@@ -60,7 +60,7 @@ public:
 private:
     
     // Int_t features
-    Int_t       hit_plane=0,    hit_wire=0, hit_id=0,  hit_trkKey=-9999;
+    Int_t       hit_plane=0,    hit_wire=0, hit_id=0,  hit_trkKey=-1;
     
     
     

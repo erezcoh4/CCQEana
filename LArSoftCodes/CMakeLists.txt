@@ -1,12 +1,8 @@
-add_subdirectory(PandoraNuTrack)
-add_subdirectory(Hit)
-add_subdirectory(Box)
+add_subdirectory(MyObjects)
 
 art_make( 
           MODULE_LIBRARIES 
-	  	   	uboone_ErezCCQEana_PandoraNuTrack
-			uboone_ErezCCQEana_Hit
-			uboone_ErezCCQEana_Box
+			uboone_ErezCCQEana_MyObjects
 	  		   larcore_Geometry
 			larcore_Geometry_Geometry_service
 			larsim_Simulation nutools_ParticleNavigation lardataobj_Simulation

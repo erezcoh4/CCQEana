@@ -17,6 +17,7 @@
 #include "Rtypes.h"
 #include "TVector3.h"
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -29,11 +30,11 @@ using namespace std;
 #define SHOW3(a,b,c) std::cout <<"\033[36m"<<#a<<": "<<(a)<<"," << #b <<": "<<(b)<<","<<#c<<": "<<(c)<< "\033[0m"<< std::endl;
 #define SHOW4(a,b,c,d) std::cout <<"\033[31m"<<#a<<": "<<(a)<<"," << #b <<": "<<(b)<<","<<#c<<": "<<(c)<<","<<#d<<": "<<(d)<< "\033[0m"<< std::endl;
 #define SHOWstdVector(v){ if (v.size()<1) {std::cout << #v << " is empty" << std::endl;} else {std::cout << #v << "( " << v.size() << " entries):\t"; for (auto it:v) std::cout << it << "\t"; std::cout << endl;}}
-#define SHOWTVector3(v){ std::cout << #v << ": (" << v.X() << "," << v.Y() << "," << v.Z() << endl;}
+#define SHOWTVector3(v){ std::cout << #v << ": (" << v.X() << "," << v.Y() << "," << v.Z() << ")" << endl;}
 #define SHOWTLorentzVector(v) std::cout << #v << ": " << "\t(" << setprecision(2) << fixed << v.Px() << ","  << v.Py() << "," << v.Pz()  << "," << v.E() << ")" << ", P = " << v.P() << ", M = " << v.M() << std::endl
 
+#define PrintPhys(a,units) std::cout  << setprecision(2) << fixed << #a << ": " << (a) <<  " " << (units) << std::endl
 
-//#include "LArUtil/Geometry.h"
 //#include "LArUtil/../../UserDev/mySoftware/MySoftwarePackage/myIncludes.h"
 //#include "hit.h"
 //#include "box.h"
@@ -64,15 +65,11 @@ public:
     
     
     /// SETters
+    void SetCC_1p_200MeVc_0pi ()                            {IsGENIECC_1p_200MeVc_0pi=true;};
+    
     void               SetRun (Int_t _run)                  {run = _run;};
     void            SetSubrun (Int_t _subrun)               {subrun = _subrun;};
-    void          SetStartPos (TVector3 pos)                {start_pos = pos;};
-    void            SetEndPos (TVector3 pos)                {end_pos = pos;};
-    void     SetTruthStartPos (TVector3 pos)                {truth_start_pos = pos;};
-    void       SetTruthEndPos (TVector3 pos)                {truth_end_pos = pos;};
-    void            SetLength (Float_t l)                   {length = l;};
-    void             SetTheta (Float_t t)                   {theta = t;};
-    void               SetPhi (Float_t ph)                  {phi = ph;};
+    void         SetMCeventID (Int_t fmcevent_id)           {mcevent_id = fmcevent_id;};
     void              SetCCNC (Int_t fccnc)                 {truth_ccnc = fccnc;};
     void              SetMode (Int_t fmode)                 {truth_mode = fmode;};
     void         SetMCpdgCode (Int_t _mcpdg)                {MCpdgCode = _mcpdg;};
@@ -80,10 +77,30 @@ public:
     void          SetMaxNHits (Int_t maxnhits)              {MaxNHits = maxnhits;};
     void    SetCaloKEPerPlane (Int_t plane , Float_t ke )   {CaloKEPerPlane[plane] = ke;};
     void      SetPIDaPerPlane (Int_t plane , Float_t pida ) {PIDaPerPlane[plane] = pida;};
+    
+    
+    void            SetLength (Float_t l)                   {length = l;};
+    void             SetTheta (Float_t t)                   {theta = t;};
+    void               SetPhi (Float_t ph)                  {phi = ph;};
+    void          SetTruthEng (Float_t f)                   {truth_Eng = f;};
+    void            SetTruthP (Float_t f)                   {truth_P = f;};
+    void         SetTruthMass (Float_t f)                   {truth_Mass = f;};
+    void       SetTruthLength (Float_t f)                   {truth_length = f;};
+    void        SetTruthTheta (Float_t f)                   {truth_theta = f;};
+    void          SetTruthPhi (Float_t f)                   {truth_phi = f;};
+
+    void          SetStartPos (TVector3 pos)                {start_pos = pos;};
+    void            SetEndPos (TVector3 pos)                {end_pos = pos;};
+    void     SetTruthStartPos (TVector3 pos)                {truth_start_pos = pos;};
+    void       SetTruthEndPos (TVector3 pos)                {truth_end_pos = pos;};
     void              SetPIDa ()                            {PIDa = PIDaPerPlane[BestPlane]; };
+    
     void     SetStartEndPlane (Int_t plane ,
                                Int_t start_wire, Int_t start_time ,
                                Int_t end_wire, Int_t end_time );
+    
+    
+    
     
     
     // GETters
@@ -93,25 +110,51 @@ public:
     Int_t             GetCCNC () const {return truth_ccnc;};
     Int_t        GetBestPlane () const {return BestPlane;};
     Int_t         GetMaxNHits () const {return MaxNHits;};
+    Int_t        GetMCeventID () const {return mcevent_id;};
     
     Float_t         GetLength () const {return length;};
     Float_t          GetTheta () const {return theta;};
     Float_t            GetPhi () const {return phi;};
+    Float_t       GetTruthEng () const {return truth_Eng;};
+    Float_t         GetTruthP () const {return truth_P;};
+    Float_t      GetTruthMass () const {return truth_Mass;};
+    Float_t    GetTruthLength () const {return truth_length;};
+    Float_t     GetTruthTheta () const {return truth_theta;};
+    Float_t       GetTruthPhi () const {return truth_phi;};
     
     Float_t GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
     Float_t   GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
     
     TVector3      GetStartPos () const {return start_pos;};
     TVector3        GetEndPos () const {return end_pos;};
+    TVector3 GetTruthStartPos () const {return truth_start_pos;};
+    TVector3   GetTruthEndPos () const {return truth_end_pos;};
     
     
     // functionallity
     void           CreateROIs ();
-    void                Print () const;
+    void                Print ( bool DoPrintPandoraNuFeatures = true ) const;
 
+    
+    // operators
+    bool IsTrackContainedSoft (float max_FV_y = 115,
+                              float min_FV_z = 5, float max_FV_z = 1045,
+                              float min_FV_x = 3, float max_FV_x = 257)  const{
+        if( ( start_pos.x() < min_FV_x )    | ( start_pos.x() > max_FV_x ) )    return false;
+        if( ( start_pos.y() < -max_FV_y )   | ( start_pos.y() > max_FV_y ) )    return false;
+        if( ( start_pos.z() < min_FV_z )    | ( start_pos.z() > max_FV_z ) )    return false;
+        if( ( end_pos.x() < min_FV_x )      | ( end_pos.x() > max_FV_x ) )      return false;
+        if( ( end_pos.y() < -max_FV_y )     | ( end_pos.y() > max_FV_y ) )      return false;
+        if( ( end_pos.z() < min_FV_z )      | ( end_pos.z() > max_FV_z ) )      return false;
+        return true;
+    };
+    
     
     
 private:
+    
+    // bool
+    bool        IsGENIECC_1p_200MeVc_0pi=false;
     
     // Int_t
     Int_t       run=0, subrun=0, event=0, track_id=-9999;
@@ -123,19 +166,32 @@ private:
     Int_t       end_time_u=0, end_time_v=0, end_time_y=0;
     Int_t       BestPlane=2;
     Int_t       MaxNHits=0;
-    
+    Int_t       mcevent_id=-1;
+
     
     // Float_t
     Float_t     length=0, theta=0, phi=0;
     Float_t     CaloKEPerPlane[3]={0,0,0};
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa;
+    // truth information - only valid for MC data
+    Float_t     truth_Eng=-1, truth_P=-1 , truth_Mass=-1;
+    Float_t     truth_theta=-9999, truth_phi=-9999, truth_length=-9999;
     
     
     // TVector3
     TVector3    start_pos=TVector3(), end_pos=TVector3();
     TVector3    truth_start_pos=TVector3(), truth_end_pos=TVector3();
     
+    
+    box         roi[3]={box(),box(),box()};
+    
+    /* other features of a pandoraNu track that might be usefull in the future
+     
+     
+     
+     
+     other features of a pandoraNu track that might be usefull in the future */
     
     
     /*
@@ -172,7 +228,6 @@ private:
      
      
      
-     void   AddNeighborTrack ( Int_t , Float_t , Float_t );
      void           Set_dEdx (vector<Float_t> , vector<Float_t> , vector<Float_t> , vector<Float_t> , vector<Float_t> ,
      vector<Float_t> , vector<Float_t> , vector<Float_t> , vector<Float_t> , vector<Float_t> ,
      vector<Float_t> , vector<Float_t> , vector<Float_t> , vector<Float_t> , vector<Float_t>  );
@@ -255,17 +310,6 @@ private:
      inline bool operator==(const PandoraNuTrack & t) {
      return std::tie( run, subrun, event, track_id ) == std::tie(t.run, t.subrun, t.event, t.track_id);
      }
-     bool IsTrackContainedSoft(float max_FV_y = 115,
-     float min_FV_z = 5, float max_FV_z = 1045,
-     float min_FV_x = 3, float max_FV_x = 257){
-     if( ( start_pos.x() < min_FV_x )    | ( start_pos.x() > max_FV_x ) )    return false;
-     if( ( start_pos.y() < -max_FV_y )   | ( start_pos.y() > max_FV_y ) )    return false;
-     if( ( start_pos.z() < min_FV_z )    | ( start_pos.z() > max_FV_z ) )    return false;
-     if( ( end_pos.x() < min_FV_x )      | ( end_pos.x() > max_FV_x ) )      return false;
-     if( ( end_pos.y() < -max_FV_y )     | ( end_pos.y() > max_FV_y ) )      return false;
-     if( ( end_pos.z() < min_FV_z )      | ( end_pos.z() > max_FV_z ) )      return false;
-     return true;
-     }
      
      
      
@@ -273,11 +317,8 @@ private:
      bool        IsStartContained, IsEndContained, IsFullyContained;
      
      Int_t       CalorimetryPDG[3];
-     Int_t       run         , subrun    , event;
      Int_t       nhits       , is_flipped;
      // Int_t       NNeighborTracks;
-     Int_t       truth_ccnc; // 0=CC interaction , 1=NC interaction
-     Short_t     track_id    , process_primary;
      
      Float_t     startx  , starty , startz , endx , endy , endz;
      
@@ -303,11 +344,6 @@ private:
      
      TString     TopBottDir  , ForBackDir    , LefRghtDir;
      
-     Int_t       start_wire_u, start_wire_v, start_wire_y;
-     Int_t       start_time_u, start_time_v, start_time_y;
-     Int_t       end_wire_u, end_wire_v, end_wire_y;
-     Int_t       end_time_u, end_time_v, end_time_y;
-     box         roi[3];
      // box         start_box[3], end_box[3];   // boxed around the start and end points of the track
      
      // dE/dx
@@ -317,16 +353,6 @@ private:
      std::vector <Float_t> track_dx_Y, residual_range_Y, dEdx_Y , Edep_Y, dqdx_Y;
      
      
-     // truth information - only valid for MC data
-     Int_t       MCpdgCode;
-     Float_t     truth_Eng , truth_P , truth_Mass , truth_KE;
-     Float_t     truth_theta         , truth_phi  , truth_length;
-     Float_t     truth_startx        , truth_starty , truth_startz , truth_endx , truth_endy , truth_endz;
-     TVector3    truth_start_pos     , truth_end_pos;
-     
-     // true CC1p (GENIE interaction)
-     bool        IsGENIECC1p, IsGENIECC_1p_200MeVc_0pi;
-     Int_t       mcevent_id;
      
      
      

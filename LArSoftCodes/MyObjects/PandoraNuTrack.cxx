@@ -2,7 +2,6 @@
 #define PANDORANUTRACK_CXX
 
 #include "PandoraNuTrack.h"
-//#include "LArUtil/GeometryHelper.h"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 PandoraNuTrack::PandoraNuTrack( Int_t frun, Int_t fsubrun, Int_t fevent
@@ -25,12 +24,54 @@ end_pos(fend_pos)
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Print() const{
-    Printf("run/subrun/event : %d/%d/%d",run,subrun,event);
-    Printf("track id: %d",track_id);
+void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
+    
+    //    Printf("run/subrun/event : %d/%d/%d",run,subrun,event);
     Printf("length: %.1f cm, theta=%.2f rad, phi=%.2f rad",length,theta,phi);
-    Printf("start position:");  start_pos.Print();
-    Printf("end position:");    end_pos.Print();
+    
+    cout << "\033[31m" << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
+    << "track " << track_id << endl << "-------------------"    << "\033[0m" << endl;
+    
+    SHOWTVector3(start_pos);
+    SHOWTVector3(end_pos);
+    
+    if (DoPrintPandoraNuFeatures){
+        PrintPhys(length,"cm");
+        //        std::cout<<" momentum from range\n";  PrintPhys(momrange,"MeV/c");
+        //        PrintPhys(mommsllhd,"MeV/c momentum from MCS LLHD");
+        //        PrintPhys(momeavgrangellhd,"MeV/c momentum from MCS LLHD and range");
+        //        SHOW(distlenratio);
+        PrintPhys(theta,"rad");
+        PrintPhys(phi,"rad");
+        //        PrintPhys(start_dqdx,"ADC/cm");
+        //        PrintPhys(end_dqdx,"ADC/cm");
+        //        PrintPhys(tot_dqdx,"ADC/cm");
+        //        PrintPhys(dQtotal,"ADC");
+        //        SHOW3( cosmicscore, coscontscore , pidpida )
+        //        SHOW2( cfdistance , cfdistance_start );
+    }
+    //    if (DoPrintPlanes){
+    //        SHOW3( purtruth_U , purtruth_V   , purtruth_Y );
+    //        for (int plane = 0 ; plane < 3; plane++) {
+    //            PrintPhys( CalorimetryPDG[plane] , Form(" for plane %d",plane) );
+    //            PrintBox(roi[plane]);
+    //        }
+    //    }
+    //    if ( truth_Eng>0 && truth_P>0 ){
+    cout << "MC information " << endl << "........................" << endl;
+    SHOW (MCpdgCode);
+    
+    //        SHOW ( mcevent_id );
+    //        SHOW2 ( process_primary , MCpdgCode );
+    //        PrintPhys (truth_P , "GeV/c");
+    //        SHOW3(truth_Eng , truth_theta , truth_phi);
+    //        PrintPhys(truth_length , "cm");
+    //        SHOWTVector3(truth_start_pos);
+    //        SHOWTVector3(truth_end_pos);
+    //        SHOW2( truth_ccnc, IsGENIECC1p );
+    //        SHOW( IsGENIECC_1p_200MeVc_0pi );
+    //    }
+    cout << "\033[31m" << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << "\033[0m" << endl;
 }
 
 
