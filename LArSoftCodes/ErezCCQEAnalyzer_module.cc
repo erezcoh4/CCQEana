@@ -435,14 +435,19 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
 void ub::ErezCCQEAnalyzer::ConstructVertices(){
     
     // cluster all tracks at close proximity to vertices
+    cout << "ClusterTracksToVertices();" << endl;
     ClusterTracksToVertices();
     // analyze these vertices: inter-tracks distances, angles...
+    cout << "AnalyzeVertices();" << endl;
     AnalyzeVertices();
     // retain only vertices with pairs of 2-tracks at close proximity
+    cout << "FindPairVertices();" << endl;
     FindPairVertices();
     // if its a MC event, tag the vertex by their MC information
+    cout << "TagVertices();" << endl;
     TagVertices();
     // output to csv file
+    cout << "StreamVerticesToCSV();" << endl;
     StreamVerticesToCSV();
 }
 
@@ -468,7 +473,7 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
         
         FoundCloseTracks = AlreadySetPosition = false;
         
-        for ( int j=0 ; j < Ntracks ; j++ ){ // i+1
+        for ( int j=0 ; j < Ntracks ; j++ ){ // i+1?
             
             // if (!tracks[j].IsFullyContained) continue;
             if (tracks[j].IsTrackContainedSoft() && j!=i){
@@ -566,15 +571,22 @@ bool ub::ErezCCQEAnalyzer::TrackAlreadyInVertices(int ftrack_id){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
-    for (auto & v:vertices){
-        // after fixing the vertext position, remove far tracks
-        v.RemoveFarTracks( kMaxInterTrackDistance );
-        // now sort the tracks
-        v.SortTracksByPIDA ();
-        v.SortTracksByLength ();
-        // and the relations between the tracks
-        // inter-track distances, delta-theta, delta-phi...
-        v.SetTracksRelations ();
+    if (vertices.size()>0){
+        for (auto & v:vertices){
+            // after fixing the vertext position, remove far tracks
+            cout << "v.RemoveFarTracks( kMaxInterTrackDistance );" << endl;
+            v.RemoveFarTracks( kMaxInterTrackDistance );
+            if (v.GetTracks().size()<2) continue;
+            // now sort the tracks
+            cout << "SortTracksByPIDA;" << endl;
+            v.SortTracksByPIDA ();
+            cout << "SortTracksByLength;" << endl;
+            v.SortTracksByLength ();
+            // and the relations between the tracks
+            // inter-track distances, delta-theta, delta-phi...
+            cout << "SetTracksRelations;" << endl;
+            v.SetTracksRelations ();
+        }
     }
 }
 
