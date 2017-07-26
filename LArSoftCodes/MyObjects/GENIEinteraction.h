@@ -76,7 +76,8 @@ public:
         return IsVertexContained;
     }
     void                   Print (bool DoPrintTracks=false) const;
-    
+    void                AddTrack (PandoraNuTrack ftrack);
+   
    
     
     
@@ -107,6 +108,7 @@ public:
     bool           GetVertexContained () const {return IsVertexContained;};
     Int_t               GetNprimaries () const {return Nprimaries;};
     TVector3        GetVertexPosition () const {return vertex_position;};
+    Int_t                GetPrimaries () const {return Nprimaries;};
     
     
     

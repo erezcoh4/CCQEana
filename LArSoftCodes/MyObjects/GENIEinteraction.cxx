@@ -39,7 +39,6 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
 ){
     
     momentum = fmomentum;
-    
      // interaction neutrino
     switch (fpdg) {
             
@@ -124,6 +123,14 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
     return true;
 
 }
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GENIEinteraction::AddTrack (PandoraNuTrack ftrack){
+    
+    tracks.push_back(ftrack);
+}
+
 
 //
 ////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -390,16 +397,18 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     SHOWTLorentzVector( muon );
     SHOWTLorentzVector( q );
     if(!protons.empty()){
-        cout << "\033[35m" << protons.size() << " protons:" << "\033[30m" << endl;
+        cout << "\033[35m" << protons.size() << " protons:" << endl;
         for (auto proton: protons) {
             SHOWTLorentzVector( proton );
         }
+        cout << "\033[30m";
     }
     if(!neutrons.empty()){
-        cout << "\033[35m" << neutrons.size() << " neutrons:" << "\033[30m" << endl;
+        cout << "\033[35m" << neutrons.size() << " neutrons:" << endl;
         for (auto neutron: neutrons) {
             SHOWTLorentzVector( neutron );
         }
+        cout << "\033[30m";
     }
     SHOW(Xb);
     SHOW(Q2);

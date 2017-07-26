@@ -16,6 +16,9 @@
 
 #include "Rtypes.h"
 #include "TVector3.h"
+#include "TLorentzVector.h"
+
+#include "box.h"
 #include <iostream>
 #include <iomanip>
 
@@ -35,7 +38,6 @@ using namespace std;
 
 #define PrintPhys(a,units) std::cout  << setprecision(2) << fixed << #a << ": " << (a) <<  " " << (units) << std::endl
 
-//#include "LArUtil/../../UserDev/mySoftware/MySoftwarePackage/myIncludes.h"
 //#include "hit.h"
 //#include "box.h"
 
@@ -69,6 +71,7 @@ public:
     
     void               SetRun (Int_t _run)                  {run = _run;};
     void            SetSubrun (Int_t _subrun)               {subrun = _subrun;};
+    void             SetEvent (Int_t _event)                {event = _event;};
     void         SetMCeventID (Int_t fmcevent_id)           {mcevent_id = fmcevent_id;};
     void              SetCCNC (Int_t fccnc)                 {truth_ccnc = fccnc;};
     void              SetMode (Int_t fmode)                 {truth_mode = fmode;};
@@ -82,9 +85,9 @@ public:
     void            SetLength (Float_t l)                   {length = l;};
     void             SetTheta (Float_t t)                   {theta = t;};
     void               SetPhi (Float_t ph)                  {phi = ph;};
-    void          SetTruthEng (Float_t f)                   {truth_Eng = f;};
-    void            SetTruthP (Float_t f)                   {truth_P = f;};
-    void         SetTruthMass (Float_t f)                   {truth_Mass = f;};
+//    void          SetTruthEng (Float_t f)                   {truth_Eng = f;};
+//    void            SetTruthP (Float_t f)                   {truth_P = f;};
+//    void         SetTruthMass (Float_t f)                   {truth_Mass = f;};
     void       SetTruthLength (Float_t f)                   {truth_length = f;};
     void        SetTruthTheta (Float_t f)                   {truth_theta = f;};
     void          SetTruthPhi (Float_t f)                   {truth_phi = f;};
@@ -94,6 +97,7 @@ public:
     void     SetTruthStartPos (TVector3 pos)                {truth_start_pos = pos;};
     void       SetTruthEndPos (TVector3 pos)                {truth_end_pos = pos;};
     void              SetPIDa ()                            {PIDa = PIDaPerPlane[BestPlane]; };
+    void     SetTruthMomentum (TLorentzVector fmomentum)    {truth_momentum=fmomentum; };
     
     void     SetStartEndPlane (Int_t plane ,
                                Int_t start_wire, Int_t start_time ,
@@ -104,31 +108,36 @@ public:
     
     
     // GETters
-    Int_t              GetRun () const {return run;};
-    Int_t           GetSubrun () const {return subrun;};
-    Int_t        GetMCpdgCode () const {return MCpdgCode;};
-    Int_t             GetCCNC () const {return truth_ccnc;};
-    Int_t        GetBestPlane () const {return BestPlane;};
-    Int_t         GetMaxNHits () const {return MaxNHits;};
-    Int_t        GetMCeventID () const {return mcevent_id;};
+    Int_t                    GetRun () const {return run;};
+    Int_t                 GetSubrun () const {return subrun;};
+    Int_t                  GetEvent () const {return event;};
+    Int_t                GetTrackID () const {return track_id;};
+    Int_t              GetMCeventID () const {return mcevent_id;};
     
-    Float_t         GetLength () const {return length;};
-    Float_t          GetTheta () const {return theta;};
-    Float_t            GetPhi () const {return phi;};
-    Float_t       GetTruthEng () const {return truth_Eng;};
-    Float_t         GetTruthP () const {return truth_P;};
-    Float_t      GetTruthMass () const {return truth_Mass;};
-    Float_t    GetTruthLength () const {return truth_length;};
-    Float_t     GetTruthTheta () const {return truth_theta;};
-    Float_t       GetTruthPhi () const {return truth_phi;};
+    Int_t              GetMCpdgCode () const {return MCpdgCode;};
+    Int_t                   GetCCNC () const {return truth_ccnc;};
+    Int_t              GetBestPlane () const {return BestPlane;};
+    Int_t               GetMaxNHits () const {return MaxNHits;};
     
-    Float_t GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
-    Float_t   GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
+    Float_t               GetLength () const {return length;};
+    Float_t                GetTheta () const {return theta;};
+    Float_t                  GetPhi () const {return phi;};
+//    Float_t             GetTruthEng () const {return truth_Eng;};
+//    Float_t               GetTruthP () const {return truth_P;};
+//    Float_t            GetTruthMass () const {return truth_Mass;};
+    Float_t          GetTruthLength () const {return truth_length;};
+    Float_t           GetTruthTheta () const {return truth_theta;};
+    Float_t             GetTruthPhi () const {return truth_phi;};
     
-    TVector3      GetStartPos () const {return start_pos;};
-    TVector3        GetEndPos () const {return end_pos;};
-    TVector3 GetTruthStartPos () const {return truth_start_pos;};
-    TVector3   GetTruthEndPos () const {return truth_end_pos;};
+    Float_t       GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
+    Float_t         GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
+    Float_t                 GetPIDa () const {return PIDa; };
+
+    TVector3            GetStartPos () const {return start_pos;};
+    TVector3              GetEndPos () const {return end_pos;};
+    TVector3       GetTruthStartPos () const {return truth_start_pos;};
+    TVector3         GetTruthEndPos () const {return truth_end_pos;};
+    TLorentzVector GetTruthMomentum () const {return truth_momentum; };
     
     
     // functionallity
@@ -148,6 +157,9 @@ public:
         if( ( end_pos.z() < min_FV_z )      | ( end_pos.z() > max_FV_z ) )      return false;
         return true;
     };
+    
+    Float_t           DistanceFromPoint ( TVector3 position , std::string * StartOrEnd=nullptr );
+    Float_t ClosestDistanceToOtherTrack ( PandoraNuTrack other_track , std::string * StartOrEnd=nullptr );
     
     
     
@@ -175,7 +187,7 @@ private:
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa;
     // truth information - only valid for MC data
-    Float_t     truth_Eng=-1, truth_P=-1 , truth_Mass=-1;
+    //    Float_t     truth_Eng=-1, truth_P=-1 , truth_Mass=-1;
     Float_t     truth_theta=-9999, truth_phi=-9999, truth_length=-9999;
     
     
@@ -183,6 +195,7 @@ private:
     TVector3    start_pos=TVector3(), end_pos=TVector3();
     TVector3    truth_start_pos=TVector3(), truth_end_pos=TVector3();
     
+    TLorentzVector truth_momentum=TLorentzVector();
     
     box         roi[3]={box(),box(),box()};
     
@@ -255,8 +268,6 @@ private:
      
      
      // finders
-     Float_t ClosestDistanceToOtherTrack ( PandoraNuTrack other_track , std::string * StartOrEnd=nullptr );
-     Float_t           DistanceFromPoint ( TVector3 position , std::string * StartOrEnd=nullptr );
      bool           IsWireTimeAlongTrack ( Int_t fplane, Int_t fwire , Float_t fPeakTime );
      
      

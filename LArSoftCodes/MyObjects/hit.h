@@ -24,7 +24,7 @@ public:
     
     /// Default constructor
     hit () = default;
-    hit (Int_t fplane, Int_t fwire, Int_t fid, Float_t fpeakT, Float_t fcharge);
+    hit (Int_t fplane, Int_t fwire, Int_t fid, float fpeakT, float fcharge);
     
     
     void    Print () const;
@@ -38,8 +38,8 @@ public:
     Int_t                 GetPlane ()   const {return hit_plane;};
     Int_t                  GetWire ()   const {return hit_wire;};
     Int_t                    GetID ()   const {return hit_id;};
-    Float_t              GetCharge ()   const {return hit_charge;};
-    Float_t               GetPeakT ()   const {return hit_peakT;};
+    float                GetCharge ()   const {return hit_charge;};
+    float                 GetPeakT ()   const {return hit_peakT;};
 
     
     
@@ -65,7 +65,7 @@ private:
     
     
     // Float_t features
-    Float_t     hit_peakT=0,    hit_charge=0;
+    float       hit_peakT=0,    hit_charge=0;
     
     
 };

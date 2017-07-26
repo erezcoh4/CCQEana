@@ -7,4 +7,6 @@
   <class name="std::vector<box>"/>
   <class name="GENIEinteraction"/>
   <class name="std::vector<GENIEinteraction>"/>
+  <class name="pairVertex"/>
+  <class name="std::vector<pairVertex>"/>
 </lcgdict>

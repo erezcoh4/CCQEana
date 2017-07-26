@@ -27,7 +27,6 @@ end_pos(fend_pos)
 void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     
     //    Printf("run/subrun/event : %d/%d/%d",run,subrun,event);
-    Printf("length: %.1f cm, theta=%.2f rad, phi=%.2f rad",length,theta,phi);
     
     cout << "\033[31m" << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
     << "track " << track_id << endl << "-------------------"    << "\033[0m" << endl;
@@ -58,16 +57,18 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     //        }
     //    }
     //    if ( truth_Eng>0 && truth_P>0 ){
-    cout << "MC information " << endl << "........................" << endl;
-    SHOW (MCpdgCode);
-    
-    //        SHOW ( mcevent_id );
-    //        SHOW2 ( process_primary , MCpdgCode );
-    //        PrintPhys (truth_P , "GeV/c");
-    //        SHOW3(truth_Eng , truth_theta , truth_phi);
-    //        PrintPhys(truth_length , "cm");
-    //        SHOWTVector3(truth_start_pos);
-    //        SHOWTVector3(truth_end_pos);
+    if (MCpdgCode!=-9999){
+        cout << "........................" << endl << "MC information " << endl ;
+        SHOW (MCpdgCode);
+        SHOW ( mcevent_id );
+        //        PrintPhys (truth_P , "GeV/c");
+        //        SHOW3(truth_Eng , truth_theta , truth_phi);
+        //        PrintPhys(truth_length , "cm");
+        SHOWTVector3(truth_start_pos);
+        SHOWTVector3(truth_end_pos);
+        SHOWTLorentzVector(truth_momentum);
+        cout << "........................" << endl;
+    }
     //        SHOW2( truth_ccnc, IsGENIECC1p );
     //        SHOW( IsGENIECC_1p_200MeVc_0pi );
     //    }
@@ -79,7 +80,8 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
 void PandoraNuTrack::SetStartEndPlane(Int_t plane ,
                                       Int_t start_wire, Int_t start_time ,
                                       Int_t end_wire, Int_t end_time ){
-//        roi[plane] = box( start_wire , start_time , end_wire , end_time );
+    
+    roi[plane] = box( start_wire , start_time , end_wire , end_time );
     switch (plane) {
         case 0:
             start_wire_u = start_wire;
@@ -105,6 +107,51 @@ void PandoraNuTrack::SetStartEndPlane(Int_t plane ,
     }
 }
 
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t PandoraNuTrack::DistanceFromPoint( TVector3 position, std::string * fStartOrEnd  ){
+    Float_t DistanceStart, DistanceEnd , distance = 1000;
+    std::string StartOrEnd = "None";
+    
+    DistanceStart = ( start_pos - position).Mag();
+    DistanceEnd = ( end_pos - position).Mag();
+    if ( DistanceStart < DistanceEnd ){
+        StartOrEnd = "Start";
+        distance = DistanceStart;
+    }
+    else{
+        StartOrEnd = "End";
+        distance = DistanceEnd;
+    }
+    
+    return distance;
+}
+
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t PandoraNuTrack::ClosestDistanceToOtherTrack( PandoraNuTrack other_track, std::string * fStartOrEnd ){
+    Float_t MinDistanceToOtherTrack = 10000;
+    std::string StartOrEnd = "None";
+    Float_t DistanceStartStart = (start_pos - other_track.start_pos).Mag();
+    if (MinDistanceToOtherTrack>DistanceStartStart)     {MinDistanceToOtherTrack = DistanceStartStart; StartOrEnd = "Start";}
+    
+    Float_t DistanceStartEnd = (start_pos - other_track.end_pos).Mag();
+    if (MinDistanceToOtherTrack>DistanceStartEnd)       {MinDistanceToOtherTrack = DistanceStartEnd; StartOrEnd = "Start";}
+    
+    Float_t DistanceEndStart = (end_pos - other_track.start_pos).Mag();
+    if (MinDistanceToOtherTrack>DistanceEndStart)       {MinDistanceToOtherTrack = DistanceEndStart; StartOrEnd = "End";}
+    
+    Float_t DistanceEndEnd = (end_pos - other_track.end_pos).Mag();
+    if (MinDistanceToOtherTrack>DistanceEndEnd)         {MinDistanceToOtherTrack = DistanceEndEnd; StartOrEnd = "End";}
+    
+    
+    if (fStartOrEnd!=nullptr) *fStartOrEnd = StartOrEnd;
+    
+    return MinDistanceToOtherTrack;
+}
 
 
 
@@ -226,47 +273,8 @@ void PandoraNuTrack::SetMomentum(Float_t fmomrange, Float_t fmommsllhd ){
 
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-Float_t PandoraNuTrack::ClosestDistanceToOtherTrack( PandoraNuTrack other_track, std::string * fStartOrEnd ){
-    Float_t MinDistanceToOtherTrack = 10000;
-    std::string StartOrEnd = "None";
-    Float_t DistanceStartStart = (start_pos - other_track.start_pos).Mag();
-    if (MinDistanceToOtherTrack>DistanceStartStart)     {MinDistanceToOtherTrack = DistanceStartStart; StartOrEnd = "Start";}
-    
-    Float_t DistanceStartEnd = (start_pos - other_track.end_pos).Mag();
-    if (MinDistanceToOtherTrack>DistanceStartEnd)       {MinDistanceToOtherTrack = DistanceStartEnd; StartOrEnd = "Start";}
-    
-    Float_t DistanceEndStart = (end_pos - other_track.start_pos).Mag();
-    if (MinDistanceToOtherTrack>DistanceEndStart)       {MinDistanceToOtherTrack = DistanceEndStart; StartOrEnd = "End";}
-    
-    Float_t DistanceEndEnd = (end_pos - other_track.end_pos).Mag();
-    if (MinDistanceToOtherTrack>DistanceEndEnd)         {MinDistanceToOtherTrack = DistanceEndEnd; StartOrEnd = "End";}
-    
-    
-    if (fStartOrEnd!=nullptr) *fStartOrEnd = StartOrEnd;
-
-    return MinDistanceToOtherTrack;
-}
 
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-Float_t PandoraNuTrack::DistanceFromPoint( TVector3 position, std::string * fStartOrEnd  ){
-    Float_t DistanceStart, DistanceEnd , distance = 1000;
-    std::string StartOrEnd = "None";
-
-    DistanceStart = ( start_pos - position).Mag();
-    DistanceEnd = ( end_pos - position).Mag();
-    if ( DistanceStart < DistanceEnd ){
-        StartOrEnd = "Start";
-        distance = DistanceStart;
-    }
-    else{
-        StartOrEnd = "End";
-        distance = DistanceEnd;
-    }
-
-    return distance;
-}
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

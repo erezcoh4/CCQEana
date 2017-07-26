@@ -48,6 +48,10 @@
 // C/C++ libraries
 #include <memory>
 #include <utility>
+#include <chrono>
+#include <ctime>
+#include <iostream>
+#include <fstream>
 
 
 // my pandoraNu track...
@@ -55,12 +59,17 @@
 #include "uboone/ErezCCQEana/MyObjects/hit.h"
 #include "uboone/ErezCCQEana/MyObjects/box.h"
 #include "uboone/ErezCCQEana/MyObjects/GENIEinteraction.h"
+#include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
 
 // constants
+constexpr int debug          = 1;
 constexpr int kMaxTrack      = 1000;  //maximum number of tracks
 constexpr int kMaxHits       = 40000; //maximum number of hits;
 constexpr int kMaxTruth      = 100;
 constexpr int kMaxNgenie     = 100;
+constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal distance for clustering
+constexpr float EPSILON      = 0.1;   // tollerance for equations
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 namespace ub { class ErezCCQEAnalyzer; }
@@ -83,14 +92,26 @@ public:
     ErezCCQEAnalyzer & operator = (ErezCCQEAnalyzer &&) = delete;
     
     // Required functions.
-    void analyze(art::Event const & e) override;
+    void                   analyze (art::Event const & e) override;
     
     // Selected optional functions.
-    void beginJob() override;
-    void reconfigure (fhicl::ParameterSet const& p) override;
+    void                  beginJob () override;
+    void               reconfigure (fhicl::ParameterSet const& p) override;
     
     // functionallity
-    void PrintInformation ();
+    void         ConstructVertices ();
+    void   ClusterTracksToVertices ();
+    void           AnalyzeVertices ();
+    void          FindPairVertices ();
+    void               TagVertices ();
+    void          PrintInformation ();
+    bool    TrackAlreadyInVertices (int ftrack_id);
+    void       HeaderVerticesInCSV ();
+    void       StreamVerticesToCSV ();
+
+    
+    
+    
     
 private:
     
@@ -104,16 +125,18 @@ private:
     
     short   isdata;
     
+    bool    MCmode;
+    
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
-    
-    
+    int     Nvertices;
+    int     vertices_ctr;
     
     // my objects
     std::vector<PandoraNuTrack>     tracks;
     std::vector<hit>                hits;
     std::vector<GENIEinteraction>   genie_interactions;
-    
+    std::vector<pairVertex>         vertices;
     
     //Module labels to get data products
     std::string fHitsModuleLabel;
@@ -123,30 +146,15 @@ private:
     std::string fGenieGenModuleLabel;
 
     //mctruth information
-    Int_t     mcevts_truth;    //number of neutrino Int_teractions in the spill
-    Int_t     nuPDG_truth;     //neutrino PDG code
-    Int_t     ccnc_truth;      //0=CC 1=NC
-    Int_t     mode_truth;      //0=QE/El, 1=RES, 2=DIS, 3=Coherent production
-    Float_t  enu_truth;       //true neutrino energy
-    Float_t  Q2_truth;        //Momentum transfer squared
-    Float_t  W_truth;         //hadronic invariant mass
-    Float_t  X_truth;
-    Float_t  Y_truth;
-    Int_t    hitnuc_truth;    //hit nucleon
-    Int_t    target_truth;    //hit nucleus
-    Float_t  nuvtxx_truth;    //neutrino vertex x
-    Float_t  nuvtxy_truth;    //neutrino vertex y
-    Float_t  nuvtxz_truth;    //neutrino vertex z
-    Float_t  nu_dcosx_truth;  //neutrino dcos x
-    Float_t  nu_dcosy_truth;  //neutrino dcos y
-    Float_t  nu_dcosz_truth;  //neutrino dcos z
-    Float_t  lep_mom_truth;   //lepton momentum
-    Float_t  lep_dcosx_truth; //lepton dcos x
-    Float_t  lep_dcosy_truth; //lepton dcos y
-    Float_t  lep_dcosz_truth; //lepton dcos z
-    Float_t  t0_truth;        // t0
-
+    Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
     
+    
+    // time stamp
+    std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
+    
+    // output csv file of vertices
+    ofstream vertices_file;
+
 };
 
 
@@ -159,14 +167,15 @@ ub::ErezCCQEAnalyzer::ErezCCQEAnalyzer(fhicl::ParameterSet const & p):EDAnalyzer
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
+    
     ResetVars();
+    
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
     art::ServiceHandle<cheat::BackTracker> bt;
     //    const sim::ParticleList& plist = bt->ParticleList();
     isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
-    
     
     // * hits
     art::Handle< std::vector<recob::Hit> > hitListHandle;
@@ -189,7 +198,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
     // hits information
     // ----------------------------------------
     Nhits = hitlist.size();
-    
     Nhits_stored = std::min(Nhits, kMaxHits);
     for (int i = 0; i < Nhits_stored ; ++i){//loop over hits
         
@@ -209,7 +217,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
     // tracks information
     // ----------------------------------------
     Ntracks = tracklist.size();
-    
     for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i ){
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = tracklist[i]->Extent();
@@ -316,7 +323,8 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
             if (particle){
                 track.SetMCpdgCode( particle->PdgCode() );
                 track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-                track.SetTruthEndPos( TVector3(particle->EndX() , particle->Endy() , particle->Endz()) );
+                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                track.SetTruthMomentum( particle -> Momentum() );
             }//if (particle)
         }//MC
         
@@ -344,7 +352,7 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         
         mcevts_truth = mclist.size();
         if (mcevts_truth){
-            
+            MCmode = true;
             
             for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
                 art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
@@ -374,169 +382,47 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                     if ( NgenieParticles ){
                         for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
                             const simb::MCParticle& part( mctruth->GetParticle(iPart) );
+                            // add a primary to genie-interaction
                             genie_interaction.AddPrimary( part.PdgCode()    // pdg code
                                                          ,part.Momentum()   // 4-momentum
                                                          ,part.StatusCode() // status code
                                                          ,part.Mother()     // mother
                                                          );
+                            
+                            // match the primary particle with a track
+                            for (auto & track : tracks){
+                                if (
+                                    ( part.PdgCode() == track.GetMCpdgCode() )
+                                    &&
+                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON )
+                                    &&
+                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON )
+                                    ) {
+                                    // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
+                                    genie_interaction.AddTrack ( track );
+                                    track.SetMCeventID( mc_evend_id );
+                                }
+                            }
+
                         } // for particle
                     }
                     genie_interaction.SortNucleons();
                     genie_interaction.ComputePmissPrec();
                     genie_interaction.FindCC1p200MeVc0pi();
-                    
-                    // loop over all tracks, and find if any of the tracks
-                    // belongs to one of the GENIE particles
-                    for (auto track : tracks){
-                        if ( track.GetTruthStartPos() == genie_interaction.GetVertexPosition() ){
-                            // match GENIE muon to muon track
-                            if (track.GetMCpdgCode()==13){
-                                if ( track. )
-                            }
-                            // match GENIE protons to proton tracks
-                        }
-                    }
-                    
-                    
+
                     genie_interactions.push_back( genie_interaction );
                     
-                    //                float mindist2 = 9999; // cm;
-                    //                TVector3 nuvtx(nuvtxx_truth, nuvtxy_truth, nuvtxz_truth);
-                    //                infidvol = insideFidVol(nuvtxx_truth, nuvtxy_truth, nuvtxz_truth);
-                    //                //find the closest reco vertex to the neutrino mc truth
-                    //                if (infidvol)
-                    //                {
-                    //                    // vertex is when at least two tracks meet
-                    //                    for(size_t i = 0; i < vtxlist.size(); ++i){ // loop over vertices
-                    //                        Double_t xyz[3] = {};
-                    //                        vtxlist[i]->XYZ(xyz);
-                    //                        TVector3 vtxreco(xyz);
-                    //                        float dist2 = pma::Dist2(vtxreco, nuvtx);
-                    //                        if (dist2 < mindist2)
-                    //                        {
-                    //                            mindist2 = dist2;
-                    //                            vtxrecomc = std::sqrt(dist2);
-                    //                            vtxrecomcx = vtxreco.X() - nuvtxx_truth;
-                    //                            vtxrecomcy = vtxreco.Y() - nuvtxy_truth;
-                    //                            vtxrecomcz = vtxreco.Z() - nuvtxz_truth;
-                    //                        }
-                    //                    }
-                    //
-                    //                    // two endpoints of tracks are somehow also vertices...
-                    //                    for (size_t i = 0; i < tracklist.size(); ++i){ // loop over tracks
-                    //                        float dist2 = pma::Dist2(tracklist[i]->Vertex(), nuvtx);
-                    //                        if (dist2 < mindist2)
-                    //                        {
-                    //                            mindist2 = dist2;
-                    //                            vtxrecomc = std::sqrt(dist2);
-                    //                            vtxrecomcx = tracklist[i]->Vertex().X() - nuvtxx_truth;
-                    //                            vtxrecomcy = tracklist[i]->Vertex().Y() - nuvtxy_truth;
-                    //                            vtxrecomcz = tracklist[i]->Vertex().Z() - nuvtxz_truth;
-                    //                            
-                    //                        }
-                    //                        dist2 = pma::Dist2(tracklist[i]->End(), nuvtx);
-                    //                        if (dist2 < mindist2)
-                    //                        {
-                    //                            mindist2 = dist2;
-                    //                            vtxrecomc = std::sqrt(dist2);
-                    //                            vtxrecomcx = tracklist[i]->End().X() - nuvtxx_truth;
-                    //                            vtxrecomcy = tracklist[i]->End().Y() - nuvtxy_truth;
-                    //                            vtxrecomcz = tracklist[i]->End().Z() - nuvtxz_truth;
-                    //                            
-                    //                        }
-                    //                    }
-                    //                }
-                }//is neutrino
+                }//mctruth->Origin()
             }
         }
-        
-//        //save g4 particle information
-//        std::vector<const simb::MCParticle* > geant_part;
-//        
-//        // ### Looping over all the Geant4 particles from the BackTracker ###
-//        for(size_t p = 0; p < plist.size(); ++p)
-//        {
-//            // ### Filling the vector with MC Particles ###
-//            geant_part.push_back(plist.Particle(p));
-//        }
-//        
-//        //std::cout<<"No of geant part= "<<geant_part.size()<<std::endl;
-//        
-//        // ### Setting a string for primary ###
-//        std::string pri("primary");
-//        
-//        int primary=0;
-//        int geant_particle=0;
-//        
-//        // ############################################################
-//        // ### Determine the number of primary particles from geant ###
-//        // ############################################################
-//        for( unsigned int i = 0; i < geant_part.size(); ++i ){
-//            geant_particle++;
-//            // ### Counting the number of primary particles ###
-//            if(geant_part[i]->Process()==pri)
-//            { primary++;}
-//        }//<---End i loop
-//        
-//        
-//        // ### Saving the number of primary particles ###
-//        no_primaries=primary;
-//        // ### Saving the number of Geant4 particles ###
-//        geant_list_size=geant_particle;
-//        
-//        // ### Looping over all the Geant4 particles ###
-//        for( unsigned int i = 0; i < geant_part.size(); ++i ){
-//            
-//            // ### If this particle is primary, set = 1 ###
-//            if(geant_part[i]->Process()==pri)
-//            {process_primary[i]=1;}
-//            // ### If this particle is not-primary, set = 0 ###
-//            else
-//            {process_primary[i]=0;}
-//            
-//            // ### Saving the particles mother TrackID ###
-//            Mother[i]=geant_part[i]->Mother();
-//            // ### Saving the particles TrackID ###
-//            TrackId[i]=geant_part[i]->TrackId();
-//            // ### Saving the PDG Code ###
-//            pdg[i]=geant_part[i]->PdgCode();
-//            // ### Saving the particles Energy ###
-//            Eng[i]=geant_part[i]->E();
-//            
-//            // ### Saving the Px, Py, Pz info ###
-//            Px[i]=geant_part[i]->Px();
-//            Py[i]=geant_part[i]->Py();
-//            Pz[i]=geant_part[i]->Pz();
-//            
-//            // ### Saving the Start and End Point for this particle ###
-//            StartPointx[i]=geant_part[i]->Vx();
-//            StartPointy[i]=geant_part[i]->Vy();
-//            StartPointz[i]=geant_part[i]->Vz();
-//            EndPointx[i]=geant_part[i]->EndPosition()[0];
-//            EndPointy[i]=geant_part[i]->EndPosition()[1];
-//            EndPointz[i]=geant_part[i]->EndPosition()[2];
-//            
-//            // ### Saving the processes for this particle ###
-//            //std::cout<<"finding proc"<<std::endl;
-//            G4Process.push_back( geant_part[i]->Process() );
-//            G4FinalProcess.push_back( geant_part[i]->EndProcess() );
-//            //std::cout<<"found proc"<<std::endl;
-//            //      std::cout << "ID " << TrackId[i] << ", pdg " << pdg[i] << ", Start X,Y,Z " << StartPointx[i] << ", " << StartPointy[i] << ", " << StartPointz[i]
-//            //		<< ", End XYZ " << EndPointx[i] << ", " << EndPointy[i] << ", " << EndPointz[i] << ", Start Proc " << G4Process[i] << ", End Proc " << G4FinalProcess[i]
-//            //		<< std::endl;
-//            
-//            // ### Saving the Start direction cosines for this particle ###
-//            Startdcosx[i] = geant_part[i]->Momentum(0).Px() / geant_part[i]->Momentum(0).P();
-//            Startdcosy[i] = geant_part[i]->Momentum(0).Py() / geant_part[i]->Momentum(0).P();
-//            Startdcosz[i] = geant_part[i]->Momentum(0).Pz() / geant_part[i]->Momentum(0).P();
-//            // ### Saving the number of Daughters for this particle ###
-//            NumberDaughters[i]=geant_part[i]->NumberDaughters();
-//            
-//        } //geant particles
-//        
-        
     }//is neutrino
 
+
+    // ----------------------------------------
+    // event topology (my-vertex....)
+    // ----------------------------------------
+    ConstructVertices();
+    
     
     PrintInformation();
     fTree -> Fill();
@@ -545,6 +431,196 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
 
 
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::ConstructVertices(){
+    
+    // cluster all tracks at close proximity to vertices
+    ClusterTracksToVertices();
+    // analyze these vertices: inter-tracks distances, angles...
+    AnalyzeVertices();
+    // retain only vertices with pairs of 2-tracks at close proximity
+    FindPairVertices();
+    // if its a MC event, tag the vertex by their MC information
+    TagVertices();
+    // output to csv file
+    StreamVerticesToCSV();
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
+    // July-25, 2017
+    // cluster all tracks at close proximity to vertices
+    bool    FoundCloseTracks , AlreadySetPosition;
+    float   closest_distance_ij;
+    TVector3 vertex_position;
+    
+    for (int i=0; i < Ntracks; i++){
+        
+        // if (!tracks[i].IsFullyContained) continue;
+        if (!tracks[i].IsTrackContainedSoft()) continue;
+        
+        // skip if track was clustered to a vertex by in one of the previous loop steps
+        if ( TrackAlreadyInVertices( tracks[i].GetTrackID() )) continue;
+        
+        pairVertex vertex( run, subrun, event , vertices.size() );
+        vertex.AddTrack( tracks[i] );
+        
+        FoundCloseTracks = AlreadySetPosition = false;
+        
+        for ( int j=0 ; j < Ntracks ; j++ ){ // i+1
+            
+            // if (!tracks[j].IsFullyContained) continue;
+            if (tracks[j].IsTrackContainedSoft() && j!=i){
+                
+                // if this is the first time we go over these two tracks
+                // and they are close enough to define a vertex,
+                // we also define the position of their mutual vertex
+                if (!AlreadySetPosition){
+                    
+                    // two close tracks (at a separation distance smaller that max_mu_p_distance)
+                    std::string StartOrEnd = "None";
+                    closest_distance_ij = tracks[i].ClosestDistanceToOtherTrack(tracks[j],&StartOrEnd);
+                    
+                    if ( closest_distance_ij < kMaxInterTrackDistance ){
+                        
+                        vertex.AddTrack( tracks[j] );
+                        FoundCloseTracks = true;
+                        
+                        if (StartOrEnd.compare("Start")==0)     vertex_position = tracks[i].GetStartPos();
+                        else if (StartOrEnd.compare("End")==0)  vertex_position = tracks[i].GetEndPos() ;
+                        else                                    vertex_position = TVector3(-1000,-1000,-1000) ;
+                        
+                        vertex.SetPosition( vertex_position );
+                        AlreadySetPosition = true;
+                    }
+                }
+                
+                // else, namely if we have already clustered a vertex
+                // and positioned it in space,
+                // we only need to check wether the new track (j) is close enough to this vertex
+                // to be also associated with it
+                else {
+                    // Debug(3, Form("cheking track %d distance from vertex %d ",tracks[j].track_id,c_vertex.vertex_id));
+                    if ( tracks[j].DistanceFromPoint(vertex.GetPosition()) < kMaxInterTrackDistance ){
+                        
+                        // SHOWTVector3(c_vertex.position);
+                        // Printf("track %d close enough...",tracks[j].track_id);
+                        // SHOW(tracks[j].DistanceFromPoint(c_vertex.position));
+                        
+                        vertex.AddTrack( tracks[j] );
+                    }
+                }
+            }
+        }
+        
+        
+        // if this is an MC event,
+        // match a GENIE interaction to the vertex
+        if (MCmode){
+            if (FoundCloseTracks) {
+
+                // 1st (and best) method: match the GENIE interaction by the mc event-id
+                // use the mc event-id of the first/second track. This is the mc event-id of the proper GENIE interaction
+                if (vertex.GetTracks().size()>1){
+                    if ( vertex.GetTracks().at(0).GetMCeventID() == vertex.GetTracks().at(1).GetMCeventID() ){
+                        vertex.SetGENIEinfo( genie_interactions.at( vertex.GetTracks().at(0).GetMCeventID() ) );
+                    }
+                }
+                // the problem with this method is that not allways the two tracks came from
+                // the same GENIE interaction
+                // for example, happenings in which one track came from a GENIE int. and the other from cosmic...
+                // so,
+                // 2nd method: look for the closest GENIE interaction in the event, spatially
+                GENIEinteraction closest_genie;
+                bool MatchedGENIEinteraction = false;
+                float closest_genie_interaction_distance = 10000; // [cm]
+                for (auto genie_interaction : genie_interactions){
+                    float genie_distance = (genie_interaction.GetVertexPosition() - vertex.GetPosition()).Mag();
+                    if ( genie_distance < closest_genie_interaction_distance ){
+                        closest_genie_interaction_distance = genie_distance;
+                        closest_genie = genie_interaction;
+                        MatchedGENIEinteraction = true;
+                        break;
+                    }
+                }
+                if (MatchedGENIEinteraction){
+                    vertex.SetClosestGENIE( closest_genie );
+                }
+            }
+        }
+        // plug into vertices list
+        vertices.push_back( vertex );
+    }
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool ub::ErezCCQEAnalyzer::TrackAlreadyInVertices(int ftrack_id){
+    for (auto v:vertices){
+        if ( v.IncludesTrack( ftrack_id ) ) return true;
+    }
+    return false;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
+    for (auto & v:vertices){
+        // after fixing the vertext position, remove far tracks
+        v.RemoveFarTracks( kMaxInterTrackDistance );
+        // now sort the tracks
+        v.SortTracksByPIDA ();
+        v.SortTracksByLength ();
+        // and the relations between the tracks
+        // inter-track distances, delta-theta, delta-phi...
+        v.SetTracksRelations ();
+    }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::FindPairVertices(){
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::TagVertices(){
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
+    
+    vertices_ctr = 0;
+    
+    vertices_file
+    << "run" << "," << "subrun" << "," << "event" << "," << "vertex_id" << ","
+    << "x" << "," << "y" << "," << "z" << ","
+    << "tracks" << ","
+    << endl;
+    
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
+    // July-25, 2017
+    // whatever you add here - must add also in header - ub::ErezCCQEAnalyzer::HeaderVerticesInCSV()
+    for (auto v:vertices){
+        
+        vertices_ctr++;
+        
+        vertices_file
+        << v.GetRun() << "," << v.GetSubrun() << "," << v.GetEvent() << "," << v.GetVertexID() << ","
+        << v.GetPosition().x() << "," << v.GetPosition().y() << "," << v.GetPosition().z() << ",";
+        
+        for ( auto track : v.GetTracks()){
+            vertices_file << track.GetTrackID() << ";" ;
+        }
+        
+        
+        vertices_file << "," << endl;
+        
+    }
+}
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::PrintInformation(){
@@ -552,10 +628,13 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
     SHOW( fTree->GetEntries() );
     SHOW3( run , subrun , event );
     
-    if(!genie_interactions.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_interactions.size() << " genie interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-        for (auto g: genie_interactions) {
-            g.Print();
+    if (MCmode){
+        Printf("this is an MC event, with an MC information");
+        if(!genie_interactions.empty()){
+            cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_interactions.size() << " genie interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+            for (auto g: genie_interactions) {
+                g.Print();
+            }
         }
     }
     
@@ -566,6 +645,24 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
         }
     }
     
+    
+    if(!vertices.empty()){
+        cout << "\033[36m" << "xxxxxxxxxxxxxx\n\n" << vertices.size() << " vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        for (auto v: vertices) {
+            v.Print( );
+        }
+    }
+
+    // time stamp
+    PrintLine();
+    end_ana_time = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end_ana_time - start_ana_time;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end_ana_time);
+    std::cout << "\033[33m"
+    << "finished analysis of this event" << std::ctime(&end_time)
+    << "time elapsed: " << elapsed_seconds.count() << "s"
+    << "\033[31m" << endl;
+
     EndEventBlock();
 }
 
@@ -573,6 +670,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::beginJob(){
+    
     art::ServiceHandle<art::TFileService> tfs;
     fTree = tfs->make<TTree>("eventsTree","analysis tree of events");
     fTree->Branch("run"     ,&run           ,"run/I");
@@ -580,11 +678,18 @@ void ub::ErezCCQEAnalyzer::beginJob(){
     fTree->Branch("event"   ,&event         ,"event/I");
     fTree->Branch("Ntracks" ,&Ntracks       ,"Ntracks/I");
     fTree->Branch("Nhits"   ,&Nhits_stored  ,"Nhits/I");
+    fTree->Branch("Nvertices",&Nvertices    ,"Nvertices/I");
     
     // my objects
     fTree->Branch("tracks"              ,&tracks);
     fTree->Branch("hits"                ,&hits);
     fTree->Branch("genie_interactions"  ,&genie_interactions);
+    fTree->Branch("vertices"            ,&vertices);
+
+    
+    // output csv file
+    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/vertices.csv");
+    HeaderVerticesInCSV();
 }
 
 
@@ -599,11 +704,17 @@ void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::ResetVars(){
+    
+    MCmode = false;
     run = subrun = event = -9999;
-    Ntracks = Nhits = Nhits_stored = 0;
+    Ntracks = Nhits = Nhits_stored = Nvertices = 0 ;
     tracks.clear();
     hits.clear();
     genie_interactions.clear();
+    vertices.clear();
+    
+    // time-stamp
+    start_ana_time = std::chrono::system_clock::now();
 }
 
 

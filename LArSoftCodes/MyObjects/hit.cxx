@@ -5,7 +5,7 @@
 #include <iostream>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-hit::hit(Int_t fplane, Int_t fwire, Int_t fid, Float_t fpeakT, Float_t fcharge):
+hit::hit(Int_t fplane, Int_t fwire, Int_t fid, float fpeakT, float fcharge):
 hit_plane(fplane),
 hit_wire(fwire),
 hit_id(fid),
