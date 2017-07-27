@@ -111,6 +111,16 @@ public:
 
     
     
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
+    // debug
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
+    Int_t debug=0;
+    void Debug (Int_t verobosity_level, std::string text){
+        if ( debug > verobosity_level ) cout << text << endl;
+    }
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
+    
+
     
     
 private:
@@ -435,19 +445,14 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
 void ub::ErezCCQEAnalyzer::ConstructVertices(){
     
     // cluster all tracks at close proximity to vertices
-    cout << "ClusterTracksToVertices();" << endl;
     ClusterTracksToVertices();
     // analyze these vertices: inter-tracks distances, angles...
-    cout << "AnalyzeVertices();" << endl;
     AnalyzeVertices();
     // retain only vertices with pairs of 2-tracks at close proximity
-    cout << "FindPairVertices();" << endl;
     FindPairVertices();
     // if its a MC event, tag the vertex by their MC information
-    cout << "TagVertices();" << endl;
     TagVertices();
     // output to csv file
-    cout << "StreamVerticesToCSV();" << endl;
     StreamVerticesToCSV();
 }
 
@@ -456,6 +461,7 @@ void ub::ErezCCQEAnalyzer::ConstructVertices(){
 void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
     // July-25, 2017
     // cluster all tracks at close proximity to vertices
+    // and fix the position of each vertex
     bool    FoundCloseTracks , AlreadySetPosition;
     float   closest_distance_ij;
     TVector3 vertex_position;
@@ -465,15 +471,15 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
         // if (!tracks[i].IsFullyContained) continue;
         if (!tracks[i].IsTrackContainedSoft()) continue;
         
-        // skip if track was clustered to a vertex by in one of the previous loop steps
-        if ( TrackAlreadyInVertices( tracks[i].GetTrackID() )) continue;
+        //        // skip if track was clustered to a vertex by in one of the previous loop steps
+        //        if ( TrackAlreadyInVertices( tracks[i].GetTrackID() )) continue;
         
         pairVertex vertex( run, subrun, event , vertices.size() );
         vertex.AddTrack( tracks[i] );
         
         FoundCloseTracks = AlreadySetPosition = false;
         
-        for ( int j=0 ; j < Ntracks ; j++ ){ // i+1?
+        for ( int j=i+1 ; j < Ntracks ; j++ ){ // i+1?
             
             // if (!tracks[j].IsFullyContained) continue;
             if (tracks[j].IsTrackContainedSoft() && j!=i){
@@ -519,19 +525,30 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
             }
         }
         
-        
-        // if this is an MC event,
-        // match a GENIE interaction to the vertex
-        if (MCmode){
-            if (FoundCloseTracks) {
+        Debug( 4 , "if (FoundCloseTracks) {");
+        if (FoundCloseTracks) {
+            
+            // if this is an MC event,
+            // match a GENIE interaction to the vertex
+            Debug( 5 , "if (MCmode)");
+            if (MCmode){
 
                 // 1st (and best) method: match the GENIE interaction by the mc event-id
                 // use the mc event-id of the first/second track. This is the mc event-id of the proper GENIE interaction
+                Debug( 6 , "(vertex.GetTracks().size()>1){");
                 if (vertex.GetTracks().size()>1){
-                    if ( vertex.GetTracks().at(0).GetMCeventID() == vertex.GetTracks().at(1).GetMCeventID() ){
-                        vertex.SetGENIEinfo( genie_interactions.at( vertex.GetTracks().at(0).GetMCeventID() ) );
+                    SHOW2(vertex.GetTracks().at(0).GetMCeventID() , vertex.GetTracks().at(1).GetMCeventID());
+                    SHOW(genie_interactions.size());
+                    int mc_id_t0 = vertex.GetTracks().at(0).GetMCeventID();
+                    int mc_id_t1 = vertex.GetTracks().at(1).GetMCeventID();
+                    
+                    if ( mc_id_t0 >= 0
+                        &&
+                        mc_id_t0 == mc_id_t1 ){
+                        vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );
                     }
                 }
+                Debug( 6 , "} (vertex.GetTracks().size()>1)");
                 // the problem with this method is that not allways the two tracks came from
                 // the same GENIE interaction
                 // for example, happenings in which one track came from a GENIE int. and the other from cosmic...
@@ -540,6 +557,7 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                 GENIEinteraction closest_genie;
                 bool MatchedGENIEinteraction = false;
                 float closest_genie_interaction_distance = 10000; // [cm]
+                Printf("for (auto genie_interaction : genie_interactions){");
                 for (auto genie_interaction : genie_interactions){
                     float genie_distance = (genie_interaction.GetVertexPosition() - vertex.GetPosition()).Mag();
                     if ( genie_distance < closest_genie_interaction_distance ){
@@ -549,13 +567,16 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                         break;
                     }
                 }
+                Debug( 6 , "} for (auto genie_interaction : genie_interactions)");
                 if (MatchedGENIEinteraction){
                     vertex.SetClosestGENIE( closest_genie );
                 }
             }
+            Debug( 5 , "} if (MCmode)");
+            // plug into vertices list
+            vertices.push_back( vertex );
         }
-        // plug into vertices list
-        vertices.push_back( vertex );
+        Debug( 4 , "} if (FoundCloseTracks)");
     }
 }
 
@@ -574,17 +595,21 @@ void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
     if (vertices.size()>0){
         for (auto & v:vertices){
             // after fixing the vertext position, remove far tracks
-            cout << "v.RemoveFarTracks( kMaxInterTrackDistance );" << endl;
-            v.RemoveFarTracks( kMaxInterTrackDistance );
+            Debug( 4 , "v.RemoveFarTracks( kMaxInterTrackDistance );");
             if (v.GetTracks().size()<2) continue;
+            
+            v.RemoveFarTracks( kMaxInterTrackDistance );
+            
             // now sort the tracks
-            cout << "SortTracksByPIDA;" << endl;
+            Debug( 4 ,"SortTracksByPIDA;" );
             v.SortTracksByPIDA ();
-            cout << "SortTracksByLength;" << endl;
+            
+            Debug( 4 , "SortTracksByLength;" );
             v.SortTracksByLength ();
+            
             // and the relations between the tracks
             // inter-track distances, delta-theta, delta-phi...
-            cout << "SetTracksRelations;" << endl;
+            Debug( 4 , "SetTracksRelations;" );
             v.SetTracksRelations ();
         }
     }
@@ -647,7 +672,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
             for (auto g: genie_interactions) {
                 g.Print();
             }
-        }
+        } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     }
     
     if(!tracks.empty()){
@@ -655,15 +680,16 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
         for (auto t: tracks) {
             t.Print( true );
         }
-    }
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     
     
     if(!vertices.empty()){
         cout << "\033[36m" << "xxxxxxxxxxxxxx\n\n" << vertices.size() << " vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
         for (auto v: vertices) {
-            v.Print( );
+            v.Print( (debug>2) ? true : false       // do print pandoraNu tracks
+                    );
         }
-    }
+    } else {cout << "\033[36m" << "xxxxxxxxxxxxxx\n" << "no vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
 
     // time stamp
     PrintLine();
@@ -711,6 +737,7 @@ void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
     fTrackModuleLabel = p.get< std::string >("TrackModuleLabel");
     fHitsModuleLabel  = p.get< std::string >("HitsModuleLabel");
     fGenieGenModuleLabel =  p.get< std::string >("GenieGenModuleLabel");
+    debug = p.get< int >("VerbosityLevel");
 }
 
 

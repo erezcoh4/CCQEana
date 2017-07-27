@@ -53,7 +53,7 @@ public:
     void                                        AddTrack (PandoraNuTrack ftrack);
     void                                      AddTrackID (Int_t ftrack_id)               {track_id.push_back(ftrack_id);};
     
-    void                                          Print () const;
+    void                                          Print (bool DoPrintTracks=false) const;
     bool                                  IncludesTrack (Int_t ftrack_id);
     bool                                RemoveFarTracks (float max_mu_p_distance );
     

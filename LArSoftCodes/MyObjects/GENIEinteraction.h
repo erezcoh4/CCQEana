@@ -103,12 +103,19 @@ public:
     
     
     // GETters
+    bool           GetVertexContained () const {return IsVertexContained;};
+    
     Int_t                     GetCCNC () const {return ccnc;};
     Int_t                     GetMode () const {return mode;};
-    bool           GetVertexContained () const {return IsVertexContained;};
     Int_t               GetNprimaries () const {return Nprimaries;};
-    TVector3        GetVertexPosition () const {return vertex_position;};
     Int_t                GetPrimaries () const {return Nprimaries;};
+    Int_t                 GetNprotons () const {return protons.size();};
+
+    Float_t              Get_theta_pq () const {return theta_pq;};
+    
+    TVector3        GetVertexPosition () const {return vertex_position;};
+    TLorentzVector  GetLeptonMomentum () const {return muon;}; // if the neutrino is v(e) this will be the e!
+    std::vector<TLorentzVector>  GetProtonsMomenta () const {return protons;}; // when taking this, check if the vector is not empty...
     
     
     

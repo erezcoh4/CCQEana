@@ -401,17 +401,16 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
         for (auto proton: protons) {
             SHOWTLorentzVector( proton );
         }
-        cout << "\033[30m";
+        cout << "\033[31m";
     }
     if(!neutrons.empty()){
         cout << "\033[35m" << neutrons.size() << " neutrons:" << endl;
         for (auto neutron: neutrons) {
             SHOWTLorentzVector( neutron );
         }
-        cout << "\033[30m";
+        cout << "\033[31m";
     }
-    SHOW(Xb);
-    SHOW(Q2);
+    SHOW2( Xb , Q2 );
     SHOW3( theta_pq , p_over_q , Mmiss );
     
     

@@ -74,8 +74,10 @@ bool pairVertex::IncludesTrack (Int_t ftrack_id){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool pairVertex::RemoveFarTracks(float max_mu_p_distance ){
-    // narrow down the set of tracks associated to the vertices by looking only
-    // at those tracks that are close enough to the vertices
+    
+    // after we fixed the vertex position,
+    // narrow down the set of tracks associated to the vertex by looking only
+    // at those tracks that are close enough to the vertex
     std::vector<Int_t>          CloseEnoughTracksID;
     std::vector<PandoraNuTrack> CloseEnoughTracks;
     
@@ -756,8 +758,9 @@ void pairVertex::SetTracksRelations(){
 //}
 //
 //
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void pairVertex::Print() const {
+void pairVertex::Print(bool DoPrintTracks) const {
     
     cout << "\033[35m" << "~~~~~~~~~~~~~~\n vertex " << vertex_id << "\n~~~~~~~~~~~~~~"<< "\033[0m" << endl;
     if (Is1mu1p) Printf("1mu-1p vertex!");
@@ -770,50 +773,52 @@ void pairVertex::Print() const {
     
     // tracks
     if (!tracks.empty()){
-        cout << "\033[33m" << tracks.size() << " tracks in vertex " << "\033[30m" << endl;
-        for (auto t: tracks) {
-            if (t.GetTrackID()!=-100)   t.Print( true );
-            else                    Printf("unidentified/non-reconstructed track. continuing...");
+        
+        if (DoPrintTracks) {
+            cout << "\033[33m" << tracks.size() << " tracks in vertex " << "\033[31m" << endl;
+            for (auto t: tracks) {
+                if (t.GetTrackID()!=-100)   t.Print( true );
+                else                    Printf("unidentified/non-reconstructed track. continuing...");
+            }
         }
-
-//        // inter-tracks distances
-//        cout << "\033[33m" << tracks.size()*tracks.size() << " inter-tracks distances " << "\033[30m" << endl;
-//        for(auto vec : tracks_distances) {
-//            for(auto x : vec) std::cout << setprecision(2) << x << "\t";
-//            std::cout << std::endl;
-//        }
+        
+        // inter-tracks distances
+        cout << "\033[33m" << tracks.size()*tracks.size() << " inter-tracks distances " << "\033[31m" << endl;
+        for(auto vec : tracks_distances) {
+            for(auto x : vec) std::cout << setprecision(2) << x << "\t";
+            std::cout << std::endl;
+        }
     }
     else {
-        cout << "\033[33m" << "no reconstructed tracks in vertex " << "\033[30m" << endl;
+        cout << "\033[33m" << "no reconstructed tracks in vertex " << "\033[31m" << endl;
     }
-    //    cout << "topology: " << TopologyString << endl;
+    
     cout << "truth topology: " << TruthTopologyString << endl;
     SHOW( IsGENIECC_1p_200MeVc_0pi );
     
-//    // GENIE interaction features
-//    if (Is1mu1p){
-//        genie_interaction.Print();
-//    }
+    // GENIE interaction features
+    if (Is1mu1p){
+        genie_interaction.Print();
+    }
     
-//    if (IsGENIECC_1p_200MeVc_0pi){
-//        cout << "This vertex is a GENIE true CC_1p_200MeVc_0pi" << endl;
+    if (IsGENIECC_1p_200MeVc_0pi){
+        cout << "This vertex is a GENIE true CC_1p_200MeVc_0pi" << endl;
 //        SHOW3( muonTrackReconstructed, protonTrackReconstructed, IsVertexReconstructed );
-//        
-//        // muon
-//        SHOWTLorentzVector( genie_interaction.muon );
+        
+        // muon
+        SHOWTLorentzVector( genie_interaction.GetLeptonMomentum() );
 //        if (!tracks.empty()) SHOWTLorentzVector( reco_Pmu );
-//        
-//        // proton
-//        if (genie_interaction.protons.size()>0) SHOWTLorentzVector( genie_interaction.protons[0] );
+        
+        // proton
+        if (genie_interaction.GetNprotons()) SHOWTLorentzVector( genie_interaction.GetProtonsMomenta().at(0) );
 //        if (!tracks.empty()) SHOWTLorentzVector( reco_Pp );
-//        
-//        // theta (p,q)
-//        SHOW(genie_interaction.theta_pq);
+        
+        // theta (p,q)
+        SHOW(genie_interaction.Get_theta_pq());
 //        if (!tracks.empty()) SHOW(reco_theta_pq);
-//    }
-//
-//    if (!tracks.empty()) for (int plane = 0 ; plane<3 ; plane ++ ) PrintBox(roi[plane]);
-//    SHOW3(AllHitsInROI_u.size(),AllHitsInROI_v.size(),AllHitsInROI_y.size());
+    }
+
+//    if (!tracks.empty()) for (int plane = 0 ; plane<3 ; plane ++ ) {printf("ROI in plane %d: ",plane); roi[plane].Print();}
     
 }
 
