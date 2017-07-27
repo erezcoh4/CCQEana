@@ -153,6 +153,44 @@ Float_t PandoraNuTrack::ClosestDistanceToOtherTrack( PandoraNuTrack other_track,
     return MinDistanceToOtherTrack;
 }
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void PandoraNuTrack::FlipTrack(){
+    
+    // flip start and end positions
+    TVector3 tmp_pos = start_pos;
+    start_pos   = end_pos;
+    end_pos     = tmp_pos;
+    
+    // change angles
+    theta       = 3.1416 - theta;
+    phi         = (phi > 0 ? phi-3.1416 : phi+3.1416);
+    
+    //    Float_t tmp_dqdx = start_dqdx;
+    //    start_dqdx  = end_dqdx;
+    //    end_dqdx    = tmp_dqdx;
+    
+    //    for (int plane = 0 ; plane < 3 ; plane++ ){
+    //
+    //        Float_t tmp1 = dqdx_around_start[plane];
+    //        dqdx_around_start[plane] = dqdx_around_end[plane];
+    //        dqdx_around_end[plane] = tmp1;
+    //
+    //        Float_t tmp2 = dqdx_around_start_track_associated[plane];
+    //        dqdx_around_start_track_associated[plane] = dqdx_around_end_track_associated[plane];
+    //        dqdx_around_end_track_associated[plane] = tmp2;
+    //    }
+    //
+    //    Float_t     tmp3 = dqdx_around_start_total;
+    //    dqdx_around_start_total = dqdx_around_end_total;
+    //    dqdx_around_end_total = tmp3;
+    //
+    //    Float_t     tmp4 = dqdx_around_start_track_associated_total;
+    //    dqdx_around_start_track_associated_total = dqdx_around_end_track_associated_total;
+    //    dqdx_around_end_track_associated_total = tmp4;
+}
+
+
+
 
 
 
@@ -194,48 +232,6 @@ void PandoraNuTrack::SetCalorimetry_Y ( std::vector <Float_t> fresidual_range_Y,
     Edep_Y = fEdep_Y;
     dqdx_Y = fdqdx_Y;
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::FlipTrack(int debug){
-    
-    if(debug>0) Printf("flipping track %i",track_id);
-    
-    // flip start and end positions
-    TVector3 tmp_pos = start_pos;
-    start_pos   = end_pos;
-    end_pos     = tmp_pos;
-    
-    // change angles
-    theta       = 3.1416 - theta;
-    phi         = (phi > 0 ? phi-3.1416 : phi+3.1416);
-    
-    Float_t tmp_dqdx = start_dqdx;
-    start_dqdx  = end_dqdx;
-    end_dqdx    = tmp_dqdx;
-    
-    //    for (int plane = 0 ; plane < 3 ; plane++ ){
-    //
-    //        Float_t tmp1 = dqdx_around_start[plane];
-    //        dqdx_around_start[plane] = dqdx_around_end[plane];
-    //        dqdx_around_end[plane] = tmp1;
-    //
-    //        Float_t tmp2 = dqdx_around_start_track_associated[plane];
-    //        dqdx_around_start_track_associated[plane] = dqdx_around_end_track_associated[plane];
-    //        dqdx_around_end_track_associated[plane] = tmp2;
-    //    }
-    //
-    //    Float_t     tmp3 = dqdx_around_start_total;
-    //    dqdx_around_start_total = dqdx_around_end_total;
-    //    dqdx_around_end_total = tmp3;
-    //
-    //    Float_t     tmp4 = dqdx_around_start_track_associated_total;
-    //    dqdx_around_start_track_associated_total = dqdx_around_end_track_associated_total;
-    //    dqdx_around_end_track_associated_total = tmp4;
-
-    is_flipped  = 1;
-}
-
-
 
 
 

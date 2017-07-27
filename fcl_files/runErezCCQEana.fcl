@@ -1,0 +1,45 @@
+#include "services_microboone.fcl"
+
+process_name: RunErezCCQEana 
+
+services:
+{
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/EventsFile.root" closeFileFast: false}
+  TimeTracker:       {}
+  RandomNumberGenerator: {} 
+  message:      @local::standard_info
+                @table::microboone_services 
+}
+
+source:
+{
+  module_type: RootInput
+  firstEvent : 1
+  maxEvents:   50
+}
+
+
+outputs:{}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    EventsAnalyzer: 
+    {
+      module_type:      	"ErezCCQEAnalyzer" 
+      TrackModuleLabel: 	"pandoraNu"
+      HitsModuleLabel:          "pandoraCosmicHitRemoval"
+      MCTruthModuleLabel:	"generator"
+      GenieGenModuleLabel:	"generator"
+      VerbosityLevel:		7
+    }
+  }
+  analysis: [ EventsAnalyzer ] #Directory for histograms
+  end_paths: [ analysis ]
+}
+
+services.DetectorClocksService.InheritClockConfig:                      false
+services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos

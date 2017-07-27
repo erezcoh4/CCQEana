@@ -103,18 +103,21 @@ public:
     
     
     // GETters
-    bool           GetVertexContained () const {return IsVertexContained;};
+    bool                        GetVertexContained () const {return IsVertexContained;};
+    bool                              AskIfCC1p0pi () const {return IsCC_1p_200MeVc_0pi;};
     
-    Int_t                     GetCCNC () const {return ccnc;};
-    Int_t                     GetMode () const {return mode;};
-    Int_t               GetNprimaries () const {return Nprimaries;};
-    Int_t                GetPrimaries () const {return Nprimaries;};
-    Int_t                 GetNprotons () const {return protons.size();};
+    Int_t                                  GetCCNC () const {return ccnc;};
+    Int_t                                  GetMode () const {return mode;};
+    Int_t                            GetNprimaries () const {return Nprimaries;};
+    Int_t                             GetPrimaries () const {return Nprimaries;};
+    Int_t                              GetNprotons () const {return protons.size();};
 
-    Float_t              Get_theta_pq () const {return theta_pq;};
+    Float_t                           Get_theta_pq () const {return theta_pq;};
     
-    TVector3        GetVertexPosition () const {return vertex_position;};
-    TLorentzVector  GetLeptonMomentum () const {return muon;}; // if the neutrino is v(e) this will be the e!
+    TVector3                     GetVertexPosition () const {return vertex_position;};
+    TLorentzVector               GetLeptonMomentum () const {return muon;}; // if the neutrino is v(e) this will be the e!
+    TLorentzVector             GetMomentumTransfer () const {return q;}; // if the neutrino is v(e) this will be the e!
+    
     std::vector<TLorentzVector>  GetProtonsMomenta () const {return protons;}; // when taking this, check if the vector is not empty...
     
     

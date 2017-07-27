@@ -141,11 +141,13 @@ public:
     
     
     // functionallity
+    void            FlipTrack ();
     void           CreateROIs ();
-    void                Print ( bool DoPrintPandoraNuFeatures = true ) const;
+    void                Print (bool DoPrintPandoraNuFeatures = true ) const;
 
     
     // operators
+    bool              AskIfCC1p0pi () const {return IsGENIECC_1p_200MeVc_0pi;};
     bool IsTrackContainedSoft (float max_FV_y = 115,
                               float min_FV_z = 5, float max_FV_z = 1045,
                               float min_FV_x = 3, float max_FV_x = 257)  const{
@@ -161,7 +163,13 @@ public:
     Float_t           DistanceFromPoint ( TVector3 position , std::string * StartOrEnd=nullptr );
     Float_t ClosestDistanceToOtherTrack ( PandoraNuTrack other_track , std::string * StartOrEnd=nullptr );
     
-    
+    inline bool operator==(const PandoraNuTrack & t) {
+        return  (run==t.GetRun() && subrun==t.GetSubrun() && event==t.GetEvent() && track_id==t.GetTrackID());
+    }
+    inline bool operator!=(const PandoraNuTrack & t) {
+        return  (run!=t.GetRun() || subrun!=t.GetSubrun() || event!=t.GetEvent() || track_id!=t.GetTrackID());
+    }
+
     
 private:
     
@@ -208,7 +216,6 @@ private:
     
     
     /*
-     void        FlipTrack (int debug=0);
      void      Calorimetry ();
      void     Straightness ();
      void      SetMomentum (Float_t,Float_t);

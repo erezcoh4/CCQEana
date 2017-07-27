@@ -52,7 +52,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-
+#include <algorithm>
 
 // my pandoraNu track...
 #include "uboone/ErezCCQEana/MyObjects/PandoraNuTrack.h"
@@ -108,7 +108,6 @@ public:
     bool    TrackAlreadyInVertices (int ftrack_id);
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
-
     
     
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
@@ -451,7 +450,7 @@ void ub::ErezCCQEAnalyzer::ConstructVertices(){
     // retain only vertices with pairs of 2-tracks at close proximity
     FindPairVertices();
     // if its a MC event, tag the vertex by their MC information
-    TagVertices();
+    if (MCmode) TagVertices();
     // output to csv file
     StreamVerticesToCSV();
 }
@@ -537,8 +536,6 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                 // use the mc event-id of the first/second track. This is the mc event-id of the proper GENIE interaction
                 Debug( 6 , "(vertex.GetTracks().size()>1){");
                 if (vertex.GetTracks().size()>1){
-                    SHOW2(vertex.GetTracks().at(0).GetMCeventID() , vertex.GetTracks().at(1).GetMCeventID());
-                    SHOW(genie_interactions.size());
                     int mc_id_t0 = vertex.GetTracks().at(0).GetMCeventID();
                     int mc_id_t1 = vertex.GetTracks().at(1).GetMCeventID();
                     
@@ -557,7 +554,6 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                 GENIEinteraction closest_genie;
                 bool MatchedGENIEinteraction = false;
                 float closest_genie_interaction_distance = 10000; // [cm]
-                Printf("for (auto genie_interaction : genie_interactions){");
                 for (auto genie_interaction : genie_interactions){
                     float genie_distance = (genie_interaction.GetVertexPosition() - vertex.GetPosition()).Mag();
                     if ( genie_distance < closest_genie_interaction_distance ){
@@ -617,10 +613,98 @@ void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::FindPairVertices(){
+
+    // for momentum reconstuction from range / otherwise
+    trkf::TrackMomentumCalculator trkm;
+
+    // this funciton also kiils all vertices which are not up to standard.
+    // to this end, we create a temporary vertices array and clear all vertices
+    std::vector<pairVertex> tmp_vertices = vertices;
+    vertices.clear();
+    
+    Debug(3 , "ub::ErezCCQEAnalyzer::FindPairVertices()");
+    for (auto & v:tmp_vertices) {
+        // vertices with only two tracks at close proximity and nothing else
+        if (
+            // we are looking for clusters of only two tracks that are fully contained
+            v.GetNtracks() == 2
+            // if there is a semi-contained track, with start/end point too close to the vertex, we don't want the vertex...
+            &&  v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size() == 0
+            ){
+            
+            // assign muon and proton tracks by PID-A
+            auto AssignedMuonTrack = v.GetSmallPIDATrack();
+            auto PmuFromRange = trkm.GetTrackMomentum( AssignedMuonTrack.GetLength()  , 13  );
+            v.AssignMuonTrack( AssignedMuonTrack  );
+            
+            
+            auto AssignedProtonTrack = v.GetLargePIDATrack();
+            auto PpFromRange = trkm.GetTrackMomentum( AssignedProtonTrack.GetLength() , 2212);
+            v.AssignProtonTrack( AssignedProtonTrack );
+            
+            v.FixTracksDirections ();
+            //    v.SetEDepAroundVertex (); // for later, using the hits-tracks association...
+            v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
+            
+            vertices.push_back( v );
+        }
+        // if the vertex is not such, kill it
+        else {
+            Debug( 0 , Form("erasing vertex %d, since its not up to standards: N(tracks)=%d, N(close semi-contained tracks):%d"
+                            , v.GetVertexID(), v.GetNtracks(), (int)(v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size()) ) );
+        }
+    }
 }
+
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::TagVertices(){
+    
+    // tag vertices
+    // ------------
+    // µp           : event with a muon and a proton detected, and nothing else at close proximity
+    // CC 1p 0π     : a subset of µp, in which only one proton with momentum > 200 MeV/c was produced, and no pions
+    // non µp       : other pairs
+    // cosmic       : pairs from cosmic (at least one of the tracks is cosmic, i.e. without MC information)
+    //
+    // Note that this functionallity is only relevant for MC events
+    //
+    for (auto & v:vertices){
+        
+        PandoraNuTrack t1 = v.GetAssignedMuonTrack();
+        PandoraNuTrack t2 = v.GetAssignedProtonTrack();
+        
+        if ( (t1.GetMCpdgCode() * t2.GetMCpdgCode())==(13*2212) ){
+            
+            v.SetAs1mu1p();
+//            v.MatchGenieInteraction ( genie_interactions , t1 );
+            v.SetTrueMuonProton( t1 , t2 );
+            
+            if (debug>0) {
+                SHOW((t1.GetTruthStartPos() - t2.GetTruthStartPos()).Mag());
+                SHOW((v.GetClosestGENIE().GetVertexPosition() - v.GetPosition()).Mag());
+                SHOW( v.GetClosestGENIE().AskIfCC1p0pi() );
+            }
+            // tag the vertex as true CC1p0π if it has two MC tracks, µ and p, which are
+            // (1) close enough,
+            // (2) come from a (close-enough) CC1p0π genie interaction
+            if (
+                (t1.GetTruthStartPos() - t2.GetTruthStartPos()).Mag() < 1.                  // distance between the true position of the two tracks is small
+                && (v.GetClosestGENIE().GetVertexPosition() - v.GetPosition()).Mag() < 10   // distance from the closest genie vertex
+                && (v.GetClosestGENIE().AskIfCC1p0pi()==true)                               // the closest GENIE is a CC1p0π
+//                && (t1.AskIfCC1p0pi() && t2.AskIfCC1p0pi())
+                ){
+                v.SetAsCC1p0pi();
+            }
+        }
+        else if ( t1.GetMCpdgCode()!=-9999 && t2.GetMCpdgCode()!=-9999 ){
+            v.SetAsNon1mu1p();
+        }
+        else {
+            v.SetAsCosmic();
+        }
+    }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -662,7 +746,7 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::PrintInformation(){
     
-    SHOW( fTree->GetEntries() );
+    Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
     if (MCmode){
@@ -672,7 +756,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
             for (auto g: genie_interactions) {
                 g.Print();
             }
-        } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+        } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     }
     
     if(!tracks.empty()){
@@ -680,7 +764,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
         for (auto t: tracks) {
             t.Print( true );
         }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     
     
     if(!vertices.empty()){
@@ -689,7 +773,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
             v.Print( (debug>2) ? true : false       // do print pandoraNu tracks
                     );
         }
-    } else {cout << "\033[36m" << "xxxxxxxxxxxxxx\n" << "no vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    } else {cout << "\033[36m" << "xxxxxxxxxxxxxx\n" << "no vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
 
     // time stamp
     PrintLine();
@@ -701,6 +785,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
     << "time elapsed: " << elapsed_seconds.count() << "s"
     << "\033[31m" << endl;
 
+    cout << "wrote " << vertices_ctr << " vertices to output file " << endl;
     EndEventBlock();
 }
 
