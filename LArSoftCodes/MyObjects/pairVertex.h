@@ -87,16 +87,50 @@ public:
     
 
     // GETters
+    
+    bool                        GetIs1mu1p () const {return Is1mu1p;};
+    bool       GetIsGENIECC_1p_200MeVc_0pi () const {return IsGENIECC_1p_200MeVc_0pi;};
+    bool                     GetIsNon1mu1p () const {return IsNon1mu1p;};
+    bool                       GetIsCosmic () const {return IsCosmic;};
+    bool              GetIsVertexContained () const {return IsVertexContained;};
+    bool       GetIs_mu_TrackReconstructed () const {return Is_mu_TrackReconstructed;};
+    bool        GetIs_p_TrackReconstructed () const {return Is_p_TrackReconstructed;};
+    bool          GetIsVertexReconstructed () const {return IsVertexReconstructed;};
+
+    
     Int_t                           GetRun () const {return run;};
     Int_t                        GetSubrun () const {return subrun;};
     Int_t                         GetEvent () const {return event;};
     Int_t                      GetVertexID () const {return vertex_id;};
     Int_t                       GetNtracks () const {return (Int_t)tracks.size();};
+ 
+    
+    float           GetAngleBetween2tracks () const; // return the angle between the muon and proton candidates, in degrees (!)
+    float                        GetRecoEv () const {return reco_Pnu.E();};
+    float                        GetRecoQ2 () const {return reco_Q2;};
+    float                        GetRecoXb () const {return reco_Xb;};
+    float                         GetRecoY () const {return reco_y;};
+    float                        GetRecoW2 () const {return reco_W2;};
+    float                        GetRecoPt () const {return (IsVertexReconstructed) ? (reco_Pmu + reco_Pp).Pt() : -1;};
+    float                 GetReco_theta_pq () const {return reco_theta_pq;};
+
+    std::vector<float>    Get_delta_phi_ij () const {return delta_phi_ij;};
+    std::vector<float>    Get_distances_ij () const {return distances_ij;};
+    std::vector<float>  Get_delta_theta_ij () const {return delta_theta_ij;};
+
+    
     
     TVector3                   GetPosition () const {return position;};
     
-    PandoraNuTrack       GetSmallPIDATrack () const {return SmallPIDATrack;};
-    PandoraNuTrack       GetLargePIDATrack () const {return LargePIDATrack;};
+    TLorentzVector              GetRecoPnu () const {return reco_Pnu;};
+    TLorentzVector              GetRecoPmu () const {return reco_Pmu;};
+    TLorentzVector               GetRecoPp () const {return ((IsVertexReconstructed) ? (reco_Pp) : TLorentzVector() );};
+    
+    
+    PandoraNuTrack        GetShortestTrack () const {return ShortestTrack;};
+    PandoraNuTrack         GetLongestTrack () const {return LongestTrack;};
+    PandoraNuTrack       GetSmallPIDaTrack () const {return SmallPIDaTrack;};
+    PandoraNuTrack       GetLargePIDaTrack () const {return LargePIDaTrack;};
     PandoraNuTrack    GetAssignedMuonTrack () const {return AssignedMuonTrack;};
     PandoraNuTrack  GetAssignedProtonTrack () const {return AssignedProtonTrack;};
     
@@ -143,7 +177,7 @@ private:
     // variables
     TString             TopologyString="" , TruthTopologyString="unknown truth topology";
     
-    bool                Is1mu1p=false,    IsGENIECC_1p_200MeVc_0pi=false,   Non1mu1p=false,   IsCosmic=false;
+    bool                Is1mu1p=false,    IsGENIECC_1p_200MeVc_0pi=false,   IsNon1mu1p=false,   IsCosmic=false;
     bool                IsVertexContained=false, Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false, IsVertexReconstructed=false;
 
     Int_t               run=-1 , subrun=-1 , event=-1, vertex_id=-1;
@@ -158,7 +192,7 @@ private:
     
     // reconstructed features
     // calorimentric reconstruction:
-    // Ev = Tp + Eµ - Sn - T(A-1)
+    // Ev = Eµ + Tp + Sn + T(A-1)
     float               reco_mu_p_distance=-1;
     float               reco_BeamE=-1,   reco_theta_pq=-1, reco_Pp_3momentum=-1, reco_Pmu_3momentum=-1;
     float               reco_p_over_q=-1, reco_Q2=-1;
@@ -177,8 +211,9 @@ private:
 //    TLorentzVector      reconstructed_nu, reconstructed_muon, reconstructed_q ;
     
     // Tp + Eµ
-    TLorentzVector      reco_Pnu,  reco_Pp,   reco_Pmu,  reco_q;
-    TLorentzVector      reco_n_miss;
+    TLorentzVector      reco_Pnu=TLorentzVector(-1,-1,-1,-1),  reco_Pp=TLorentzVector(-1,-1,-1,-1);
+    TLorentzVector      reco_Pmu=TLorentzVector(-1,-1,-1,-1),  reco_q=TLorentzVector(-1,-1,-1,-1);
+    TLorentzVector      reco_n_miss=TLorentzVector(-1,-1,-1,-1);
 
 //    TLorentzVector      reco_Pnu_fromE, reco_q_fromE, reco_n_miss_fromE;
 //
@@ -202,7 +237,7 @@ private:
 //
     PandoraNuTrack      muonTrueTrack,  protonTrueTrack;
     PandoraNuTrack      ShortestTrack,  LongestTrack;
-    PandoraNuTrack      LargePIDATrack, SmallPIDATrack;
+    PandoraNuTrack      LargePIDaTrack, SmallPIDaTrack;
     PandoraNuTrack      AssignedMuonTrack, AssignedProtonTrack;
     
     GENIEinteraction    genie_interaction=GENIEinteraction();

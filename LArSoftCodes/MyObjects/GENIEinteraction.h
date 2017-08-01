@@ -106,17 +106,26 @@ public:
     bool                        GetVertexContained () const {return IsVertexContained;};
     bool                              AskIfCC1p0pi () const {return IsCC_1p_200MeVc_0pi;};
     
+    Int_t                             GetMCeventID () const {return mcevent_id;};
     Int_t                                  GetCCNC () const {return ccnc;};
     Int_t                                  GetMode () const {return mode;};
     Int_t                            GetNprimaries () const {return Nprimaries;};
     Int_t                             GetPrimaries () const {return Nprimaries;};
     Int_t                              GetNprotons () const {return protons.size();};
 
+    Float_t                                  GetPt () const {return (protons.size()) ? (muon+protons.at(0)).Pt() : -1;};
     Float_t                           Get_theta_pq () const {return theta_pq;};
-    
+    Float_t                                  GetEv () const {return nu.E();};
+    Float_t                                  GetQ2 () const {return Q2;};
+    Float_t                                  GetXb () const {return Xb;};
+    Float_t                                   GetY () const {return y;};
+    Float_t                                  GetW2 () const {return W*W;};
+
     TVector3                     GetVertexPosition () const {return vertex_position;};
     TLorentzVector               GetLeptonMomentum () const {return muon;}; // if the neutrino is v(e) this will be the e!
     TLorentzVector             GetMomentumTransfer () const {return q;}; // if the neutrino is v(e) this will be the e!
+    TLorentzVector                          GetPmu () const {return GetLeptonMomentum();};
+    TLorentzVector                           GetPp () const {return ((protons.size()>0) ? protons.at(0) : TLorentzVector());};
     
     std::vector<TLorentzVector>  GetProtonsMomenta () const {return protons;}; // when taking this, check if the vector is not empty...
     
@@ -128,8 +137,8 @@ private:
     // booleans on the genie interaction
     bool                    IsVertexContained=false;
     bool                    IsCC_1p_200MeVc_0pi=false; // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions
-    bool                    muonTrackReconstructed=false, protonTrackReconstructed=false;
-    
+    bool                    Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false, IsVertexReconstructed=false;
+
     // Int_t
     Int_t                   nuPDG=-9999;
     Int_t                   run=-9999, subrun=-9999, event=-9999, ccnc=-9999, mode=-9999, mcevent_id=-9999;
@@ -153,7 +162,7 @@ private:
     
     // TLorentzVector
     TLorentzVector          momentum=TLorentzVector(), Plead=TLorentzVector() ;
-    TLorentzVector          nu=TLorentzVector()      , muon=TLorentzVector()  , q=TLorentzVector() ;
+    TLorentzVector          nu=TLorentzVector(-1,-1,-1,-1), muon=TLorentzVector()  , q=TLorentzVector() ;
     TLorentzVector          n_miss=TLorentzVector()  , Pcm=TLorentzVector()   , Prec=TLorentzVector();
     
     // std::vector-s
@@ -178,7 +187,6 @@ private:
     // PandoraNuTrack
     PandoraNuTrack              muonTrack=PandoraNuTrack(), protonTrack=PandoraNuTrack();
     std::vector<PandoraNuTrack> tracks; // pandoraNu tracks that are associated with the genie interacion
-    std::vector<PandoraNuTrack> protonTracks;
 
 };
 #endif

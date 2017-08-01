@@ -88,7 +88,7 @@ public:
 //    void          SetTruthEng (Float_t f)                   {truth_Eng = f;};
 //    void            SetTruthP (Float_t f)                   {truth_P = f;};
 //    void         SetTruthMass (Float_t f)                   {truth_Mass = f;};
-    void       SetTruthLength (Float_t f)                   {truth_length = f;};
+    void       SetTruthLength ()                            {truth_length = (truth_start_pos-truth_end_pos).Mag();};
     void        SetTruthTheta (Float_t f)                   {truth_theta = f;};
     void          SetTruthPhi (Float_t f)                   {truth_phi = f;};
 

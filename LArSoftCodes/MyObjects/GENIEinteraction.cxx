@@ -131,131 +131,6 @@ void GENIEinteraction::AddTrack (PandoraNuTrack ftrack){
     tracks.push_back(ftrack);
 }
 
-
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//bool GENIEinteraction::AddPrimary ( // GENIE information is for outside of the nucleus (after the reaction)
-//                                   Int_t fpdg
-//                                   ,Float_t fEng
-//                                   ,Float_t fPx
-//                                   ,Float_t fPy
-//                                   ,Float_t fPz
-//                                   ,Float_t fP
-//                                   ,Int_t fstatus_code
-//                                   ,Float_t fmass
-//                                   ,Int_t fND
-//                                   ,Int_t fmother
-//                                   ,bool track_reconstructed
-//                                   ,Int_t ftrackID
-//                                   ,PandoraNuTrack fprimarPandoraNuTrack
-//                                   ){
-//    
-//    momentum.SetVectM( TVector3 ( fPx , fPy , fPz ) , fmass );
-//    
-//    
-//    switch (fpdg) { // interaction neutrino
-//            
-//        case 12: // ν(e)
-//            nu = momentum;
-//            Nnu ++;
-//            Nnu_e ++;
-//            break;
-//            
-//        case 14: // ν(µ)
-//            nu = momentum;
-//            Nnu ++;
-//            Nnu_mu ++;
-//            break;
-//            
-//        default:
-//            break;
-//    }
-//    
-//    
-//    if (fstatus_code==1) { // status code 0 particles are unstable or do not exit the nucleus and are thus irrelevant
-//        
-//        pdg.push_back(fpdg);
-//        Eng.push_back(fEng);
-//        ND.push_back(fND);
-//        mother.push_back(fmother);
-//        status_code.push_back(fstatus_code);
-//        
-//        Nprimaries++;
-//        if (track_reconstructed){
-//            tracks.push_back(fprimarPandoraNuTrack);
-//            trackID.push_back(ftrackID);
-//        }
-//        
-//        switch (pdg.back()) {
-//                
-//            case 13: // µ-
-//                muon = momentum;
-//                muonTrack = fprimarPandoraNuTrack;
-//                muonTrackReconstructed = track_reconstructed;
-//                Nmu++;
-//                Nmu_minus++;
-//                break;
-//                
-//            case -13: // µ+
-//                Nmu++;
-//                Nmu_plus++;
-//                break;
-//                
-//            case 2212: // p
-//                p3vect.push_back( momentum.Vect() ) ;
-//                protonTracks.push_back(fprimarPandoraNuTrack);
-//                protonTrack = fprimarPandoraNuTrack; // for CC1p, there is only one proton track, protonTrack.
-//                if (protonTrackReconstructed==false) protonTrackReconstructed = track_reconstructed;
-//                Np++;
-//                break;
-//                
-//                
-//            case 2112: // n
-//                n3vect.push_back( momentum.Vect() ) ;
-//                Nn++;
-//                break;
-//                
-//            case 211: // π+
-//                Npi++;
-//                Npi_plus++;
-//                break;
-//                
-//            case -211: // π-
-//                Npi++;
-//                Npi_minus++;
-//                break;
-//
-//            case 111: // π0
-//                Npi++;
-//                Npi_0++;
-//                break;
-//                
-//            case 11: // e-
-//                Ne_minus++;
-//                Nel++;
-//                break;
-//                
-//            case -11: // e+
-//                Ne_plus++;
-//                Nel++;
-//                break;
-//
-//            case 22: // photon
-//                Ngamma++;
-//                break;
-//                
-//            default:
-//                break;
-//        }
-//    }
-//    return true;
-//}
-//
-//
-//
-//
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GENIEinteraction::FindCC1p200MeVc0pi(){
     // tag the vertex as
@@ -279,6 +154,22 @@ bool GENIEinteraction::FindCC1p200MeVc0pi(){
         IsCC_1p_200MeVc_0pi = true;
         for (auto & t : tracks){
             t.SetCC_1p_200MeVc_0pi();
+        }
+        // check if µ and p tracks are reconstructed
+        if (tracks.size()>0){
+            for (auto t:tracks){
+                if (t.GetMCpdgCode()==13){
+                    Is_mu_TrackReconstructed = true;
+                    muonTrack = t;
+                }
+                else if (t.GetMCpdgCode()==2212){
+                    Is_p_TrackReconstructed = true;
+                    protonTrack = t;
+                }
+            }
+            if (Is_mu_TrackReconstructed && Is_p_TrackReconstructed){
+                IsVertexReconstructed = true;
+            }
         }
         return true;
     }
@@ -316,8 +207,6 @@ vector<size_t> GENIEinteraction::sort_by_momentum_magnitude(const vector<TVector
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GENIEinteraction::ComputePmissPrec(){
     
-    //    SHOW(Np);
-    //    SHOW(protons.size());
     if(Np>0){
         
         Plead = protons.at(0);
@@ -398,22 +287,20 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     SHOWTLorentzVector( q );
     if(!protons.empty()){
         cout << "\033[35m" << protons.size() << " protons:" << endl;
-        for (auto proton: protons) {
+        for (auto proton:protons) {
             SHOWTLorentzVector( proton );
         }
         cout << "\033[31m";
     }
     if(!neutrons.empty()){
         cout << "\033[35m" << neutrons.size() << " neutrons:" << endl;
-        for (auto neutron: neutrons) {
+        for (auto neutron:neutrons) {
             SHOWTLorentzVector( neutron );
         }
         cout << "\033[31m";
     }
     SHOW2( Xb , Q2 );
     SHOW3( theta_pq , p_over_q , Mmiss );
-    
-    
     SHOW( Nprimaries );
     SHOW3( Np , Nn , Npi );
     SHOW3( Nmu , Nel , Ngamma );
@@ -422,7 +309,7 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     
     SHOW( IsCC_1p_200MeVc_0pi );
     if ( IsCC_1p_200MeVc_0pi ) {
-        SHOW2( muonTrackReconstructed, protonTrackReconstructed );
+        SHOW3( Is_mu_TrackReconstructed, Is_p_TrackReconstructed , IsVertexReconstructed );
         SHOW2( muonTrack.IsTrackContainedSoft() , protonTrack.IsTrackContainedSoft() );
     }
 

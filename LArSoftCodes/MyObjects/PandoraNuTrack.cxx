@@ -26,8 +26,6 @@ end_pos(fend_pos)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     
-    //    Printf("run/subrun/event : %d/%d/%d",run,subrun,event);
-    
     cout << "\033[31m" << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
     << "track " << track_id << endl << "-------------------"    << "\033[0m" << endl;
     
@@ -35,6 +33,9 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     SHOWTVector3(end_pos);
     
     if (DoPrintPandoraNuFeatures){
+        
+        
+        SHOW( PIDa ); // SHOW3( PIDaPerPlane[0] , PIDaPerPlane[1] , PIDaPerPlane[2] );
         PrintPhys(length,"cm");
         //        std::cout<<" momentum from range\n";  PrintPhys(momrange,"MeV/c");
         //        PrintPhys(mommsllhd,"MeV/c momentum from MCS LLHD");

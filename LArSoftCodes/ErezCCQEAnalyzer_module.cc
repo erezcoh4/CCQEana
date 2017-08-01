@@ -244,10 +244,59 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         
         // U / V / Y coordinates
         for (int plane = 0; plane < 3; plane++){
+            
+            
             // Get the PlaneID in (geo::PlaneID) type
-            raw::ChannelID_t channel = geom -> NearestChannel( StartLoc , plane );
-            std::vector<geo::WireID> wires = geom -> ChannelToWire(channel);
-            const geo::PlaneID & planeID = wires[0].planeID();
+//            Debug( 0 , "Get the PlaneID in (geo::PlaneID) type" );
+//            raw::ChannelID_t channel = geom -> NearestChannel( StartLoc , plane );
+            
+//            Debug( 0 , "raw::ChannelID_t channel" );
+//            raw::ChannelID_t channel;
+//            try{
+//                channel = geom -> NearestChannel( StartLoc , plane );
+//            }
+//            catch(raw::InvalidChannelID const& e) {
+//                channel = e.suggestedChannelID(); // pick the closest valid channel
+//            }
+//            
+//            
+//            // -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x
+//            Debug( 0 , "// -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x" );
+//            Debug( 0 , "std::vector<geo::WireID> wires = geom -> ChannelToWire(channel);" );
+////            std::vector<geo::WireID> wires = geom -> ChannelToWire(channel);
+//            std::vector<geo::WireID> wires;
+//            geo::WireID WireID;
+//            try{
+//                wires = geom -> ChannelToWire(channel);
+//                WireID = wires[0];
+//            }
+//            catch(geo::InvalidChannelID const& e) {
+//                WireID = e.suggestedWireID(); // pick the closest valid wire
+//            }
+//            Debug( 0 , "const geo::PlaneID & planeID = wires[0].planeID();" );
+//            const geo::PlaneID & planeID = wires[0].planeID();
+            Debug(0,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
+            geo::TPCID tpcID = geom->FindTPCAtPosition( StartLoc );
+            int tpc = 0;
+            if (tpcID.isValid) tpc = tpcID.TPC;
+            else continue;
+            
+            // Construct wire ID for this point projected onto the plane
+            Debug(0,"Construct wire ID for this point projected onto the plane");
+            geo::PlaneID planeID = geo::PlaneID( 0 , tpc , plane ); // cryostat=0
+//            geo::WireID wireID;
+//            try{
+//                wireID = geom->NearestWireID( start_pos , planeID);
+//            }
+//            catch(geo::InvalidWireError const& e) {
+//                wireID = e.suggestedWireID(); // pick the closest valid wire
+//            }
+//            Debug( 0 , "const geo::PlaneID & planeID = WireID.planeID();" );
+//            const geo::PlaneID & planeID = WireID.planeID();
+            Debug( 0 , "// -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x" );
+            // -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x
+            
+            
             // get start point
             Int_t start_wire = (Int_t) ( geom->WireCoordinate( start_pos.Y() , start_pos.Z() ,  planeID ) );
             Int_t start_time = (Int_t) ( detprop->ConvertXToTicks( start_pos.X() , planeID ) ) ;
@@ -333,6 +382,7 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                 track.SetMCpdgCode( particle->PdgCode() );
                 track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
                 track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                track.SetTruthLength();
                 track.SetTruthMomentum( particle -> Momentum() );
             }//if (particle)
         }//MC
@@ -538,11 +588,14 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                 if (vertex.GetTracks().size()>1){
                     int mc_id_t0 = vertex.GetTracks().at(0).GetMCeventID();
                     int mc_id_t1 = vertex.GetTracks().at(1).GetMCeventID();
-                    
+                    Debug( 0 , "if ( mc_id_t0 >= 0 && mc_id_t0 == mc_id_t1 )");
                     if ( mc_id_t0 >= 0
                         &&
                         mc_id_t0 == mc_id_t1 ){
+                        Debug( 0 , "vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );");
                         vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );
+                        Printf("matched GENIE information");
+                        vertex.GetGENIEinfo().Print(); // PRINTOUT
                     }
                 }
                 Debug( 6 , "} (vertex.GetTracks().size()>1)");
@@ -552,19 +605,17 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                 // so,
                 // 2nd method: look for the closest GENIE interaction in the event, spatially
                 GENIEinteraction closest_genie;
-                bool MatchedGENIEinteraction = false;
                 float closest_genie_interaction_distance = 10000; // [cm]
                 for (auto genie_interaction : genie_interactions){
                     float genie_distance = (genie_interaction.GetVertexPosition() - vertex.GetPosition()).Mag();
                     if ( genie_distance < closest_genie_interaction_distance ){
                         closest_genie_interaction_distance = genie_distance;
                         closest_genie = genie_interaction;
-                        MatchedGENIEinteraction = true;
                         break;
                     }
                 }
                 Debug( 6 , "} for (auto genie_interaction : genie_interactions)");
-                if (MatchedGENIEinteraction){
+                if ( closest_genie_interaction_distance < 1000 ){
                     vertex.SetClosestGENIE( closest_genie );
                 }
             }
@@ -633,12 +684,12 @@ void ub::ErezCCQEAnalyzer::FindPairVertices(){
             ){
             
             // assign muon and proton tracks by PID-A
-            auto AssignedMuonTrack = v.GetSmallPIDATrack();
+            auto AssignedMuonTrack = v.GetSmallPIDaTrack();
             auto PmuFromRange = trkm.GetTrackMomentum( AssignedMuonTrack.GetLength()  , 13  );
             v.AssignMuonTrack( AssignedMuonTrack  );
             
             
-            auto AssignedProtonTrack = v.GetLargePIDATrack();
+            auto AssignedProtonTrack = v.GetLargePIDaTrack();
             auto PpFromRange = trkm.GetTrackMomentum( AssignedProtonTrack.GetLength() , 2212);
             v.AssignProtonTrack( AssignedProtonTrack );
             
@@ -678,14 +729,8 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
         if ( (t1.GetMCpdgCode() * t2.GetMCpdgCode())==(13*2212) ){
             
             v.SetAs1mu1p();
-//            v.MatchGenieInteraction ( genie_interactions , t1 );
             v.SetTrueMuonProton( t1 , t2 );
             
-            if (debug>0) {
-                SHOW((t1.GetTruthStartPos() - t2.GetTruthStartPos()).Mag());
-                SHOW((v.GetClosestGENIE().GetVertexPosition() - v.GetPosition()).Mag());
-                SHOW( v.GetClosestGENIE().AskIfCC1p0pi() );
-            }
             // tag the vertex as true CC1p0π if it has two MC tracks, µ and p, which are
             // (1) close enough,
             // (2) come from a (close-enough) CC1p0π genie interaction
@@ -693,7 +738,6 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
                 (t1.GetTruthStartPos() - t2.GetTruthStartPos()).Mag() < 1.                  // distance between the true position of the two tracks is small
                 && (v.GetClosestGENIE().GetVertexPosition() - v.GetPosition()).Mag() < 10   // distance from the closest genie vertex
                 && (v.GetClosestGENIE().AskIfCC1p0pi()==true)                               // the closest GENIE is a CC1p0π
-//                && (t1.AskIfCC1p0pi() && t2.AskIfCC1p0pi())
                 ){
                 v.SetAsCC1p0pi();
             }
@@ -715,7 +759,51 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     vertices_file
     << "run" << "," << "subrun" << "," << "event" << "," << "vertex_id" << ","
     << "x" << "," << "y" << "," << "z" << ","
-    << "tracks" << ","
+    << "track_id" << "," << ","
+    // tracks sorted by long / short
+    << "PIDa_long"<< "," << "PIDa_short" << ","
+    << "l_long"<< "," << "l_short" << ","
+    // tracks sorted by small / large PIDa
+    << "PIDa_small_PIDa"<< "," << "PIDa_large_PIDa" << ","
+    << "l_small_PIDa"<< "," << "l_large_PIDa" << ","
+    // µ/p assigned tracks
+    << "PIDa_assigned_muon"<< "," << "PIDa_assigned_proton" << ","
+    << "l_assigned_muon"<< "," << "l_assigned_proton" << ","
+    // start/end points, for FV cuts
+    << "startx_assigned_muon" << ","
+    << "starty_assigned_muon" << ","
+    << "startz_assigned_muon" << ","
+    << "startx_assigned_proton" << ","
+    << "starty_assigned_proton" << ","
+    << "startz_assigned_proton" << ","
+    << "endx_assigned_muon" << ","
+    << "endy_assigned_muon" << ","
+    << "endz_assigned_muon" << ","
+    << "endx_assigned_proton" << ","
+    << "endy_assigned_proton" << ","
+    << "endz_assigned_proton" << ","
+    
+    
+    // CC1p0π reconstructed featues
+    << "distance" << "," << "delta_phi" << "," << "delta_theta" << ","
+    << "theta_12" << ","
+    
+    // reconstructed kinematics
+    << "reco_Ev" << "," << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
+    << "reco_Pt" << "," << "reco_theta_pq" << ","
+    << "reco_Pmu" << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << ","
+    << "reco_Pp" << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << ","
+
+    // truth MC information
+    << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
+    << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
+    << "truth_Pt" << "," << "truth_theta_pq" << ","
+    << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
+    << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
+    
+    // vertex truth-topology in MC
+    << "all" << "," << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
+    
     << endl;
     
 }
@@ -726,19 +814,94 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
     // whatever you add here - must add also in header - ub::ErezCCQEAnalyzer::HeaderVerticesInCSV()
     for (auto v:vertices){
         
+        
+        
         vertices_ctr++;
         
         vertices_file
         << v.GetRun() << "," << v.GetSubrun() << "," << v.GetEvent() << "," << v.GetVertexID() << ","
         << v.GetPosition().x() << "," << v.GetPosition().y() << "," << v.GetPosition().z() << ",";
         
+        // tracks id
         for ( auto track : v.GetTracks()){
             vertices_file << track.GetTrackID() << ";" ;
         }
+        vertices_file << ",";
         
         
-        vertices_file << "," << endl;
+        // tracks sorted by long / short
+        vertices_file
+        << v.GetLongestTrack().GetPIDa() << "," << v.GetShortestTrack().GetPIDa() << ","
+        << v.GetLongestTrack().GetLength() << "," << v.GetShortestTrack().GetLength() << "," ;
         
+        
+        // tracks sorted by small / large PIDa
+        vertices_file
+        << v.GetSmallPIDaTrack().GetPIDa() << "," << v.GetLargePIDaTrack().GetPIDa() << ","
+        << v.GetSmallPIDaTrack().GetLength() << "," << v.GetLargePIDaTrack().GetLength() << "," ;
+        
+        // µ/p assigned tracks
+        vertices_file
+        << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
+        << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << "," ;
+        // start/end points, for FV cuts
+        vertices_file
+        << v.GetAssignedMuonTrack().GetStartPos().x() << ","
+        << v.GetAssignedMuonTrack().GetStartPos().y() << ","
+        << v.GetAssignedMuonTrack().GetStartPos().z() << ","
+        << v.GetAssignedProtonTrack().GetStartPos().x() << ","
+        << v.GetAssignedProtonTrack().GetStartPos().y() << ","
+        << v.GetAssignedProtonTrack().GetStartPos().z() << ","
+        << v.GetAssignedMuonTrack().GetEndPos().x() << ","
+        << v.GetAssignedMuonTrack().GetEndPos().y() << ","
+        << v.GetAssignedMuonTrack().GetEndPos().z() << ","
+        << v.GetAssignedProtonTrack().GetEndPos().x() << ","
+        << v.GetAssignedProtonTrack().GetEndPos().y() << ","
+        << v.GetAssignedProtonTrack().GetEndPos().z() << ",";
+        
+        
+        // CC1p0π reconstructed featues
+        // distances between the tracks
+        for ( auto d : v.Get_distances_ij()){
+            vertices_file << d ; //  for more than 2 tracks add << ";" ;
+        }
+        vertices_file << ",";
+        
+        // delta_phi
+        for ( auto delta_phi : v.Get_delta_phi_ij()){
+            // in degrees
+            vertices_file << delta_phi ; //  for more than 2 tracks add << ";" ;
+        }
+        vertices_file << ",";
+        
+        // delta_theta
+        for ( auto delta_theta : v.Get_delta_theta_ij()){
+            // in degrees
+            vertices_file << delta_theta ; //  for more than 2 tracks add << ";" ;
+        }
+        vertices_file << ",";
+        // theta_12 (the 3D angle between the two tracks)
+        vertices_file << v.GetAngleBetween2tracks() << ","; // in degrees
+        
+        // reconstructed kinematics
+        vertices_file << v.GetRecoEv() << "," << v.GetRecoQ2() << "," <<  v.GetRecoXb() << "," << v.GetRecoY() << "," << v.GetRecoW2() << ","  ;
+        vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
+        vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << ",";
+        vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << ",";
+
+        
+        // truth MC information
+        vertices_file << v.GetAssignedMuonTrack().GetTruthLength() << "," << v.GetAssignedProtonTrack().GetTruthLength() << ",";
+        vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
+        vertices_file << v.GetGENIEinfo().GetPt() << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
+        vertices_file << v.GetGENIEinfo().GetPmu().P() << "," << v.GetGENIEinfo().GetPmu().Px() << "," << v.GetGENIEinfo().GetPmu().Py() << "," << v.GetGENIEinfo().GetPmu().Pz() << ",";
+        vertices_file << v.GetGENIEinfo().GetPp().P() << "," << v.GetGENIEinfo().GetPp().Px() << "," << v.GetGENIEinfo().GetPp().Py() << "," << v.GetGENIEinfo().GetPp().Pz() << ",";
+        
+        // vertex truth-topology in MC
+        vertices_file << true << "," << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
+        
+        
+        vertices_file << endl;
     }
 }
 
@@ -746,11 +909,11 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::PrintInformation(){
     
+    PrintXLine();
     Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
     if (MCmode){
-        Printf("this is an MC event, with an MC information");
         if(!genie_interactions.empty()){
             cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_interactions.size() << " genie interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
             for (auto g: genie_interactions) {
@@ -768,10 +931,11 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
     
     
     if(!vertices.empty()){
-        cout << "\033[36m" << "xxxxxxxxxxxxxx\n\n" << vertices.size() << " vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        cout << "\033[36m" << "xxxxxxxxxxxxxx\n\n" << vertices.size() << " vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
         for (auto v: vertices) {
             v.Print( (debug>2) ? true : false       // do print pandoraNu tracks
                     );
+            v.GetGENIEinfo().Print();
         }
     } else {cout << "\033[36m" << "xxxxxxxxxxxxxx\n" << "no vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
 
@@ -819,9 +983,10 @@ void ub::ErezCCQEAnalyzer::beginJob(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
-    fTrackModuleLabel = p.get< std::string >("TrackModuleLabel");
-    fHitsModuleLabel  = p.get< std::string >("HitsModuleLabel");
-    fGenieGenModuleLabel =  p.get< std::string >("GenieGenModuleLabel");
+    fTrackModuleLabel       = p.get< std::string >("TrackModuleLabel");
+    fHitsModuleLabel        = p.get< std::string >("HitsModuleLabel");
+    fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
+    fCalorimetryModuleLabel = p.get< std::string >("CalorimetryModuleLabel");
     debug = p.get< int >("VerbosityLevel");
 }
 

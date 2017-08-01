@@ -27,7 +27,7 @@ void pairVertex::AddTrack (PandoraNuTrack ftrack){
 void pairVertex::SetAs1mu1p(){
     Is1mu1p                     = true;
     IsGENIECC_1p_200MeVc_0pi    = false;
-    Non1mu1p                    = false;
+    IsNon1mu1p                  = false;
     IsCosmic                    = false;
     TruthTopologyString = "true µp pair";
 }
@@ -36,7 +36,7 @@ void pairVertex::SetAs1mu1p(){
 void pairVertex::SetAsCC1p0pi(){
     Is1mu1p                     = true;
     IsGENIECC_1p_200MeVc_0pi    = true;
-    Non1mu1p                    = false;
+    IsNon1mu1p                  = false;
     IsCosmic                    = false;
     TruthTopologyString = "true CC 1p 0π";
 }
@@ -45,7 +45,7 @@ void pairVertex::SetAsCC1p0pi(){
 void pairVertex::SetAsNon1mu1p(){
     Is1mu1p                     = false;
     IsGENIECC_1p_200MeVc_0pi    = false;
-    Non1mu1p                    = true;
+    IsNon1mu1p                  = true;
     IsCosmic                    = false;
     TruthTopologyString = "true non-µp pair";
 }
@@ -53,7 +53,7 @@ void pairVertex::SetAsNon1mu1p(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetAsCosmic(){
     IsGENIECC_1p_200MeVc_0pi    = false;
-    Non1mu1p                    = false;
+    IsNon1mu1p                  = false;
     IsCosmic                    = true;
     TruthTopologyString = "cosmic pair";
 }
@@ -123,14 +123,15 @@ bool pairVertex::SortTracksByPIDA(){
     for (auto i:sort_pida( tmp_tracks )){
         tracks_pidasorted.push_back( tmp_tracks.at(i) );
     }
-    SmallPIDATrack = tracks_pidasorted.at( tmp_tracks.size() - 1 );
-    LargePIDATrack = tracks_pidasorted.at( 0 );
+    SmallPIDaTrack = tracks_pidasorted.at( tmp_tracks.size() - 1 );
+    LargePIDaTrack = tracks_pidasorted.at( 0 );
     return true;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetTracksRelations(){
-    
+    // July 2017
+    // the angles (delta_phi and delta_theta) are calculated in degrees (!)
     for(int i = 0; i < Ntracks ; i++){
         
         tracks_dis_from_vertex.push_back( tracks[i].DistanceFromPoint( position ) );
@@ -178,13 +179,6 @@ std::vector<PandoraNuTrack> pairVertex::RemoveTrackFromVector( vector<PandoraNuT
             TracksVector.push_back(t);
         }
     }
-
-//    auto element = std::find(std::begin(TracksVector), std::end(TracksVector), TrackToBeRemoved );
-//    if (element!=TracksVector.end()) {
-//        auto i_TrackToBeRemoved = std::distance( TracksVector.begin(), element );
-//        TracksVector.erase( TracksVector.begin() + i_TrackToBeRemoved );
-//        
-//    }
     return TracksVector;
 }
 
@@ -215,25 +209,6 @@ vector<PandoraNuTrack> pairVertex::CloseSemiContainedTracks( vector<PandoraNuTra
 
 
 
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//bool pairVertex::MatchGenieInteraction ( std::vector<GENIEinteraction> fgenie_interactions , PandoraNuTrack ftrack ){
-//    // match the proper GENIE interaction
-//    for (auto genie_interaction : fgenie_interactions){
-//        
-//        // check mc-event id (maybe has a bug?)
-//        //        if (genie_interaction.mcevent_id == ftrack.mcevent_id){
-//        
-//        // check if the track is close enough to a GENIE vertex
-//        if ( (ftrack.truth_start_pos - genie_interaction.vertex_position).Mag() < 1.) {
-//            SetGENIEinfo( genie_interaction );
-//            return true;
-//        }
-//    }
-//    return false;
-//}
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetTrueMuonProtonTracks( PandoraNuTrack track_a , PandoraNuTrack track_b ){
     protonTrueTrack = track_a;
@@ -252,70 +227,15 @@ void pairVertex::SetTrueMuonProton( PandoraNuTrack t1 , PandoraNuTrack t2 ){
 }
 
 
-
-
-
-//
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//bool pairVertex::SetKinematicalTopology(float min_length_long,
-//                                      float max_length_short,
-//                                      float delta_phi_min,  float delta_phi_max,
-//                                      float PIDA_short_min, float PIDA_short_max,
-//                                      float PIDA_long_min,  float PIDA_long_max){
-//    
-//    // I definde a CC1p vertex topolgy by the following:
-//    // (1) two tracks, and only two tracks
-//    //      - one is a long (longer than min_length_muon), with a PIDA ~ proton
-//    //      - the other is short (shorteer than max_length_proton), with a PIDA ~ muon
-//    // (2) they are closer than 10 cm
-//    // (3) their azimuthal angular difference corresponds to QE ~ 180 (delta_phi_min < delta_phi < delta_phi_max)
-//    
-//    CCQETopology = false;
-//    TopologyString = "just a weird topology";
-//    if (
-//        tracks.size() == 2
-//        && LongestTrack.length > min_length_long
-//        && ShortestTrack.length < max_length_short
-//        && (delta_phi_min < delta_phi_ij[0] && delta_phi_ij[0] < delta_phi_max)
-//        && (PIDA_short_min < ShortestTrack.pidpida && ShortestTrack.pidpida < PIDA_short_max)
-//        && (PIDA_long_min < LongestTrack.pidpida && LongestTrack.pidpida < PIDA_long_max)
-//        ){
-//        CCQETopology = true;
-//        TopologyString = "CCQE topology";
-//        return true;
-//    }
-//    
-//    return false;
-//}
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//float pairVertex::GetAngleBetween2tracks(){
-//    TVector3 t1_direction, t2_direction;
-//    t1_direction.SetMagThetaPhi ( 1 , ShortestTrack.theta, ShortestTrack.phi );
-//    t2_direction.SetMagThetaPhi ( 1 , LongestTrack.theta, LongestTrack.phi );
-//    return t1_direction.Angle( t2_direction );
-//}
-//
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//bool pairVertex::SetIsReconstructed( float fmax_mu_p_distance ){
-//    if (IsVertexContained
-//        && muonTrackReconstructed && muonTrueTrack.IsTrackContainedSoft()
-//        && protonTrackReconstructed && protonTrueTrack.IsTrackContainedSoft()
-//        ){
-//        reco_mu_p_distance = muonTrueTrack.ClosestDistanceToOtherTrack( protonTrueTrack );
-////        if (reco_mu_p_distance < fmax_mu_p_distance){
-//            IsVertexReconstructed = true;
-//            return true;
-////        }
-//    }
-//    IsVertexReconstructed = false;
-//    return false;
-//    
-//}
-//
-//
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+float pairVertex::GetAngleBetween2tracks() const{
+    // July-30 2017
+    // return the angle between the two tracks in the vertex, in degrees (!)
+    TVector3 t1_dir, t2_dir;
+    t1_dir.SetMagThetaPhi ( 1 , AssignedMuonTrack.GetTheta(), AssignedMuonTrack.GetPhi() );
+    t2_dir.SetMagThetaPhi ( 1 , AssignedProtonTrack.GetTheta(), AssignedProtonTrack.GetPhi() );
+    return r2d*(t1_dir.Angle( t2_dir ));
+}
 
 
 
@@ -397,8 +317,8 @@ void pairVertex::FixTracksDirections(){
 void pairVertex::SetReconstructedMomenta( float PmuFromRange, float PpFromRange ){
     // reconstruct the µ and p momenta by using the minimal features possible
     // theta / phi of the reconstructed track
-    // and the momentum from stopping range ( Get_protonMomentumFromRange which gives the answer in MeV/c )
-    // at a later stage we can maybe use calorimetery
+    // and the momentum from stopping range
+    // at a later stage we can maybe use calorimetery or multiple Coulomb scattering
     // p
     reco_Pp_3momentum = PpFromRange;
     reco_Pp_3vect.SetMagThetaPhi( reco_Pp_3momentum , AssignedProtonTrack.GetTheta() , AssignedProtonTrack.GetPhi() );
@@ -412,63 +332,14 @@ void pairVertex::SetReconstructedMomenta( float PmuFromRange, float PpFromRange 
     //    reco_Pmu_3vect_mcsllhd.SetMagThetaPhi( AssignedMuonTrack.mommsllhd , AssignedMuonTrack.theta , AssignedMuonTrack.phi );
     //    reco_Pmu_mcsllhd.SetVectMag ( reco_Pmu_3vect_mcsllhd , 0.1056 );
     
-    //        PrintPhys( (AssignedMuonTrack.truth_start_pos - AssignedMuonTrack.truth_end_pos).Mag() , "cm (true length)" );
-    //        PrintPhys(AssignedMuonTrack.truth_P,"GeV/c (true momentum)");
-    //        PrintPhys( AssignedMuonTrack.length , "cm (reco. length)" );
-    //        PrintPhys(reco_Pmu_3momentum,"GeV/c (reco. momentum from stopping range)");
-    
-    
-    // from Ev_form_momenta_vs_Ev_from_energies.ipynb
-    // p
-    //    530 theta(p)<pi/4
-    //    reco_Pp_corrected = reco_Pp_corrected+(829.467268*power(reco_Pp_theta , -0.000145)+-828.787001)-(272.517358*power(reco_Pp_theta , -0.000166)+-272.006880)
-    //    384 pi/4<theta(p)
-    //    reco_Pp_corrected = reco_Pp_corrected+(-373.647151*power(reco_Pp_theta , 0.000654)+374.240938)-(-167.943634*power(reco_Pp_theta , 0.000747)+168.395327)
-    // µ
-    //    163 theta(mu)>pi/2
-    //    reco_Pmu_corrected = reco_Pmu_corrected+(239.285823*power(reco_Pmu_theta , -0.000924)+-238.823596)-(94.431539*power(reco_Pmu_theta , -0.000762)+-94.194473)
-    //    550 pi/6<theta(mu)<pi/2
-    //    reco_Pmu_corrected = reco_Pmu_corrected+(0.399575*power(reco_Pmu_theta , -1.167177)+0.154257)-(0.098050*power(reco_Pmu_theta , -0.762805)+0.145517)
-    //    201 theta(mu)<pi/6
-    //    reco_Pmu_corrected = reco_Pmu_corrected+(2487.389498*power(reco_Pmu_theta , -0.000175)+-2486.692171)-(322.878637*power(reco_Pmu_theta , -0.000389)+-322.613939)
-//    
-//    // momentum correction from p(mu)/theta(mu) and p(p) / theta(p) correlations
-//    float Pp_corrected , Pmu_corrected;
-//    if (reco_Pp.Theta() < 3.1415/4) {
-//        Pp_corrected = reco_Pp_3momentum+(829.467268*pow(reco_Pp.Theta() , -0.000145)+-828.787001)-(272.517358*pow(reco_Pp.Theta() , -0.000166)+(-272.006880));
-//    }
-//    else {
-//        Pp_corrected = reco_Pp_3momentum+(-373.647151*pow(reco_Pp.Theta() , 0.000654)+374.240938)-(-167.943634*pow(reco_Pp.Theta() , 0.000747)+168.395327);
-//    }
-//    reco_Pp_3vect_corrected.SetMagThetaPhi( Pp_corrected , AssignedProtonTrack.theta , AssignedProtonTrack.phi );
-//    reco_Pp_corrected.SetVectMag ( reco_Pp_3vect_corrected , 0.938 );
-//    
-//    
-//    
-//    
-//    if ( reco_Pmu.Theta() > 3.1415/2 ) {
-//        Pmu_corrected = reco_Pmu_3momentum+(239.285823*pow(reco_Pmu.Theta() , -0.000924)+-238.823596)-(94.431539*pow(reco_Pmu.Theta() , -0.000762)+(-94.194473));
-//    }
-//    else if ( 3.1415/6 < reco_Pmu.Theta() &&  reco_Pp.Theta() < 3.1415/2){
-//        Pmu_corrected = reco_Pmu_3momentum+(0.399575*pow(reco_Pmu.Theta() , -1.167177)+0.154257)-(0.098050*pow(reco_Pmu.Theta() , -0.762805)+0.145517);
-//    }
-//    else {
-//        Pmu_corrected = reco_Pmu_3momentum+(2487.389498*pow(reco_Pmu.Theta() , -0.000175)+(-2486.692171))-(322.878637*pow(reco_Pmu.Theta() , -0.000389)+ (-322.613939));
-//    }
-//    reco_Pmu_3vect_corrected.SetMagThetaPhi( Pmu_corrected , AssignedMuonTrack.theta , AssignedMuonTrack.phi );
-//    reco_Pmu_corrected.SetVectMag ( reco_Pmu_3vect_corrected , 0.1056 );
-    
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::ReconstructBeam(){
     // reconstruct the beam by using the reconstructed Pµ and Pp
-    reco_BeamE = reco_Pp.E() + (reco_Pmu.E() - reco_Pp.Mag()) + 0.040 ; // Tp + Eµ + Sn + T(A-1)
+    reco_BeamE = reco_Pmu.E() + (reco_Pp.E() - reco_Pp.Mag()) + 0.040 ; // Eµ + Tp + Sn + T(A-1)
     reco_Pnu = TLorentzVector( 0 , 0 , reco_BeamE , reco_BeamE );
-    
-    //    reco_BeamPz_mcsllhd = reco_Pp.Pz() + reco_Pmu_mcsllhd.Pz();
-    //    reco_Pnu_mcsllhd = TLorentzVector( 0 , 0 , reco_BeamPz_mcsllhd , reco_BeamPz_mcsllhd );
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -705,17 +576,13 @@ void pairVertex::Print(bool DoPrintTracks) const {
         cout << "\033[33m" << "no reconstructed tracks in vertex " << "\033[31m" << endl;
     }
     
-    cout << "truth topology: " << TruthTopologyString << endl;
-    
-    // GENIE interaction features
-    if (Is1mu1p){
-        genie_interaction.Print();
-    }
-    
     SHOW( IsGENIECC_1p_200MeVc_0pi );
     if (IsGENIECC_1p_200MeVc_0pi){
-        cout << "This vertex is a GENIE true CC_1p_200MeVc_0pi" << endl;
+        cout << "This vertex is a GENIE true CC1p0π" << endl;
         SHOW3( Is_mu_TrackReconstructed, Is_p_TrackReconstructed, IsVertexReconstructed );
+        
+        // neutrino
+        SHOWTLorentzVector( reco_Pnu );
         
         // muon
         SHOWTLorentzVector( genie_interaction.GetLeptonMomentum() );
@@ -729,9 +596,18 @@ void pairVertex::Print(bool DoPrintTracks) const {
         SHOW(genie_interaction.Get_theta_pq());
         if (!tracks.empty()) SHOW(reco_theta_pq);
     }
-
-//    if (!tracks.empty()) for (int plane = 0 ; plane<3 ; plane ++ ) {printf("ROI in plane %d: ",plane); roi[plane].Print();}
     
+    // GENIE interaction features
+    PrintLine();
+    cout << "MC information: " << endl;
+    cout << "truth topology: " << TruthTopologyString << endl;
+    if (Is1mu1p){
+        if ( genie_interaction.GetMCeventID() == -9999 ) Printf("vertex does not have a matching GENIE interaction");
+        else genie_interaction.Print();
+        PrintLine();
+    }
+    
+//    if (!tracks.empty()) for (int plane = 0 ; plane<3 ; plane ++ ) {printf("ROI in plane %d: ",plane); roi[plane].Print();}
 }
 
 
