@@ -399,6 +399,17 @@ void pairVertex::SetReconstructedFeatures( float PmuFromRange, float PpFromRange
     ReconstructKinematics();
 
 }
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+float pairVertex::GetTruthDeltaPhi () const {
+    // return the truth \Delta \phi between tracks in degrees
+    float muon_truth_phi = AssignedMuonTrack.GetTruthMomentum().Phi();
+    float proton_truth_phi = AssignedPRotonTrack.GetTruthMomentum().Phi();
+    return r2d*fabs( muon_truth_phi - proton_truth_phi );
+}
+
+
 //
 //
 //

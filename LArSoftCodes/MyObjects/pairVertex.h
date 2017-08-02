@@ -113,7 +113,7 @@ public:
     float                        GetRecoW2 () const {return reco_W2;};
     float                        GetRecoPt () const {return (IsVertexReconstructed) ? (reco_Pmu + reco_Pp).Pt() : -1;};
     float                 GetReco_theta_pq () const {return reco_theta_pq;};
-
+    float                 GetTruthDeltaPhi () const;
     std::vector<float>    Get_delta_phi_ij () const {return delta_phi_ij;};
     std::vector<float>    Get_distances_ij () const {return distances_ij;};
     std::vector<float>  Get_delta_theta_ij () const {return delta_theta_ij;};

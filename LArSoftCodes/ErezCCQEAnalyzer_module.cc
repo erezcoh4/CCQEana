@@ -809,7 +809,9 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
     << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
     << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
-
+    
+    // truth delta-phi
+    << "truth_delta_phi" << ","
     
     // vertex truth-topology in MC
     << "all" << "," << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
@@ -923,6 +925,9 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
         
        
+        // truth delta-phi
+        vertices_file << v.GetTruthDeltaPhi() << ",";
+
         // vertex truth-topology in MC
         vertices_file << true << "," << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
         
