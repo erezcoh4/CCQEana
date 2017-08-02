@@ -605,6 +605,12 @@ void pairVertex::Print(bool DoPrintTracks) const {
         if ( genie_interaction.GetMCeventID() == -9999 ) Printf("vertex does not have a matching GENIE interaction");
         else genie_interaction.Print();
         PrintLine();
+        if ( closest_genie_interaction.GetMCeventID() == -9999 ) Printf("vertex does not have a matching closest GENIE interaction around");
+        else {
+            Printf("closest GENIE interaction is %.1f cm away from reconstructed vertex:",(closest_genie_interaction.GetVertexPosition() - position).Mag());
+            closest_genie_interaction.Print();
+        }
+        PrintLine();
     }
     
 //    if (!tracks.empty()) for (int plane = 0 ; plane<3 ; plane ++ ) {printf("ROI in plane %d: ",plane); roi[plane].Print();}

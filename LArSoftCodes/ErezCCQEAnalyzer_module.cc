@@ -275,14 +275,14 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
 //            }
 //            Debug( 0 , "const geo::PlaneID & planeID = wires[0].planeID();" );
 //            const geo::PlaneID & planeID = wires[0].planeID();
-            Debug(0,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
+            Debug(5,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
             geo::TPCID tpcID = geom->FindTPCAtPosition( StartLoc );
             int tpc = 0;
             if (tpcID.isValid) tpc = tpcID.TPC;
             else continue;
             
             // Construct wire ID for this point projected onto the plane
-            Debug(0,"Construct wire ID for this point projected onto the plane");
+            Debug(5,"Construct wire ID for this point projected onto the plane");
             geo::PlaneID planeID = geo::PlaneID( 0 , tpc , plane ); // cryostat=0
 //            geo::WireID wireID;
 //            try{
@@ -293,7 +293,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
 //            }
 //            Debug( 0 , "const geo::PlaneID & planeID = WireID.planeID();" );
 //            const geo::PlaneID & planeID = WireID.planeID();
-            Debug( 0 , "// -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x" );
             // -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x
             
             
@@ -384,6 +383,8 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                 track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
                 track.SetTruthLength();
                 track.SetTruthMomentum( particle -> Momentum() );
+                track.SetTruthMother( particle -> Mother() );
+                track.SetTruthProcess( particle -> Process() );
             }//if (particle)
         }//MC
         
@@ -446,6 +447,7 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                                                          ,part.Momentum()   // 4-momentum
                                                          ,part.StatusCode() // status code
                                                          ,part.Mother()     // mother
+                                                         ,part.Process()    // process
                                                          );
                             
                             // match the primary particle with a track
@@ -759,7 +761,7 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     vertices_file
     << "run" << "," << "subrun" << "," << "event" << "," << "vertex_id" << ","
     << "x" << "," << "y" << "," << "z" << ","
-    << "track_id" << "," << ","
+    << "track_id" << ","
     // tracks sorted by long / short
     << "PIDa_long"<< "," << "PIDa_short" << ","
     << "l_long"<< "," << "l_short" << ","
@@ -796,10 +798,18 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
 
     // truth MC information
     << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
-    << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
-    << "truth_Pt" << "," << "truth_theta_pq" << ","
+    
     << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
     << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
+    
+    // mathing genie interaction
+    << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
+    << "truth_Pt" << "," << "truth_theta_pq" << ","
+
+    // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
+    << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
+    << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
+
     
     // vertex truth-topology in MC
     << "all" << "," << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
@@ -892,11 +902,27 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         
         // truth MC information
         vertices_file << v.GetAssignedMuonTrack().GetTruthLength() << "," << v.GetAssignedProtonTrack().GetTruthLength() << ",";
+        
+        vertices_file
+        << v.GetAssignedMuonTrack().GetTruthMomentum().P() << ","
+        << v.GetAssignedMuonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Pz() << ",";
+        
+        vertices_file
+        << v.GetAssignedProtonTrack().GetTruthMomentum().P() << ","
+        << v.GetAssignedProtonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Pz() << ",";
+        
+
+        // mathing genie interaction
         vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
         vertices_file << v.GetGENIEinfo().GetPt() << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
-        vertices_file << v.GetGENIEinfo().GetPmu().P() << "," << v.GetGENIEinfo().GetPmu().Px() << "," << v.GetGENIEinfo().GetPmu().Py() << "," << v.GetGENIEinfo().GetPmu().Pz() << ",";
-        vertices_file << v.GetGENIEinfo().GetPp().P() << "," << v.GetGENIEinfo().GetPp().Px() << "," << v.GetGENIEinfo().GetPp().Py() << "," << v.GetGENIEinfo().GetPp().Pz() << ",";
         
+        
+        
+        // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
+        vertices_file << v.GetClosestGENIE().GetEv() << "," << v.GetClosestGENIE().GetQ2() << "," << v.GetClosestGENIE().GetXb() << "," << v.GetClosestGENIE().GetY() << "," << v.GetClosestGENIE().GetW2() << ",";
+        vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
+        
+       
         // vertex truth-topology in MC
         vertices_file << true << "," << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
         
@@ -935,7 +961,6 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
         for (auto v: vertices) {
             v.Print( (debug>2) ? true : false       // do print pandoraNu tracks
                     );
-            v.GetGENIEinfo().Print();
         }
     } else {cout << "\033[36m" << "xxxxxxxxxxxxxx\n" << "no vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
 

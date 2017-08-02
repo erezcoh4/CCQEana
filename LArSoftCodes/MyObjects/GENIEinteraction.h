@@ -44,22 +44,6 @@ public:
     
     
     // running
-    bool         AddPrimary (Int_t fpdg=-1000
-                             ,Float_t fEng=-1000
-                             ,Float_t fPx=-1000
-                             ,Float_t fPy=-1000
-                             ,Float_t fPz=-1000
-                             ,Float_t fP=-1000
-                             ,Int_t fstatus_code=-1000
-                             ,Float_t fmass=-1000
-                             ,Int_t fND=-1000
-                             ,Int_t fmother=-1000
-                             ,bool track_reconstructed=false
-                             ,Int_t ftrackID=-1000
-                             ,PandoraNuTrack fprimarPandoraNuTrack=PandoraNuTrack()
-                             );
-    
-    
 
     vector<size_t> sort_by_momentum_magnitude(const vector<TVector3> &v);
     bool            SortNucleons ();
@@ -98,6 +82,7 @@ public:
                                    ,TLorentzVector fmomentum    // 4-momentum
                                    ,Int_t fstatus_code          // status code
                                    ,Int_t fmother               // mother
+                                   ,std::string fprocess        // process
     );
 
     
@@ -183,6 +168,7 @@ private:
     std::vector<TLorentzVector> protons , neutrons;
 
     
+    std::vector<std::string>    process;   
     
     // PandoraNuTrack
     PandoraNuTrack              muonTrack=PandoraNuTrack(), protonTrack=PandoraNuTrack();

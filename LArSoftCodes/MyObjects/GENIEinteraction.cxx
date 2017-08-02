@@ -36,6 +36,7 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
                                    ,TLorentzVector fmomentum    // 4-momentum
                                    ,Int_t fstatus_code          // status code
                                    ,Int_t fmother               // mother
+                                   ,std::string fprocess        // process
 ){
     
     momentum = fmomentum;
@@ -60,6 +61,7 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
         
         pdg.push_back(fpdg);
         mother.push_back(fmother);
+        process.push_back(fprocess);
         status_code.push_back(fstatus_code);
         
         Nprimaries++;
@@ -281,7 +283,12 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     SHOW(mcevent_id);
     SHOWTVector3(vertex_position);
     if (!IsVertexContained) Printf("vertex not contained!");
+    
+    // std::vector-s of all primary paritcles
     SHOWstdVector( pdg );
+    SHOWstdVector( mother );
+    SHOWstdVector( process );
+    
     SHOWTLorentzVector( nu );
     SHOWTLorentzVector( muon );
     SHOWTLorentzVector( q );

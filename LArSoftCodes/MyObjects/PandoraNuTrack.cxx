@@ -60,14 +60,13 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     //    if ( truth_Eng>0 && truth_P>0 ){
     if (MCpdgCode!=-9999){
         cout << "........................" << endl << "MC information " << endl ;
-        SHOW (MCpdgCode);
-        SHOW ( mcevent_id );
-        //        PrintPhys (truth_P , "GeV/c");
-        //        SHOW3(truth_Eng , truth_theta , truth_phi);
-        //        PrintPhys(truth_length , "cm");
+        SHOW(MCpdgCode);
+        SHOW(mcevent_id);
         SHOWTVector3(truth_start_pos);
         SHOWTVector3(truth_end_pos);
         SHOWTLorentzVector(truth_momentum);
+        SHOW(truth_mother);
+        SHOW(truth_process);
         cout << "........................" << endl;
     }
     //        SHOW2( truth_ccnc, IsGENIECC1p );
@@ -285,59 +284,6 @@ bool PandoraNuTrack::IsWireTimeAlongTrack ( Int_t plane, Int_t wire , Float_t ti
     return false;
 }
 
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Print(bool DoPrintPos, bool DoPrintPandoraNuFeatures, bool DoPrintPlanes){
-    
-    cout << "\033[31m"
-    << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
-    << "track " << track_id << endl
-    << "-------------------"
-    << "\033[0m" << endl;
-    // SHOW3(run , subrun , event);
-    if (DoPrintPos){
-        SHOWTVector3(start_pos);
-        SHOWTVector3(end_pos);
-    }
-    if (DoPrintPandoraNuFeatures){
-        PrintPhys(length,"cm");
-        PrintPhys(momrange,"MeV/c momentum from range");
-        PrintPhys(mommsllhd,"MeV/c momentum from MCS LLHD");
-        PrintPhys(momeavgrangellhd,"MeV/c momentum from MCS LLHD and range");
-        SHOW(distlenratio);
-        PrintPhys(theta,"radians");
-        PrintPhys(phi,"radians");
-        PrintPhys(start_dqdx,"ADC/cm");
-        PrintPhys(end_dqdx,"ADC/cm");
-        PrintPhys(tot_dqdx,"ADC/cm");
-        PrintPhys(dQtotal,"ADC");
-        SHOW3( cosmicscore, coscontscore , pidpida )
-        SHOW2( cfdistance , cfdistance_start );
-    }
-    if (DoPrintPlanes){
-        SHOW3( purtruth_U , purtruth_V   , purtruth_Y );
-        for (int plane = 0 ; plane < 3; plane++) {
-            PrintPhys( CalorimetryPDG[plane] , Form(" for plane %d",plane) );
-            PrintBox(roi[plane]);
-        }
-    }
-    if ( truth_Eng>0 && truth_P>0 ){
-        cout << "MC information \n..................." << endl;
-        SHOW ( mcevent_id );
-        SHOW2 ( process_primary , MCpdgCode );
-        PrintPhys (truth_P , "GeV/c");
-        SHOW3(truth_Eng , truth_theta , truth_phi);
-        PrintPhys(truth_length , "cm");
-        SHOWTVector3(truth_start_pos);
-        SHOWTVector3(truth_end_pos);
-        SHOW2( truth_ccnc, IsGENIECC1p );
-        SHOW( IsGENIECC_1p_200MeVc_0pi );
-    }
-    cout << "\033[31m"
-    << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
-    << "\033[0m" << endl;
-}
 
 
 */

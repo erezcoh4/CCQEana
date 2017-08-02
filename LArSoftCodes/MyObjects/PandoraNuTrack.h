@@ -67,6 +67,8 @@ public:
     
     
     /// SETters
+    void      SetTruthProcess (std::string _process)        {truth_process = _process;};
+
     void SetCC_1p_200MeVc_0pi ()                            {IsGENIECC_1p_200MeVc_0pi=true;};
     
     void               SetRun (Int_t _run)                  {run = _run;};
@@ -78,6 +80,7 @@ public:
     void         SetMCpdgCode (Int_t _mcpdg)                {MCpdgCode = _mcpdg;};
     void         SetBestPlane (Int_t best)                  {BestPlane = best;};
     void          SetMaxNHits (Int_t maxnhits)              {MaxNHits = maxnhits;};
+    void       SetTruthMother (Int_t _mother)               {truth_mother = _mother;};
     void    SetCaloKEPerPlane (Int_t plane , Float_t ke )   {CaloKEPerPlane[plane] = ke;};
     void      SetPIDaPerPlane (Int_t plane , Float_t pida ) {PIDaPerPlane[plane] = pida;};
     
@@ -108,11 +111,16 @@ public:
     
     
     // GETters
+
+    std::string     GetTruthProcess () const {return truth_process;};
+
+    
     Int_t                    GetRun () const {return run;};
     Int_t                 GetSubrun () const {return subrun;};
     Int_t                  GetEvent () const {return event;};
     Int_t                GetTrackID () const {return track_id;};
     Int_t              GetMCeventID () const {return mcevent_id;};
+    Int_t            GetTruthMother () const {return truth_mother;};
     
     Int_t              GetMCpdgCode () const {return MCpdgCode;};
     Int_t                   GetCCNC () const {return truth_ccnc;};
@@ -172,6 +180,10 @@ public:
 
     
 private:
+
+    // std::string
+    std::string truth_process="unknown process";
+
     
     // bool
     bool        IsGENIECC_1p_200MeVc_0pi=false;
@@ -187,7 +199,7 @@ private:
     Int_t       BestPlane=2;
     Int_t       MaxNHits=0;
     Int_t       mcevent_id=-1;
-
+    Int_t       truth_mother=-1;
     
     // Float_t
     Float_t     length=0, theta=0, phi=0;
