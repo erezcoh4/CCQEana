@@ -16,8 +16,12 @@
 
 #include <iostream>
 #include "../../mySoftware/MySoftwarePackage/myIncludes.h"
-#include "../../AnalysisTreesInformation/AnaTreesPackage/PandoraNuTrack.h"
-#include "../../AnalysisTreesInformation/AnaTreesPackage/hit.h"
+//#include "../../AnalysisTreesInformation/AnaTreesPackage/PandoraNuTrack.h"
+//#include "../../AnalysisTreesInformation/AnaTreesPackage/hit.h"
+#include "../LArSoftCodes/MyObjects/PandoraNuTrack.h"
+#include "../LArSoftCodes/MyObjects/hit.h"
+#include "../LArSoftCodes/MyObjects/box.h"
+#include "../LArSoftCodes/MyObjects/pairVertex.h"
 
 /**
  \class AnalyseEvents
@@ -41,6 +45,7 @@ public:
     void                           GetEntry ( int );
     std::vector<hit>                GetHits ()  const {return hits;};
     std::vector<PandoraNuTrack>   GetTracks ()  const {return tracks;};
+    std::vector<pairVertex>     GetVertices ()  const {return vertices;};
     
     
     // INITializers
@@ -60,6 +65,9 @@ private:
     std::vector<PandoraNuTrack> tracks;
     
     std::vector<hit>            hits;
+
+    std::vector<pairVertex>     vertices;
+
 };
 
 #endif

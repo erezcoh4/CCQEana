@@ -15,9 +15,8 @@ INCFLAGS += -I$(LARLITE_USERDEVDIR)/AnalysisTreesInformation/AnaTreesPackage
 INCFLAGS += -I$(LARLITE_USERDEVDIR)/MyLarLite/MyPackage
 INCFLAGS += -I$(LARLITE_USERDEVDIR)/LarLite/MyPackage
 INCFLAGS += -I$(LARLITE_USERDEVDIR)/BasicTool/GeoAlgo
-# INCFLAGS += -I$(LARLITE_USERDEVDIR)/CCQEana/LArSoftCodes
-# INCFLAGS += -I$(LARLITE_USERDEVDIR)/CCQEana/LArSoftCodes/PandoraNuTrack
-# INCFLAGS += -I$(LARLITE_USERDEVDIR)/CCQEana/LArSoftCodes/Hit
+INCFLAGS += -I$(LARLITE_USERDEVDIR)/CCQEana/LArSoftCodes
+INCFLAGS += -I$(LARLITE_USERDEVDIR)/CCQEana/LArSoftCodes/MyObjects
 INCFLAGS += $(shell larlite-config --includes)
 
 
@@ -31,5 +30,8 @@ include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}
 
 # call the common GNUmakefile
 LDFLAGS += $(shell larlite-config --libs)
-LDFLAGS += -L$(LARLITE_LIBDIR) -lBasicTool_GeoAlgo -lAnalysisTreesInformation_AnaTreesPackage 
+LDFLAGS += -L$(LARLITE_LIBDIR) -lBasicTool_GeoAlgo 
 include $(LARLITE_BASEDIR)/Makefile/GNUmakefile.CORE
+
+
+# -lAnalysisTreesInformation_AnaTreesPackage was originally in LDFLAGS

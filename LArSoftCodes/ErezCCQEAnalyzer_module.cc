@@ -71,7 +71,7 @@ constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal d
 constexpr float EPSILON      = 0.1;   // tollerance for equations
 
 // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
-constexpr int N_box_sizes    = 2;
+constexpr int N_box_sizes    = 20;
 constexpr int MinNwiresBox   = 5;
 constexpr int dNwiresBox     = 5;
 constexpr int MinNticksBox   = 10;
@@ -843,7 +843,7 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
     for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
-        for (int plane = 0; plane < 2; plane++) {
+        for (int plane = 0; plane < 3; plane++) {
             vertices_file << Form( "RdQaroundVertex[plane %d][%d wires x %d ticks]"
                                   , plane , NwiresBox[i_box_size] , NticksBox[i_box_size] ) << "," ;
         }
@@ -971,14 +971,15 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         // CONTINUE HERE!!! create the function pairVertex::GetRdQaroundVertex
         // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
         for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
-            for (int plane = 0; plane < 2; plane++) {
+            for (int plane = 0; plane < 3; plane++) {
                 vertices_file << v.GetRdQaroundVertex( plane, NwiresBox[i_box_size] , NticksBox[i_box_size] , hits ) << "," ;
             }
         }
         
         
         // vertex truth-topology in MC
-        vertices_file << "," << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
+        vertices_file
+        << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
         
         // finish
         vertices_file << endl;

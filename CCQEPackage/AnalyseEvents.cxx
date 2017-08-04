@@ -44,12 +44,18 @@ void AnalyseEvents::GetEntry (int entry){
     std::vector <hit> * fhits = 0;
     InTree -> SetBranchAddress("hits" , &fhits);
     
+
+    std::vector <pairVertex> * fvertices = 0;
+    InTree -> SetBranchAddress("vertices" , &fvertices);
+
     InTree -> GetEntry(entry);
     
     hits = *fhits;
     tracks = *ftracks;
+    vertices = *fvertices;
 
     delete ftracks;
     delete fhits;
+    delete fvertices;
 }
 #endif
