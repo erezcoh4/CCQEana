@@ -15,6 +15,8 @@
 #define hit_H
 
 #include "Rtypes.h"
+#include "box.h"
+
 
 
 
@@ -41,7 +43,9 @@ public:
     float                GetCharge ()   const {return hit_charge;};
     float                 GetPeakT ()   const {return hit_peakT;};
 
-    
+    bool                   InPlane (int fplane) const {return (hit_plane==fplane);};
+    bool                     InBox (box fbox)   const;
+
     
 //    inline bool operator==(const hit & h) {
 //        return std::tie( hit_plane, hit_wire , hit_peakT , hit_id) == std::tie(h.hit_plane , h.hit_wire, h.hit_peakT , h.hit_id);

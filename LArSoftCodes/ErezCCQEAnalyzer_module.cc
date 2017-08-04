@@ -70,6 +70,13 @@ constexpr int kMaxNgenie     = 100;
 constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal distance for clustering
 constexpr float EPSILON      = 0.1;   // tollerance for equations
 
+// charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+constexpr int N_box_sizes    = 2;
+constexpr int MinNwiresBox   = 5;
+constexpr int dNwiresBox     = 5;
+constexpr int MinNticksBox   = 10;
+constexpr int dNticksBox     = 10;
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 namespace ub { class ErezCCQEAnalyzer; }
@@ -102,7 +109,7 @@ public:
     void         ConstructVertices ();
     void   ClusterTracksToVertices ();
     void           AnalyzeVertices ();
-    void          FindPairVertices ();
+    void          FilterGoodPairVertices ();
     void               TagVertices ();
     void          PrintInformation ();
     bool    TrackAlreadyInVertices (int ftrack_id);
@@ -141,6 +148,9 @@ private:
     int     Nvertices;
     int     vertices_ctr;
     
+    int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
+    
+    
     // my objects
     std::vector<PandoraNuTrack>     tracks;
     std::vector<hit>                hits;
@@ -156,7 +166,6 @@ private:
 
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
-    
     
     // time stamp
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
@@ -500,7 +509,7 @@ void ub::ErezCCQEAnalyzer::ConstructVertices(){
     // analyze these vertices: inter-tracks distances, angles...
     AnalyzeVertices();
     // retain only vertices with pairs of 2-tracks at close proximity
-    FindPairVertices();
+    FilterGoodPairVertices();
     // if its a MC event, tag the vertex by their MC information
     if (MCmode) TagVertices();
     // output to csv file
@@ -665,8 +674,12 @@ void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::FindPairVertices(){
+void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
 
+    art::ServiceHandle<geo::Geometry> geom;
+    auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+
+    
     // for momentum reconstuction from range / otherwise
     trkf::TrackMomentumCalculator trkm;
 
@@ -675,7 +688,7 @@ void ub::ErezCCQEAnalyzer::FindPairVertices(){
     std::vector<pairVertex> tmp_vertices = vertices;
     vertices.clear();
     
-    Debug(3 , "ub::ErezCCQEAnalyzer::FindPairVertices()");
+    Debug(3 , "ub::ErezCCQEAnalyzer::FilterGoodPairVertices()");
     for (auto & v:tmp_vertices) {
         // vertices with only two tracks at close proximity and nothing else
         if (
@@ -696,8 +709,22 @@ void ub::ErezCCQEAnalyzer::FindPairVertices(){
             v.AssignProtonTrack( AssignedProtonTrack );
             
             v.FixTracksDirections ();
-            //    v.SetEDepAroundVertex (); // for later, using the hits-tracks association...
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
+           
+            // set vertex position in the three wire planes
+            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
+            if (tpcID.isValid) {
+                int tpc = tpcID.TPC;
+                for (int plane = 0 ; plane < 2 ; plane ++){
+                    geo::PlaneID planeID = geo::PlaneID( 0 , tpc , plane ); // cryostat=0
+                    float wire = geom->WireCoordinate( v.GetPosition().Y() , v.GetPosition().Z() ,  planeID );
+                    float time = detprop->ConvertXToTicks( v.GetPosition().X() , planeID ) ;
+                    // plug into the track
+                    v.SetPlaneProjection( plane , wire , time );
+                }
+            }
+            // plug hits associated with the proton and the muon tracks
+            v.AssociateHitsToTracks( hits );
             
             vertices.push_back( v );
         }
@@ -811,10 +838,21 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
     
     // truth delta-phi
-    << "truth_delta_phi" << ","
+    << "truth_delta_phi" << ",";
+    
+    
+    // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+    for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
+        for (int plane = 0; plane < 2; plane++) {
+            vertices_file << Form( "RdQaroundVertex[plane %d][%d wires x %d ticks]"
+                                  , plane , NwiresBox[i_box_size] , NticksBox[i_box_size] ) << "," ;
+        }
+    }
+
     
     // vertex truth-topology in MC
-    << "all" << "," << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
+    vertices_file
+    << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
     
     << endl;
     
@@ -928,10 +966,21 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         // truth delta-phi
         vertices_file << v.GetTruthDeltaPhi() << ",";
 
+        
+        
+        // CONTINUE HERE!!! create the function pairVertex::GetRdQaroundVertex
+        // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+        for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
+            for (int plane = 0; plane < 2; plane++) {
+                vertices_file << v.GetRdQaroundVertex( plane, NwiresBox[i_box_size] , NticksBox[i_box_size] , hits ) << "," ;
+            }
+        }
+        
+        
         // vertex truth-topology in MC
-        vertices_file << true << "," << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
+        vertices_file << "," << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
         
-        
+        // finish
         vertices_file << endl;
     }
 }
@@ -987,6 +1036,13 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::beginJob(){
+    
+    // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+    for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
+        NwiresBox[i_box_size] = MinNwiresBox + i_box_size * dNwiresBox;
+        NticksBox[i_box_size] = MinNticksBox + i_box_size * dNticksBox;
+    }
+
     
     art::ServiceHandle<art::TFileService> tfs;
     fTree = tfs->make<TTree>("eventsTree","analysis tree of events");

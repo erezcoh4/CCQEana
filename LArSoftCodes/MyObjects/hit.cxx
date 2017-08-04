@@ -16,11 +16,28 @@ hit_charge(fcharge)
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool hit::InBox(box fbox) const {
+    if (
+        ( fbox.GetStartWire() <= hit_wire && hit_wire <= fbox.GetEndWire() )
+        &&
+        ( fbox.GetStartTime() <= hit_peakT && hit_peakT <= fbox.GetEndTime() )
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void hit::Print() const{
     std::cout << "hit " << hit_id << ", " << hit_plane << "/" << hit_wire << "/" << hit_peakT << std::endl;
     std::cout << "\t trkKey: " << hit_trkKey << std::endl;
 
 }
+
+
 
 
 #endif

@@ -16,6 +16,8 @@
 
 #include <iostream>
 #include "PandoraNuTrack.h"
+#include "hit.h"
+#include "box.h"
 #include "GENIEinteraction.h"
 
 #define r2d TMath::RadToDeg()
@@ -63,6 +65,7 @@ public:
     void                                ReconstructBeam ();
     void                          ReconstructKinematics ();
     
+    void                          AssociateHitsToTracks (std::vector<hit> hits);
     
     
     // SETters
@@ -84,7 +87,7 @@ public:
     void          AssignProtonTrack (PandoraNuTrack ftrack)                         {AssignedProtonTrack = ftrack; };
     void    SetReconstructedMomenta (float PmuFromRange = 0, float PpFromRange = 0 );
     void   SetReconstructedFeatures (float PmuFromRange = 0, float PpFromRange = 0 );
-    
+    void         SetPlaneProjection (int plane , float _wire , float _time )        {vertex_wire[plane]=_wire; vertex_time[plane]=_time;};
 
     // GETters
     
@@ -114,6 +117,12 @@ public:
     float                        GetRecoPt () const {return (IsVertexReconstructed) ? (reco_Pmu + reco_Pp).Pt() : -1;};
     float                 GetReco_theta_pq () const {return reco_theta_pq;};
     float                 GetTruthDeltaPhi () const;
+    
+    // get the ratio of tracks-charge deposited to total-charge deposited
+    // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
+    // input: plane, N(wires) & N(time-ticks) for the box, hits in event
+    float               GetRdQaroundVertex (int plane, int Nwires, int Nticks, std::vector<hit> hits) const ;
+    
     std::vector<float>    Get_delta_phi_ij () const {return delta_phi_ij;};
     std::vector<float>    Get_distances_ij () const {return distances_ij;};
     std::vector<float>  Get_delta_theta_ij () const {return delta_theta_ij;};
@@ -139,6 +148,8 @@ public:
     GENIEinteraction          GetGENIEinfo () const {return genie_interaction;};
     GENIEinteraction       GetClosestGENIE () const {return closest_genie_interaction;};
 
+    
+    
     // operators
     inline bool operator==(const pairVertex & v) {
         return  (vertex_id == v.GetVertexID());
@@ -182,13 +193,9 @@ private:
 
     Int_t               run=-1 , subrun=-1 , event=-1, vertex_id=-1;
     Int_t               Ntracks=-1;
-//    Int_t               reconstructed_Np, reconstructed_Nn, reconstructed_Npi, reconstructed_Nmu, reconstructed_Nel;
-//    
-//    // location in each plane
-//    float               vertex_wire[3] , vertex_time[3];
-//    float               delta_phi_LongestShortestTracks;
-//    float               reconstructed_Xb, reconstructed_Q2 ;
-//    float               reconstructed_theta_pq, reconstructed_p_over_q, reconstructed_Mmiss;
+    
+    // location in each plane
+    float               vertex_wire[3]={0,0,0} , vertex_time[3]={0,0,0}; // these are floating point numbers since they are projections
     
     // reconstructed features
     // calorimentric reconstruction:
@@ -202,6 +209,7 @@ private:
     // --- - - --- -- - -- -- -- -- --- -- - --- - -- - -- -- -- --- - -- - --- - - -- - -- -
     
     float               truth_alpha_q, truth_alpha_p, truth_alpha_mu, truth_alpha_miss;
+    
     //    float               dqdx_around_vertex,   dqdx_around_vertex_tracks_associated, dqdx_around_vertex_non_tracks_associated;
 
     TVector3            position=TVector3();
@@ -214,11 +222,7 @@ private:
     TLorentzVector      reco_Pnu=TLorentzVector(-1,-1,-1,-1),  reco_Pp=TLorentzVector(-1,-1,-1,-1);
     TLorentzVector      reco_Pmu=TLorentzVector(-1,-1,-1,-1),  reco_q=TLorentzVector(-1,-1,-1,-1);
     TLorentzVector      reco_n_miss=TLorentzVector(-1,-1,-1,-1);
-
-//    TLorentzVector      reco_Pnu_fromE, reco_q_fromE, reco_n_miss_fromE;
-//
-//    
-//    
+    
 //    // momentum correction from p(mu)/theta(mu) and p(p) / theta(p) correlations
 //    TLorentzVector      reco_Pp_corrected,  reco_Pmu_corrected,  reco_q_corrected;
 //    TLorentzVector      reco_Pnu_corrected, reco_n_miss_corrected;
@@ -233,8 +237,7 @@ private:
 //    // --------------------------------------------------------------------------------------------------------
 //    
 //    box                 roi[3] , roi_u , roi_v , roi_y, Roi_20x40_AroundVertex[3];
-//    
-//
+    
     PandoraNuTrack      muonTrueTrack,  protonTrueTrack;
     PandoraNuTrack      ShortestTrack,  LongestTrack;
     PandoraNuTrack      LargePIDaTrack, SmallPIDaTrack;
@@ -249,13 +252,9 @@ private:
     std::vector <std::vector<float> >   tracks_delta_phi;
     std::vector <std::vector<float> >   tracks_delta_theta;
     std::vector<float>                  tracks_dis_from_vertex, delta_phi_ij,    distances_ij , delta_theta_ij;
-//
-//    
-//    std::vector<TLorentzVector> reconstructed_protons;
-//    
     std::vector<PandoraNuTrack>         tracks, tracks_lengthsorted,  tracks_pidasorted ;
     
-    
+    std::vector<hit>    hits_muon[3], hits_proton[3]; // in 3 wire planes
     
 };
 

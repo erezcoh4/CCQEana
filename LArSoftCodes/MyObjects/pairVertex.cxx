@@ -405,13 +405,66 @@ void pairVertex::SetReconstructedFeatures( float PmuFromRange, float PpFromRange
 float pairVertex::GetTruthDeltaPhi () const {
     // return the truth \Delta \phi between tracks in degrees
     float muon_truth_phi = AssignedMuonTrack.GetTruthMomentum().Phi();
-    float proton_truth_phi = AssignedPRotonTrack.GetTruthMomentum().Phi();
+    float proton_truth_phi = AssignedProtonTrack.GetTruthMomentum().Phi();
     return r2d*fabs( muon_truth_phi - proton_truth_phi );
 }
 
 
-//
-//
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void pairVertex::AssociateHitsToTracks (std::vector<hit> hits) {
+    // Aug-3,2017
+    // plug the proton hits to the proton (candidate) and the muon (candidate) hits
+    
+    for (auto hit:hits){
+        
+        int plane = hit.GetPlane();
+        
+        if (hit.GetTrackKey()== AssignedMuonTrack.GetTrackID() ){
+            hits_muon[plane].push_back(hit);
+        }
+        else if (hit.GetTrackKey()== AssignedProtonTrack.GetTrackID() ){
+            hits_proton[plane].push_back(hit);
+        }
+    }
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::vector<hit> hits) const {
+    // Aug-3,2017
+    // get the ratio of tracks-charge deposited to total-charge deposited
+    // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
+    // a mal-function wil return -1
+    // input:
+    // plane, N(wires) & N(time-ticks) for the box, hits in event
+    if (plane<0 || plane>2) return -1;
+    
+    box VertexBox( (Int_t)vertex_wire[plane] - Nwires , (Int_t)vertex_time[plane] - Nticks,
+                   (Int_t)vertex_wire[plane] + Nwires , (Int_t)vertex_time[plane] + Nticks );
+    
+    
+    float Qtotal = 0.0 , Qtracks = 0.0;
+    for (auto hit:hits){
+        
+        if (hit.InPlane(plane) && hit.InBox(VertexBox)){
+            
+            Qtotal += hit.GetCharge();
+            
+            // the hit belongs to the muon/proton track add its charge to the tracks charge
+            if ( hit.GetTrackKey()== AssignedMuonTrack.GetTrackID()  || hit.GetTrackKey()== AssignedProtonTrack.GetTrackID() ){
+                Qtracks += hit.GetCharge();
+            }
+        }
+    }
+    if (fabs(Qtracks)>0) return (Qtracks/Qtotal);
+    else return -1;
+}
+
+
+
+
 //
 ////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //bool pairVertex::BuildROI(int plane){
@@ -442,7 +495,7 @@ float pairVertex::GetTruthDeltaPhi () const {
 //    }
 //    return true;
 //}
-//
+
 //
 ////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //bool pairVertex::BuildLocationInPlane(int plane){
