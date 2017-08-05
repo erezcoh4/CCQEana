@@ -715,7 +715,7 @@ void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
             geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
             if (tpcID.isValid) {
                 int tpc = tpcID.TPC;
-                for (int plane = 0 ; plane < 2 ; plane ++){
+                for (int plane = 0 ; plane < 3 ; plane ++){
                     geo::PlaneID planeID = geo::PlaneID( 0 , tpc , plane ); // cryostat=0
                     float wire = geom->WireCoordinate( v.GetPosition().Y() , v.GetPosition().Z() ,  planeID );
                     float time = detprop->ConvertXToTicks( v.GetPosition().X() , planeID ) ;
@@ -968,7 +968,6 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
 
         
         
-        // CONTINUE HERE!!! create the function pairVertex::GetRdQaroundVertex
         // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
         for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
             for (int plane = 0; plane < 3; plane++) {

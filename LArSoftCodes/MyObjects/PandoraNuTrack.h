@@ -126,7 +126,11 @@ public:
     Int_t                   GetCCNC () const {return truth_ccnc;};
     Int_t              GetBestPlane () const {return BestPlane;};
     Int_t               GetMaxNHits () const {return MaxNHits;};
-    
+    Int_t              GetStartWire (int plane) const {return roi[plane].GetStartWire();};
+    Int_t              GetStartTime (int plane) const {return roi[plane].GetStartTime();};
+    Int_t                GetEndWire (int plane) const {return roi[plane].GetEndWire();};
+    Int_t                GetEndTime (int plane) const {return roi[plane].GetEndTime();};
+   
     Float_t               GetLength () const {return length;};
     Float_t                GetTheta () const {return theta;};
     Float_t                  GetPhi () const {return phi;};

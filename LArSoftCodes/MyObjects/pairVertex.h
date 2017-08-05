@@ -90,6 +90,7 @@ public:
     void         SetPlaneProjection (int plane , float _wire , float _time )        {vertex_wire[plane]=_wire; vertex_time[plane]=_time;};
 
     // GETters
+    TString         GetTruthTopologyString () const {return TruthTopologyString;}
     
     bool                        GetIs1mu1p () const {return Is1mu1p;};
     bool       GetIsGENIECC_1p_200MeVc_0pi () const {return IsGENIECC_1p_200MeVc_0pi;};
@@ -107,6 +108,8 @@ public:
     Int_t                      GetVertexID () const {return vertex_id;};
     Int_t                       GetNtracks () const {return (Int_t)tracks.size();};
  
+    Int_t                    GetVertexWire (int plane) const {return vertex_wire[plane];};
+    Int_t                    GetVertexTime (int plane) const {return vertex_time[plane];};
     
     float           GetAngleBetween2tracks () const; // return the angle between the muon and proton candidates, in degrees (!)
     float                        GetRecoEv () const {return reco_Pnu.E();};
@@ -148,6 +151,8 @@ public:
     GENIEinteraction          GetGENIEinfo () const {return genie_interaction;};
     GENIEinteraction       GetClosestGENIE () const {return closest_genie_interaction;};
 
+    std::vector<hit>           GetMuonHits (int plane) const {return hits_muon[plane];};
+    std::vector<hit>         GetProtonHits (int plane) const {return hits_proton[plane];};
     
     
     // operators
@@ -186,7 +191,7 @@ private:
 
     
     // variables
-    TString             TopologyString="" , TruthTopologyString="unknown truth topology";
+    TString             TruthTopologyString="unknown truth topology";
     
     bool                Is1mu1p=false,    IsGENIECC_1p_200MeVc_0pi=false,   IsNon1mu1p=false,   IsCosmic=false;
     bool                IsVertexContained=false, Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false, IsVertexReconstructed=false;
