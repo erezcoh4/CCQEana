@@ -30,8 +30,8 @@ include $(LARLITE_BASEDIR)/Makefile/Makefile.${OSNAME}
 
 # call the common GNUmakefile
 LDFLAGS += $(shell larlite-config --libs)
-LDFLAGS += -L$(LARLITE_LIBDIR) -lBasicTool_GeoAlgo 
+LDFLAGS += -L$(LARLITE_LIBDIR) 
 include $(LARLITE_BASEDIR)/Makefile/GNUmakefile.CORE
 
 
-# -lAnalysisTreesInformation_AnaTreesPackage was originally in LDFLAGS
+# -lBasicTool_GeoAlgo  -lAnalysisTreesInformation_AnaTreesPackage were originally in LDFLAGS

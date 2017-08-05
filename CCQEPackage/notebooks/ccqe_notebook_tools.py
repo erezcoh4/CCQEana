@@ -6,6 +6,8 @@ from matplotlib.ticker import NullFormatter, MultipleLocator, FormatStrFormatter
 from matplotlib import ticker
 
 
+
+
 #---------------------------------------------------------------------------------------------
 # Aug-4, 2017
 pair_types = ['1mu-1p'   ,'other pairs','cosmic' ,'CC 1p 0pi'    ]
@@ -13,6 +15,52 @@ labels     = ['1$\\mu$1p','other pairs','cosmic' ,'CC 1p 0$\\pi$']
 colors     = ['teal'     ,'red'        ,'orange' ,'blue'         ]
 cmaps      = ['Greens'   ,'Reds'       ,'Oranges','Blues'        ]
 #---------------------------------------------------------------------------------------------
+
+
+# ------------------------------------------------
+# Aug-5, 2017
+def set_color_label_cmap(t):
+    pdg = t.GetMCpdgCode()
+    color, label, cmap = 'purple','%d'%pdg,'Purples'
+    if pdg==-13:
+        color, label, cmap = 'black','$\\mu^+$','Greys'
+    elif pdg==13:
+        color, label, cmap = 'black','$\\mu^-$','Greys'
+    elif pdg==-11:
+        color, label, cmap = 'red','$e^+$','Reds'
+    elif pdg==11:
+        color, label, cmap = 'red','$e^-$','Reds'
+    elif pdg==2212:
+        color, label, cmap = 'blue','$p$','Blues'
+    elif pdg==2112:
+        color, label, cmap = 'salmon','$n$','Oranges'
+    elif pdg==-211:
+        color, label, cmap = 'teal','$\\pi^-$','Greens'
+    elif pdg==211:
+        color, label, cmap = 'teal','$\\pi^+$','Greens'
+    elif pdg==111:
+        color, label, cmap = 'teal','$\\pi^0$','Greens'
+    elif pdg==22:
+        color, label, cmap = 'cyal','$\\gamma$','cool'
+    return color , label , cmap
+# ------------------------------------------------
+
+# deprreacted
+##---------------------------------------------------------------------------------------------
+## Aug-5, 2017
+#def get_t_start_end(t,plane): # t is a track
+#    if plane==0:
+#        t_start_wire,t_start_time = t.start_wire_u, t.start_time_u
+#        t_end_wire,t_end_time = t.end_wire_u, t.end_time_u
+#    elif plane==1:
+#        t_start_wire,t_start_time = t.start_wire_v, t.start_time_v
+#        t_end_wire,t_end_time = t.end_wire_v, t.end_time_v
+#    elif plane==2:
+#        t_start_wire,t_start_time = t.start_wire_y, t.start_time_y
+#        t_end_wire,t_end_time = t.end_wire_y, t.end_time_y
+#    return t_start_wire , t_start_time , t_end_wire , t_end_time
+##---------------------------------------------------------------------------------------------
+#
 
 
 # ------------------------------------------------
