@@ -18,17 +18,15 @@ void AnalyseEvents::InitInputTree(){
     InTree -> SetBranchAddress("Nhits"          , &Nhits);
     
     Nentries = InTree -> GetEntries();
-    if(debug>1) cout << "AnalyzeVertex input-tree ready (" << InTree -> GetName() <<"), " <<  Nentries << " entries" << endl;
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void AnalyseEvents::InitEvent(){
     
-    Debug ( 2 , "AnalyzeVertex::InitEvent");
-    
     tracks.clear();
     hits.clear();
+    vertices.clear();
     
 }
 

@@ -15,20 +15,23 @@
 #define ANALYSEEVENTS_H
 
 #include <iostream>
-#include "../../mySoftware/MySoftwarePackage/myIncludes.h"
+//#include "../../mySoftware/MySoftwarePackage/myIncludes.h"
 //#include "../../AnalysisTreesInformation/AnaTreesPackage/PandoraNuTrack.h"
 //#include "../../AnalysisTreesInformation/AnaTreesPackage/hit.h"
-#include "../LArSoftCodes/MyObjects/PandoraNuTrack.h"
-#include "../LArSoftCodes/MyObjects/hit.h"
-#include "../LArSoftCodes/MyObjects/box.h"
-#include "../LArSoftCodes/MyObjects/pairVertex.h"
+#include "TTree.h"
+#include "Rtypes.h"
+#include "PandoraNuTrack.h"
+#include "hit.h"
+#include "box.h"
+#include "GENIEinteraction.h"
+#include "pairVertex.h"
 
 /**
  \class AnalyseEvents
  User defined class AnalyseEvents ... these comments are used to generate
  doxygen documentation!
  */
-class AnalyseEvents: public myIncludes{
+class AnalyseEvents{
     
 public:
     
