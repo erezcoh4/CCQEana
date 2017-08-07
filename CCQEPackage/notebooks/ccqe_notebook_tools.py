@@ -45,22 +45,15 @@ def set_color_label_cmap(t):
     return color , label , cmap
 # ------------------------------------------------
 
-# deprreacted
-##---------------------------------------------------------------------------------------------
-## Aug-5, 2017
-#def get_t_start_end(t,plane): # t is a track
-#    if plane==0:
-#        t_start_wire,t_start_time = t.start_wire_u, t.start_time_u
-#        t_end_wire,t_end_time = t.end_wire_u, t.end_time_u
-#    elif plane==1:
-#        t_start_wire,t_start_time = t.start_wire_v, t.start_time_v
-#        t_end_wire,t_end_time = t.end_wire_v, t.end_time_v
-#    elif plane==2:
-#        t_start_wire,t_start_time = t.start_wire_y, t.start_time_y
-#        t_end_wire,t_end_time = t.end_wire_y, t.end_time_y
-#    return t_start_wire , t_start_time , t_end_wire , t_end_time
-##---------------------------------------------------------------------------------------------
-#
+# ------------------------------------------------
+def find_a_straight_line( x_array , y_array ):
+    [x0,x1] = x_array
+    [y0,y1] = y_array
+    slope = (y1-y0)/((x1-x0) if np.abs(x1-x0)>0.001 else (y1-y0)/(0.001*np.sign(x1-x0)))
+    intercept = y1 - slope*x1
+    return slope,intercept
+# ------------------------------------------------
+
 
 
 # ------------------------------------------------
