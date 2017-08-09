@@ -41,7 +41,7 @@ def set_color_label_cmap(t):
     elif pdg==111:
         color, label, cmap = 'teal','$\\pi^0$','Greens'
     elif pdg==22:
-        color, label, cmap = 'cyal','$\\gamma$','cool'
+        color, label, cmap = 'cyan','$\\gamma$','cool'
     return color , label , cmap
 # ------------------------------------------------
 
