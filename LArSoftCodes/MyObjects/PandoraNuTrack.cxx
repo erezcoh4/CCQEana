@@ -108,6 +108,76 @@ void PandoraNuTrack::SetStartEndPlane(Int_t plane ,
 }
 
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Int_t PandoraNuTrack::GetStartWire (int plane) const{
+    switch (plane) {
+        case 0:
+            return start_wire_u;
+            break;
+        case 1:
+            return start_wire_v;
+            break;
+        case 2:
+        default:
+            return start_wire_y;
+            break;
+    }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Int_t PandoraNuTrack::GetStartTime (int plane) const{
+    switch (plane) {
+        case 0:
+            return start_time_u;
+            break;
+        case 1:
+            return start_time_v;
+            break;
+        case 2:
+        default:
+            return start_time_y;
+            break;
+    }
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Int_t PandoraNuTrack::GetEndWire (int plane) const{
+    switch (plane) {
+        case 0:
+            return end_wire_u;
+            break;
+        case 1:
+            return end_wire_v;
+            break;
+        case 2:
+        default:
+            return end_wire_y;
+            break;
+    }
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Int_t PandoraNuTrack::GetEndTime (int plane) const{
+    switch (plane) {
+        case 0:
+            return end_time_u;
+            break;
+        case 1:
+            return end_time_v;
+            break;
+        case 2:
+        default:
+            return end_time_y;
+            break;
+    }
+}
+
+
+
+
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t PandoraNuTrack::DistanceFromPoint( TVector3 position, std::string * fStartOrEnd  ){
@@ -259,19 +329,6 @@ void PandoraNuTrack::Straightness(){
     
     
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::SetMomentum(Float_t fmomrange, Float_t fmommsllhd ){
-
-    // this is true only if this track was a muon
-    momrange = fmomrange;
-    mommsllhd = fmommsllhd;
-    momeavgrangellhd = 0.5*(fmommsllhd+fmomrange);
-
-}
-
-
-
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

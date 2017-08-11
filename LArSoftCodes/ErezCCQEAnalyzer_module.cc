@@ -71,7 +71,7 @@ constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal d
 constexpr float EPSILON      = 0.1;   // tollerance for equations
 
 // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
-constexpr int N_box_sizes    = 20;
+constexpr int N_box_sizes    = 30;
 constexpr int MinNwiresBox   = 5;
 constexpr int dNwiresBox     = 5;
 constexpr int MinNticksBox   = 10;
@@ -163,7 +163,8 @@ private:
     std::string fFlashModuleLabel;
     std::string fCalorimetryModuleLabel;
     std::string fGenieGenModuleLabel;
-
+    std::string fDataSampleLabel;
+    
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
     
@@ -1061,7 +1062,7 @@ void ub::ErezCCQEAnalyzer::beginJob(){
 
     
     // output csv file
-    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/vertices.csv");
+    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
     HeaderVerticesInCSV();
 }
 
@@ -1073,6 +1074,7 @@ void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
     fHitsModuleLabel        = p.get< std::string >("HitsModuleLabel");
     fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
     fCalorimetryModuleLabel = p.get< std::string >("CalorimetryModuleLabel");
+    fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     debug = p.get< int >("VerbosityLevel");
 }
 

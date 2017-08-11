@@ -431,8 +431,22 @@ void pairVertex::AssociateHitsToTracks (std::vector<hit> hits) {
 }
 
 
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::vector<hit> hits) const {
+float pairVertex::GetChargeInBox(int plane, std::vector<hit> hits, box VertexBox) const {
+    // Aug-5,2017
+    // get the charge deposition from a set of hits (std::vector<hit>) in a box around the vertex
+    float Q = 0.0;
+    for (auto hit:hits){
+        if (hit.InPlane(plane) && hit.InBox(VertexBox)){
+            Q += hit.GetCharge();
+        }
+    }
+    return Q;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::vector<hit> hits ) const {
     // Aug-3,2017
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
@@ -441,24 +455,12 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
     // plane, N(wires) & N(time-ticks) for the box, hits in event
     if (plane<0 || plane>2) return -1;
     
-    box VertexBox( (Int_t)vertex_wire[plane] - Nwires , (Int_t)vertex_time[plane] - Nticks,
-                   (Int_t)vertex_wire[plane] + Nwires , (Int_t)vertex_time[plane] + Nticks );
-    
-    
-    float Qtotal = 0.0 , Qtracks = 0.0;
-    for (auto hit:hits){
-        
-        if (hit.InPlane(plane) && hit.InBox(VertexBox)){
-            
-            Qtotal += hit.GetCharge();
-            
-            // the hit belongs to the muon/proton track add its charge to the tracks charge
-            if ( hit.GetTrackKey()== AssignedMuonTrack.GetTrackID()  || hit.GetTrackKey()== AssignedProtonTrack.GetTrackID() ){
-                Qtracks += hit.GetCharge();
-            }
-        }
-    }
-    if (fabs(Qtracks)>0) return (Qtracks/Qtotal);
+    box VertexBox( (Int_t)vertex_wire[plane] - Nwires/2 , (Int_t)vertex_time[plane] - Nticks/2,
+                   (Int_t)vertex_wire[plane] + Nwires/2 , (Int_t)vertex_time[plane] + Nticks/2 );
+    float Qtotal    = GetChargeInBox( plane, hits, VertexBox);
+    float Qmuon     = GetChargeInBox( plane, hits_muon[plane], VertexBox);
+    float Qproton   = GetChargeInBox( plane, hits_proton[plane], VertexBox);
+    if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
     else return -1;
 }
 

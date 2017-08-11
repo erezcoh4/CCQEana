@@ -7,7 +7,6 @@ from matplotlib import ticker
 
 
 
-
 #---------------------------------------------------------------------------------------------
 # Aug-4, 2017
 pair_types = ['1mu-1p'   ,'other pairs','cosmic' ,'CC 1p 0pi'    ]

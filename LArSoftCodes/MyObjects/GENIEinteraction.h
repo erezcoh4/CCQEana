@@ -97,6 +97,8 @@ public:
     Int_t                            GetNprimaries () const {return Nprimaries;};
     Int_t                             GetPrimaries () const {return Nprimaries;};
     Int_t                              GetNprotons () const {return protons.size();};
+    Int_t                             GetNneutrons () const {return neutrons.size();};
+    Int_t                                GetNpions () const {return Npi;};
 
     Float_t                                  GetPt () const {return (protons.size()) ? (muon+protons.at(0)).Pt() : -1;};
     Float_t                           Get_theta_pq () const {return theta_pq;};

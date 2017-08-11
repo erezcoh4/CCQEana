@@ -125,6 +125,7 @@ public:
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
     // input: plane, N(wires) & N(time-ticks) for the box, hits in event
     float               GetRdQaroundVertex (int plane, int Nwires, int Nticks, std::vector<hit> hits) const ;
+    float                   GetChargeInBox (int plane, std::vector<hit> hits, box VertexBox) const;
     
     std::vector<float>    Get_delta_phi_ij () const {return delta_phi_ij;};
     std::vector<float>    Get_distances_ij () const {return distances_ij;};
