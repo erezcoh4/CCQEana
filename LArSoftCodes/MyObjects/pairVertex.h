@@ -120,6 +120,8 @@ public:
     float                        GetRecoPt () const {return (IsVertexReconstructed) ? (reco_Pmu + reco_Pp).Pt() : -1;};
     float                 GetReco_theta_pq () const {return reco_theta_pq;};
     float                 GetTruthDeltaPhi () const;
+    float               GetDistanceToGENIE () const {return (genie_interaction.GetVertexPosition()-position).Mag()};
+    float        GetDistanceToClosestGENIE () const {return (closest_genie_interaction.GetVertexPosition()-position).Mag()};
     
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2

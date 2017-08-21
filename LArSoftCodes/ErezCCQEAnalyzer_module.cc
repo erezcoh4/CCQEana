@@ -831,10 +831,12 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
     
     // mathing genie interaction
+    << "genie_distance" << ","
     << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
     << "truth_Pt" << "," << "truth_theta_pq" << ","
 
     // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
+    << "closest_genie_distance" << ","
     << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
     << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
     
@@ -954,12 +956,14 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         
 
         // mathing genie interaction
+        vertices_file << v.GetDistanceToGENIE() << ",";
         vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
         vertices_file << v.GetGENIEinfo().GetPt() << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
         
         
         
         // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
+        vertices_file << v.GetDistanceToClosestGENIE() << ",";
         vertices_file << v.GetClosestGENIE().GetEv() << "," << v.GetClosestGENIE().GetQ2() << "," << v.GetClosestGENIE().GetXb() << "," << v.GetClosestGENIE().GetY() << "," << v.GetClosestGENIE().GetW2() << ",";
         vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
         
@@ -1025,7 +1029,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
     std::chrono::duration<double> elapsed_seconds = end_ana_time - start_ana_time;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end_ana_time);
     std::cout << "\033[33m"
-    << "finished analysis of this event" << std::ctime(&end_time)
+    << "finished analysis of this event at " << std::ctime(&end_time)
     << "time elapsed: " << elapsed_seconds.count() << "s"
     << "\033[31m" << endl;
 
