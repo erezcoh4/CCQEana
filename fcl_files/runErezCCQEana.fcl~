@@ -15,7 +15,7 @@ source:
 {
   module_type: RootInput
   firstEvent : 1
-  maxEvents:   50
+  maxEvents:   -1
 }
 
 
@@ -34,7 +34,8 @@ physics:
       HitsModuleLabel:          "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"
-      VerbosityLevel:		1
+      CalorimetryModuleLabel:	"pandoraNucalo"
+      VerbosityLevel:		2
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

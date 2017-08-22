@@ -4,7 +4,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/prodgenie_bnb_nu_uboone_overlay_reco2_events.root" closeFileFast: false}
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05_events.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -36,7 +36,7 @@ physics:
       GenieGenModuleLabel:	"generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
       VerbosityLevel:		2
-      DataSampleLabel:		"prodgenie_bnb_nu_uboone_overlay_reco2"
+      DataSampleLabel:		"prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

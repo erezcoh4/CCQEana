@@ -117,11 +117,11 @@ public:
     float                        GetRecoXb () const {return reco_Xb;};
     float                         GetRecoY () const {return reco_y;};
     float                        GetRecoW2 () const {return reco_W2;};
-    float                        GetRecoPt () const {return (IsVertexReconstructed) ? (reco_Pmu + reco_Pp).Pt() : -1;};
+    float                        GetRecoPt () const {return (reco_Pmu + reco_Pp).Pt();};
     float                 GetReco_theta_pq () const {return reco_theta_pq;};
     float                 GetTruthDeltaPhi () const;
-    float               GetDistanceToGENIE () const {return (genie_interaction.GetVertexPosition()-position).Mag()};
-    float        GetDistanceToClosestGENIE () const {return (closest_genie_interaction.GetVertexPosition()-position).Mag()};
+    float               GetDistanceToGENIE () const {return (genie_interaction.GetVertexPosition()-position).Mag();};
+    float        GetDistanceToClosestGENIE () const {return (closest_genie_interaction.GetVertexPosition()-position).Mag();};
     
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
@@ -139,7 +139,7 @@ public:
     
     TLorentzVector              GetRecoPnu () const {return reco_Pnu;};
     TLorentzVector              GetRecoPmu () const {return reco_Pmu;};
-    TLorentzVector               GetRecoPp () const {return ((IsVertexReconstructed) ? (reco_Pp) : TLorentzVector() );};
+    TLorentzVector               GetRecoPp () const {return reco_Pp;};
     
     
     PandoraNuTrack        GetShortestTrack () const {return ShortestTrack;};
@@ -169,29 +169,7 @@ public:
 private:
     
     
-//    Float_t             AllChargeInVertexROI[3], AllChargeInVertexROI_enlarged_20_100[3], AllChargeInVertexROI_enlarged_40_200[3]; // sum of charge of all hits in the vertex-roi per plane
-//    Float_t             dQtotROI_20x40_AroundVertex[3], dQassociatedROI_20x40_AroundVertex[3];
-//    Float_t             TracksAssociatedCharge[3]; // sum of charge of all hits that are associated with my-tracks
-//    Float_t             ratio_associated_hit_charge_to_total[3] , average_ratio_associated_hit_charge_to_total , max_ratio_associated_hit_charge_to_total;
-//    Float_t             ratio_associated_hit_charge_to_total_enlarged_20_100[3];
-//    Float_t             ratio_associated_hit_charge_to_total_enlarged_40_200[3];
-//    Float_t             ratio_dQassociated_dQtot_ROI_20x40_AroundVertex[3];
-//    
-//    MyTrack             MyTrackMuonTrack[3] , MyTrackProtonTrack[3];
-//    MyTrack             MyTrackMuon_u, MyTrackMuon_v, MyTrackMuon_y, MyTrackProton_u, MyTrackProton_v, MyTrackProton_y;
-//    std::vector<MyTrack> my_tracks;
-//    
-//    hit                 ClosestHitToVertex[3];
-//    std::vector<hit>    HitsInPlane_u, HitsInPlane_v, HitsInPlane_y;
-//    std::vector<hit>    AllHitsInROI[3], AllHitsInROI_u,AllHitsInROI_v,AllHitsInROI_y;
     // -------------------------------------------------------
-    
-    
-    
-    
-    
-    
-
     
     // variables
     TString             TruthTopologyString="unknown truth topology";
@@ -218,33 +196,13 @@ private:
     
     float               truth_alpha_q, truth_alpha_p, truth_alpha_mu, truth_alpha_miss;
     
-    //    float               dqdx_around_vertex,   dqdx_around_vertex_tracks_associated, dqdx_around_vertex_non_tracks_associated;
-
     TVector3            position=TVector3();
     TVector3            reco_Pp_3vect=TVector3(), reco_Pmu_3vect=TVector3();
-//
-//    
-//    TLorentzVector      reconstructed_nu, reconstructed_muon, reconstructed_q ;
     
     // Tp + Eµ
     TLorentzVector      reco_Pnu=TLorentzVector(-1,-1,-1,-1),  reco_Pp=TLorentzVector(-1,-1,-1,-1);
     TLorentzVector      reco_Pmu=TLorentzVector(-1,-1,-1,-1),  reco_q=TLorentzVector(-1,-1,-1,-1);
     TLorentzVector      reco_n_miss=TLorentzVector(-1,-1,-1,-1);
-    
-//    // momentum correction from p(mu)/theta(mu) and p(p) / theta(p) correlations
-//    TLorentzVector      reco_Pp_corrected,  reco_Pmu_corrected,  reco_q_corrected;
-//    TLorentzVector      reco_Pnu_corrected, reco_n_miss_corrected;
-//    // --- - - --- -- - -- -- -- -- --- -- - --- - -- - -- -- -- --- - -- - --- - - -- - -- -
-//    
-//    
-//    // from MCS LLHD
-//    TVector3            reco_Pmu_3vect_mcsllhd;
-//    TLorentzVector      reco_Pmu_mcsllhd, reco_Pnu_mcsllhd, reco_q_mcsllhd;
-//    float               reco_theta_pq_mcsllhd, reco_BeamPz_mcsllhd;
-//    float               reco_p_over_q_mcsllhd, reco_Q2_mcsllhd, reco_Q2_from_angles_mcsllhd;
-//    // --------------------------------------------------------------------------------------------------------
-//    
-//    box                 roi[3] , roi_u , roi_v , roi_y, Roi_20x40_AroundVertex[3];
     
     PandoraNuTrack      muonTrueTrack,  protonTrueTrack;
     PandoraNuTrack      ShortestTrack,  LongestTrack;
