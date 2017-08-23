@@ -26,7 +26,7 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>100000</numevents>
+        <numevents>10</numevents>
         <!--        to solve the infamous "inconsistent process history" issue-->
         <maxfilesperjob>1</maxfilesperjob>
         
@@ -43,6 +43,7 @@
         <larsoft>
             <tag>&LArSoft_release;</tag>
             <qual>e14:prof</qual>
+            <local>/uboone/app/users/ecohen/ErezCCQE/test.tar</local>
         </larsoft>
         
         <check>0</check>
@@ -57,9 +58,9 @@
         <!-- Project stages -->
         
         <stage name="ccqe_ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/runCCQEana_OffBeam_v05.fcl</fcl>
-<!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05.list</inputlist>-->
-            <inputdef>prod_reco2_extbnb_v8_mcc8</inputdef>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/runCCQEana_OffBeam_v05_for_xml.fcl</fcl>
+            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05.list</inputlist>
+<!--            <inputdef>prod_reco2_extbnb_v8_mcc8</inputdef>-->
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
             <workdir>/pnfs/uboone/scratch/users/&user_id;/work/&tag;/&LArSoft_release;/ccqe_ana/&name;</workdir>
