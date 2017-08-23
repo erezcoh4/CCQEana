@@ -81,10 +81,6 @@ constexpr int dNticksBox     = 10;
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 namespace ub { class ErezCCQEAnalyzer; }
 
-
-
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 class ub::ErezCCQEAnalyzer : public art::EDAnalyzer {
 public:
@@ -104,6 +100,9 @@ public:
     // Selected optional functions.
     void                  beginJob () override;
     void               reconfigure (fhicl::ParameterSet const& p) override;
+    
+    void                 endSubRun (const art::SubRun& sr);
+
     
     // functionallity
     void         ConstructVertices ();
@@ -136,8 +135,9 @@ private:
     
     // Declare member data here.
     TTree *fTree;
+    TTree* fPOTTree;
+
     Int_t run, subrun, event;
-    
     
     short   isdata;
     
@@ -150,7 +150,8 @@ private:
     
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
-    
+    double  pot;
+
     // my objects
     std::vector<PandoraNuTrack>     tracks;
     std::vector<hit>                hits;
@@ -164,6 +165,8 @@ private:
     std::string fCalorimetryModuleLabel;
     std::string fGenieGenModuleLabel;
     std::string fDataSampleLabel;
+    std::string fPOTModuleLabel;
+
     
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -176,13 +179,10 @@ private:
 
 };
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 ub::ErezCCQEAnalyzer::ErezCCQEAnalyzer(fhicl::ParameterSet const & p):EDAnalyzer(p){
     reconfigure(p);
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
@@ -499,9 +499,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
     fTree -> Fill();
 }
 
-
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::ConstructVertices(){
     
@@ -516,7 +513,6 @@ void ub::ErezCCQEAnalyzer::ConstructVertices(){
     // output to csv file
     StreamVerticesToCSV();
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
@@ -648,7 +644,6 @@ bool ub::ErezCCQEAnalyzer::TrackAlreadyInVertices(int ftrack_id){
     return false;
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
     if (vertices.size()>0){
@@ -736,8 +731,6 @@ void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
         }
     }
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::TagVertices(){
@@ -990,7 +983,6 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
     }
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::PrintInformation(){
     
@@ -1037,8 +1029,6 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
     EndEventBlock();
 }
 
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzer::beginJob(){
     
@@ -1065,13 +1055,30 @@ void ub::ErezCCQEAnalyzer::beginJob(){
     fTree->Branch("vertices"            ,&vertices);
 
     
+    fPOTTree = tfs->make<TTree>("pottree","pot tree");
+    fPOTTree->Branch("pot",&pot,"pot/D");
+    fPOTTree->Branch("run",&run,"run/I");
+    fPOTTree->Branch("subrun",&subrun,"subrun/I");
+
     // output csv file
     //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
     vertices_file.open(fDataSampleLabel+"_vertices.csv");
-    Printf("opened vertices file: "+fDataSampleLabel+"_vertices.csv");
+    cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
     HeaderVerticesInCSV();
 }
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzer::endSubRun(const art::SubRun& sr){
+    
+    art::Handle< sumdata::POTSummary > potListHandle;
+    
+    if(sr.getByLabel(fPOTModuleLabel,potListHandle))
+        pot = potListHandle->totpot;
+    else
+        pot = 0.;
+    if (fPOTTree) fPOTTree->Fill();
+}
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -1081,6 +1088,8 @@ void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
     fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
     fCalorimetryModuleLabel = p.get< std::string >("CalorimetryModuleLabel");
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
+    fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
+
     debug = p.get< int >("VerbosityLevel");
 }
 
