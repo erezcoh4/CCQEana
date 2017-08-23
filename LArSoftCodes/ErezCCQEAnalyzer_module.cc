@@ -1066,7 +1066,9 @@ void ub::ErezCCQEAnalyzer::beginJob(){
 
     
     // output csv file
-    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
+    //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
+    vertices_file.open(fDataSampleLabel+"_vertices.csv");
+    Printf("opened vertices file: "+fDataSampleLabel+"_vertices.csv");
     HeaderVerticesInCSV();
 }
 

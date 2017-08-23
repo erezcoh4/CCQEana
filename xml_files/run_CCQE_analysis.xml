@@ -26,7 +26,7 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>10</numevents>
+        <numevents>6</numevents>
         <!--        to solve the infamous "inconsistent process history" issue-->
         <maxfilesperjob>1</maxfilesperjob>
         
