@@ -126,6 +126,7 @@ public:
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
     // input: plane, N(wires) & N(time-ticks) for the box, hits in event
+    // see docdb-10958
     float               GetRdQaroundVertex (int plane, int Nwires, int Nticks, std::vector<hit> hits) const ;
     float                   GetChargeInBox (int plane, std::vector<hit> hits, box VertexBox) const;
     

@@ -838,6 +838,7 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+    // see description of the observable at docdb-10958
     for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
         for (int plane = 0; plane < 3; plane++) {
             vertices_file << Form( "RdQaroundVertex[plane %d][%d wires x %d ticks]"
@@ -967,6 +968,7 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         
         
         // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+        // see description of the observable at docdb-10958
         for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
             for (int plane = 0; plane < 3; plane++) {
                 vertices_file << v.GetRdQaroundVertex( plane, NwiresBox[i_box_size] , NticksBox[i_box_size] , hits ) << "," ;
