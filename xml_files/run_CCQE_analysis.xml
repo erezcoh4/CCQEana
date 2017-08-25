@@ -4,7 +4,7 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "3">
+<!ENTITY number_of_jobs "200">
 <!ENTITY defname "prod_reco2_extbnb_v8_mcc8">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "v06_42_00">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
@@ -26,7 +26,7 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>6</numevents>
+        <numevents>100000</numevents>
         <!--        to solve the infamous "inconsistent process history" issue-->
         <maxfilesperjob>1</maxfilesperjob>
         
@@ -59,8 +59,8 @@
         
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/runCCQEana_OffBeam_v05_for_xml.fcl</fcl>
-            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05.list</inputlist>
-<!--            <inputdef>prod_reco2_extbnb_v8_mcc8</inputdef>-->
+<!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05.list</inputlist>-->
+            <inputdef>prod_reco2_extbnb_v8_mcc8</inputdef>
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
             <workdir>/pnfs/uboone/scratch/users/&user_id;/work/&tag;/&LArSoft_release;/ccqe_ana/&name;</workdir>
