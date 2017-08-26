@@ -2,12 +2,12 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco2_bnb_v8_mcc8">
+<!ENTITY defname "prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v05">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "1000">
+<!ENTITY number_of_jobs "375">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "v06_42_00">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
 <!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
@@ -50,7 +50,7 @@
         <!-- Project stages -->
         
         <stage name="ccqe_ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/runCCQEanaOnBeam.fcl</fcl>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/runCCQEanaOffBeam_v05.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>

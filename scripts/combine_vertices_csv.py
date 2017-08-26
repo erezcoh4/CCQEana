@@ -1,8 +1,8 @@
 # combine *vertices.csv files from a grid job
-default_name = "prod_reco2_extbnb_v8_mcc8"
+default_name = "prod_reco2_bnb_v8_mcc8"
 name = raw_input("enter list name:...<"+default_name+">") or default_name
 
-defauld_indirname = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/"+name+"/"
+defauld_indirname = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/from_grid/"+name+"/"
 indirname = raw_input("enter indir:...<"+defauld_indirname+">") or defauld_indirname
 
 defauls_outdirname = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/ccqe_candidates/"

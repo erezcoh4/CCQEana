@@ -2,7 +2,7 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco2_bnb_v8_mcc8">
+<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8_reco2">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
@@ -12,7 +12,6 @@
 <!ENTITY LArSoft_release "v06_42_00">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
 <!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
 ]>
-
 
 <job>
     
@@ -48,9 +47,8 @@
         <runtype>&run_type;</runtype>
         
         <!-- Project stages -->
-        
         <stage name="ccqe_ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/runCCQEanaOnBeam.fcl</fcl>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/runCCQEanaMCBNBCosmicDataOverlay.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
@@ -65,7 +63,6 @@
             <jobsub> --expected-lifetime=16h --site=Hyak_CE,Manchester,Lancaster,Clemson,FNAL_GPGrid</jobsub>
             <memory>2000</memory>
         </stage>
-        
         
     </project>
     

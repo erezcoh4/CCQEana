@@ -2,7 +2,7 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco2_bnb_v8_mcc8">
+<!ENTITY defname "prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v04">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
@@ -50,7 +50,7 @@
         <!-- Project stages -->
         
         <stage name="ccqe_ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/runCCQEanaOnBeam.fcl</fcl>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/runCCQEanaOffBeam_v04.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
