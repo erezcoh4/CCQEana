@@ -150,7 +150,7 @@ private:
     
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
-    double  pot;
+    double  pot, pot_total;
 
     // my objects
     std::vector<PandoraNuTrack>     tracks;
@@ -992,6 +992,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
     Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
+    
     if (MCmode){
         if(!genie_interactions.empty()){
             cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_interactions.size() << " genie interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
@@ -1067,6 +1068,8 @@ void ub::ErezCCQEAnalyzer::beginJob(){
     vertices_file.open(fDataSampleLabel+"_vertices.csv");
     cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
     HeaderVerticesInCSV();
+    
+    pot_total = 0;
 }
 
 
@@ -1075,11 +1078,18 @@ void ub::ErezCCQEAnalyzer::endSubRun(const art::SubRun& sr){
     
     art::Handle< sumdata::POTSummary > potListHandle;
     
-    if(sr.getByLabel(fPOTModuleLabel,potListHandle))
+//    if(sr.getByLabel(fPOTModuleLabel,potListHandle))
+    if(sr.getByLabel(fPOTModuleLabel,"bnbETOR860")) // Marco Del Tutto, Aug-27, 2017
         pot = potListHandle->totpot;
     else
         pot = 0.;
     if (fPOTTree) fPOTTree->Fill();
+    pot_total += pot;
+    
+    if (debug){
+        Printf("end subrun %d",subrun);
+        SHOW2( pot , pot_total );
+    }
 }
 
 
@@ -1102,6 +1112,7 @@ void ub::ErezCCQEAnalyzer::ResetVars(){
     MCmode = false;
     run = subrun = event = -9999;
     Ntracks = Nhits = Nhits_stored = Nvertices = 0 ;
+    pot = 0;
     tracks.clear();
     hits.clear();
     genie_interactions.clear();

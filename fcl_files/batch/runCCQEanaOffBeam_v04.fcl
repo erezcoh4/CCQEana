@@ -37,7 +37,7 @@ physics:
       CalorimetryModuleLabel:	"pandoraNucalo"
       VerbosityLevel:		2
       DataSampleLabel:		"prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v04"
-      POTModuleLabel:     "generator"
+      POTModuleLabel:     "beamdata"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms
