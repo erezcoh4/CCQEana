@@ -834,8 +834,10 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
     
     // truth delta-phi
-    << "truth_delta_phi" << ",";
-    
+    << "truth_delta_phi" << ","
+    // pdg code of long / short tracks
+    << "pdg_long"<< "," << "pdg_short" << ",";
+
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
     // see description of the observable at docdb-10958
@@ -964,6 +966,8 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
        
         // truth delta-phi
         vertices_file << v.GetTruthDeltaPhi() << ",";
+        // pdg code of long / short tracks
+        vertices_file << v.GetLongestTrack().GetMCpdgCode() << "," << v.GetShortestTrack().GetMCpdgCode() << ",";
 
         
         
@@ -1078,8 +1082,11 @@ void ub::ErezCCQEAnalyzer::endSubRun(const art::SubRun& sr){
     
     art::Handle< sumdata::POTSummary > potListHandle;
     
-//    if(sr.getByLabel(fPOTModuleLabel,potListHandle))
-    if(sr.getByLabel(fPOTModuleLabel,"bnbETOR860")) // Marco Del Tutto, Aug-27, 2017
+    if(
+       ((fPOTModuleLabel=="generator") && (sr.getByLabel(fPOTModuleLabel,potListHandle))) // for MC-BNB
+        ||
+       ((fPOTModuleLabel=="beamdata") && (sr.getByLabel(fPOTModuleLabel,"bnbETOR860",potListHandle))) // for BNB, Marco Del Tutto, Aug-27, 2017
+        )
         pot = potListHandle->totpot;
     else
         pot = 0.;
@@ -1090,6 +1097,7 @@ void ub::ErezCCQEAnalyzer::endSubRun(const art::SubRun& sr){
         Printf("end subrun %d",subrun);
         SHOW2( pot , pot_total );
     }
+    Printf( "POT from this subrun: %16.0lf" ,pot );
 }
 
 
