@@ -458,7 +458,7 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                                                          ,part.StatusCode() // status code
                                                          ,part.Mother()     // mother
                                                          ,part.Process()    // process
-                                                         );
+                                                         ) ;
                             
                             // match the primary particle with a track
                             for (auto & track : tracks){
@@ -835,8 +835,9 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     
     // truth delta-phi
     << "truth_delta_phi" << ","
-    // pdg code of long / short tracks
-    << "pdg_long"<< "," << "pdg_short" << ",";
+    // pdg code of long / short tracks and small / large PIDa
+    << "pdg_long"<< "," << "pdg_short" << ","
+    << "pdg_small_PIDa"<< "," << "pdg_large_PIDa" << ",";
 
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
@@ -966,8 +967,9 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
        
         // truth delta-phi
         vertices_file << v.GetTruthDeltaPhi() << ",";
-        // pdg code of long / short tracks
+        // pdg code of long / short tracks and small / large PIDa
         vertices_file << v.GetLongestTrack().GetMCpdgCode() << "," << v.GetShortestTrack().GetMCpdgCode() << ",";
+        vertices_file << v.GetSmallPIDaTrack().GetMCpdgCode() << "," << v.GetLargePIDaTrack().GetMCpdgCode() << ",";
 
         
         
