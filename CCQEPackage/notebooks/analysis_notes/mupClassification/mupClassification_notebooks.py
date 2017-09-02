@@ -155,12 +155,25 @@ def get_Nreduced(reduced = dict()):
 # ------------------------------------------------
 # Aug-30, 2017
 def get_pur_eff_cut(cut_name = '${PID}_A$' , reduced = dict()):
-    # return eff_CC1p0pi,pur_CC1p0pi 
+    ''' 
+        return
+        eff (mu-p) , pur (mu-p), eff (CC 1p 0pi) , pur (CC 1p 0pi)
+    '''
+    
     global pur_eff
+    eff = dict()
+    pur = dict()
     Nreduced , freduced = get_Nreduced(reduced=reduced)
     Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
-    pur_eff_cut = pd.DataFrame({'$\mu p$ eff.':'%.1f'%freduced['1mu-1p']+'%'
-                               ,'$\mu p$ pur.':'%.1f'%(100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0)+'%'
+    
+    eff['1mu-1p'] = freduced['1mu-1p']
+    pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
+    
+    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
+    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    
+    pur_eff_cut = pd.DataFrame({'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
+                               ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
                                ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
                                ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
                                , index=[cut_name]
@@ -169,7 +182,7 @@ def get_pur_eff_cut(cut_name = '${PID}_A$' , reduced = dict()):
     pur_eff = pur_eff.append(pur_eff_cut)
     reduced_MCsamples[cut_name] = reduced  
     Ntot = Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs']
-    return freduced['CC 1p 0pi'],(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)
+    return freduced['1mu-1p'],(100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0),freduced['CC 1p 0pi'],(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
 # ------------------------------------------------
