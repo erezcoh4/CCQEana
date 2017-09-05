@@ -9,4 +9,6 @@
   <class name="std::vector<GENIEinteraction>"/>
   <class name="pairVertex"/>
   <class name="std::vector<pairVertex>"/>
+  <class name="flash"/>
+  <class name="std::vector<flash>"/>
 </lcgdict>

@@ -38,6 +38,7 @@ physics:
       VerbosityLevel:		2
       DataSampleLabel:		"prod_reco2_bnb_v8_mcc8"
       POTModuleLabel:     "beamdata"
+      FlashModuleLabel:     "opflash"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

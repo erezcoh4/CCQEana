@@ -450,7 +450,7 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
     // Aug-3,2017
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
-    // a mal-function wil return -1
+    // a mal-function will return -1 (if plane is not 0,1,2) or -9999 (if Qtotal=0)
     // input:
     // plane, N(wires) & N(time-ticks) for the box, hits in event
     if (plane<0 || plane>2) return -1;
@@ -461,7 +461,7 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
     float Qmuon     = GetChargeInBox( plane, hits_muon[plane], VertexBox);
     float Qproton   = GetChargeInBox( plane, hits_proton[plane], VertexBox);
     if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
-    else return -1;
+    else return -9999;
 }
 
 
@@ -662,7 +662,9 @@ void pairVertex::Print(bool DoPrintTracks) const {
         SHOW(genie_interaction.Get_theta_pq());
         if (!tracks.empty()) SHOW(reco_theta_pq);
     }
-    
+    cout << "closest-flash:" << endl;
+    ClosestFlash.Print();
+
     // GENIE interaction features
     PrintLine();
     cout << "MC information: " << endl;

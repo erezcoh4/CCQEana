@@ -37,7 +37,8 @@ physics:
       CalorimetryModuleLabel:	"pandoraNucalo"
       VerbosityLevel:		2
       DataSampleLabel:		"prodgenie_bnb_nu_uboone_overlay_mcc8_reco2"
-        POTModuleLabel:     "generator"
+      POTModuleLabel:     "generator"
+      FlashModuleLabel:     "opflash"
 
     }
   }

@@ -24,11 +24,12 @@ for dir_name in list_dir:#{
                         # count POT
                         left,sep,right = line.partition("POT from this subrun: ")
                         if sep: # True iff 'Figure' in line
-                            if "prodgenie" in default_name:
+                            if "prodgenie" in name:
                                 POT_str = right.split(' ',1)[0]
                             else:
                                 POT_str = right.split(' ',1)[1]
                             POT = int(POT_str)
+#                            print "POT_str:",POT_str
                             print "adding %d POT from file "%POT+indirname+'/'+dir_name+'/'+file
                             POT_tot = POT_tot + POT
                         # count events

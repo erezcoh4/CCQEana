@@ -37,27 +37,10 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
         
         SHOW( PIDa ); // SHOW3( PIDaPerPlane[0] , PIDaPerPlane[1] , PIDaPerPlane[2] );
         PrintPhys(length,"cm");
-        //        std::cout<<" momentum from range\n";  PrintPhys(momrange,"MeV/c");
-        //        PrintPhys(mommsllhd,"MeV/c momentum from MCS LLHD");
-        //        PrintPhys(momeavgrangellhd,"MeV/c momentum from MCS LLHD and range");
-        //        SHOW(distlenratio);
         PrintPhys(theta,"rad");
         PrintPhys(phi,"rad");
-        //        PrintPhys(start_dqdx,"ADC/cm");
-        //        PrintPhys(end_dqdx,"ADC/cm");
-        //        PrintPhys(tot_dqdx,"ADC/cm");
-        //        PrintPhys(dQtotal,"ADC");
-        //        SHOW3( cosmicscore, coscontscore , pidpida )
-        //        SHOW2( cfdistance , cfdistance_start );
+        
     }
-    //    if (DoPrintPlanes){
-    //        SHOW3( purtruth_U , purtruth_V   , purtruth_Y );
-    //        for (int plane = 0 ; plane < 3; plane++) {
-    //            PrintPhys( CalorimetryPDG[plane] , Form(" for plane %d",plane) );
-    //            PrintBox(roi[plane]);
-    //        }
-    //    }
-    //    if ( truth_Eng>0 && truth_P>0 ){
     if (MCpdgCode!=-9999){
         cout << "........................" << endl << "MC information " << endl ;
         SHOW(MCpdgCode);
@@ -67,8 +50,11 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
         SHOWTLorentzVector(truth_momentum);
         SHOW(truth_mother);
         SHOW(truth_process);
+        SHOW(truth_origin);
         cout << "........................" << endl;
     }
+    cout << "closest-flash:" << endl;
+    ClosestFlash.Print();
     //        SHOW2( truth_ccnc, IsGENIECC1p );
     //        SHOW( IsGENIECC_1p_200MeVc_0pi );
     //    }
@@ -260,89 +246,4 @@ void PandoraNuTrack::FlipTrack(){
 }
 
 
-
-
-
-
-
-/*
-
- //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::SetFlashInfo(Float_t fcftime, Float_t fcftimewidth, Float_t fcfzcenter, Float_t fcfzwidth, Float_t fcfycenter, Float_t fcfywidth, Float_t fcftotalpe, Float_t fcfdistance){
-    cftime         = fcftime;
-    cftimewidth    = fcftimewidth;
-    cfzcenter      = fcfzcenter;
-    cfzwidth       = fcfzwidth;
-    cfycenter      = fcfycenter;
-    cfywidth       = fcfywidth;
-    cftotalpe      = fcftotalpe;
-    cfdistance     = fcfdistance;
-}
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Set_dqdx (Float_t fstart_dqdx, Float_t fend_dqdx, Float_t ftot_dqdx, Int_t fnhits){
-    Set_start_dqdx(fstart_dqdx);
-    Set_end_dqdx(fend_dqdx);
-    Set_tot_dqdx(ftot_dqdx);
-    Set_nhits(fnhits);
-    Set_avg_dqdx( (nhits>0) ? tot_dqdx/nhits : 0 );
-    
-    // fix start and end points by charge: If start charge is greater, flip track
-    is_flipped = 0;
-    if(fstart_dqdx > fend_dqdx) FlipTrack();
- 
-}
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::SetCalorimetry_Y ( std::vector <Float_t> fresidual_range_Y, std::vector <Float_t> fdEdx_Y, std::vector <Float_t> fEdep_Y, std::vector <Float_t> fdqdx_Y){
-    residual_range_Y = fresidual_range_Y;
-    NEdepYsteps = residual_range_Y.size();
-    dEdx_Y = fdEdx_Y;
-    Edep_Y = fEdep_Y;
-    dqdx_Y = fdqdx_Y;
-}
-
-
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Calorimetry(){
-    
-    // make some additional caloritric variables
-    dqdx_diff     = end_dqdx - start_dqdx;
-    dqdx_ratio    = end_dqdx/start_dqdx;
-    
-    // ask about the directionality of the track
-    TopBottDir = (start_pos.y() > end_pos.y()) ? "Top->Bottom"              : "Bottom->Top"         ;
-    ForBackDir = (start_pos.z() > end_pos.z()) ? "backward (against BNB)"   : "forward (along BNB)" ;
-    LefRghtDir = (start_pos.x() > end_pos.x()) ? "Left -> Right"            : "Right -> Left"       ;
-    
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Straightness(){
-    
-    // get straightness (distance from start to end of track over reco'd length)
-    distlenratio = ((end_pos-start_pos).Mag())/length;
-    
-    
-}
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-bool PandoraNuTrack::IsWireTimeAlongTrack ( Int_t plane, Int_t wire , Float_t time ){
-    // return true if the Plane/Wire/Time point is along the track
-    // load GeometryHelper utility
-    Float_t trajectory_time = trajectory_slope[plane] * wire + trajectory_intersect[plane];
-    if ( fabs(time - trajectory_time) < 20. ) {
-        return true;
-    }
-    return false;
-}
-
-
-
-*/
 #endif

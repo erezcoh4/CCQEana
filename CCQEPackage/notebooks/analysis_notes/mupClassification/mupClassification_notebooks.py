@@ -10,7 +10,17 @@ pur_eff_numbers = pd.DataFrame()
 
 # ------------------------------------------------
 # Aug 30
-def apply_cuts():
+def apply_cuts( PIDa_p_min=8
+               , delta_theta_12=60  # deg.
+               , delta_Delta_phi=40 # deg.
+               , theta_pq_max=25    # deg.
+               , Pt_max=0.35        # GeV/c
+               , i_optimal_box_size=9 , Rmin = (0.25,0.25,0.6) # U,V,Y
+               ):
+#    # initiate the pur_eff dataframe
+#    pur_eff = pd.DataFrame()
+#    pur_eff_numbers = pd.DataFrame()
+    # --- -- --- - -- -- --- --
     reduced = dict()
     for pair_type in pair_types: reduced[pair_type] = MCsamples[pair_type]
     reduced_MCsamples['no cut'] = reduced
@@ -27,85 +37,86 @@ def apply_cuts():
     reduced = dict()
     for pair_type in pair_types:
         sam = reduced_MCsamples['no cut'][pair_type]
-        reduced[pair_type] = sam[sam['PIDa_assigned_proton']>8]
-    get_pur_eff_cut(cut_name = '${PID}_A$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '\CutPIDa', reduced = reduced)
+        reduced[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
+    get_pur_eff_cut(cut_name = 'PIDa', cut_label='${PID}_a>%.0f$'%PIDa_p_min, reduced = reduced)
+    get_pur_eff_numbers(cut_name = '\CutPIDa', cut_label='${PID}_a>%.0f$'%PIDa_p_min, reduced = reduced)
 
     # cut 2: require that the longer track is the one with larger PIDa
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['${PID}_A$'][pair_type]
+        sam = reduced_MCsamples['PIDa'][pair_type]
         reduced[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
-    get_pur_eff_cut(cut_name = '$l_{\\mu}>l_{p}$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '\Cutlmup', reduced = reduced)
+    get_pur_eff_cut(cut_name = 'length', cut_label='$l_{\\mu}>l_{p}$', reduced = reduced)
+    get_pur_eff_numbers(cut_name = '\Cutlmup', cut_label='$l_{\\mu}>l_{p}$', reduced = reduced)
 
     # cut 3: |\theta_{1,2}-90^0|<60^0$
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['$l_{\\mu}>l_{p}$'][pair_type]
-        reduced[pair_type] = sam[np.abs(sam['theta_12']-90)<60]
-    get_pur_eff_cut(cut_name = '$|\theta_{1,2}-90^0|<60^0$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = 'non-collinearity', reduced = reduced)
+        sam = reduced_MCsamples['length'][pair_type]
+        reduced[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
+    get_pur_eff_cut(cut_name='non-collinearity' , cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12, reduced = reduced)
+    get_pur_eff_numbers(cut_name = 'non-collinearity', cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12, reduced = reduced)
 
     # cut 4: vertex $\Delta Q$
+    N_box_sizes = 30
+    MinNwiresBox,dNwiresBox = 5,5
+    MinNticksBox,dNticksBox = 10,10
+    NwiresBox,NticksBox=[],[]
+    for i_box_size in range(N_box_sizes):#{
+        NwiresBox.append(MinNwiresBox + i_box_size * dNwiresBox)
+        NticksBox.append(MinNticksBox + i_box_size * dNticksBox)
+    #}
+    Ru = 'RdQaroundVertex[plane 0][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
+    Rv = 'RdQaroundVertex[plane 1][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
+    Ry = 'RdQaroundVertex[plane 2][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
+    RuMin = Rmin[0]-0.01
+    RvMin = Rmin[1]-0.01
+    RyMin = Rmin[2]-0.01
+    cut_label='$(%.2f,%.2f,%.2f)<R_{\Delta Q}^{(U,V,Y)}$'%(RuMin,RvMin,RyMin)
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['$|\theta_{1,2}-90^0|<60^0$'][pair_type]
-        N_box_sizes = 30
-        MinNwiresBox,dNwiresBox = 5,5
-        MinNticksBox,dNticksBox = 10,10    
-        NwiresBox,NticksBox=[],[]
-        for i_box_size in range(N_box_sizes):
-            NwiresBox.append(MinNwiresBox + i_box_size * dNwiresBox)
-            NticksBox.append(MinNticksBox + i_box_size * dNticksBox) 
-        i_optimal_box_size=9
-        Ru = 'RdQaroundVertex[plane 0][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
-        Rv = 'RdQaroundVertex[plane 1][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
-        Ry = 'RdQaroundVertex[plane 2][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])    
-        RuMin = 0.25
-        RvMin = 0.25
-        RyMin = 0.6
+        sam = reduced_MCsamples['non-collinearity'][pair_type]
         reduced[pair_type] = sam[(sam[Ru]>RuMin)&(sam[Ru]<1.01)
                                  &(sam[Rv]>RvMin)&(sam[Rv]<1.01)
                                  &(sam[Ry]>RyMin)&(sam[Ry]<1.01)]
-    get_pur_eff_cut(cut_name = 'vertex $\Delta Q$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '$\Delta Q$', reduced = reduced)
+    get_pur_eff_cut(cut_name = 'vertex activity' ,cut_label=cut_label , reduced = reduced)
+    get_pur_eff_numbers(cut_name = 'vertex activity', cut_label=cut_label, reduced = reduced)
 
 
     # cut 5: $\Delta phi$
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['vertex $\Delta Q$'][pair_type]
-        reduced[pair_type] = sam[np.abs(sam['delta_phi']-180.000)<40]
-    get_pur_eff_cut(cut_name = '$|\Delta \phi - \pi|<40^{0}$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '\CutDeltaPhi', reduced = reduced)
+        sam = reduced_MCsamples['vertex activity'][pair_type]
+        reduced[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
+    get_pur_eff_cut(cut_name = 'delta phi', cut_label='$|\Delta \phi - \pi|<%.0f^0$'%delta_Delta_phi, reduced = reduced)
+    get_pur_eff_numbers(cut_name = '\CutDeltaPhi', cut_label='$|\Delta \phi - \pi|<%.0f^0$'%delta_Delta_phi, reduced = reduced)
 
 
     # cut 6: $\theta_{pq}<25$
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['$|\Delta \phi - \pi|<40^{0}$'][pair_type]
-        reduced[pair_type] = sam[sam['reco_theta_pq']<25]
-    get_pur_eff_cut(cut_name = '$\theta_{pq}<25$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '$\\theta_{pq}<25$', reduced = reduced)
+        sam = reduced_MCsamples['delta phi'][pair_type]
+        reduced[pair_type] = sam[sam['reco_theta_pq']<theta_pq_max]
+    get_pur_eff_cut(cut_name ='theta_pq' , cut_label= '$\theta_{pq}<%.0f^0$'%theta_pq_max, reduced = reduced)
+    get_pur_eff_numbers(cut_name ='theta_pq' , cut_label= '$\\theta_{pq}<%.0f^0$'%theta_pq_max, reduced = reduced)
 
 
     # modified cut 6: $p_{t}<0.35$
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['$|\Delta \phi - \pi|<40^{0}$'][pair_type]
-        reduced[pair_type] = sam[sam['reco_Pt']<0.35]
-    get_pur_eff_cut(cut_name = '$p_{t}<0.35$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '$p_{t}<0.35$', reduced = reduced)
+        sam = reduced_MCsamples['delta phi'][pair_type]
+        reduced[pair_type] = sam[sam['reco_Pt']<Pt_max]
+    get_pur_eff_cut(cut_name='soft Pt', cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max, reduced = reduced)
+    get_pur_eff_numbers(cut_name='soft Pt', cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max, reduced = reduced)
 
 
     # tight Pt cut for good Ev reconstruction
     reduced = dict()
     for pair_type in pair_types:
-        sam = reduced_MCsamples['$\theta_{pq}<25$'][pair_type]
+        sam = reduced_MCsamples['theta_pq'][pair_type]
         reduced[pair_type] = sam[sam['reco_Pt']<0.15]
-    get_pur_eff_cut(cut_name = '$p_{t}<0.15$', reduced = reduced)
-    get_pur_eff_numbers(cut_name = '$p_{t}<0.15$', reduced = reduced)
+    get_pur_eff_cut(cut_name ='tight Pt', cut_label= '$p_{t}<0.15$ GeV/c', reduced = reduced)
+    get_pur_eff_numbers(cut_name ='tight Pt', cut_label= '$p_{t}<0.15$ GeV/c', reduced = reduced)
 
 
     
@@ -154,7 +165,7 @@ def get_Nreduced(reduced = dict()):
     
 # ------------------------------------------------
 # Aug-30, 2017
-def get_pur_eff_cut(cut_name = '${PID}_A$' , reduced = dict()):
+def get_pur_eff_cut(cut_name = 'PIDa', cut_label=None , reduced = dict()):
     ''' 
         return
         eff (mu-p) , pur (mu-p), eff (CC 1p 0pi) , pur (CC 1p 0pi)
@@ -172,7 +183,8 @@ def get_pur_eff_cut(cut_name = '${PID}_A$' , reduced = dict()):
     eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
     pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
     
-    pur_eff_cut = pd.DataFrame({'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
+    pur_eff_cut = pd.DataFrame({'label':cut_label
+                               ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
                                ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
                                ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
                                ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
@@ -187,11 +199,12 @@ def get_pur_eff_cut(cut_name = '${PID}_A$' , reduced = dict()):
 
 # ------------------------------------------------
 # Aug-30, 2017
-def get_pur_eff_numbers(cut_name = '${PID}_A$' , reduced = dict()):
+def get_pur_eff_numbers(cut_name = 'PIDa', cut_label=None , reduced = dict()):
     global pur_eff_numbers
     Nreduced , freduced = get_Nreduced(reduced=reduced)
     Ntot = Nreduced['cosmic']+Nreduced['other pairs']+Nreduced['1mu-1p']
     pur_eff_numbers_cut = pd.DataFrame({'cut name':cut_name,
+                                       'cut label':cut_label,
                                         'cosmic':Nreduced['cosmic'],                                
                                         'other pairs':Nreduced['other pairs'],                                
                                         '\mup':Nreduced['1mu-1p'],                               

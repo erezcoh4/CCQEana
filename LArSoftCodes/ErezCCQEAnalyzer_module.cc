@@ -58,6 +58,7 @@
 #include "uboone/ErezCCQEana/MyObjects/PandoraNuTrack.h"
 #include "uboone/ErezCCQEana/MyObjects/hit.h"
 #include "uboone/ErezCCQEana/MyObjects/box.h"
+#include "uboone/ErezCCQEana/MyObjects/flash.h"
 #include "uboone/ErezCCQEana/MyObjects/GENIEinteraction.h"
 #include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
 
@@ -145,6 +146,7 @@ private:
     
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
+    int     Nflashes;
     int     Nvertices;
     int     vertices_ctr;
     
@@ -157,6 +159,8 @@ private:
     std::vector<hit>                hits;
     std::vector<GENIEinteraction>   genie_interactions;
     std::vector<pairVertex>         vertices;
+    std::vector<flash>              flashes;
+    
     
     //Module labels to get data products
     std::string fHitsModuleLabel;
@@ -202,6 +206,13 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
     if (evt.getByLabel(fHitsModuleLabel,hitListHandle))
     art::fill_ptr_vector(hitlist, hitListHandle);
 
+    // * flashes
+    art::Handle< std::vector<recob::OpFlash> > flashListHandle;
+    std::vector<art::Ptr<recob::OpFlash> > flashlist;
+    if (evt.getByLabel(fFlashModuleLabel, flashListHandle))
+    art::fill_ptr_vector(flashlist, flashListHandle);
+
+    
     // * tracks
     art::Handle< std::vector<recob::Track> > trackListHandle;
     std::vector<art::Ptr<recob::Track> > tracklist;
@@ -231,6 +242,33 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         hits.push_back( fhit );
         
     }
+    
+    
+    // ----------------------------------------
+    // flash information
+    // ----------------------------------------
+    Nflashes = flashlist.size();
+    if (debug>0) SHOW(Nflashes);
+    for ( int f = 0; f < std::min(Nflashes,kMaxHits); f++ ) {
+        
+        if (debug>0){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
+        flash fflash(
+                     flashlist[f]->Time(),         // flash time
+                     flashlist[f]->TimeWidth(),    // flash time width
+                     flashlist[f]->ZCenter(),      // flash z-center
+                     flashlist[f]->ZWidth(),       // flash z-width
+                     flashlist[f]->YCenter(),      // flash y-center
+                     flashlist[f]->YWidth(),       // flash y-width
+                     flashlist[f]->TotalPE()       // flash total PE
+        );
+        
+        // keep only in-time flashes for the event
+        // following Katherine conditions
+        if( (0.0 < fflash.GetTime()) && (fflash.GetTime() < 10.0) && (6.5 < fflash.GetTotalPE()) ){
+            flashes.push_back( fflash );
+        }
+    }
+
 
     // ----------------------------------------
     // tracks information
@@ -256,35 +294,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         for (int plane = 0; plane < 3; plane++){
             
             
-            // Get the PlaneID in (geo::PlaneID) type
-//            Debug( 0 , "Get the PlaneID in (geo::PlaneID) type" );
-//            raw::ChannelID_t channel = geom -> NearestChannel( StartLoc , plane );
-            
-//            Debug( 0 , "raw::ChannelID_t channel" );
-//            raw::ChannelID_t channel;
-//            try{
-//                channel = geom -> NearestChannel( StartLoc , plane );
-//            }
-//            catch(raw::InvalidChannelID const& e) {
-//                channel = e.suggestedChannelID(); // pick the closest valid channel
-//            }
-//            
-//            
-//            // -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x
-//            Debug( 0 , "// -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x" );
-//            Debug( 0 , "std::vector<geo::WireID> wires = geom -> ChannelToWire(channel);" );
-////            std::vector<geo::WireID> wires = geom -> ChannelToWire(channel);
-//            std::vector<geo::WireID> wires;
-//            geo::WireID WireID;
-//            try{
-//                wires = geom -> ChannelToWire(channel);
-//                WireID = wires[0];
-//            }
-//            catch(geo::InvalidChannelID const& e) {
-//                WireID = e.suggestedWireID(); // pick the closest valid wire
-//            }
-//            Debug( 0 , "const geo::PlaneID & planeID = wires[0].planeID();" );
-//            const geo::PlaneID & planeID = wires[0].planeID();
             Debug(5,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
             geo::TPCID tpcID = geom->FindTPCAtPosition( StartLoc );
             int tpc = 0;
@@ -294,17 +303,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
             // Construct wire ID for this point projected onto the plane
             Debug(5,"Construct wire ID for this point projected onto the plane");
             geo::PlaneID planeID = geo::PlaneID( 0 , tpc , plane ); // cryostat=0
-//            geo::WireID wireID;
-//            try{
-//                wireID = geom->NearestWireID( start_pos , planeID);
-//            }
-//            catch(geo::InvalidWireError const& e) {
-//                wireID = e.suggestedWireID(); // pick the closest valid wire
-//            }
-//            Debug( 0 , "const geo::PlaneID & planeID = WireID.planeID();" );
-//            const geo::PlaneID & planeID = WireID.planeID();
-            // -- - - - - --x-x-x-c-c-x-x-d-d-d--x--x-xx---x
-            
             
             // get start point
             Int_t start_wire = (Int_t) ( geom->WireCoordinate( start_pos.Y() , start_pos.Z() ,  planeID ) );
@@ -361,8 +359,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
             track.SetPIDa();
         }
         
-        
-        
         // MC information
         if (!isdata&&fmth.isValid()){
             // Find true track for each reconstructed track
@@ -395,8 +391,27 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                 track.SetTruthMomentum( particle -> Momentum() );
                 track.SetTruthMother( particle -> Mother() );
                 track.SetTruthProcess( particle -> Process() );
+                
+                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
+                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
             }//if (particle)
+            
         }//MC
+        
+        // flash - matching
+        // find the closest flash to the track
+        if (flashes.size()){
+            float TrackZcenter = (track.GetStartPos().z() + track.GetEndPos().z())/2.;
+            float Zdistance = 1000, ClosestFlashZdistance = 1000;
+            for (auto f : flashes){
+                Zdistance = fabs( f.GetZcenter() - TrackZcenter );
+                if ( Zdistance < ClosestFlashZdistance ){
+                    ClosestFlashZdistance = Zdistance;
+                    track.SetClosestFlash( f );
+                }
+            }
+        }
         
         tracks.push_back( track );
     }
@@ -596,11 +611,11 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
                 if (vertex.GetTracks().size()>1){
                     int mc_id_t0 = vertex.GetTracks().at(0).GetMCeventID();
                     int mc_id_t1 = vertex.GetTracks().at(1).GetMCeventID();
-                    Debug( 0 , "if ( mc_id_t0 >= 0 && mc_id_t0 == mc_id_t1 )");
+                    Debug( 7 , "if ( mc_id_t0 >= 0 && mc_id_t0 == mc_id_t1 )");
                     if ( mc_id_t0 >= 0
                         &&
                         mc_id_t0 == mc_id_t1 ){
-                        Debug( 0 , "vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );");
+                        Debug( 8 , "vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );");
                         vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );
                         Printf("matched GENIE information");
                         vertex.GetGENIEinfo().Print(); // PRINTOUT
@@ -665,6 +680,22 @@ void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
             // inter-track distances, delta-theta, delta-phi...
             Debug( 4 , "SetTracksRelations;" );
             v.SetTracksRelations ();
+            
+            // flash - matching
+            // find the closest flash to the vertex
+            Debug( 4 , "vertices flash matching" );
+            if (flashes.size()){
+                float vertexZ = v.GetPosition().z();
+                float Zdistance = 1000, ClosestFlashZdistance = 1000;
+                for (auto f : flashes){
+                    Zdistance = fabs( f.GetZcenter() - vertexZ );
+                    if ( Zdistance < ClosestFlashZdistance ){
+                        ClosestFlashZdistance = Zdistance;
+                        v.SetClosestFlash( f );
+                    }
+                }
+            }
+
         }
     }
 }
@@ -749,6 +780,7 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
         PandoraNuTrack t1 = v.GetAssignedMuonTrack();
         PandoraNuTrack t2 = v.GetAssignedProtonTrack();
         
+        // for MC-BNB and cosmic-data overlay, we determine that a vertex is cosmic if one of its tracks is unrecognized (-9999)
         if ( (t1.GetMCpdgCode() * t2.GetMCpdgCode())==(13*2212) ){
             
             v.SetAs1mu1p();
@@ -769,6 +801,11 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
             v.SetAsNon1mu1p();
         }
         else {
+            v.SetAsCosmic();
+        }
+        
+        // for MC-BNB and cosmic-MC overlay, we determine that a vertex is cosmic if one of its tracks is known to come from a cosmic ray
+        if (t1.GetOrigin()=="cosmic ray" || t2.GetOrigin()=="cosmic ray"){
             v.SetAsCosmic();
         }
     }
@@ -1008,6 +1045,13 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
         } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     }
     
+    if(!flashes.empty()){
+        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << flashes.size() << " flashes\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        for (auto f: flashes) {
+            f.Print();
+        }
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no flashes\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+   
     if(!tracks.empty()){
         cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
         for (auto t: tracks) {
@@ -1111,6 +1155,7 @@ void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
     fCalorimetryModuleLabel = p.get< std::string >("CalorimetryModuleLabel");
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
+    fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
 
     debug = p.get< int >("VerbosityLevel");
 }

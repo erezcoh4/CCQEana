@@ -18,6 +18,7 @@
 #include "PandoraNuTrack.h"
 #include "hit.h"
 #include "box.h"
+#include "flash.h"
 #include "GENIEinteraction.h"
 
 #define r2d TMath::RadToDeg()
@@ -88,6 +89,7 @@ public:
     void    SetReconstructedMomenta (float PmuFromRange = 0, float PpFromRange = 0 );
     void   SetReconstructedFeatures (float PmuFromRange = 0, float PpFromRange = 0 );
     void         SetPlaneProjection (int plane , float _wire , float _time )        {vertex_wire[plane]=_wire; vertex_time[plane]=_time;};
+    void            SetClosestFlash (flash _flash)                                  {ClosestFlash = _flash;};
 
     // GETters
     TString         GetTruthTopologyString () const {return TruthTopologyString;}
@@ -154,6 +156,7 @@ public:
     
     GENIEinteraction          GetGENIEinfo () const {return genie_interaction;};
     GENIEinteraction       GetClosestGENIE () const {return closest_genie_interaction;};
+    flash                  GetClosestFlash () const {return ClosestFlash;};
 
     std::vector<hit>           GetMuonHits (int plane) const {return hits_muon[plane];};
     std::vector<hit>         GetProtonHits (int plane) const {return hits_proton[plane];};
@@ -222,6 +225,7 @@ private:
     std::vector<PandoraNuTrack>         tracks, tracks_lengthsorted,  tracks_pidasorted ;
     
     std::vector<hit>    hits_muon[3], hits_proton[3]; // in 3 wire planes
+    flash               ClosestFlash=flash();
     
 };
 
