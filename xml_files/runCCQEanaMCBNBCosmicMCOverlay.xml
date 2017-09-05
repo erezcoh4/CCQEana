@@ -18,7 +18,7 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>1000000</numevents>        
+        <numevents>2000000</numevents>
         <!--        <maxfilesperjob>1</maxfilesperjob>--> <!--        to solve the infamous "inconsistent process history" issue-->
 
         <!-- Operating System -->
@@ -60,8 +60,8 @@
             <!--    <defname>&name;_&tag;</defname> -->
             <!--    <anadefname>&name;_&tag;_ana</anadefname> -->
             <!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05.list</inputlist>-->
-            <jobsub> --expected-lifetime=16h --site=Hyak_CE,Manchester,Lancaster,Clemson,FNAL_GPGrid</jobsub>
-            <memory>2000</memory>
+            <jobsub> --expected-lifetime=8h --site=Hyak_CE,Manchester,Lancaster,Clemson,FNAL_GPGrid</jobsub>
+            <memory>4000</memory>
         </stage>
         
     </project>
