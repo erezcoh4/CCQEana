@@ -25,7 +25,10 @@ public:
     
     /// Default constructor
     flash () = default;
-    flash (Float_t, Float_t, Float_t, Float_t, Float_t, Float_t, Float_t);
+    flash (Float_t ftime, Float_t ftimewidth,           
+           Float_t fZcenter , Float_t fZwidth,
+           Float_t fYcenter , Float_t fYwidth,
+           Float_t ftotalPE);
 
     
     void                     Print () const;

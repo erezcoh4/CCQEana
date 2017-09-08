@@ -264,6 +264,7 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         
         // keep only in-time flashes for the event
         // following Katherine conditions
+        if (debug>0){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
         if( (0.0 < fflash.GetTime()) && (fflash.GetTime() < 10.0) && (6.5 < fflash.GetTotalPE()) ){
             flashes.push_back( fflash );
         }
@@ -1170,6 +1171,7 @@ void ub::ErezCCQEAnalyzer::ResetVars(){
     pot = 0;
     tracks.clear();
     hits.clear();
+    flashes.clear();
     genie_interactions.clear();
     vertices.clear();
     

@@ -38,7 +38,7 @@ physics:
       VerbosityLevel:		2
       DataSampleLabel:		"prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2"
       POTModuleLabel:       "generator"
-      FlashModuleLabel:     "SimpleFlashBeam"
+      FlashModuleLabel:     "simpleFlashBeam"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

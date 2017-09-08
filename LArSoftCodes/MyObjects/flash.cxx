@@ -14,7 +14,8 @@ timewidth(ftimewidth),
 Zcenter(fZcenter),
 Zwidth(fZwidth),
 Ycenter(fYcenter),
-Ywidth(fYwidth)
+Ywidth(fYwidth),
+totalPE(ftotalPE)
 {
 
 }
