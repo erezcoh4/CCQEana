@@ -141,12 +141,17 @@ public:
     Float_t       GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
     Float_t         GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
     Float_t                 GetPIDa () const {return PIDa; };
-
+    Float_t            GetDis2Flash (flash) const;
+    Float_t     GetDis2ClosestFlash () const ;
+    
+    
+    
     TVector3            GetStartPos () const {return start_pos;};
     TVector3              GetEndPos () const {return end_pos;};
     TVector3       GetTruthStartPos () const {return truth_start_pos;};
     TVector3         GetTruthEndPos () const {return truth_end_pos;};
     TLorentzVector GetTruthMomentum () const {return truth_momentum; };
+    
     flash           GetClosestFlash () const {return ClosestFlash;};
     
     

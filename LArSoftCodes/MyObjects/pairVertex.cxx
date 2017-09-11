@@ -467,145 +467,22 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
 
 
 
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//bool pairVertex::BuildROI(int plane){
-//    
-//    // for GENIE vertices in which only one track was reconstructed, build the roi based on this track
-//    if (muonTrackReconstructed && !protonTrackReconstructed) {AssignedProtonTrack=AssignedMuonTrack;}
-//    if (!muonTrackReconstructed && protonTrackReconstructed) {AssignedMuonTrack=AssignedProtonTrack;}
-//    // -------------------------------------------------------------------------------------------------
-//    
-//    int wire_min = std::min( {AssignedMuonTrack.roi[plane].start_wire , AssignedMuonTrack.roi[plane].end_wire , AssignedProtonTrack.roi[plane].start_wire, AssignedProtonTrack.roi[plane].end_wire} );
-//    int wire_max = std::max( {AssignedMuonTrack.roi[plane].start_wire , AssignedMuonTrack.roi[plane].end_wire , AssignedProtonTrack.roi[plane].start_wire, AssignedProtonTrack.roi[plane].end_wire} );
-//    int time_min = std::min( {AssignedMuonTrack.roi[plane].start_time , AssignedMuonTrack.roi[plane].end_time , AssignedProtonTrack.roi[plane].start_time, AssignedProtonTrack.roi[plane].end_time} );
-//    int time_max = std::max( {AssignedMuonTrack.roi[plane].start_time , AssignedMuonTrack.roi[plane].end_time , AssignedProtonTrack.roi[plane].start_time, AssignedProtonTrack.roi[plane].end_time} );
-//    
-//    roi[plane] = box( wire_min - 10 , time_min - 30 , wire_max + 10 , time_max + 30 );
-//
-//    switch (plane) {
-//        case 0:
-//            roi_u = roi[plane];
-//            break;
-//        case 1:
-//            roi_v = roi[plane];
-//            break;
-//        case 2:
-//        default:
-//            roi_y = roi[plane];
-//            break;
-//    }
-//    return true;
-//}
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t pairVertex::GetDis2Flash (flash Flash) const {
+    float vZ = position.z();
+    float FlashZcenter = Flash.GetZcenter();
+    float Zdis = vZ - FlashZcenter;
+    float vY = position.y() ;
+    float FlashYcenter = Flash.GetYcenter();
+    float Ydis = vY - FlashYcenter;
+    float YZdistance = sqrt( Zdis*Zdis + Ydis*Ydis );
+    return YZdistance;
+}
 
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//bool pairVertex::BuildLocationInPlane(int plane){
-//    
-//    mu_start_wire[plane] = mu_start_time[plane] = p_start_wire[plane] = p_start_time[plane] = 0;
-//    mu_end_wire[plane] = mu_end_time[plane] = p_end_wire[plane] = p_end_time[plane] = 0;
-//
-//    
-//    switch (plane) {
-//        case 0:
-//            mu_start_wire[plane] = AssignedMuonTrack.start_wire_u;
-//            mu_start_time[plane] = AssignedMuonTrack.start_time_u;
-//            mu_end_wire[plane] = AssignedMuonTrack.end_wire_u;
-//            mu_end_time[plane] = AssignedMuonTrack.end_time_u;
-//            
-//            p_start_wire[plane] = AssignedProtonTrack.start_wire_u;
-//            p_start_time[plane] = AssignedProtonTrack.start_time_u;
-//            p_end_wire[plane] = AssignedProtonTrack.end_wire_u;
-//            p_end_time[plane] = AssignedProtonTrack.end_time_u;
-//            
-//            break;
-//        case 1:
-//            mu_start_wire[plane] = AssignedMuonTrack.start_wire_v;
-//            mu_start_time[plane] = AssignedMuonTrack.start_time_v;
-//            mu_end_wire[plane] = AssignedMuonTrack.end_wire_v;
-//            mu_end_time[plane] = AssignedMuonTrack.end_time_v;
-//            
-//            p_start_wire[plane] = AssignedProtonTrack.start_wire_v;
-//            p_start_time[plane] = AssignedProtonTrack.start_time_v;
-//            p_end_wire[plane] = AssignedProtonTrack.end_wire_v;
-//            p_end_time[plane] = AssignedProtonTrack.end_time_v;
-//
-//            break;
-//        case 2:
-//        default:
-//            mu_start_wire[plane] = AssignedMuonTrack.start_wire_y;
-//            mu_start_time[plane] = AssignedMuonTrack.start_time_y;
-//            mu_end_wire[plane] = AssignedMuonTrack.end_wire_y;
-//            mu_end_time[plane] = AssignedMuonTrack.end_time_y;
-//            
-//            p_start_wire[plane] = AssignedProtonTrack.start_wire_y;
-//            p_start_time[plane] = AssignedProtonTrack.start_time_y;
-//            p_end_wire[plane] = AssignedProtonTrack.end_wire_y;
-//            p_end_time[plane] = AssignedProtonTrack.end_time_y;
-//            
-//            break;
-//    }
-//    
-//    // first fix the position of the vertex
-//    TVector2 mu_start( mu_start_wire[plane] , mu_start_time[plane] );
-//    TVector2  mu_end( mu_end_wire[plane]    , mu_end_time[plane] );
-//    TVector2 p_start(  p_start_wire[plane]  , p_start_time[plane] );
-//    TVector2   p_end( p_end_wire[plane]     , p_end_time[plane] );
-//    
-//    float d_start_start = WireTimeDistance( mu_start.X() , mu_start.Y() , p_start.X() , p_start.Y() );
-//    float   d_end_start = WireTimeDistance( mu_end.X()   , mu_end.Y()   , p_start.X() , p_start.Y() );
-//    float   d_start_end = WireTimeDistance( mu_start.X() , mu_start.Y() , p_end.X()   , p_end.Y() );
-//    float     d_end_end = WireTimeDistance( mu_end.X()   , mu_end.Y()   , p_end.X()   , p_end.Y() );
-//    float d_min = std::min({ d_start_start , d_end_start , d_start_end , d_end_end });
-//    
-//    if (d_min==d_start_start){
-//        vertex_wire[plane] = 0.5*(mu_start.X() + p_start.X());
-//        vertex_time[plane] = 0.5*(mu_start.Y() + p_start.Y());
-//    }
-//    else if (d_min==d_end_start){
-//        vertex_wire[plane] = 0.5*(mu_end.X() + p_start.X());
-//        vertex_time[plane] = 0.5*(mu_end.Y() + p_start.Y());
-//    }
-//    else if (d_min==d_start_end){
-//        vertex_wire[plane] = 0.5*(mu_start.X() + p_end.X());
-//        vertex_time[plane] = 0.5*(mu_start.Y() + p_end.Y());
-//    }
-//    else if (d_min==d_end_end){
-//        vertex_wire[plane] = 0.5*(mu_end.X() + p_end.X());
-//        vertex_time[plane] = 0.5*(mu_end.Y() + p_end.Y());
-//    }
-//    // build a small ROI of 20 wires x 40 time ticks around the vertex
-//    Roi_20x40_AroundVertex[plane] = box( vertex_wire[plane]-20, vertex_time[plane]-40, vertex_wire[plane]+20, vertex_time[plane]+40  );
-//    
-//    // now flip the tracks that need to be flipped
-//    if ( WireTimeDistance( vertex_wire[plane] , vertex_time[plane] , mu_start_wire[plane] , mu_start_time[plane] ) > WireTimeDistance( vertex_wire[plane] , vertex_time[plane] , mu_end_wire[plane] , mu_end_time[plane] ) ){
-//        int tmp_wire = mu_start_wire[plane];
-//        mu_start_wire[plane] = mu_end_wire[plane];
-//        mu_end_wire[plane] = tmp_wire;
-//        int tmp_time = mu_start_time[plane];
-//        mu_start_time[plane] = mu_end_time[plane];
-//        mu_end_time[plane] = tmp_time;
-//    }
-//    if ( WireTimeDistance( vertex_wire[plane] , vertex_time[plane] , p_start_wire[plane] , p_start_time[plane] ) > WireTimeDistance( vertex_wire[plane] , vertex_time[plane] , p_end_wire[plane] , p_end_time[plane] ) ){
-//        int tmp_wire = p_start_wire[plane];
-//        p_start_wire[plane] = p_end_wire[plane];
-//        p_end_wire[plane] = tmp_wire;
-//        int tmp_time = p_start_time[plane];
-//        p_start_time[plane] = p_end_time[plane];
-//        p_end_time[plane] = tmp_time;
-//    }
-//    
-//    mu_angle[plane] = WireTimeAngle( (float)mu_start_wire[plane] ,  (float)mu_start_time[plane]
-//                                    , (float)mu_end_wire[plane] , (float)mu_end_time[plane] );
-//    AssignedMuonTrack.WireTimeAngle[plane] = mu_angle[plane];
-//    
-//    p_angle[plane] = WireTimeAngle( (float)p_start_wire[plane] ,  (float)p_start_time[plane]
-//                                    , (float)p_end_wire[plane] , (float)p_end_time[plane] );
-//    AssignedProtonTrack.WireTimeAngle[plane] = p_angle[plane];
-//    
-//    return true;
-//    
-//}
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t pairVertex::GetDis2ClosestFlash () const {
+    return GetDis2Flash(ClosestFlash);
+}
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

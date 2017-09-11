@@ -246,4 +246,47 @@ void PandoraNuTrack::FlipTrack(){
 }
 
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t PandoraNuTrack::GetDis2Flash (flash Flash) const {
+    float TrackZcenter = (start_pos.z() + end_pos.z())/2.;
+    float FlashZcenter = Flash.GetZcenter();
+    float Zdis = TrackZcenter - FlashZcenter;
+    float TrackYcenter = (start_pos.y() + end_pos.y())/2.;
+    float FlashYcenter = Flash.GetYcenter();
+    float Ydis = TrackYcenter - FlashYcenter;
+    float YZdistance = sqrt( Zdis*Zdis + Ydis*Ydis );
+    return YZdistance;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t PandoraNuTrack::GetDis2ClosestFlash () const {
+    return GetDis2Flash(ClosestFlash);
+}
+
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

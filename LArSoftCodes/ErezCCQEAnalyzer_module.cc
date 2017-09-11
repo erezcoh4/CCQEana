@@ -403,17 +403,15 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         // flash - matching
         // find the closest flash to the track
         if (flashes.size()){
-            float TrackZcenter = (track.GetStartPos().z() + track.GetEndPos().z())/2.;
-            float Zdistance = 1000, ClosestFlashZdistance = 1000;
+            float YZdistance = 1000, ClosestFlashYZdistance = 1000;
             for (auto f : flashes){
-                Zdistance = fabs( f.GetZcenter() - TrackZcenter );
-                if ( Zdistance < ClosestFlashZdistance ){
-                    ClosestFlashZdistance = Zdistance;
+                YZdistance = track.GetDis2Flash(f);
+                if ( YZdistance < ClosestFlashYZdistance ){
+                    ClosestFlashYZdistance = YZdistance;
                     track.SetClosestFlash( f );
                 }
             }
         }
-        
         tracks.push_back( track );
     }
     
@@ -685,18 +683,17 @@ void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
             // flash - matching
             // find the closest flash to the vertex
             Debug( 4 , "vertices flash matching" );
+            
             if (flashes.size()){
-                float vertexZ = v.GetPosition().z();
-                float Zdistance = 1000, ClosestFlashZdistance = 1000;
+                float YZdistance = 1000, ClosestFlashYZdistance = 1000;
                 for (auto f : flashes){
-                    Zdistance = fabs( f.GetZcenter() - vertexZ );
-                    if ( Zdistance < ClosestFlashZdistance ){
-                        ClosestFlashZdistance = Zdistance;
+                    YZdistance = v.GetDis2Flash(f);
+                    if ( YZdistance < ClosestFlashYZdistance ){
+                        ClosestFlashYZdistance = YZdistance;
                         v.SetClosestFlash( f );
                     }
                 }
             }
-
         }
     }
 }
@@ -830,6 +827,10 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     // µ/p assigned tracks
     << "PIDa_assigned_muon"<< "," << "PIDa_assigned_proton" << ","
     << "l_assigned_muon"<< "," << "l_assigned_proton" << ","
+    // flash matching of tracks
+    << "ClosestFlash_YZdistance_assigned_muon"<< "," << "ClosestFlash_YZdistance_assigned_proton" << ","
+    << "ClosestFlash_TotalPE_assigned_muon"<< "," << "ClosestFlash_TotalPE_assigned_proton" << ","
+    
     // start/end points, for FV cuts
     << "startx_assigned_muon" << ","
     << "starty_assigned_muon" << ","
@@ -852,8 +853,8 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     // reconstructed kinematics
     << "reco_Ev" << "," << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
     << "reco_Pt" << "," << "reco_theta_pq" << ","
-    << "reco_Pmu" << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << ","
-    << "reco_Pp" << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << ","
+    << "reco_Pmu" << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
+    << "reco_Pp" << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
 
     // truth MC information
     << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
@@ -887,7 +888,9 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
         }
     }
 
-    
+    // flash matching of vertex
+    vertices_file << "ClosestFlash_YZdistance" << "," << "ClosestFlash_TotalPE" << ",";
+
     // vertex truth-topology in MC
     vertices_file
     << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
@@ -932,6 +935,11 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         vertices_file
         << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
         << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << "," ;
+        // flash matching of tracks
+        vertices_file
+        << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << "," 
+        << v.GetAssignedMuonTrack().GetClosestFlash().GetTotalPE() << "," << v.GetAssignedProtonTrack().GetClosestFlash().GetTotalPE() << "," ;
+
         // start/end points, for FV cuts
         vertices_file
         << v.GetAssignedMuonTrack().GetStartPos().x() << ","
@@ -974,8 +982,8 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         // reconstructed kinematics
         vertices_file << v.GetRecoEv() << "," << v.GetRecoQ2() << "," <<  v.GetRecoXb() << "," << v.GetRecoY() << "," << v.GetRecoW2() << ","  ;
         vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
-        vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << ",";
-        vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << ",";
+        vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
+        vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";
 
         
         // truth MC information
@@ -1018,11 +1026,12 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
                 vertices_file << v.GetRdQaroundVertex( plane, NwiresBox[i_box_size] , NticksBox[i_box_size] , hits ) << "," ;
             }
         }
-        
+        // flash matching of vertex
+        vertices_file << v.GetDis2ClosestFlash() << "," << v.GetClosestFlash().GetTotalPE() << ",";
+
         
         // vertex truth-topology in MC
-        vertices_file
-        << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
+        vertices_file << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
         
         // finish
         vertices_file << endl;

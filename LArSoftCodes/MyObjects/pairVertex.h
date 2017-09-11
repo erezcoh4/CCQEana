@@ -132,6 +132,11 @@ public:
     float               GetRdQaroundVertex (int plane, int Nwires, int Nticks, std::vector<hit> hits) const ;
     float                   GetChargeInBox (int plane, std::vector<hit> hits, box VertexBox) const;
     
+    
+    
+    Float_t                   GetDis2Flash (flash) const;
+    Float_t            GetDis2ClosestFlash () const ;
+
     std::vector<float>    Get_delta_phi_ij () const {return delta_phi_ij;};
     std::vector<float>    Get_distances_ij () const {return distances_ij;};
     std::vector<float>  Get_delta_theta_ij () const {return delta_theta_ij;};
