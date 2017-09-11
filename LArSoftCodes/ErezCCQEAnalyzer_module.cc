@@ -937,7 +937,7 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << "," ;
         // flash matching of tracks
         vertices_file
-        << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << "," 
+        << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
         << v.GetAssignedMuonTrack().GetClosestFlash().GetTotalPE() << "," << v.GetAssignedProtonTrack().GetClosestFlash().GetTotalPE() << "," ;
 
         // start/end points, for FV cuts
