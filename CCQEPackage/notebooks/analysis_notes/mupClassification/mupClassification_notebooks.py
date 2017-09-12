@@ -13,6 +13,19 @@ reduced_MCbnbMCcosmicSamples=dict(dict())
 pureff_MCbnbMCcosmic = pd.DataFrame()
 pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
 
+# ------------------------------------------------
+# sep-12
+def get_pair_hpars(index):
+    pair_type = pair_types[index];
+    label = MClabels[index]; 
+    cmap = MCcmaps[index]; 
+    color = MCcolors[index]
+    return pair_type,label,cmap,color
+# ------------------------------------------------
+
+
+
+
 
 # ------------------------------------------------
 # Aug 30
@@ -408,7 +421,7 @@ def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collecti
 
 #---------------------------------------------------------------------------------------------
 # July-11, 2017
-def plot_feature_pairs(cut_name='${PID}_A$',
+def plot_feature_pairs(reduced_samples=None,cut_name='${PID}_A$',
                        var='l_long',x_label='$l_{long}$ [cm]',mul=1,                                
                        bins=np.linspace(0,300,50),
                        figsize=(12,8),legend_fontsize=25,fontsize=25,
@@ -417,8 +430,8 @@ def plot_feature_pairs(cut_name='${PID}_A$',
     fig,ax = plt.subplots(figsize=figsize)
     max_h=0
     text_colors=[]
-    for i,(pair_type,label,cmap,color) in enumerate(zip(pair_types,labels,cmaps,colors)):
-        sample = reduced_MCbnbDATAcosmicSamples[cut_name][pair_type]
+    for i,(pair_type,label,cmap,color) in enumerate(zip(pair_types,MClabels,MCcmaps,MCcolors)):
+        sample = reduced_samples[cut_name][pair_type]
         if len(sample) < 10: continue
         h,bins,_=plt.hist(mul*sample[var],normed=1,bins=bins,histtype='step',linewidth=3,color=color)
         text_colors.append(color)
@@ -444,7 +457,8 @@ def plot_feature_pairs(cut_name='${PID}_A$',
 
 #---------------------------------------------------------------------------------------------
 # July-11, 2017
-def plot_cut_samples (reduced_cut_name='${PID}_A$',markers_size=5,
+def plot_cut_samples (reduced_samples=None,
+                      reduced_cut_name='${PID}_A$',markers_size=5,
                       cut_name='maximal distance between tracks',mul=1,
                       cut_var ='distance',
                       cut_type= 'max',
@@ -453,8 +467,8 @@ def plot_cut_samples (reduced_cut_name='${PID}_A$',markers_size=5,
                       xmin=0.1, xmax=10 , Nbins=10, do_add_legend=True, legend_loc='bbox',legend_fontsize=25,
                       ticks_color='black'):
     fig,ax=plt.subplots(figsize=figsize)
-    for i,(pair_type,label,cmap,color) in enumerate(zip(pair_types,labels,cmaps,colors)):
-        sample = reduced_MCbnbDATAcosmicSamples[reduced_cut_name][pair_type]
+    for i,(pair_type,label,cmap,color) in enumerate(zip(pair_types,MClabels,MCcmaps,MCcolors)):
+        sample = reduced_samples[reduced_cut_name][pair_type]
         if cut_type=='max' or cut_type=='min':
             x , frac , frac_err = get_fraction_in_cut( data=sample , cut_var=cut_var , mul=mul , cut_type=cut_type , xmin=xmin, xmax=xmax , Nbins=Nbins )
         elif cut_type=='symmetric':
@@ -465,7 +479,7 @@ def plot_cut_samples (reduced_cut_name='${PID}_A$',markers_size=5,
             leg=ax.legend(fontsize=legend_fontsize,loc=legend_loc,markerscale=2.)
         else:
             leg=ax.legend(bbox_to_anchor=(1.05,1),loc=2,borderaxespad=0.,fontsize=legend_fontsize,markerscale=2.)
-        for color,text in zip(colors,leg.get_texts()):
+        for color,text in zip(MCcolors,leg.get_texts()):
             text.set_color(color)
     ax.set_ylim(0,101)
     ax.set_xlim(xmin,xmax)    
