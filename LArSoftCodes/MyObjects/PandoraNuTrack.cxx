@@ -7,19 +7,19 @@
 PandoraNuTrack::PandoraNuTrack( Int_t frun, Int_t fsubrun, Int_t fevent
                                ,Int_t ftrack_id
                                ,Float_t flength
-                               ,Float_t ftheta, Float_t fphi
+//                               ,Float_t ftheta, Float_t fphi
                                ,TVector3 fstart_pos, TVector3 fend_pos):
 run(frun),
 subrun(fsubrun),
 event(fevent),
 track_id(ftrack_id),
 length(flength),
-theta(ftheta),
-phi(fphi),
+//theta(ftheta),
+//phi(fphi),
 start_pos(fstart_pos),
 end_pos(fend_pos)
 {
-
+    SetRecDirection();
 }
 
 
@@ -31,14 +31,17 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     
     SHOWTVector3(start_pos);
     SHOWTVector3(end_pos);
-    
+    SHOWTVector3(rec_dir);
+
     if (DoPrintPandoraNuFeatures){
         
         
         SHOW( PIDa ); // SHOW3( PIDaPerPlane[0] , PIDaPerPlane[1] , PIDaPerPlane[2] );
         PrintPhys(length,"cm");
-        PrintPhys(theta,"rad");
-        PrintPhys(phi,"rad");
+//        PrintPhys(r2d*theta,"deg.");
+//        PrintPhys(r2d*phi,"deg.");
+        Printf("rec theta=%.1f, phi=%.1f deg.", r2d*rec_dir.Theta(), r2d*rec_dir.Phi() );
+        SHOW(IsFlipped);
         
     }
     if (MCpdgCode!=-9999){
@@ -47,17 +50,19 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
         SHOW(mcevent_id);
         SHOWTVector3(truth_start_pos);
         SHOWTVector3(truth_end_pos);
+        SHOWTVector3(truth_dir);
         SHOWTLorentzVector(truth_momentum);
         SHOW(truth_mother);
         SHOW(truth_process);
         SHOW(truth_origin);
+        Printf("truth theta=%.1f, phi=%.1f deg.", r2d*truth_dir.Theta(), r2d*truth_dir.Phi() );
+        if ( r2d*fabs(truth_dir.Theta()-rec_dir.Theta()) > 90 ) {
+            Printf("theta - truth-theta = %.1f(!)",r2d*fabs(truth_dir.Theta()-rec_dir.Theta()));
+        }
         cout << "........................" << endl;
     }
     cout << "closest-flash:" << endl;
     ClosestFlash.Print();
-    //        SHOW2( truth_ccnc, IsGENIECC1p );
-    //        SHOW( IsGENIECC_1p_200MeVc_0pi );
-    //    }
     cout << "\033[31m" << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << "\033[0m" << endl;
 }
 
@@ -218,31 +223,12 @@ void PandoraNuTrack::FlipTrack(){
     end_pos     = tmp_pos;
     
     // change angles
-    theta       = 3.1416 - theta;
-    phi         = (phi > 0 ? phi-3.1416 : phi+3.1416);
+    rec_dir = -rec_dir;
+//    theta       = 3.1416 - theta;
+//    phi         = (phi > 0 ? phi-3.1416 : phi+3.1416);
     
-    //    Float_t tmp_dqdx = start_dqdx;
-    //    start_dqdx  = end_dqdx;
-    //    end_dqdx    = tmp_dqdx;
+    IsFlipped  = !IsFlipped;
     
-    //    for (int plane = 0 ; plane < 3 ; plane++ ){
-    //
-    //        Float_t tmp1 = dqdx_around_start[plane];
-    //        dqdx_around_start[plane] = dqdx_around_end[plane];
-    //        dqdx_around_end[plane] = tmp1;
-    //
-    //        Float_t tmp2 = dqdx_around_start_track_associated[plane];
-    //        dqdx_around_start_track_associated[plane] = dqdx_around_end_track_associated[plane];
-    //        dqdx_around_end_track_associated[plane] = tmp2;
-    //    }
-    //
-    //    Float_t     tmp3 = dqdx_around_start_total;
-    //    dqdx_around_start_total = dqdx_around_end_total;
-    //    dqdx_around_end_total = tmp3;
-    //
-    //    Float_t     tmp4 = dqdx_around_start_track_associated_total;
-    //    dqdx_around_start_track_associated_total = dqdx_around_end_track_associated_total;
-    //    dqdx_around_end_track_associated_total = tmp4;
 }
 
 

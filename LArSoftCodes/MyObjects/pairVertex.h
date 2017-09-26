@@ -21,9 +21,6 @@
 #include "flash.h"
 #include "GENIEinteraction.h"
 
-#define r2d TMath::RadToDeg()
-#define d2r TMath::DegToRad()
-#define PI TMath::Pi()
 
 
 
@@ -36,6 +33,7 @@ class pairVertex {
 
 public:
 
+    
     pairVertex() = default;
     pairVertex (Int_t frun,Int_t fsubrun,Int_t fevent,Int_t fID);
 
@@ -174,6 +172,15 @@ public:
     inline bool operator!=(const pairVertex & v) {
         return  (vertex_id != v.GetVertexID());
     }
+    
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
+    // debug
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
+    Int_t debug=0;
+    void Debug (Int_t verobosity_level, std::string text){
+        if ( debug > verobosity_level ) cout << text << endl;
+    }
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
    
 private:
     

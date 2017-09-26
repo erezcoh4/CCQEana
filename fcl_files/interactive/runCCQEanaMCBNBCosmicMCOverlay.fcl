@@ -35,7 +35,7 @@ physics:
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
-      VerbosityLevel:		2
+      VerbosityLevel:		4
       DataSampleLabel:		"prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2"
       POTModuleLabel:     "generator"
       FlashModuleLabel:     "simpleFlashBeam"

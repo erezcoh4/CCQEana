@@ -26,8 +26,13 @@ print "OffBeam_scaling:",OffBeam_scaling,"= N(on beam)/N(off beam) before sof. t
 
 Nevents['MC-BNB/Cosmic-DATA overlay'] = 96350 # from python scripts/count_events.py on <prodgenie_bnb_nu_uboone_overlay_mcc8_reco2>
 Nevents['MC-BNB/Cosmic-DATA overlay POT'] = 9.773e19
-MC_scaling = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
-print "MC_scaling:",MC_scaling,"= N(POT on beam)/N(POT MC)"
+MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
+print "MC_scaling_DATAcosmic:",MC_scaling_DATAcosmic,"= N(POT on beam)/N(POT MC)"
+
+Nevents['MC-BNB/Cosmic-MC overlay'] = 358800 # from python scripts/count_events.py on <prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2>
+Nevents['MC-BNB/Cosmic-MC overlay POT'] = 3.61901e20
+MC_scaling_MCcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-MC overlay POT']
+print "MC_scaling_MCcosmic:",MC_scaling_MCcosmic,"= N(POT on beam)/N(POT MC)"
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -

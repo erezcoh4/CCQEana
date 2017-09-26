@@ -40,6 +40,11 @@ using namespace std;
 #define PrintPhys(a,units) std::cout  << setprecision(2) << fixed << #a << ": " << (a) <<  " " << (units) << std::endl
 
 
+#define r2d TMath::RadToDeg()
+#define d2r TMath::DegToRad()
+#define PI TMath::Pi()
+
+
 
 /**
  \class PandoraNuTrack
@@ -60,7 +65,7 @@ public:
     PandoraNuTrack (Int_t frun, Int_t fsubrun, Int_t fevent
                     ,Int_t ftrack_id
                     ,Float_t flength
-                    ,Float_t ftheta, Float_t fphi
+//                    ,Float_t ftheta, Float_t fphi
                     ,TVector3 fstart_pos, TVector3 fend_pos );
     
     
@@ -86,16 +91,18 @@ public:
     
     
     void            SetLength (Float_t l)                   {length = l;};
-    void             SetTheta (Float_t t)                   {theta = t;};
-    void               SetPhi (Float_t ph)                  {phi = ph;};
+//    void             SetTheta (Float_t t)                   {theta = t;};
+//    void               SetPhi (Float_t ph)                  {phi = ph;};
     void       SetTruthLength ()                            {truth_length = (truth_start_pos-truth_end_pos).Mag();};
-    void        SetTruthTheta (Float_t f)                   {truth_theta = f;};
-    void          SetTruthPhi (Float_t f)                   {truth_phi = f;};
+//    void        SetTruthTheta (Float_t f)                   {truth_theta = f;};
+//    void          SetTruthPhi (Float_t f)                   {truth_phi = f;};
 
     void          SetStartPos (TVector3 pos)                {start_pos = pos;};
     void            SetEndPos (TVector3 pos)                {end_pos = pos;};
+    void      SetRecDirection ()                            {rec_dir = end_pos-start_pos;};
     void     SetTruthStartPos (TVector3 pos)                {truth_start_pos = pos;};
     void       SetTruthEndPos (TVector3 pos)                {truth_end_pos = pos;};
+    void    SetTruthDirection ()                            {truth_dir = truth_end_pos-truth_start_pos;};
     void              SetPIDa ()                            {PIDa = PIDaPerPlane[BestPlane]; };
     void     SetTruthMomentum (TLorentzVector fmomentum)    {truth_momentum=fmomentum; };
     
@@ -132,11 +139,16 @@ public:
 
     
     Float_t               GetLength () const {return length;};
-    Float_t                GetTheta () const {return theta;};
-    Float_t                  GetPhi () const {return phi;};
+//    Float_t                GetTheta () const {return theta;};
+//    Float_t                  GetPhi () const {return phi;};
+    Float_t                GetTheta () const {return rec_dir.Theta();};
+    Float_t                  GetPhi () const {return rec_dir.Phi();};
+    
     Float_t          GetTruthLength () const {return truth_length;};
-    Float_t           GetTruthTheta () const {return truth_theta;};
-    Float_t             GetTruthPhi () const {return truth_phi;};
+//    Float_t           GetTruthTheta () const {return truth_theta;};
+//    Float_t             GetTruthPhi () const {return truth_phi;};
+    Float_t           GetTruthTheta () const {return truth_dir.Theta();};
+    Float_t             GetTruthPhi () const {return truth_dir.Phi();};
     
     Float_t       GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
     Float_t         GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
@@ -148,8 +160,12 @@ public:
     
     TVector3            GetStartPos () const {return start_pos;};
     TVector3              GetEndPos () const {return end_pos;};
+    TVector3        GetRecDirection () const {return rec_dir;};
+
     TVector3       GetTruthStartPos () const {return truth_start_pos;};
     TVector3         GetTruthEndPos () const {return truth_end_pos;};
+    TVector3      GetTruthDirection () const {return truth_dir;};
+    
     TLorentzVector GetTruthMomentum () const {return truth_momentum; };
     
     flash           GetClosestFlash () const {return ClosestFlash;};
@@ -200,7 +216,7 @@ private:
     
     // bool
     bool        IsGENIECC_1p_200MeVc_0pi=false;
-    
+    bool        IsFlipped=false;
     // Int_t
     Int_t       run=0, subrun=0, event=0, track_id=-9999;
     Int_t       truth_ccnc=0, truth_mode=0;
@@ -215,18 +231,20 @@ private:
     Int_t       truth_mother=-1;
     
     // Float_t
-    Float_t     length=0, theta=0, phi=0;
+    Float_t     length=0;
+//    Float_t     theta=0, phi=0;
     Float_t     CaloKEPerPlane[3]={0,0,0};
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa=-1;
 
     // truth information - only valid for MC data
-    Float_t     truth_theta=-9999, truth_phi=-9999, truth_length=-9999;
+    Float_t     truth_length=-9999;
+//    Float_t     truth_theta=-9999, truth_phi=-9999;
     
     
     // TVector3
-    TVector3    start_pos=TVector3(), end_pos=TVector3();
-    TVector3    truth_start_pos=TVector3(), truth_end_pos=TVector3();
+    TVector3    start_pos=TVector3(), end_pos=TVector3(), rec_dir=TVector3();
+    TVector3    truth_start_pos=TVector3(), truth_end_pos=TVector3(), truth_dir=TVector3();
     
     TLorentzVector truth_momentum=TLorentzVector();
     

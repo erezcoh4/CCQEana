@@ -266,11 +266,11 @@ void pairVertex::FixTracksDirections(){
     
     // then, flip the tracks accordingly
     if ( (AssignedMuonTrack.GetEndPos() - position).Mag() < (AssignedMuonTrack.GetStartPos() - position).Mag() ){
-        // Debug(4,"Flipping muon track");
+        Debug(1,"Flipping muon track");
         AssignedMuonTrack.FlipTrack();
     }
     if ( (AssignedProtonTrack.GetEndPos() - position).Mag() < (AssignedProtonTrack.GetStartPos() - position).Mag() ){
-        // Debug(4,"Flipping proton track");
+        Debug(1,"Flipping proton track");
         AssignedProtonTrack.FlipTrack();
     }
     
@@ -283,6 +283,7 @@ void pairVertex::FixTracksDirections(){
     // 𝜽(p) = -𝜽(µ)/𝛑 + 1
     // so if 𝜽(p) is too far from this correlation we can flip the p-track
     if (fabs( AssignedProtonTrack.GetTheta() - (-AssignedMuonTrack.GetTheta()/PI + 1.)) > 1.){
+        Debug(1,"re-flipping proton track");
         AssignedProtonTrack.FlipTrack();
     }
     // -- - --- -- -- --- - - -- -- -- - -- - -- -- -- - -- -- - - -- - - -- - -- - -- - - - -- - - -- - - -

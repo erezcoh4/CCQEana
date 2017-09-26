@@ -283,8 +283,8 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                              run , subrun, event        // r/s/e
                              ,tracklist[i]->ID()        // track id
                              ,tracklist[i]->Length()    // length
-                             ,tracklist[i]->Theta()     // polar angle
-                             ,tracklist[i]->Phi()       // azimuthal angle
+//                             ,tracklist[i]->Theta()     // polar angle
+//                             ,tracklist[i]->Phi()       // azimuthal angle
                              ,TVector3(start_pos.X(),start_pos.Y(),start_pos.Z())   // start position
                              ,TVector3(end_pos.X(),end_pos.Y(),end_pos.Z())         // end position
                             );
@@ -388,6 +388,8 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                 track.SetMCpdgCode( particle->PdgCode() );
                 track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
                 track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                track.SetTruthDirection();
+                
                 track.SetTruthLength();
                 track.SetTruthMomentum( particle -> Momentum() );
                 track.SetTruthMother( particle -> Mother() );
@@ -859,8 +861,8 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     // truth MC information
     << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
     
-    << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
-    << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
+    << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << "," << "truth_Pmu_theta" << ","<< "truth_Pmu_phi" << ","
+    << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << "," << "truth_Pp_theta" << ","<< "truth_Pp_phi" << ","
     
     // mathing genie interaction
     << "genie_distance" << ","
@@ -991,11 +993,11 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         
         vertices_file
         << v.GetAssignedMuonTrack().GetTruthMomentum().P() << ","
-        << v.GetAssignedMuonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Pz() << ",";
+        << v.GetAssignedMuonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Phi() << ",";
         
         vertices_file
         << v.GetAssignedProtonTrack().GetTruthMomentum().P() << ","
-        << v.GetAssignedProtonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Pz() << ",";
+        << v.GetAssignedProtonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Phi() << ",";
         
 
         // mathing genie interaction
