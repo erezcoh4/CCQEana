@@ -34,7 +34,7 @@ def apply_cuts( PIDa_p_min=8
                , delta_Delta_phi=40 # deg.
                , theta_pq_max=25    # deg.
                , Pt_max=0.35        # GeV/c
-               , i_optimal_box_size=9 , Rmin = (0.25,0.25,0.6) # U,V,Y
+               , i_optimal_box_size=9 , Rmin_CC1p0pi = (0.25,0.25,0.6) # sphere in U,V,Y space, apply a cut only to CC1p0pi
                ):
     '''
         return:
