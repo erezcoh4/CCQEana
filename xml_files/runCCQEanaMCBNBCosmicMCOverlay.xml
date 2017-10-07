@@ -60,7 +60,7 @@
             <!--    <defname>&name;_&tag;</defname> -->
             <!--    <anadefname>&name;_&tag;_ana</anadefname> -->
             <!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/prod_reco2_extbnb_v8_mcc8_v04_26_04_05_05.list</inputlist>-->
-            <jobsub> --expected-lifetime=16h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
+            <jobsub> --expected-lifetime=18h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
             <memory>4000</memory>
         </stage>
         

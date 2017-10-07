@@ -27,14 +27,18 @@ def get_pair_hpars(index):
 
 
 
+
 # ------------------------------------------------
-# Aug 30
-def apply_cuts( PIDa_p_min=8
+# last edit Oct-3, 2017
+def apply_cuts( PIDa_p_min=12
                , delta_theta_12=60  # deg.
                , delta_Delta_phi=40 # deg.
                , theta_pq_max=25    # deg.
                , Pt_max=0.35        # GeV/c
-               , i_optimal_box_size=9 , Rmin_CC1p0pi = (0.25,0.25,0.6) # sphere in U,V,Y space, apply a cut only to CC1p0pi
+               , opt_box=(50,100) # [Nwires x Nticks]
+               , r_min_RdQ_CC1p0pi = 0.32 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+               , min_PE_ClosestFlash = 50
+               , max_dYZ_ClosestFlash = 150
                ):
     '''
         return:
@@ -70,6 +74,7 @@ def apply_cuts( PIDa_p_min=8
 
 
     # cut 1: PIDa
+    cut_name , cut_label = 'PIDa','${PID}_a>%.0f$'%PIDa_p_min
     reduced_MCbnbDATAcosmic = dict()
     reduced_MCbnbMCcosmic = dict()
     for pair_type in pair_types:#{
@@ -78,13 +83,14 @@ def apply_cuts( PIDa_p_min=8
         sam = reduced_MCbnbMCcosmicSamples['no cut'][pair_type]
         reduced_MCbnbMCcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
     #}
-    get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label='${PID}_a>%.0f$'%PIDa_p_min, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbDATAcosmic_numbers(cut_name = '\CutPIDa', cut_label='${PID}_a>%.0f$'%PIDa_p_min, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label='${PID}_a>%.0f$'%PIDa_p_min, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
-    get_pureff_MCbnbMCcosmic_numbers(cut_name = '\CutPIDa', cut_label='${PID}_a>%.0f$'%PIDa_p_min, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
 
 
     # cut 2: require that the longer track is the one with larger PIDa
+    cut_name , cut_label = 'length', '$l_{\\mu}>l_{p}$'
     reduced_MCbnbDATAcosmic = dict()
     reduced_MCbnbMCcosmic = dict()
     for pair_type in pair_types:#{
@@ -93,12 +99,13 @@ def apply_cuts( PIDa_p_min=8
         sam = reduced_MCbnbMCcosmicSamples['PIDa'][pair_type]
         reduced_MCbnbMCcosmic[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
     #}
-    get_pureff_MCbnbDATAcosmic_cut(cut_name = 'length', cut_label='$l_{\\mu}>l_{p}$', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbDATAcosmic_numbers(cut_name = '\Cutlmup', cut_label='$l_{\\mu}>l_{p}$', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbMCcosmic_cut(cut_name = 'length', cut_label='$l_{\\mu}>l_{p}$', reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
-    get_pureff_MCbnbMCcosmic_numbers(cut_name = '\Cutlmup', cut_label='$l_{\\mu}>l_{p}$', reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
     
     # cut 3: |\theta_{1,2}-90^0|<60^0$
+    cut_name, cut_label='non-collinearity' ,'$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12
     reduced_MCbnbDATAcosmic = dict()
     reduced_MCbnbMCcosmic = dict()
     for pair_type in pair_types:#{
@@ -107,40 +114,76 @@ def apply_cuts( PIDa_p_min=8
         sam = reduced_MCbnbMCcosmicSamples['length'][pair_type]
         reduced_MCbnbMCcosmic[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
     #}
-    get_pureff_MCbnbDATAcosmic_cut(cut_name='non-collinearity' , cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'non-collinearity', cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbMCcosmic_cut(cut_name='non-collinearity' , cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
-    get_pureff_MCbnbMCcosmic_numbers(cut_name = 'non-collinearity', cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
 
 
-    # cut 4: vertex $\Delta Q$
-    N_box_sizes = 30
-    MinNwiresBox,dNwiresBox = 5,5
-    MinNticksBox,dNticksBox = 10,10
-    NwiresBox,NticksBox=[],[]
-    for i_box_size in range(N_box_sizes):#{
-        NwiresBox.append(MinNwiresBox + i_box_size * dNwiresBox)
-        NticksBox.append(MinNticksBox + i_box_size * dNticksBox)
-    #}
-    Ru = 'RdQaroundVertex[plane 0][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
-    Rv = 'RdQaroundVertex[plane 1][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
-    Ry = 'RdQaroundVertex[plane 2][%d wires x %d ticks]'%(NwiresBox[i_optimal_box_size],NticksBox[i_optimal_box_size])
-    RuMin = Rmin[0]-0.01
-    RvMin = Rmin[1]-0.01
-    RyMin = Rmin[2]-0.01
-    cut_label='$(%.2f,%.2f,%.2f)<R_{\Delta Q}^{(U,V,Y)}$'%(RuMin,RvMin,RyMin)
+    # -- - -- -- - -- -- - - -- --- 
+    # FLASH A: look at the closest flash to the vertex
+    # -- - -- -- - -- -- - - -- --- 
+    # cut 4: number of photoelectrons in the closest flash to the vertex (ClosestFlash_TotalPE)
+    cut_name, cut_label='closest-flash PE' ,'$N_{PE}^{closest-flash}>%.0f$'%min_PE_ClosestFlash
     reduced_MCbnbDATAcosmic = dict()
     reduced_MCbnbMCcosmic = dict()
     for pair_type in pair_types:#{
         sam = reduced_MCbnbDATAcosmicSamples['non-collinearity'][pair_type]
-        reduced_MCbnbDATAcosmic[pair_type] = sam[(sam[Ru]>RuMin)&(sam[Ru]<1.01)&(sam[Rv]>RvMin)&(sam[Rv]<1.01)&(sam[Ry]>RyMin)&(sam[Ry]<1.01)]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['ClosestFlash_TotalPE'] > min_PE_ClosestFlash]
         sam = reduced_MCbnbMCcosmicSamples['non-collinearity'][pair_type]
-        reduced_MCbnbMCcosmic[pair_type] = sam[(sam[Ru]>RuMin)&(sam[Ru]<1.01)&(sam[Rv]>RvMin)&(sam[Rv]<1.01)&(sam[Ry]>RyMin)&(sam[Ry]<1.01)]
+        reduced_MCbnbMCcosmic[pair_type] = sam[sam['ClosestFlash_TotalPE'] > min_PE_ClosestFlash]
     #}
-    get_pureff_MCbnbDATAcosmic_cut(cut_name = 'vertex activity' ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'vertex activity', cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbMCcosmic_cut(cut_name = 'vertex activity' ,cut_label=cut_label , reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
-    get_pureff_MCbnbMCcosmic_numbers(cut_name = 'vertex activity', cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+
+
+    # cut 5: distance of the closest flash to the vertex in YZ plane (ClosestFlash_YZdistance)
+    cut_name, cut_label='closest-flash dYZ' ,'$d_{YZ-plane}^{closest-flash}<%.0f$ cm'%max_dYZ_ClosestFlash
+    reduced_MCbnbDATAcosmic = dict()
+    reduced_MCbnbMCcosmic = dict()
+    for pair_type in pair_types:#{
+        sam = reduced_MCbnbDATAcosmicSamples['closest-flash PE'][pair_type]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['ClosestFlash_YZdistance'] < max_dYZ_ClosestFlash]
+        sam = reduced_MCbnbMCcosmicSamples['closest-flash PE'][pair_type]
+        reduced_MCbnbMCcosmic[pair_type] = sam[sam['ClosestFlash_YZdistance'] < max_dYZ_ClosestFlash]
+    #}
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+
+
+
+    
+    
+    # -- - -- -- - -- -- - - -- --- 
+    # VERTEX ACTIVITY 
+    # -- - -- -- - -- -- - - -- --- 
+    # cut 6: vertex activity (RdQ)
+    # for the 1mu-1p sample we do not apply a cut, which means that we stop here for 1mu-1p
+    # for the CC 1p 0pi we apply a cut:
+    # a sphere around RdQ=1 of radius r_min_RdQ_CC1p0pi
+    # where r_min_RdQ_CC1p0pi is taken from analysis_notes/RdQ/RdQaroundVertex_cut_selection
+    cut_name , cut_label = 'vertex activity' , '$\sqrt{\sum_{p=0,1,2}(R_{\Delta Q}^{p}-1)^2}<%.2f$'%r_min_RdQ_CC1p0pi
+    box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
+    RdQu = 'RdQaroundVertex[plane 0]'+box_str
+    RdQv = 'RdQaroundVertex[plane 1]'+box_str
+    RdQy = 'RdQaroundVertex[plane 2]'+box_str
+    
+    reduced_MCbnbDATAcosmic = dict()
+    reduced_MCbnbMCcosmic = dict()    
+    for pair_type in pair_types:#{ 
+        sam = reduced_MCbnbDATAcosmicSamples['closest-flash dYZ'][pair_type]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[np.sqrt(np.square(sam[RdQu]-1)+np.square(sam[RdQu]-1)+np.square(sam[RdQy]-1))<r_min_RdQ_CC1p0pi]
+        sam = reduced_MCbnbMCcosmicSamples['closest-flash dYZ'][pair_type]
+        reduced_MCbnbMCcosmic[pair_type] = sam[np.sqrt(np.square(sam[RdQu]-1)+np.square(sam[RdQu]-1)+np.square(sam[RdQy]-1))<r_min_RdQ_CC1p0pi]
+    #}
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name,cut_label=cut_label , reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
 
 
     # cut 5: $\Delta phi$
@@ -206,7 +249,6 @@ def apply_cuts( PIDa_p_min=8
 
     return pureff_MCbnbDATAcosmic,pureff_MCbnbDATAcosmic_numbers,pureff_MCbnbMCcosmic,pureff_MCbnbMCcosmic_numbers
 # ------------------------------------------------
-
 
 
 # ------------------------------------------------
