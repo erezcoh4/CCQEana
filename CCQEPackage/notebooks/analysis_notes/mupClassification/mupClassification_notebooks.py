@@ -463,7 +463,7 @@ def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collecti
 
 #---------------------------------------------------------------------------------------------
 # July-11, 2017
-def plot_feature_pairs(reduced_samples=None,cut_name='${PID}_A$',
+def plot_feature_pairs(reduced_samples=None,cut_name='PIDa',
                        var='l_long',x_label='$l_{long}$ [cm]',mul=1,                                
                        bins=np.linspace(0,300,50),
                        figsize=(12,8),legend_fontsize=25,fontsize=25,
@@ -473,7 +473,7 @@ def plot_feature_pairs(reduced_samples=None,cut_name='${PID}_A$',
     max_h=0
     text_colors=[]
     for i,(pair_type,label,cmap,color) in enumerate(zip(pair_types,MClabels,MCcmaps,MCcolors)):
-        sample = reduced_samples[cut_name][pair_type]
+        sample = reduced_MCbnbDATAcosmicSamples[cut_name][pair_type]
         if len(sample) < 10: continue
         h,bins,_=plt.hist(mul*sample[var],normed=1,bins=bins,histtype='step',linewidth=3,color=color)
         text_colors.append(color)
@@ -500,7 +500,7 @@ def plot_feature_pairs(reduced_samples=None,cut_name='${PID}_A$',
 #---------------------------------------------------------------------------------------------
 # July-11, 2017
 def plot_cut_samples (reduced_samples=None,
-                      reduced_cut_name='${PID}_A$',markers_size=5,
+                      reduced_cut_name='PIDa',markers_size=5,
                       cut_name='maximal distance between tracks',mul=1,
                       cut_var ='distance',
                       cut_type= 'max',
@@ -510,7 +510,7 @@ def plot_cut_samples (reduced_samples=None,
                       ticks_color='black'):
     fig,ax=plt.subplots(figsize=figsize)
     for i,(pair_type,label,cmap,color) in enumerate(zip(pair_types,MClabels,MCcmaps,MCcolors)):
-        sample = reduced_samples[reduced_cut_name][pair_type]
+        sample = reduced_MCbnbDATAcosmicSamples[reduced_cut_name][pair_type]
         if cut_type=='max' or cut_type=='min':
             x , frac , frac_err = get_fraction_in_cut( data=sample , cut_var=cut_var , mul=mul , cut_type=cut_type , xmin=xmin, xmax=xmax , Nbins=Nbins )
         elif cut_type=='symmetric':
