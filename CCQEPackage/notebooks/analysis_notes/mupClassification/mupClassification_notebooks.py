@@ -29,14 +29,15 @@ def get_pair_hpars(index):
 
 
 # ------------------------------------------------
-# last edit Oct-3, 2017
+# last edit:
+# Oct. 13, 2017
 def apply_cuts( PIDa_p_min=12
                , delta_theta_12=60  # deg.
                , delta_Delta_phi=40 # deg.
                , theta_pq_max=25    # deg.
                , Pt_max=0.35        # GeV/c
                , opt_box=(50,100) # [Nwires x Nticks]
-               , r_min_RdQ_CC1p0pi = 0.32 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+               , r_max_RdQ_CC1p0pi = 0.32 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                , min_PE_ClosestFlash = 50
                , max_dYZ_ClosestFlash = 150
                ):
@@ -67,10 +68,10 @@ def apply_cuts( PIDa_p_min=12
         sam = reduced_MCbnbMCcosmicSamples['no cut'][pair_type]
         reduced_MCbnbMCcosmic[pair_type] = sam
     #}
-    get_pureff_MCbnbDATAcosmic_cut(cut_name = 'no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-    get_pureff_MCbnbMCcosmic_cut(cut_name = 'no cut', reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
-    get_pureff_MCbnbMCcosmic_numbers(cut_name = 'no cut', reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbDATAcosmic_cut(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbMCcosmic_cut(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
+    get_pureff_MCbnbMCcosmic_numbers(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
 
 
     # cut 1: PIDa
@@ -154,8 +155,6 @@ def apply_cuts( PIDa_p_min=12
     get_pureff_MCbnbMCcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
     get_pureff_MCbnbMCcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbMCcosmic = reduced_MCbnbMCcosmic)
 
-
-
     
     
     # -- - -- -- - -- -- - - -- --- 
@@ -166,19 +165,27 @@ def apply_cuts( PIDa_p_min=12
     # for the CC 1p 0pi we apply a cut:
     # a sphere around RdQ=1 of radius r_min_RdQ_CC1p0pi
     # where r_min_RdQ_CC1p0pi is taken from analysis_notes/RdQ/RdQaroundVertex_cut_selection
-    cut_name , cut_label = 'vertex activity' , '$\sqrt{\sum_{p=0,1,2}(R_{\Delta Q}^{p}-1)^2}<%.2f$'%r_min_RdQ_CC1p0pi
+    cut_name , cut_label = 'vertex activity' , '$\sqrt{\sum_{p=0,1,2}(R_{\Delta Q}^{p}-1)^2}<%.2f$'%r_max_RdQ_CC1p0pi
     box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
-    RdQu = 'RdQaroundVertex[plane 0]'+box_str
-    RdQv = 'RdQaroundVertex[plane 1]'+box_str
-    RdQy = 'RdQaroundVertex[plane 2]'+box_str
+    Ru = 'RdQaroundVertex[plane 0]'+box_str
+    Rv = 'RdQaroundVertex[plane 1]'+box_str
+    Ry = 'RdQaroundVertex[plane 2]'+box_str
     
     reduced_MCbnbDATAcosmic = dict()
     reduced_MCbnbMCcosmic = dict()    
     for pair_type in pair_types:#{ 
-        sam = reduced_MCbnbDATAcosmicSamples['closest-flash dYZ'][pair_type]
-        reduced_MCbnbDATAcosmic[pair_type] = sam[np.sqrt(np.square(sam[RdQu]-1)+np.square(sam[RdQu]-1)+np.square(sam[RdQy]-1))<r_min_RdQ_CC1p0pi]
+        
+        sam = reduced_MCbnbDATAcosmicSamples['non-collinearity'][pair_type]#closest-flash dYZ
+        sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1) 
+                  | 
+                  (np.sqrt( np.square(sam[Ru]-1) + np.square(sam[Rv]-1) + np.square(sam[Ry]-1) ) <= r_max_RdQ_CC1p0pi) ]
+        reduced_MCbnbDATAcosmic[pair_type] = sam
+        
         sam = reduced_MCbnbMCcosmicSamples['closest-flash dYZ'][pair_type]
-        reduced_MCbnbMCcosmic[pair_type] = sam[np.sqrt(np.square(sam[RdQu]-1)+np.square(sam[RdQu]-1)+np.square(sam[RdQy]-1))<r_min_RdQ_CC1p0pi]
+        sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1) 
+                  | 
+                  (np.sqrt( np.square(sam[Ru]-1) + np.square(sam[Rv]-1) + np.square(sam[Ry]-1) ) <= r_max_RdQ_CC1p0pi) ]
+        reduced_MCbnbMCcosmic[pair_type] = sam
     #}
     get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
@@ -250,7 +257,6 @@ def apply_cuts( PIDa_p_min=12
     return pureff_MCbnbDATAcosmic,pureff_MCbnbDATAcosmic_numbers,pureff_MCbnbMCcosmic,pureff_MCbnbMCcosmic_numbers
 # ------------------------------------------------
 
-
 # ------------------------------------------------
 # Sep 9
 def load_MCbnbMCcosmicSamples():
@@ -321,9 +327,11 @@ def get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic = dict()):
         freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
     return Nreduced , freduced
 # ------------------------------------------------
-           
+
+
+      
 # ------------------------------------------------
-# Sep-9, 2017
+# Oct. 13, 2017
 def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCbnbMCcosmic = dict()):
     '''
         return
@@ -356,9 +364,10 @@ def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCb
     return freduced_MCbnbMCcosmic['1mu-1p'],(100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbMCcosmic['CC 1p 0pi'],(100.*Nreduced_MCbnbMCcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
-    
+  
+      
 # ------------------------------------------------
-# Aug-30, 2017
+# Oct. 13, 2017
 def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCbnbDATAcosmic = dict()):
     ''' 
         return
@@ -391,8 +400,9 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC 1p 0pi'],(100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
+
 # ------------------------------------------------
-# Sep-9, 2017
+# Oct. 13, 2017
 def get_pureff_MCbnbMCcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced_MCbnbMCcosmic = dict()):
     global pureff_MCbnbMCcosmic_numbers
     Nreduced_MCbnbMCcosmic , freduced_MCbnbMCcosmic = get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic=reduced_MCbnbMCcosmic)
@@ -414,7 +424,7 @@ def get_pureff_MCbnbMCcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced
 
 
 # ------------------------------------------------
-# Aug-30, 2017
+# Oct. 13, 2017
 def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced_MCbnbDATAcosmic = dict()):
     global pureff_MCbnbDATAcosmic_numbers
     Nreduced_MCbnbDATAcosmic , freduced_MCbnbDATAcosmic = get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic=reduced_MCbnbDATAcosmic)
@@ -433,6 +443,7 @@ def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduc
                                       )
     pureff_MCbnbDATAcosmic_numbers = pureff_MCbnbDATAcosmic_numbers.append(pureff_MCbnbDATAcosmic_numbers_cut)
 # ------------------------------------------------
+
 
 
 
