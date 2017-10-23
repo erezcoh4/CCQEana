@@ -245,10 +245,10 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
     // flash information
     // ----------------------------------------
     Nflashes = flashlist.size();
-    if (debug>0) SHOW(Nflashes);
+    if (debug>5) SHOW(Nflashes);
     for ( int f = 0; f < std::min(Nflashes,kMaxHits); f++ ) {
         
-        if (debug>0){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
+        if (debug>5){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
         flash fflash(
                      flashlist[f]->Time(),         // flash time
                      flashlist[f]->TimeWidth(),    // flash time width
@@ -261,7 +261,7 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
         
         // keep only in-time flashes for the event
         // following Katherine conditions
-        if (debug>0){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
+        if (debug>5){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
         if( (0.0 < fflash.GetTime()) && (fflash.GetTime() < 10.0) && (6.5 < fflash.GetTotalPE()) ){
             flashes.push_back( fflash );
         }
@@ -272,10 +272,16 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
     // tracks information
     // ----------------------------------------
     Ntracks = tracklist.size();
+    if (debug>4){
+        SHOW4( run , subrun , event , Ntracks );
+        for (int i=0 ; i<Ntracks ; i++) cout << tracklist[i]->ID() << "\t";
+        cout << endl;
+    }
     for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i ){
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = tracklist[i]->Extent();
         
+        Debug(5 , Form("analyzing track %d in this event",tracklist[i]->ID()) );
         PandoraNuTrack track(
                              run , subrun, event        // r/s/e
                              ,tracklist[i]->ID()        // track id
@@ -288,7 +294,6 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
         
         // U / V / Y coordinates
         for (int plane = 0; plane < 3; plane++){
-            
             
             Debug(5,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
             geo::TPCID tpcID = geom->FindTPCAtPosition( StartLoc );
@@ -309,7 +314,6 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
             // plug into the track
             track.SetStartEndPlane( plane , start_wire , start_time , end_wire , end_time );
         }
-
         
         // Hits-Tracks association
         if (fmth.isValid()){
@@ -409,9 +413,15 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
                 }
             }
         }
+        
+        Debug(5 , Form("adding track %d to list of tracks in this event",track.GetTrackID()) );
         tracks.push_back( track );
+        if (debug>5){
+            cout << "track list includes:" << endl;
+            for (auto t: tracks) cout << t.GetTrackID() << "\t";
+            cout << endl;
+        }
     }
-    
     
     
     // ----------------------------------------
@@ -474,11 +484,13 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
                             // match the primary particle with a track
                             for (auto & track : tracks){
                                 if (
-                                    ( part.PdgCode() == track.GetMCpdgCode() )
+                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
                                     &&
-                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON )
+                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
                                     &&
-                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON )
+                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                    &&
+                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
                                     ) {
                                     // Printf("found a primary-track match! plugging mcevent_id=%d into track %d",mcevent_id,track.GetTrackID());
                                     genie_interaction.AddTrack ( track );
@@ -492,6 +504,12 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
                     genie_interaction.ComputePmissPrec();
                     genie_interaction.FindCC1p200MeVc0pi();
 
+                    if (debug>6){
+                        cout << "finished analyzing genie interaction " << mcevent_id << ", genie track list includes:" << endl;
+                        for (auto t: genie_interaction.GetTracks()) cout << t.GetTrackID() << "\t";
+                        cout << endl;
+                    }
+
                     genie_interactions.push_back( genie_interaction );
                     
                 }//mctruth->Origin()
@@ -499,10 +517,23 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
         }
     }//is neutrino
 
+    if (debug>4){
+        cout << "after MC truth information loop ended, track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+    }
     FindGENIECCVertices();
     
-    
-    PrintInformation();
+    if (debug>4){
+        cout << "after FindGENIECCVertices() ended, track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+    }
+    if(!genie_CC_interactions.empty() && !tracks.empty()){
+        PrintInformation();
+    } else {
+        cout << "either genie_CC_interactions or tracks is empty in this event" << endl;
+    }
     fTree -> Fill();
 }
 
@@ -517,10 +548,21 @@ void ub::ErezCCQEGENIE::FindGENIECCVertices(){
             genie_CC_interactions.push_back(g);
         }
     }
+    if (debug>4){
+        cout << "after generating genie_CC_interactions, track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+    }
     N_CC_interactions = (int)genie_CC_interactions.size();
     
     // flag the CC interactions
     TagCCInteractions();
+    if (debug>4){
+        cout << "after TagCCInteractions() track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+    }
+
     // output to csv file
     StreamVerticesToCSV();
 }
@@ -549,9 +591,9 @@ void ub::ErezCCQEGENIE::TagCCInteractions(){
         // check if µ and p tracks are reconstructed
         // and also check if the vertex is µp
         int NpRecoTracks=0;
-        tracks = g.GetTracks();
-        if (tracks.size()>0){
-            for (auto t:tracks){
+        auto genie_tracks = g.GetTracks();
+        if (genie_tracks.size()>0){
+            for (auto t:genie_tracks){
                 switch (t.GetMCpdgCode()) {
                     case 13:
                         g.SetIs_mu_Reconstructed( true );
@@ -567,14 +609,12 @@ void ub::ErezCCQEGENIE::TagCCInteractions(){
         }
         if (g.GetIs_mu_TrackReconstructed()==true && g.GetIs_p_TrackReconstructed()==true){
             g.SetIsVertexReconstructed( true );
-            if (tracks.size()==2){
+            if (genie_tracks.size()==2){
                 g.SetIs1mu1p(true);
             }
         }
-        
         // the functionallity GENIEinteraction::FindCC1p200MeVc0pi()
         // called in ub::ErezCCQEGENIE::analyze() allready finds CC1p0π and flags them
-
     }
 }
 
@@ -677,15 +717,14 @@ void ub::ErezCCQEGENIE::PrintInformation(){
     Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
+
+    if(!genie_CC_interactions.empty()){
+        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_CC_interactions.size() << " genie CC-interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        for (auto g: genie_CC_interactions) {
+            g.Print(true);
+        }
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     
-    if (MCmode){
-        if(!genie_CC_interactions.empty()){
-            cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_CC_interactions.size() << " genie CC-interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-            for (auto g: genie_CC_interactions) {
-                g.Print(true);
-            }
-        } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-    }
     
 //    if(!flashes.empty()){
 //        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << flashes.size() << " flashes\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
@@ -693,14 +732,16 @@ void ub::ErezCCQEGENIE::PrintInformation(){
 //            f.Print();
 //        }
 ////    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no flashes\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-////    if(!tracks.empty()){
-////        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-////        for (auto t: tracks) {
-////            t.Print( true );
-////        }
-////    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-//    
-//    
+    if(!tracks.empty()){
+        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+        for (auto t: tracks) {
+            t.Print( true );
+        }
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+
+    
     // time stamp
     PrintLine();
     end_ana_time = std::chrono::system_clock::now();

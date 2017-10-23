@@ -477,11 +477,13 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                             // match the primary particle with a track
                             for (auto & track : tracks){
                                 if (
-                                    ( part.PdgCode() == track.GetMCpdgCode() )
+                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
                                     &&
-                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON )
+                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
                                     &&
-                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON )
+                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                    &&
+                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
                                     ) {
                                     // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
                                     genie_interaction.AddTrack ( track );

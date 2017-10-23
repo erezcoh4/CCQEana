@@ -276,6 +276,17 @@ void GENIEinteraction::SetVertexPosition (TVector3 fpos){
 //
 }
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool GENIEinteraction::IncludesTrack(Int_t ftrackID) const{
+    // ask if the track (ftrackID) is in the list of tracks belonging to this genie interaction
+    for (auto t:tracks){
+        if (t.GetTrackID() == ftrackID) return true;
+    }
+    return false;
+}
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GENIEinteraction::Print(bool DoPrintTracks) const{
 
@@ -313,9 +324,10 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     SHOW3( Nmu , Nel , Ngamma );
     SHOW2( ccnc , mode );
     SHOW( IsVertexContained );
+    SHOW( IsCCQE );
     SHOW3( Is_mu_TrackReconstructed , Is_p_TrackReconstructed , IsVertexReconstructed );
+    SHOW2( Is1mu1p, IsCC_1p_200MeVc_0pi );
     
-    SHOW( IsCC_1p_200MeVc_0pi );
     if ( IsCC_1p_200MeVc_0pi ) {
         SHOW2( muonTrack.IsTrackContainedSoft() , protonTrack.IsTrackContainedSoft() );
     }
