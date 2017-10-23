@@ -1,0 +1,50 @@
+#include "services_microboone.fcl"
+
+process_name: runErezTracksana
+
+services:
+{
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2_tracks.root" closeFileFast: false}
+  TimeTracker:       {}
+  RandomNumberGenerator: {} 
+  message:      @local::standard_info
+                @table::microboone_services 
+}
+
+source:
+{
+  module_type: RootInput
+  firstEvent : 1
+  maxEvents:   -1
+}
+
+
+outputs:{}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    EventsAnalyzer: 
+    {
+      module_type:      	"ErezSimpleTracksAnalyzer"
+      TrackModuleLabel: 	"pandoraNu"
+      HitsModuleLabel:        "pandoraCosmicHitRemoval"
+      MCTruthModuleLabel:	"generator"
+      GenieGenModuleLabel:	"generator"
+      CalorimetryModuleLabel:	"pandoraNucalo"
+      VerbosityLevel:		2
+      DataSampleLabel:		"prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2"
+      POTModuleLabel:     	"generator"
+      FlashModuleLabel:     	"simpleFlashBeam"
+
+    }
+  }
+  analysis: [ EventsAnalyzer ] #Directory for histograms
+  end_paths: [ analysis ]
+}
+
+services.DetectorClocksService.InheritClockConfig:                      false
+services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos

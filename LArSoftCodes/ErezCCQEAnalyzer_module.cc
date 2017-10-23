@@ -283,8 +283,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                              run , subrun, event        // r/s/e
                              ,tracklist[i]->ID()        // track id
                              ,tracklist[i]->Length()    // length
-//                             ,tracklist[i]->Theta()     // polar angle
-//                             ,tracklist[i]->Phi()       // azimuthal angle
                              ,TVector3(start_pos.X(),start_pos.Y(),start_pos.Z())   // start position
                              ,TVector3(end_pos.X(),end_pos.Y(),end_pos.Z())         // end position
                             );

@@ -91,11 +91,7 @@ public:
     
     
     void            SetLength (Float_t l)                   {length = l;};
-//    void             SetTheta (Float_t t)                   {theta = t;};
-//    void               SetPhi (Float_t ph)                  {phi = ph;};
     void       SetTruthLength ()                            {truth_length = (truth_start_pos-truth_end_pos).Mag();};
-//    void        SetTruthTheta (Float_t f)                   {truth_theta = f;};
-//    void          SetTruthPhi (Float_t f)                   {truth_phi = f;};
 
     void          SetStartPos (TVector3 pos)                {start_pos = pos;};
     void            SetEndPos (TVector3 pos)                {end_pos = pos;};
@@ -139,14 +135,10 @@ public:
 
     
     Float_t               GetLength () const {return length;};
-//    Float_t                GetTheta () const {return theta;};
-//    Float_t                  GetPhi () const {return phi;};
     Float_t                GetTheta () const {return rec_dir.Theta();};
     Float_t                  GetPhi () const {return rec_dir.Phi();};
     
     Float_t          GetTruthLength () const {return truth_length;};
-//    Float_t           GetTruthTheta () const {return truth_theta;};
-//    Float_t             GetTruthPhi () const {return truth_phi;};
     Float_t           GetTruthTheta () const {return truth_dir.Theta();};
     Float_t             GetTruthPhi () const {return truth_dir.Phi();};
     
@@ -232,14 +224,12 @@ private:
     
     // Float_t
     Float_t     length=0;
-//    Float_t     theta=0, phi=0;
     Float_t     CaloKEPerPlane[3]={0,0,0};
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa=-1;
 
     // truth information - only valid for MC data
     Float_t     truth_length=-9999;
-//    Float_t     truth_theta=-9999, truth_phi=-9999;
     
     
     // TVector3

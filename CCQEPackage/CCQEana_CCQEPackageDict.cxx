@@ -153,7 +153,7 @@ namespace ROOT {
       ::PandoraNuTrack *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::PandoraNuTrack));
       static ::ROOT::TGenericClassInfo 
-         instance("PandoraNuTrack", "PandoraNuTrack.h", 54,
+         instance("PandoraNuTrack", "PandoraNuTrack.h", 59,
                   typeid(::PandoraNuTrack), DefineBehavior(ptr, ptr),
                   &PandoraNuTrack_Dictionary, isa_proxy, 4,
                   sizeof(::PandoraNuTrack) );
@@ -198,7 +198,7 @@ namespace ROOT {
       ::pairVertex *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::pairVertex));
       static ::ROOT::TGenericClassInfo 
-         instance("pairVertex", "pairVertex.h", 35,
+         instance("pairVertex", "pairVertex.h", 32,
                   typeid(::pairVertex), DefineBehavior(ptr, ptr),
                   &pairVertex_Dictionary, isa_proxy, 4,
                   sizeof(::pairVertex) );

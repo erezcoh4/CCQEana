@@ -84,12 +84,29 @@ public:
                                    ,Int_t fmother               // mother
                                    ,std::string fprocess        // process
     );
-
+    
+    void      SetIsInActiveVolume (bool fIsInActiveVolume=false)        {IsInActiveVolume = fIsInActiveVolume;};
+    void                SetIsCCQE (bool fIsCCQE=false)                  {IsCCQE = fIsCCQE;};
+    void   SetIs_mu_Reconstructed (bool fIs_mu_TrackReconstructed=false){Is_mu_TrackReconstructed = fIs_mu_TrackReconstructed;};
+    void    SetIs_p_Reconstructed (bool fIs_p_TrackReconstructed=false) {Is_p_TrackReconstructed = fIs_p_TrackReconstructed;};
+    void SetIsVertexReconstructed (bool fIsVertexReconstructed=false)   {IsVertexReconstructed = fIsVertexReconstructed;};
+    void               SetIs1mu1p (bool fIs1mu1p=false)                 {Is1mu1p = fIs1mu1p;};
     
     
     // GETters
     bool                        GetVertexContained () const {return IsVertexContained;};
     bool                              AskIfCC1p0pi () const {return IsCC_1p_200MeVc_0pi;};
+    bool               GetIs_mu_TrackReconstructed () const {return Is_mu_TrackReconstructed;};
+    bool                GetIs_p_TrackReconstructed () const {return Is_p_TrackReconstructed;};
+    bool                       GetIsInActiveVolume () const {return IsInActiveVolume;};
+    bool                  GetIsVertexReconstructed () const {return IsVertexReconstructed;};
+    bool                                GetIs1mu1p () const {return Is1mu1p;};
+    bool                                 GetIsCCQE () const {return IsCCQE;};
+    
+    
+    Int_t                                   GetRun () const {return run;};
+    Int_t                                GetSubrun () const {return subrun;};
+    Int_t                                 GetEvent () const {return event;};
     
     Int_t                             GetMCeventID () const {return mcevent_id;};
     Int_t                                  GetCCNC () const {return ccnc;};
@@ -118,6 +135,15 @@ public:
     
     
     
+    
+    PandoraNuTrack                    Get_mu_track () const {return muonTrack;};
+    PandoraNuTrack                     Get_p_track () const {return protonTrack;};
+    std::vector<PandoraNuTrack>          GetTracks () const {return tracks;}; // when taking this, check if the vector is not empty...
+    
+    
+    
+    
+    
 
 private:
     
@@ -125,6 +151,7 @@ private:
     bool                    IsVertexContained=false;
     bool                    IsCC_1p_200MeVc_0pi=false; // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions
     bool                    Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false, IsVertexReconstructed=false;
+    bool                    IsInActiveVolume=false, IsCCQE=false, Is1mu1p=false;
 
     // Int_t
     Int_t                   nuPDG=-9999;

@@ -312,11 +312,11 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     SHOW3( Np , Nn , Npi );
     SHOW3( Nmu , Nel , Ngamma );
     SHOW2( ccnc , mode );
-    SHOW( IsVertexContained )
+    SHOW( IsVertexContained );
+    SHOW3( Is_mu_TrackReconstructed , Is_p_TrackReconstructed , IsVertexReconstructed );
     
     SHOW( IsCC_1p_200MeVc_0pi );
     if ( IsCC_1p_200MeVc_0pi ) {
-        SHOW3( Is_mu_TrackReconstructed, Is_p_TrackReconstructed , IsVertexReconstructed );
         SHOW2( muonTrack.IsTrackContainedSoft() , protonTrack.IsTrackContainedSoft() );
     }
 
