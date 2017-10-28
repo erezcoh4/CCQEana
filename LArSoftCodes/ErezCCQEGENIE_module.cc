@@ -587,31 +587,19 @@ void ub::ErezCCQEGENIE::TagCCInteractions(){
         
         g.SetIsInActiveVolume( CheckIsInActiveVolume( g.GetVertexPosition() ) );
         g.SetIsCCQE( g.GetMode()==0 ? true : false );
-        
-        // check if µ and p tracks are reconstructed
-        // and also check if the vertex is µp
-        int NpRecoTracks=0;
-        auto genie_tracks = g.GetTracks();
-        if (genie_tracks.size()>0){
-            for (auto t:genie_tracks){
-                switch (t.GetMCpdgCode()) {
-                    case 13:
-                        g.SetIs_mu_Reconstructed( true );
-                        break;
-                    case 2212:
-                        NpRecoTracks++;
-                        g.SetIs_p_Reconstructed( true );
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        if (g.GetIs_mu_TrackReconstructed()==true && g.GetIs_p_TrackReconstructed()==true){
-            g.SetIsVertexReconstructed( true );
-            if (genie_tracks.size()==2){
+ 
+        if (g.GetIsVertexReconstructed()==true){
+            g.SetReco_mu_p_distance();
+            
+            // 1mu1p is a topology-based definitino:
+            // a vertex in which only two tracks were reconstructed in the f.s.,
+            // one is a muon and the other a proton
+            if (g.GetTracks().size()==2){
                 g.SetIs1mu1p(true);
             }
+        }
+        else{
+            g.SetIs1mu1p( false );
         }
         // the functionallity GENIEinteraction::FindCC1p200MeVc0pi()
         // called in ub::ErezCCQEGENIE::analyze() allready finds CC1p0π and flags them
@@ -638,6 +626,7 @@ void ub::ErezCCQEGENIE::HeaderVerticesInCSV(){
     << "run" << "," << "subrun" << "," << "event" << "," ;
     
     vertices_file
+    << "IsVertexContained" << ","
     << "IsInActiveVolume" << ","
     << "Is1mu1p" << ","
     << "IsCC1p0pi" << ","
@@ -653,6 +642,10 @@ void ub::ErezCCQEGENIE::HeaderVerticesInCSV(){
     << "truth_Pp" << ","
     << "truth_Pp_theta" << ",";
     
+    // relevant truth-information
+    vertices_file
+    << "truth_Ev" << ","
+    << "truth_Q2" << ",";
     
     
     // only for 1mu-1p vertices
@@ -678,6 +671,7 @@ void ub::ErezCCQEGENIE::StreamVerticesToCSV(){
         
         
         vertices_file
+        << g.GetVertexContained() << ","
         << g.GetIsInActiveVolume() << ","
         << g.GetIs1mu1p() << ","
         << g.AskIfCC1p0pi() << ","
@@ -693,15 +687,13 @@ void ub::ErezCCQEGENIE::StreamVerticesToCSV(){
         << g.GetPp().P() << ","
         << g.GetPp().Theta() << ",";
         
+        // relevant truth-information
+        vertices_file
+        << g.GetEv() << ","
+        << g.GetQ2() << ",";
+        
         // only for 1mu-1p vertices
-        if (g.GetIs1mu1p()==true){
-            vertices_file
-            << g.Get_mu_track().ClosestDistanceToOtherTrack( g.Get_p_track() ) ;
-        }
-        else {
-            vertices_file
-            << -1 ;
-        }
+        vertices_file << g.GetReco_mu_p_distance();
         
         
         
@@ -726,20 +718,20 @@ void ub::ErezCCQEGENIE::PrintInformation(){
     } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     
     
-//    if(!flashes.empty()){
-//        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << flashes.size() << " flashes\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-//        for (auto f: flashes) {
-//            f.Print();
-//        }
-////    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no flashes\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-    if(!tracks.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-        for (auto t: tracks) cout << t.GetTrackID() << "\t";
-        cout << endl;
-        for (auto t: tracks) {
-            t.Print( true );
-        }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    //    if(!flashes.empty()){
+    //        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << flashes.size() << " flashes\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+    //        for (auto f: flashes) {
+    //            f.Print();
+    //        }
+    ////    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no flashes\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    //    if(!tracks.empty()){
+    //        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+    //        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+    //        cout << endl;
+    //        for (auto t: tracks) {
+    //            t.Print( true );
+    //        }
+    //    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
 
     
     // time stamp

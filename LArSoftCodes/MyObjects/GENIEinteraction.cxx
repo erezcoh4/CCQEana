@@ -11,7 +11,7 @@ subrun(fsubrun),
 event(fevent),
 mcevent_id(fmcevent_id)
 {
-    
+    fastest_proton_momentum = -1;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -131,6 +131,28 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
 void GENIEinteraction::AddTrack (PandoraNuTrack ftrack){
     
     tracks.push_back(ftrack);
+    switch (ftrack.GetMCpdgCode()) {
+        case 13:
+            Is_mu_TrackReconstructed = true;
+            muonTrack = ftrack;
+            break;
+        case 2212:
+            Is_p_TrackReconstructed = true;
+            // the "proton track" is the reconstructed track of the fastest proton
+            // which reduces to the only reconstructed proton track,
+            // in the case of a single reconstructed proton track
+            // (1mu-1p and reconstructed CC1p0pi events)
+            if (ftrack.GetTruthMomentum().P() > fastest_proton_momentum){
+                fastest_proton_momentum = ftrack.GetTruthMomentum().P();
+                protonTrack = ftrack;
+            }
+            break;            
+        default:
+            break;
+    }
+    if (Is_mu_TrackReconstructed && Is_p_TrackReconstructed){
+        IsVertexReconstructed = true;
+    }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -158,21 +180,30 @@ bool GENIEinteraction::FindCC1p200MeVc0pi(){
             t.SetCC_1p_200MeVc_0pi();
         }
         // check if µ and p tracks are reconstructed
-        if (tracks.size()>0){
-            for (auto t:tracks){
-                if (t.GetMCpdgCode()==13){
-                    Is_mu_TrackReconstructed = true;
-                    muonTrack = t;
-                }
-                else if (t.GetMCpdgCode()==2212){
-                    Is_p_TrackReconstructed = true;
-                    protonTrack = t;
-                }
-            }
-            if (Is_mu_TrackReconstructed && Is_p_TrackReconstructed){
-                IsVertexReconstructed = true;
-            }
-        }
+//        if (tracks.size()>0){
+////            float fastest_proton_momentum = -1;
+////            for (auto t:tracks){
+////                if (t.GetMCpdgCode()==13){
+////                    Is_mu_TrackReconstructed = true;
+////                    muonTrack = t;
+////                }
+////                else if (t.GetMCpdgCode()==2212){
+////                    Is_p_TrackReconstructed = true;
+////                    
+////                    // the "proton track" is the reconstructed track of the fastest proton
+////                    // which reduces to the only reconstructed proton track,
+////                    // in the case of a single reconstructed proton track
+////                    // (1mu-1p and reconstructed CC1p0pi events)
+////                    if (t.GetTruthMomentum().P() > fastest_proton_momentum){
+////                        fastest_proton_momentum = t.GetTruthMomentum().P();
+////                        protonTrack = t;
+////                    }
+////                }
+////            }
+////            if (Is_mu_TrackReconstructed && Is_p_TrackReconstructed){
+////                IsVertexReconstructed = true;
+////            }
+//        }
         return true;
     }
     IsCC_1p_200MeVc_0pi = false;
@@ -239,41 +270,18 @@ bool GENIEinteraction::ComputePmissPrec(){
 void GENIEinteraction::SetVertexPosition (TVector3 fpos){
     vertex_position = fpos;
     CheckContainement ();
-//
-//    // load GeometryHelper utility
-//    auto geomHelper = ::larutil::GeometryHelper::GetME();
-//    double pos_xyz[3] = {fpos.x() , fpos.y() , fpos.z() };
-//    // shift in time-axis due to the truncation of the waveforms
-//    // (the first 2400 ADCs are removed from the waveform, The extra couple ticks could be due to a shift in the signal deconvolution)
-//    double time_shift =  802;
-//    
-//    
-//    for (int plane = 0; plane < 3; plane++){
-//        
-//        // geoHelper is a set of utility functions that help with geometric stuff..
-//        auto const& projection2D = geomHelper->Point_3Dto2D(pos_xyz, plane);
-//        int wire = (int) ( projection2D.w / geomHelper->WireToCm() );
-//        int time = (int) ( projection2D.t / geomHelper->TimeToCm() ) + time_shift;
-//        
-//        switch (plane) {
-//            case 0:
-//                pos_wire_u = wire;
-//                pos_time_u = time;
-//                break;
-//            case 1:
-//                pos_wire_v = wire;
-//                pos_time_v = time;
-//                break;
-//            case 2:
-//                pos_wire_y = wire;
-//                pos_time_y = time;
-//                break;
-//                
-//            default:
-//                break;
-//        }
-//    }
-//
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GENIEinteraction::SetReco_mu_p_distance(){
+    // the reconstructed distance between the muon and the proton tracks
+    // only relevant for genie interactions in which both a muon and at least one proton were reconsturcted
+    // for multiple reconstructed proton tracks, take the leading (fastest) proton
+    // which is protons[0], after the protons were sorted
+    // by GENIEinteraction::SortNucleons()
+    if ( IsVertexReconstructed == true ){
+        reco_mu_p_distance = muonTrack.ClosestDistanceToOtherTrack( protonTrack ) ;
+    }
 }
 
 
@@ -341,7 +349,20 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
             t.Print(true);
         }
     }
-
+    
+    if (Is_mu_TrackReconstructed){
+        cout  << "\033[33m" << "muon track:"  << "\033[30m" << endl;
+        muonTrack.Print();
+    } else {
+        cout  << "\033[33m" << "no muon track reconstructed"  << "\033[30m" << endl;
+    }
+    if (Is_p_TrackReconstructed){
+        cout  << "\033[33m" << "proton track:"  << "\033[30m" << endl;
+        protonTrack.Print();
+    } else {
+        cout  << "\033[33m" << "no proton track reconstructed"  << "\033[30m" << endl;
+    }
+    if (IsVertexReconstructed) SHOW(reco_mu_p_distance);
 
 }
 

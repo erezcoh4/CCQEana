@@ -50,9 +50,9 @@ public:
     bool       ComputeKinematics ();
     bool        ComputePmissPrec ();
     bool      FindCC1p200MeVc0pi ();
-    bool CheckContainement (float max_y = 120,
-                            float min_z = 0, float max_z = 1050,
-                            float min_x = 0, float max_x = 260){
+    bool CheckContainement (float max_y = 116.5,
+                            float min_z = 0, float max_z = 1037,
+                            float min_x = 0, float max_x = 256){
         if( ( vertex_position.x() < min_x )    | ( vertex_position.x() > max_x ) )    IsVertexContained=false;
         if( ( vertex_position.y() < -max_y )   | ( vertex_position.y() > max_y ) )    IsVertexContained=false;
         if( ( vertex_position.z() < min_z )    | ( vertex_position.z() > max_z ) )    IsVertexContained=false;
@@ -93,6 +93,10 @@ public:
     void SetIsVertexReconstructed (bool fIsVertexReconstructed=false)   {IsVertexReconstructed = fIsVertexReconstructed;};
     void               SetIs1mu1p (bool fIs1mu1p=false)                 {Is1mu1p = fIs1mu1p;};
     
+    void    SetReco_mu_p_distance ();
+    
+    
+    
     
     // GETters
     bool                        GetVertexContained () const {return IsVertexContained;};
@@ -125,6 +129,7 @@ public:
     Float_t                                  GetXb () const {return Xb;};
     Float_t                                   GetY () const {return y;};
     Float_t                                  GetW2 () const {return W*W;};
+    Float_t                  GetReco_mu_p_distance () const {return reco_mu_p_distance;};
 
     TVector3                     GetVertexPosition () const {return vertex_position;};
     TLorentzVector               GetLeptonMomentum () const {return muon;}; // if the neutrino is v(e) this will be the e!
@@ -171,6 +176,7 @@ private:
     Float_t                 Xb=-9999 , Q2=-9999, W=-9999, y=-9999;
     Float_t                 theta_pq=-9999, p_over_q=-9999, Mmiss=-9999;
     Float_t                 reco_mu_p_distance=-9999;
+    Float_t                 fastest_proton_momentum = -1;
     
     // TVector3
     TVector3                vertex_position=TVector3();
