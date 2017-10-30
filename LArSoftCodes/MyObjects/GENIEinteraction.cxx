@@ -128,86 +128,44 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void GENIEinteraction::AddTrack (PandoraNuTrack ftrack){
+void GENIEinteraction::AddTrack(PandoraNuTrack ftrack){
     
     tracks.push_back(ftrack);
     switch (ftrack.GetMCpdgCode()) {
+            // muon
         case 13:
             Is_mu_TrackReconstructed = true;
             muonTrack = ftrack;
+            if (muonTrack.IsTrackInFV()) Is_mu_TrackInFV=true;
             break;
+            
+            // proton
         case 2212:
             Is_p_TrackReconstructed = true;
             // the "proton track" is the reconstructed track of the fastest proton
             // which reduces to the only reconstructed proton track,
             // in the case of a single reconstructed proton track
             // (1mu-1p and reconstructed CC1p0pi events)
-            if (ftrack.GetTruthMomentum().P() > fastest_proton_momentum){
+            if ( ftrack.GetTruthMomentum().P() > fastest_proton_momentum
+                &&
+                ftrack.IsTrackInFV() ){
+                
                 fastest_proton_momentum = ftrack.GetTruthMomentum().P();
                 protonTrack = ftrack;
+                Is_p_TrackInFV=true;
             }
-            break;            
+            break;
+            
         default:
             break;
     }
     if (Is_mu_TrackReconstructed && Is_p_TrackReconstructed){
         IsVertexReconstructed = true;
-    }
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-bool GENIEinteraction::FindCC1p200MeVc0pi(){
-    // tag the vertex as
-    // IsCC_1p_200MeVc_0pi
-    // which means that the final state includes
-    // 1 protons with momentum >= 200 MeV/c
-    // 0 neutrons with momentum >= 200 MeV/c
-    // 0 pions
-    // 0 electrons
-    // 0 photons
-    // flagged by GENIE as CC interaction
-    Int_t Np_200MeVc = 0 , Nn_200MeVc = 0;
-    for (auto Pp : p3vect){
-        if (Pp.Mag()>=0.2) Np_200MeVc++;
-    }
-    for (auto Pn : n3vect){
-        if (Pn.Mag()>=0.2) Nn_200MeVc++;
-    }
-    
-    if ( ccnc==0 && Nmu==1 && Np_200MeVc==1 && Npi==0 && Nn_200MeVc==0 && Nel==0 && Ngamma==0 ){
-        IsCC_1p_200MeVc_0pi = true;
-        for (auto & t : tracks){
-            t.SetCC_1p_200MeVc_0pi();
+        
+        if ( Is_mu_TrackInFV && Is_p_TrackInFV ){
+            IsVertexInFV = true;
         }
-        // check if µ and p tracks are reconstructed
-//        if (tracks.size()>0){
-////            float fastest_proton_momentum = -1;
-////            for (auto t:tracks){
-////                if (t.GetMCpdgCode()==13){
-////                    Is_mu_TrackReconstructed = true;
-////                    muonTrack = t;
-////                }
-////                else if (t.GetMCpdgCode()==2212){
-////                    Is_p_TrackReconstructed = true;
-////                    
-////                    // the "proton track" is the reconstructed track of the fastest proton
-////                    // which reduces to the only reconstructed proton track,
-////                    // in the case of a single reconstructed proton track
-////                    // (1mu-1p and reconstructed CC1p0pi events)
-////                    if (t.GetTruthMomentum().P() > fastest_proton_momentum){
-////                        fastest_proton_momentum = t.GetTruthMomentum().P();
-////                        protonTrack = t;
-////                    }
-////                }
-////            }
-////            if (Is_mu_TrackReconstructed && Is_p_TrackReconstructed){
-////                IsVertexReconstructed = true;
-////            }
-//        }
-        return true;
     }
-    IsCC_1p_200MeVc_0pi = false;
-    return false;
 }
 
 
@@ -215,7 +173,7 @@ bool GENIEinteraction::FindCC1p200MeVc0pi(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GENIEinteraction::SortNucleons(){
     
-
+    
     for (auto i: sort_by_momentum_magnitude( p3vect )){
         protons.push_back( TLorentzVector( p3vect.at(i) , sqrt( p3vect.at(i).Mag2() + 0.938*0.938 ) ) );
     }
@@ -252,7 +210,7 @@ bool GENIEinteraction::ComputePmissPrec(){
         }
         Pcm  -= q;
         Prec  = Pcm - n_miss;
-     
+        
         
         // for SRC
         theta_pq    = (Plead.P()>0 && q.P()>0) ? TMath::RadToDeg() * Plead.Vect().Angle(q.Vect()) : -9999;
@@ -260,7 +218,7 @@ bool GENIEinteraction::ComputePmissPrec(){
         
         // A(ν,𝝁p) missing mass M²(miss) = (q + (Mp+Mn) - Plead)² , all 4-vectors
         Mmiss       = (q + TLorentzVector( TVector3() , 0.938+0.939 ) - Plead).Mag();
-
+        
     }
     return true;
 }
@@ -293,6 +251,85 @@ bool GENIEinteraction::IncludesTrack(Int_t ftrackID) const{
     }
     return false;
 }
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GENIEinteraction::SetTruthTopology(){
+    
+    // determine the value of truth-definition flags
+    
+    Int_t Np_200MeVc = 0 , Nn_200MeVc = 0;
+    for (auto Pp : p3vect){
+        if (Pp.Mag()>=0.2) Np_200MeVc++;
+    }
+    for (auto Pn : n3vect){
+        if (Pn.Mag()>=0.2) Nn_200MeVc++;
+    }
+
+    
+    // IsCC_Np_200MeVc
+    if ( ccnc==0 && Nmu>=1 && Np_200MeVc>=1 ){
+        IsCC_Np_200MeVc = true;
+        
+        
+        // IsCC_1p_200MeVc
+        if ( Np_200MeVc==1 ){
+            IsCC_1p_200MeVc = true;
+            
+            // IsCC_1p_200MeVc_0pi
+            // which means that the final state includes
+            // 1 protons with momentum >= 200 MeV/c
+            // 0 neutrons with momentum >= 200 MeV/c
+            // 0 pions
+            // 0 electrons
+            // 0 photons
+            if ( Npi==0 && Nn_200MeVc==0 && Nel==0 && Ngamma==0 ){
+                IsCC_1p_200MeVc_0pi = true;
+                
+                // if this genie is a CC 1p 0pi, all the tracks in this interactions should be flagged accordingly
+                for (auto & t : tracks){
+                    t.SetCC_1p_200MeVc_0pi();
+                }
+            }
+        }
+    }
+    
+    
+    // IsCCQE : is QE or not - genie's "mode" flag: QE=0
+    if ( mode==0 && ccnc==0 ){
+        SetIsCCQE( true );
+    }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GENIEinteraction::SetReconstructedTopology(){
+    
+    // determine the value of reconstructed-definition flags
+    
+    // tag vertices
+    // ------------
+    // contained        : vertex contained in active volume of the detector (256 x 233 x 1037 cm^3)
+    // µ-reconstructed  : the muon track was reconstructed
+    // p-reconstructed  : at least one proton was reconstructed
+    // µp-reconstructed : both the muon and at least one proton were reconstructed
+    // µp               : a muon and only one p were reconstructed, and nothing else was reconstructed
+    
+    SetIsInActiveVolume( CheckContainement() );
+    
+    // IsVertexReconstructed is determined in GENIEinteraction::AddTrack()
+    // together with Is_mu_TrackReconstructed and Is_p_TrackReconstructed
+    if (IsVertexReconstructed){
+        SetReco_mu_p_distance();
+        
+        // 1mu-1p is a topology-based definitino:
+        // a vertex in which only two tracks were reconstructed in the f.s.,
+        // one is a muon and the other a proton
+        if (tracks.size()==2){
+            SetIs1mu1p( true );
+        }
+    }
+}
+
+
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -334,6 +371,7 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     SHOW( IsVertexContained );
     SHOW( IsCCQE );
     SHOW3( Is_mu_TrackReconstructed , Is_p_TrackReconstructed , IsVertexReconstructed );
+    SHOW3( Is_mu_TrackInFV , Is_p_TrackInFV , IsVertexInFV );
     SHOW2( Is1mu1p, IsCC_1p_200MeVc_0pi );
     
     if ( IsCC_1p_200MeVc_0pi ) {

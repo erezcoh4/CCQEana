@@ -495,7 +495,8 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                     }
                     genie_interaction.SortNucleons();
                     genie_interaction.ComputePmissPrec();
-                    genie_interaction.FindCC1p200MeVc0pi();
+                    genie_interaction.SetTruthTopology();
+                    genie_interaction.SetReconstructedTopology();
 
                     genie_interactions.push_back( genie_interaction );
                     
@@ -792,7 +793,7 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
             if (
                 (t1.GetTruthStartPos() - t2.GetTruthStartPos()).Mag() < 1.                  // distance between the true position of the two tracks is small
                 && (v.GetClosestGENIE().GetVertexPosition() - v.GetPosition()).Mag() < 10   // distance from the closest genie vertex
-                && (v.GetClosestGENIE().AskIfCC1p0pi()==true)                               // the closest GENIE is a CC1p0π
+                && (v.GetClosestGENIE().GetIsCC_1p_200MeVc_0pi()==true)                     // the closest GENIE is a CC1p0π
                 ){
                 v.SetAsCC1p0pi();
             }

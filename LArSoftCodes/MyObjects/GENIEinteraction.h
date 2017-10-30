@@ -49,15 +49,16 @@ public:
     bool            SortNucleons ();
     bool       ComputeKinematics ();
     bool        ComputePmissPrec ();
-    bool      FindCC1p200MeVc0pi ();
     bool CheckContainement (float max_y = 116.5,
                             float min_z = 0, float max_z = 1037,
                             float min_x = 0, float max_x = 256){
+        // start with contained = true
+        IsVertexContained=true;
+        // and then check, to see if contained = false
         if( ( vertex_position.x() < min_x )    | ( vertex_position.x() > max_x ) )    IsVertexContained=false;
         if( ( vertex_position.y() < -max_y )   | ( vertex_position.y() > max_y ) )    IsVertexContained=false;
         if( ( vertex_position.z() < min_z )    | ( vertex_position.z() > max_z ) )    IsVertexContained=false;
-        IsVertexContained=true;
-        return IsVertexContained;
+        return  IsVertexContained;
     }
     void                   Print (bool DoPrintTracks=false) const;
     void                AddTrack (PandoraNuTrack ftrack);
@@ -68,6 +69,8 @@ public:
     
     
     // SETters
+    void         SetTruthTopology (); // set TRUTH topology DEFINITIONs
+    void SetReconstructedTopology (); // set RECONSTRUCTED topology DEFINITIONs
     void                   SetRSE (int frun , int fsubrun , int fevent)   {run=frun; subrun=fsubrun;event=fevent;};
     void                  SetCCNC (int fccnc)                             {ccnc = fccnc;};
     void                  SetMode (int fmode)                             {mode = fmode;};
@@ -100,11 +103,17 @@ public:
     
     // GETters
     bool                        GetVertexContained () const {return IsVertexContained;};
-    bool                              AskIfCC1p0pi () const {return IsCC_1p_200MeVc_0pi;};
+    bool                        GetIsCC_Np_200MeVc () const {return IsCC_Np_200MeVc;};
+    bool                        GetIsCC_1p_200MeVc () const {return IsCC_1p_200MeVc;};
+    bool                    GetIsCC_1p_200MeVc_0pi () const {return IsCC_1p_200MeVc_0pi;};
+    
     bool               GetIs_mu_TrackReconstructed () const {return Is_mu_TrackReconstructed;};
+    bool                        GetIs_mu_TrackInFV () const {return Is_mu_TrackInFV;};
     bool                GetIs_p_TrackReconstructed () const {return Is_p_TrackReconstructed;};
+    bool                         GetIs_p_TrackInFV () const {return Is_p_TrackInFV;};
     bool                       GetIsInActiveVolume () const {return IsInActiveVolume;};
     bool                  GetIsVertexReconstructed () const {return IsVertexReconstructed;};
+    bool                           GetIsVertexInFV () const {return IsVertexInFV;};
     bool                                GetIs1mu1p () const {return Is1mu1p;};
     bool                                 GetIsCCQE () const {return IsCCQE;};
     
@@ -154,14 +163,24 @@ public:
 private:
     
     // booleans on the genie interaction
-    bool                    IsVertexContained=false;
+    // TRUTH topology DEFINITIONs
+    bool                    IsCC_Np_200MeVc=false; // an interaction with at least 1 muon and N protons > 200 MeV/c
+    bool                    IsCC_1p_200MeVc=false; // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c
     bool                    IsCC_1p_200MeVc_0pi=false; // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions
-    bool                    Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false, IsVertexReconstructed=false;
-    bool                    IsInActiveVolume=false, IsCCQE=false, Is1mu1p=false;
+    bool                    IsCCQE=false; // is QE or not - genie's "mode" flag: QE=0
+    // RECONSTRUCTED topology DEFINITIONs
+    bool                    IsVertexContained=false, IsInActiveVolume=false; // should be practically the same
+    bool                    Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false;
+    bool                    IsVertexReconstructed=false; // vertex reconstructed = muon reconstructed && proton reconsutructed
+    bool                    Is1mu1p=false; // 1 muon + 1 proton reconstructed, and nothing else
+    bool                    Is_mu_TrackInFV=false, Is_p_TrackInFV=false;
+    bool                    IsVertexInFV=false;
 
     // Int_t
     Int_t                   nuPDG=-9999;
-    Int_t                   run=-9999, subrun=-9999, event=-9999, ccnc=-9999, mode=-9999, mcevent_id=-9999;
+    Int_t                   ccnc=-9999; // CC=0/NC=1
+    Int_t                   mode=-9999; // QE=0
+    Int_t                   run=-9999, subrun=-9999, event=-9999, mcevent_id=-9999;
     Int_t                   Nprimaries=0;
     Int_t                   Nnu=0, Nnu_e=0, Nnu_mu=0;
     Int_t                   Np=0, Nn=0, Npi=0;

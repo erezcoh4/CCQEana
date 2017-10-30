@@ -188,6 +188,17 @@ public:
         if( ( end_pos.z() < min_FV_z )      | ( end_pos.z() > max_FV_z ) )      return false;
         return true;
     };
+    bool IsTrackInFV (float max_FV_y = 110,
+                      float min_FV_z = 5, float max_FV_z = 1037,
+                      float min_FV_x = 3, float max_FV_x = 250)  const{
+        if( ( start_pos.x() < min_FV_x )    | ( start_pos.x() > max_FV_x ) )    return false;
+        if( ( start_pos.y() < -max_FV_y )   | ( start_pos.y() > max_FV_y ) )    return false;
+        if( ( start_pos.z() < min_FV_z )    | ( start_pos.z() > max_FV_z ) )    return false;
+        if( ( end_pos.x() < min_FV_x )      | ( end_pos.x() > max_FV_x ) )      return false;
+        if( ( end_pos.y() < -max_FV_y )     | ( end_pos.y() > max_FV_y ) )      return false;
+        if( ( end_pos.z() < min_FV_z )      | ( end_pos.z() > max_FV_z ) )      return false;
+        return true;
+    };
     
     Float_t           DistanceFromPoint ( TVector3 position , std::string * StartOrEnd=nullptr );
     Float_t ClosestDistanceToOtherTrack ( PandoraNuTrack other_track , std::string * StartOrEnd=nullptr );

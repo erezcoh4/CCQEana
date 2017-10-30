@@ -107,8 +107,6 @@ public:
     
     // functionallity
     void       FindGENIECCVertices ();
-    void         TagCCInteractions ();
-    bool     CheckIsInActiveVolume (TVector3 pos);
     void          PrintInformation ();
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
@@ -502,7 +500,8 @@ void ub::ErezCCQEGENIE::analyze(art::Event const & evt){
                     }
                     genie_interaction.SortNucleons();
                     genie_interaction.ComputePmissPrec();
-                    genie_interaction.FindCC1p200MeVc0pi();
+                    genie_interaction.SetTruthTopology();
+                    genie_interaction.SetReconstructedTopology();
 
                     if (debug>6){
                         cout << "finished analyzing genie interaction " << mcevent_id << ", genie track list includes:" << endl;
@@ -555,66 +554,10 @@ void ub::ErezCCQEGENIE::FindGENIECCVertices(){
     }
     N_CC_interactions = (int)genie_CC_interactions.size();
     
-    // flag the CC interactions
-    TagCCInteractions();
-    if (debug>4){
-        cout << "after TagCCInteractions() track list includes:" << endl;
-        for (auto t: tracks) cout << t.GetTrackID() << "\t";
-        cout << endl;
-    }
-
     // output to csv file
     StreamVerticesToCSV();
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEGENIE::TagCCInteractions(){
-    
-    //
-    // tag vertices
-    // ------------
-    // contained        : vertex contained in active volume of the detector (256 x 233 x 1037 cm^3)
-    // µ-reconstructed  : the muon track was reconstructed
-    // p-reconstructed  : at least one proton with momentum 200 MeV/c was reconstructed
-    // µp-reconstructed : both the muon and at least one proton with momentum 200 MeV/c were reconstructed
-    // µp               : both the muon and only one proton with momentum 200 MeV/c were reconstructed
-    // CC 1p 0π         : a subset of µp, in which only one proton with momentum > 200 MeV/c was produced, and no pions were produced
-    // CCQE             : is QE or not - genie's "mode" flag: QE=0
-    //
-    
-    
-    for (auto & g:genie_CC_interactions){
-        
-        g.SetIsInActiveVolume( CheckIsInActiveVolume( g.GetVertexPosition() ) );
-        g.SetIsCCQE( g.GetMode()==0 ? true : false );
- 
-        if (g.GetIsVertexReconstructed()==true){
-            g.SetReco_mu_p_distance();
-            
-            // 1mu1p is a topology-based definitino:
-            // a vertex in which only two tracks were reconstructed in the f.s.,
-            // one is a muon and the other a proton
-            if (g.GetTracks().size()==2){
-                g.SetIs1mu1p(true);
-            }
-        }
-        else{
-            g.SetIs1mu1p( false );
-        }
-        // the functionallity GENIEinteraction::FindCC1p200MeVc0pi()
-        // called in ub::ErezCCQEGENIE::analyze() allready finds CC1p0π and flags them
-    }
-}
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-bool ub::ErezCCQEGENIE::CheckIsInActiveVolume(TVector3 pos){
-    // vertex contained in active volume of the detector (256 x 233 x 1037 cm^3)
-    if ( pos.X()<0      || pos.X()>256 )    return false;
-    if ( pos.Y()<-116.5 || pos.Y()>116.5 )  return false;
-    if ( pos.Z()<0      || pos.Z()>1037 )   return false;
-    return true;
-}
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -625,15 +568,24 @@ void ub::ErezCCQEGENIE::HeaderVerticesInCSV(){
     vertices_file
     << "run" << "," << "subrun" << "," << "event" << "," ;
     
+    // truth topology
+    vertices_file
+    << "IsCC_Np_200MeVc" << ","
+    << "IsCC_1p_200MeVc" << ","
+    << "IsCC_1p_200MeVc_0pi" << ","
+    << "IsCCQE" << ",";
+    
+    // reconstructed topology
     vertices_file
     << "IsVertexContained" << ","
     << "IsInActiveVolume" << ","
     << "Is1mu1p" << ","
-    << "IsCC1p0pi" << ","
     << "Is_mu_TrackReconstructed" << ","
+    << "Is_mu_TrackInFV" << ","
     << "Is_p_TrackReconstructed" << ","
+    << "Is_p_TrackInFV" << ","
     << "IsVertexReconstructed" << ","
-    << "IsCCQE" << ",";
+    << "IsVertexInFV" << ",";
     
     // general for CC events
     vertices_file
@@ -670,15 +622,25 @@ void ub::ErezCCQEGENIE::StreamVerticesToCSV(){
         << g.GetRun() << "," << g.GetSubrun() << "," << g.GetEvent() << "," ;
         
         
+        // truth topology
+        vertices_file
+        << g.GetIsCC_Np_200MeVc() << ","
+        << g.GetIsCC_1p_200MeVc() << ","
+        << g.GetIsCC_1p_200MeVc_0pi() << ","
+        << g.GetIsCCQE() << ",";
+        
+        // reconstructed topology
         vertices_file
         << g.GetVertexContained() << ","
         << g.GetIsInActiveVolume() << ","
         << g.GetIs1mu1p() << ","
-        << g.AskIfCC1p0pi() << ","
         << g.GetIs_mu_TrackReconstructed() << ","
+        << g.GetIs_mu_TrackInFV() << ","
         << g.GetIs_p_TrackReconstructed() << ","
+        << g.GetIs_p_TrackInFV() << ","
         << g.GetIsVertexReconstructed() << ","
-        << g.GetIsCCQE() << ",";
+        << g.GetIsVertexInFV() << ",";
+        
         
         // general for CC events
         vertices_file
