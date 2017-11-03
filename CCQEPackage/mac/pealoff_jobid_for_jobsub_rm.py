@@ -1,4 +1,4 @@
-filename = "/Users/erezcohen/Desktop/held.c"
+filename = "/Users/erezcohen/Desktop/jobsub_hold"
 string = ''
 with open(filename,'r') as file:
     lines = file.readlines()
