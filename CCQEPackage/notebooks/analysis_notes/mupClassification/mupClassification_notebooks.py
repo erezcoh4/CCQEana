@@ -33,6 +33,7 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
                                , delta_Delta_phi=40 # deg.
                                , theta_pq_max=25    # deg.
                                , Pt_max=0.35        # GeV/c
+                               , Pmiss_max=0.3      # GeV/c
                                , opt_box=(50,100) # [Nwires x Nticks]
                                , r_max_RdQ_CC1p0pi = 0.32 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                                
@@ -153,6 +154,18 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     get_pureff_MCbnbDATAcosmic_cut(cut_name='soft Pt', cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name='soft Pt', cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
 
+    # another modified cut 6: $p_{miss}<0.3$
+    reduced_MCbnbDATAcosmic = dict()
+    for pair_type in pair_types:#{
+        sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pmiss']<Pmiss_max]
+    #}
+    get_pureff_MCbnbDATAcosmic_cut(cut_name='soft Pmiss', cut_label='$p_{miss}<%.2f$ GeV/c'%Pmiss_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name='soft Pmiss', cut_label='$p_{miss}<%.2f$ GeV/c'%Pmiss_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+
+    
+    
+    
     # tight Pt cut for good Ev reconstruction
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{

@@ -36,8 +36,71 @@ print "MC_scaling_MCcosmic:",MC_scaling_MCcosmic,"= N(POT on beam)/N(POT MC)"
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Sep-3,2017
-def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DATAcosmic
+# Nov-9,2017
+def extBNBvsCosmicOverlay(OffBeamSample=None,OffBeamFV=None
+                            , var='PIDa_assigned_proton' , x_label='$PID_a^p$' 
+                            , bins=np.linspace(0,30,31) 
+                            , ax=None, figsize=(14,6),fontsize=25
+                            , color='purple'
+                            , do_add_cosmic_overlay=True , cosmic_overlay_sample=None
+                            , do_add_legend=True , legend_loc='best', overlay_alpha=0.5):
+    bin_width = bins[1]-bins[0]
+    if ax is None: fig,ax=plt.subplots(figsize=figsize)
+    x = OffBeamSample[var]
+    h_OffBeam,edges = np.histogram( x , bins=bins )
+    h_OffBeam_err = np.sqrt(h_OffBeam)
+    Int_OffBeam = np.sum([h_OffBeam[i]*bin_width for i in range(len(h_OffBeam))])
+    
+    plt.errorbar( x = bins[:-1], xerr=bin_width/2.
+                 , y=h_OffBeam , yerr=h_OffBeam_err
+                 , fmt='o', color=color , ecolor='black'
+                 , label='extBNB (%d=%.1f'%(len(OffBeamSample),100*float(len(OffBeamSample))/len(OffBeamFV))+'%)'
+                )
+    plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
+    
+    if do_add_cosmic_overlay:        
+        plot_cosmic_overlay( ax=ax                               
+                            , cosmic_overlay_sample = cosmic_overlay_sample , var=var, bins=bins 
+                            , Int_OffBeam = Int_OffBeam
+                            , alpha=overlay_alpha)
+    set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
+             ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
+    #              ,ylim=(0,1.05*np.max(h_OffBeam))
+            )
+    if do_add_legend: 
+        if legend_loc=='bbox':
+            leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
+        else:
+            leg=plt.legend(fontsize=fontsize,loc=legend_loc)
+    plt.tight_layout()
+    return ax,leg
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# Nov-9,2017
+def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=None
+                        , alpha=0.5, Int_OffBeam=1):
+    x = cosmic_overlay_sample[var]
+    bin_width = bins[1]-bins[0]
+        
+    h_overlay,edges = np.histogram( x , bins=bins )
+    Int_overlay = np.sum([h_overlay[i]*bin_width for i in range(len(h_overlay))])
+    SUMoverlay = np.sum(h_overlay)    
+
+    cosmic_overlay_scaling = Int_OffBeam/Int_overlay    
+    ax.hist( x , weights=cosmic_overlay_scaling*np.ones(len(x))
+                     , bins=bins-0.5*bin_width, width=bin_width
+                     , color=MCcolors[2]
+                     , label='cosmic overlay (%d=%.1f'%(len(cosmic_overlay_sample),100*float(len(cosmic_overlay_sample))/len(MCbnbDATAcosmicSamples['cosmic']))+'%)'
+                     , alpha=alpha)       
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -        
+
+
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# Nov-20,2017
+def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DATAcosmic, MCbnbDATAcosmicSamples=None
                            , var=None, bins=None , N_OnBeam_minus_OffBeam=1, alpha=0.8):
     Nall_pairs = len(MCsamples['1mu-1p']+MCsamples['cosmic']+MCsamples['other pairs'])
 
@@ -47,7 +110,8 @@ def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DA
     for i_pair_type in [2,1,0]:
         pair_type=pair_types[i_pair_type]
         sample = MCsamples[pair_type]; 
-        label_array.append(MClabels[i_pair_type]); 
+        label = MClabels[i_pair_type]+' (%.1f'%(100*float(len(sample))/len(MCbnbDATAcosmicSamples[pair_type]))+'%)'
+        label_array.append(label); 
         color_array.append(MCcolors[i_pair_type]);
         x = sample[var]
         x_array.append(x)
@@ -71,7 +135,9 @@ def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DA
     for bin in range(len(bins[:-2])):
         x, dx = bins[bin+1] - 0.4*bin_width, bin_width 
         y, dy = 0.99*h[2][bin+1] - hCC1p0pi[bin], hCC1p0pi[bin]
-        ax.add_patch( patches.Rectangle( (x, y),dx,dy, facecolor=MCcolors[3],alpha=0.8*alpha,label=MClabels[3] if bin==0 else None))
+        label=MClabels[3]+' (%.1f'%(100*float(len(sample))/len(MCbnbDATAcosmicSamples['CC 1p 0pi']))+'%)'
+        ax.add_patch( patches.Rectangle( (x, y),dx,dy, facecolor=MCcolors[3],alpha=0.8*alpha,label=label if bin==0 else None))
+
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 
@@ -83,7 +149,8 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None
                             , bins=np.linspace(0,30,31) 
                             , ax=None, figsize=(14,6),fontsize=25
                             , color='purple'
-                            , do_add_MCoverlay=True , MCsamples=None, MC_scaling=MC_scaling_DATAcosmic
+                            , do_add_MCoverlay=True , MCsamples=None, MCbnbDATAcosmicSamples=None
+                            , MC_scaling=MC_scaling_DATAcosmic
                             , do_add_legend=True , legend_loc='best', MCalpha=0.5):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
@@ -103,7 +170,7 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None
     ax.set_ylim(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])
                 ,np.max(h_OnBeam_minus_OffBeam+1.1*h_OnBeam_minus_OffBeam_err));
 
-    plt.plot(ax.get_xlim(),[0,0],'--',color='black',linewidth=2)
+    plt.plot([np.min(ax.get_xlim()),np.min(ax.get_xlim())],[0,0],'--',color='black',linewidth=2)
     set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize)
     
     if do_add_MCoverlay:        
@@ -111,14 +178,19 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None
         if debug>1: print 'Number of On-Off:',N_OnBeam_minus_OffBeam
 
         plot_stacked_MCsamples( ax=ax
-                               , MCsamples = MCsamples , var=var, bins=bins , MC_scaling=MC_scaling
+                               , MCsamples = MCsamples , MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
+                               , var=var, bins=bins , MC_scaling=MC_scaling
                                , N_OnBeam_minus_OffBeam=N_OnBeam_minus_OffBeam , alpha=MCalpha)
     
     if do_add_legend: 
-        plt.legend(fontsize=fontsize,loc=legend_loc)
+        if legend_loc=='bbox':
+            leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
+        else:
+            leg=plt.legend(fontsize=fontsize,loc=legend_loc)
     plt.tight_layout()
-    return ax
+    return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
