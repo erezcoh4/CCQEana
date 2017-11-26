@@ -48,6 +48,8 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
                                , delta_Delta_phi_plus = 45
                                , Pt_max_minus=0.3
                                , Pt_max_plus=0.4
+                               , theta_pq_max_minus=15
+                               , theta_pq_max_plus=35                               
                ):
     '''
         return:      
@@ -242,6 +244,18 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
         get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
     #}
    
+    # cut 6: \theta_pq
+    for cut_name,theta_pq_max_cut in zip(['theta_pq-','theta_pq+'],[theta_pq_max_minus,theta_pq_max_plus]):#{
+        cut_label=r'$\theta_{pq}<%.0f^0$ deg.'%theta_pq_max_cut
+        reduced_MCbnbDATAcosmic = dict()
+        for pair_type in pair_types:#{
+            sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
+            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_theta_pq']<theta_pq_max_cut]
+        #}
+        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
+    #}
+
     return pureff_MCbnbDATAcosmic,pureff_MCbnbDATAcosmic_numbers
 # ------------------------------------------------
 
