@@ -138,7 +138,7 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     get_pureff_MCbnbDATAcosmic_cut(cut_name = 'delta phi', cut_label='$|\Delta \phi - \pi|<%.0f^0$'%delta_Delta_phi, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name = '\CutDeltaPhi', cut_label='$|\Delta \phi - \pi|<%.0f^0$'%delta_Delta_phi, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
 
-    # cut 6: $\theta_{pq}<25$
+    # modified cut 6: $\theta_{pq}<25$
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
         sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
@@ -147,6 +147,17 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     get_pureff_MCbnbDATAcosmic_cut(cut_name ='theta_pq' , cut_label= '$\theta_{pq}<%.0f^0$'%theta_pq_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name ='theta_pq' , cut_label= '$\\theta_{pq}<%.0f^0$'%theta_pq_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
 
+    # cut 5.5: $p_{t}<0.35$ without application of the $\Delta phi$ cut
+    reduced_MCbnbDATAcosmic = dict()
+    for pair_type in pair_types:#{
+        sam = reduced_MCbnbDATAcosmicSamples['vertex activity'][pair_type]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pt']<Pt_max]
+    #}
+    get_pureff_MCbnbDATAcosmic_cut(cut_name='Pt no Delta phi', cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name='Pt no Delta phi', cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+
+    
+    
     # modified cut 6: $p_{t}<0.35$
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
