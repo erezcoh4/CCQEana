@@ -859,6 +859,10 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
     << "reco_Pmu" << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
     << "reco_Pp" << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
 
+    // missing momentum (reconstructed struck neutron)
+    << "reco_Pmiss" << ","  << "reco_Pmiss_x" << ","  << "reco_Pmiss_y" << ","  << "reco_Pmiss_z" << "," << "reco_Pmiss_t" << ","
+    
+    
     // truth MC information
     << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
     
@@ -988,6 +992,8 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
         vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";
 
+        // missing momentum (reconstructed struck neutron)
+        vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";
         
         // truth MC information
         vertices_file << v.GetAssignedMuonTrack().GetTruthLength() << "," << v.GetAssignedProtonTrack().GetTruthLength() << ",";

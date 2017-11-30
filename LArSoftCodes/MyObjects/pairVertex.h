@@ -146,6 +146,7 @@ public:
     TLorentzVector              GetRecoPnu () const {return reco_Pnu;};
     TLorentzVector              GetRecoPmu () const {return reco_Pmu;};
     TLorentzVector               GetRecoPp () const {return reco_Pp;};
+    TLorentzVector            GetRecoPmiss () const {return (reco_Pp - reco_q);};
     
     
     PandoraNuTrack        GetShortestTrack () const {return ShortestTrack;};
