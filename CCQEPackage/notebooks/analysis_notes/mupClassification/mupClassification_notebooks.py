@@ -72,6 +72,16 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     get_pureff_MCbnbDATAcosmic_cut(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
 
+    # cut 3 before everything: |\theta_{1,2}-90^0|<60^0$
+    cut_name, cut_label='non-collinearity first' ,'$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12
+    reduced_MCbnbDATAcosmic = dict()
+    reduced_MCbnbMCcosmic = dict()
+    for pair_type in pair_types:#{
+        sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
+    #}
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
 
     # cut 1: PIDa
     cut_name , cut_label = 'PIDa','${PID}_a>%.0f$'%PIDa_p_min
@@ -85,7 +95,7 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
 
     
     # cut 2: require that the longer track is the one with larger PIDa
-    cut_name , cut_label = 'length', '$l_{\\mu}>l_{p}$'
+    cut_name , cut_label = 'length', r'$l_{\mu}>l_{p}$'
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
         sam = reduced_MCbnbDATAcosmicSamples['PIDa'][pair_type]

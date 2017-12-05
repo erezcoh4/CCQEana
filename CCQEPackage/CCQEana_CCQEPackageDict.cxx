@@ -777,7 +777,7 @@ namespace {
 "/Users/erezcohen/larlite/UserDev/CCQEana/LArSoftCodes",
 "/Users/erezcohen/larlite/UserDev/CCQEana/LArSoftCodes/MyObjects",
 "/Users/erezcohen/larlite/core",
-"/usr/local/Cellar/root6/6.06.02/include/root",
+"/usr/local/include/root",
 "/Users/erezcohen/larlite/UserDev/CCQEana/CCQEPackage/",
 0
     };

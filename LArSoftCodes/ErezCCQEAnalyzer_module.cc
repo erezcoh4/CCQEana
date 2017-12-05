@@ -359,7 +359,11 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
         }
         
         // MC information
+        Debug(0,"before MC information (if(!isdata&&fmth.isValid()))");
+        SHOW2(isdata,fmth.isValid())
         if (!isdata&&fmth.isValid()){
+            Debug(0,"MC information !isdata&&fmth.isValid()");
+            
             // Find true track for each reconstructed track
             int TrackID = 0;
             std::vector< art::Ptr<recob::Hit> > allHits = fmth.at(i);
@@ -382,7 +386,10 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
             }
             // Now have trackID, so get PDG code and T0 etc.
             const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
+            Debug(0,"particle = bt->TrackIDToParticle( TrackID )");
+            SHOW(particle);
             if (particle){
+                Debug(0, Form("particle: pdg=%d",particle->PdgCode()));
                 track.SetMCpdgCode( particle->PdgCode() );
                 track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
                 track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );

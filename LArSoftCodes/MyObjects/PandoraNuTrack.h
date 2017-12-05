@@ -65,7 +65,6 @@ public:
     PandoraNuTrack (Int_t frun, Int_t fsubrun, Int_t fevent
                     ,Int_t ftrack_id
                     ,Float_t flength
-//                    ,Float_t ftheta, Float_t fphi
                     ,TVector3 fstart_pos, TVector3 fend_pos );
     
     

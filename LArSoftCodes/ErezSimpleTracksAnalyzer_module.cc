@@ -173,19 +173,24 @@ private:
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 ub::ErezSimpleTracksAnalyzer::ErezSimpleTracksAnalyzer(fhicl::ParameterSet const & p):EDAnalyzer(p){
+    Debug(0,"ErezSimpleTracksAnalyzer::ErezSimpleTracksAnalyzer();");
     reconfigure(p);
+    Debug(3,"reconfigure(p);");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezSimpleTracksAnalyzer::analyze(art::Event const & evt){
     
+    Debug(2,"ub::ErezSimpleTracksAnalyzer::analyze(art::Event const & evt)");
     ResetVars();
+    Debug(3,"ResetVars()");
     
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
     art::ServiceHandle<cheat::BackTracker> bt;
     isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
+    Debug(3,"run = evt.run(); subrun = evt.subRun(); event = evt.id().event()");
     
     // * hits
     art::Handle< std::vector<recob::Hit> > hitListHandle;
@@ -202,6 +207,7 @@ void ub::ErezSimpleTracksAnalyzer::analyze(art::Event const & evt){
     // * associations
     art::FindManyP<recob::Hit> fmth(trackListHandle, evt, fTrackModuleLabel);
     art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
+    Debug(3,"art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);");
 
     
     // ----------------------------------------
@@ -222,6 +228,7 @@ void ub::ErezSimpleTracksAnalyzer::analyze(art::Event const & evt){
         hits.push_back( fhit );
         
     }
+    Debug(3,"after for (int i = 0; i < Nhits_stored ; ++i)");
     
 
 
@@ -355,10 +362,12 @@ void ub::ErezSimpleTracksAnalyzer::analyze(art::Event const & evt){
         
         tracks.push_back( track );
     }
-    
+    Debug(3,"after for (int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i )");
+
     fTree -> Fill();
     StreamTracksToCSV();
     PrintInformation();
+    Debug(3,"PrintInformation()");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -374,6 +383,7 @@ void ub::ErezSimpleTracksAnalyzer::HeaderTracksInCSV(){
     tracks_file
     << "start_x"<< "," << "start_y" << "," << "start_z" << ","
     << "end_x"  << "," << "end_y"   << "," << "end_z"   << ","
+    << "theta"  << "," << "phi"     << ","
     << "PIDa"   << "," << "length"  << ",";
     
     // truth information
@@ -403,6 +413,7 @@ void ub::ErezSimpleTracksAnalyzer::StreamTracksToCSV(){
         tracks_file
         << t.GetStartPos().x()  << "," << t.GetStartPos().y()   << "," << t.GetStartPos().z() << ","
         << t.GetEndPos().x()    << "," << t.GetEndPos().y()     << "," << t.GetEndPos().z() << ","
+        << t.GetTheta()         << "," << t.GetPhi()            << ","
         << t.GetPIDa()          << "," << t.GetLength()         << ",";
         
         // truth information

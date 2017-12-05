@@ -7,15 +7,12 @@
 PandoraNuTrack::PandoraNuTrack( Int_t frun, Int_t fsubrun, Int_t fevent
                                ,Int_t ftrack_id
                                ,Float_t flength
-//                               ,Float_t ftheta, Float_t fphi
                                ,TVector3 fstart_pos, TVector3 fend_pos):
 run(frun),
 subrun(fsubrun),
 event(fevent),
 track_id(ftrack_id),
 length(flength),
-//theta(ftheta),
-//phi(fphi),
 start_pos(fstart_pos),
 end_pos(fend_pos)
 {
@@ -38,8 +35,6 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
         
         SHOW( PIDa ); // SHOW3( PIDaPerPlane[0] , PIDaPerPlane[1] , PIDaPerPlane[2] );
         PrintPhys(length,"cm");
-//        PrintPhys(r2d*theta,"deg.");
-//        PrintPhys(r2d*phi,"deg.");
         Printf("rec theta=%.1f, phi=%.1f deg.", r2d*rec_dir.Theta(), r2d*rec_dir.Phi() );
         SHOW(IsFlipped);
         

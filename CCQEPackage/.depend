@@ -131,88 +131,69 @@ AnalyseEvents.o: AnalyseEvents.cxx AnalyseEvents.h \
   /usr/include/sys/_types/_fsfilcnt_t.h /usr/include/_types/_nl_item.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/bitset \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
-  /usr/local/Cellar/root6/6.06.02/include/root/TTree.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TBranch.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TNamed.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TObject.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
+  /usr/local/include/root/TTree.h /usr/local/include/root/TBranch.h \
+  /usr/local/include/root/TNamed.h /usr/local/include/root/TObject.h \
+  /usr/local/include/root/Rtypes.h /usr/local/include/root/RtypesCore.h \
+  /usr/local/include/root/RConfig.h /usr/local/include/root/RVersion.h \
   /usr/include/AvailabilityMacros.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h /usr/local/include/root/snprintf.h \
+  /usr/local/include/root/strlcpy.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TStorage.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVersionCheck.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Riosfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TBuffer.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TString.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMathBase.h \
+  /usr/local/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TStorage.h \
+  /usr/local/include/root/TVersionCheck.h \
+  /usr/local/include/root/Riosfwd.h /usr/local/include/root/TBuffer.h \
+  /usr/local/include/root/TString.h /usr/local/include/root/TMathBase.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cmath \
-  /usr/include/math.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RStringView.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfigure.h \
+  /usr/include/math.h /usr/local/include/root/RStringView.h \
+  /usr/local/include/root/RConfigure.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/string_view \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/__config \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/iomanip \
-  /usr/local/Cellar/root6/6.06.02/include/root/TObjArray.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSeqCollection.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TCollection.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TIterator.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TAttFill.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TDataType.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TDictionary.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/ESTLType.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TAttLine.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TAttMarker.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TArrayD.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TArray.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TArrayI.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TClass.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TObjString.h \
+  /usr/local/include/root/TObjArray.h \
+  /usr/local/include/root/TSeqCollection.h \
+  /usr/local/include/root/TCollection.h \
+  /usr/local/include/root/TIterator.h /usr/local/include/root/TAttFill.h \
+  /usr/local/include/root/TDataType.h \
+  /usr/local/include/root/TDictionary.h \
+  /usr/local/include/root/ESTLType.h /usr/local/include/root/TAttLine.h \
+  /usr/local/include/root/TAttMarker.h /usr/local/include/root/TArrayD.h \
+  /usr/local/include/root/TArray.h /usr/local/include/root/TArrayI.h \
+  /usr/local/include/root/TClass.h /usr/local/include/root/TObjString.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/map \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__tree \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/set \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/unordered_set \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__hash_table \
-  /usr/local/Cellar/root6/6.06.02/include/root/ThreadLocalStorage.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVirtualTreePlayer.h \
-  PandoraNuTrack.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector3.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TError.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector2.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrix.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixF.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixT.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTBase.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixDBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorDfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtilsfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TLorentzVector.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMath.h \
+  /usr/local/include/root/ThreadLocalStorage.h \
+  /usr/local/include/root/TVirtualTreePlayer.h PandoraNuTrack.h \
+  /usr/local/include/root/TVector3.h /usr/local/include/root/TError.h \
+  /usr/local/include/root/TVector2.h /usr/local/include/root/TMatrix.h \
+  /usr/local/include/root/TMatrixF.h /usr/local/include/root/TMatrixT.h \
+  /usr/local/include/root/TMatrixTBase.h \
+  /usr/local/include/root/TMatrixFBasefwd.h \
+  /usr/local/include/root/TMatrixDBasefwd.h \
+  /usr/local/include/root/TVectorFfwd.h \
+  /usr/local/include/root/TVectorDfwd.h \
+  /usr/local/include/root/TMatrixTUtils.h \
+  /usr/local/include/root/TMatrixFfwd.h \
+  /usr/local/include/root/TMatrixFUtils.h \
+  /usr/local/include/root/TMatrixFUtilsfwd.h \
+  /usr/local/include/root/TLorentzVector.h \
+  /usr/local/include/root/TMath.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/include/float.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TRotation.h box.h flash.h \
-  hit.h GENIEinteraction.h pairVertex.h
+  /usr/local/include/root/TRotation.h box.h flash.h hit.h \
+  GENIEinteraction.h pairVertex.h
 GENIEinteraction.o: GENIEinteraction.cxx GENIEinteraction.h \
-  PandoraNuTrack.h /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
-  /usr/include/AvailabilityMacros.h /usr/include/Availability.h \
-  /usr/include/AvailabilityInternal.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
+  PandoraNuTrack.h /usr/local/include/root/Rtypes.h \
+  /usr/local/include/root/RtypesCore.h /usr/local/include/root/RConfig.h \
+  /usr/local/include/root/RVersion.h /usr/include/AvailabilityMacros.h \
+  /usr/include/Availability.h /usr/include/AvailabilityInternal.h \
+  /usr/include/TargetConditionals.h /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/typeinfo \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__config \
   /usr/include/unistd.h /usr/include/_types.h /usr/include/sys/_types.h \
@@ -252,10 +233,9 @@ GENIEinteraction.o: GENIEinteraction.cxx GENIEinteraction.h \
   /usr/include/_types/_uintmax_t.h /usr/include/stdio.h \
   /usr/include/sys/_types/_va_list.h /usr/include/sys/stdio.h \
   /usr/include/string.h /usr/include/strings.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
+  /usr/local/include/root/snprintf.h /usr/local/include/root/strlcpy.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/atomic \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/algorithm \
@@ -287,28 +267,23 @@ GENIEinteraction.o: GENIEinteraction.cxx GENIEinteraction.h \
   /usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/stdexcept \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TSchemaHelper.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/string \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdio \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwchar \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwctype \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cctype \
   /usr/include/wctype.h /usr/include/_types/_wctrans_t.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector3.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TError.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector2.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TObject.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TStorage.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVersionCheck.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Riosfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TBuffer.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrix.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixF.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixT.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTBase.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TNamed.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TString.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMathBase.h \
+  /usr/local/include/root/TVector3.h /usr/local/include/root/TError.h \
+  /usr/local/include/root/TVector2.h /usr/local/include/root/TObject.h \
+  /usr/local/include/root/TStorage.h \
+  /usr/local/include/root/TVersionCheck.h \
+  /usr/local/include/root/Riosfwd.h /usr/local/include/root/TBuffer.h \
+  /usr/local/include/root/TMatrix.h /usr/local/include/root/TMatrixF.h \
+  /usr/local/include/root/TMatrixT.h \
+  /usr/local/include/root/TMatrixTBase.h \
+  /usr/local/include/root/TNamed.h /usr/local/include/root/TString.h \
+  /usr/local/include/root/TMathBase.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdlib \
   /usr/include/stdlib.h /usr/include/sys/wait.h \
   /usr/include/sys/_types/_id_t.h /usr/include/sys/signal.h \
@@ -323,9 +298,8 @@ GENIEinteraction.o: GENIEinteraction.cxx GENIEinteraction.h \
   /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
   /usr/include/machine/types.h /usr/include/i386/types.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cmath \
-  /usr/include/math.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RStringView.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfigure.h \
+  /usr/include/math.h /usr/local/include/root/RStringView.h \
+  /usr/local/include/root/RConfigure.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/string_view \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/__config \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/ostream \
@@ -372,29 +346,27 @@ GENIEinteraction.o: GENIEinteraction.cxx GENIEinteraction.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/bitset \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/iomanip \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/istream \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixDBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorDfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtilsfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TLorentzVector.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMath.h \
+  /usr/local/include/root/TMatrixFBasefwd.h \
+  /usr/local/include/root/TMatrixDBasefwd.h \
+  /usr/local/include/root/TVectorFfwd.h \
+  /usr/local/include/root/TVectorDfwd.h \
+  /usr/local/include/root/TMatrixTUtils.h \
+  /usr/local/include/root/TMatrixFfwd.h \
+  /usr/local/include/root/TMatrixFUtils.h \
+  /usr/local/include/root/TMatrixFUtilsfwd.h \
+  /usr/local/include/root/TLorentzVector.h \
+  /usr/local/include/root/TMath.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/include/float.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TRotation.h box.h \
+  /usr/local/include/root/TRotation.h box.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/iostream \
   flash.h
 PandoraNuTrack.o: PandoraNuTrack.cxx PandoraNuTrack.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
+  /usr/local/include/root/Rtypes.h /usr/local/include/root/RtypesCore.h \
+  /usr/local/include/root/RConfig.h /usr/local/include/root/RVersion.h \
   /usr/include/AvailabilityMacros.h /usr/include/Availability.h \
   /usr/include/AvailabilityInternal.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
+  /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/typeinfo \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__config \
   /usr/include/unistd.h /usr/include/_types.h /usr/include/sys/_types.h \
@@ -434,10 +406,9 @@ PandoraNuTrack.o: PandoraNuTrack.cxx PandoraNuTrack.h \
   /usr/include/_types/_uintmax_t.h /usr/include/stdio.h \
   /usr/include/sys/_types/_va_list.h /usr/include/sys/stdio.h \
   /usr/include/string.h /usr/include/strings.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
+  /usr/local/include/root/snprintf.h /usr/local/include/root/strlcpy.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/atomic \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/algorithm \
@@ -469,28 +440,23 @@ PandoraNuTrack.o: PandoraNuTrack.cxx PandoraNuTrack.h \
   /usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/stdexcept \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TSchemaHelper.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/string \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdio \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwchar \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwctype \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cctype \
   /usr/include/wctype.h /usr/include/_types/_wctrans_t.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector3.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TError.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector2.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TObject.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TStorage.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVersionCheck.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Riosfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TBuffer.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrix.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixF.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixT.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTBase.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TNamed.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TString.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMathBase.h \
+  /usr/local/include/root/TVector3.h /usr/local/include/root/TError.h \
+  /usr/local/include/root/TVector2.h /usr/local/include/root/TObject.h \
+  /usr/local/include/root/TStorage.h \
+  /usr/local/include/root/TVersionCheck.h \
+  /usr/local/include/root/Riosfwd.h /usr/local/include/root/TBuffer.h \
+  /usr/local/include/root/TMatrix.h /usr/local/include/root/TMatrixF.h \
+  /usr/local/include/root/TMatrixT.h \
+  /usr/local/include/root/TMatrixTBase.h \
+  /usr/local/include/root/TNamed.h /usr/local/include/root/TString.h \
+  /usr/local/include/root/TMathBase.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdlib \
   /usr/include/stdlib.h /usr/include/sys/wait.h \
   /usr/include/sys/_types/_id_t.h /usr/include/sys/signal.h \
@@ -505,9 +471,8 @@ PandoraNuTrack.o: PandoraNuTrack.cxx PandoraNuTrack.h \
   /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
   /usr/include/machine/types.h /usr/include/i386/types.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cmath \
-  /usr/include/math.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RStringView.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfigure.h \
+  /usr/include/math.h /usr/local/include/root/RStringView.h \
+  /usr/local/include/root/RConfigure.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/string_view \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/__config \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/ostream \
@@ -554,29 +519,26 @@ PandoraNuTrack.o: PandoraNuTrack.cxx PandoraNuTrack.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/bitset \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/iomanip \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/istream \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixDBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorDfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtilsfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TLorentzVector.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMath.h \
+  /usr/local/include/root/TMatrixFBasefwd.h \
+  /usr/local/include/root/TMatrixDBasefwd.h \
+  /usr/local/include/root/TVectorFfwd.h \
+  /usr/local/include/root/TVectorDfwd.h \
+  /usr/local/include/root/TMatrixTUtils.h \
+  /usr/local/include/root/TMatrixFfwd.h \
+  /usr/local/include/root/TMatrixFUtils.h \
+  /usr/local/include/root/TMatrixFUtilsfwd.h \
+  /usr/local/include/root/TLorentzVector.h \
+  /usr/local/include/root/TMath.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/include/float.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TRotation.h box.h \
+  /usr/local/include/root/TRotation.h box.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/iostream \
   flash.h
-box.o: box.cxx box.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
-  /usr/include/AvailabilityMacros.h /usr/include/Availability.h \
-  /usr/include/AvailabilityInternal.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
+box.o: box.cxx box.h /usr/local/include/root/Rtypes.h \
+  /usr/local/include/root/RtypesCore.h /usr/local/include/root/RConfig.h \
+  /usr/local/include/root/RVersion.h /usr/include/AvailabilityMacros.h \
+  /usr/include/Availability.h /usr/include/AvailabilityInternal.h \
+  /usr/include/TargetConditionals.h /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/typeinfo \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__config \
   /usr/include/unistd.h /usr/include/_types.h /usr/include/sys/_types.h \
@@ -616,10 +578,9 @@ box.o: box.cxx box.h \
   /usr/include/_types/_uintmax_t.h /usr/include/stdio.h \
   /usr/include/sys/_types/_va_list.h /usr/include/sys/stdio.h \
   /usr/include/string.h /usr/include/strings.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
+  /usr/local/include/root/snprintf.h /usr/local/include/root/strlcpy.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/atomic \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/algorithm \
@@ -651,7 +612,7 @@ box.o: box.cxx box.h \
   /usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/stdexcept \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TSchemaHelper.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/string \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdio \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwchar \
@@ -714,15 +675,12 @@ box.o: box.cxx box.h \
   /usr/include/sys/_types/_fsblkcnt_t.h \
   /usr/include/sys/_types/_fsfilcnt_t.h /usr/include/_types/_nl_item.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/bitset
-flash.o: flash.cxx flash.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
-  /usr/include/AvailabilityMacros.h /usr/include/Availability.h \
-  /usr/include/AvailabilityInternal.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
+flash.o: flash.cxx flash.h /usr/local/include/root/Rtypes.h \
+  /usr/local/include/root/RtypesCore.h /usr/local/include/root/RConfig.h \
+  /usr/local/include/root/RVersion.h /usr/include/AvailabilityMacros.h \
+  /usr/include/Availability.h /usr/include/AvailabilityInternal.h \
+  /usr/include/TargetConditionals.h /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/typeinfo \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__config \
   /usr/include/unistd.h /usr/include/_types.h /usr/include/sys/_types.h \
@@ -762,10 +720,9 @@ flash.o: flash.cxx flash.h \
   /usr/include/_types/_uintmax_t.h /usr/include/stdio.h \
   /usr/include/sys/_types/_va_list.h /usr/include/sys/stdio.h \
   /usr/include/string.h /usr/include/strings.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
+  /usr/local/include/root/snprintf.h /usr/local/include/root/strlcpy.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/atomic \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/algorithm \
@@ -797,7 +754,7 @@ flash.o: flash.cxx flash.h \
   /usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/stdexcept \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TSchemaHelper.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/string \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdio \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwchar \
@@ -860,15 +817,12 @@ flash.o: flash.cxx flash.h \
   /usr/include/sys/_types/_fsblkcnt_t.h \
   /usr/include/sys/_types/_fsfilcnt_t.h /usr/include/_types/_nl_item.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/bitset
-hit.o: hit.cxx hit.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
-  /usr/include/AvailabilityMacros.h /usr/include/Availability.h \
-  /usr/include/AvailabilityInternal.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
+hit.o: hit.cxx hit.h /usr/local/include/root/Rtypes.h \
+  /usr/local/include/root/RtypesCore.h /usr/local/include/root/RConfig.h \
+  /usr/local/include/root/RVersion.h /usr/include/AvailabilityMacros.h \
+  /usr/include/Availability.h /usr/include/AvailabilityInternal.h \
+  /usr/include/TargetConditionals.h /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/typeinfo \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__config \
   /usr/include/unistd.h /usr/include/_types.h /usr/include/sys/_types.h \
@@ -908,10 +862,9 @@ hit.o: hit.cxx hit.h \
   /usr/include/_types/_uintmax_t.h /usr/include/stdio.h \
   /usr/include/sys/_types/_va_list.h /usr/include/sys/stdio.h \
   /usr/include/string.h /usr/include/strings.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
+  /usr/local/include/root/snprintf.h /usr/local/include/root/strlcpy.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/atomic \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/algorithm \
@@ -943,7 +896,7 @@ hit.o: hit.cxx hit.h \
   /usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/stdexcept \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TSchemaHelper.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/string \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdio \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cwchar \
@@ -1139,51 +1092,42 @@ pairVertex.o: pairVertex.cxx pairVertex.h \
   /usr/include/sys/_types/_fsfilcnt_t.h /usr/include/_types/_nl_item.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/bitset \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__bit_reference \
-  PandoraNuTrack.h /usr/local/Cellar/root6/6.06.02/include/root/Rtypes.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RtypesCore.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfig.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RVersion.h \
-  /usr/include/AvailabilityMacros.h /usr/include/TargetConditionals.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/DllImport.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Rtypeinfo.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/snprintf.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/strlcpy.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TGenericClassInfo.h \
+  PandoraNuTrack.h /usr/local/include/root/Rtypes.h \
+  /usr/local/include/root/RtypesCore.h /usr/local/include/root/RConfig.h \
+  /usr/local/include/root/RVersion.h /usr/include/AvailabilityMacros.h \
+  /usr/include/TargetConditionals.h /usr/local/include/root/DllImport.h \
+  /usr/local/include/root/Rtypeinfo.h /usr/local/include/root/snprintf.h \
+  /usr/local/include/root/strlcpy.h \
+  /usr/local/include/root/TGenericClassInfo.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/vector \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/__split_buffer \
-  /usr/local/Cellar/root6/6.06.02/include/root/TSchemaHelper.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector3.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TError.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVector2.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TObject.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TStorage.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVersionCheck.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/Riosfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TBuffer.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrix.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixF.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixT.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTBase.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TNamed.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TString.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMathBase.h \
+  /usr/local/include/root/TSchemaHelper.h \
+  /usr/local/include/root/TVector3.h /usr/local/include/root/TError.h \
+  /usr/local/include/root/TVector2.h /usr/local/include/root/TObject.h \
+  /usr/local/include/root/TStorage.h \
+  /usr/local/include/root/TVersionCheck.h \
+  /usr/local/include/root/Riosfwd.h /usr/local/include/root/TBuffer.h \
+  /usr/local/include/root/TMatrix.h /usr/local/include/root/TMatrixF.h \
+  /usr/local/include/root/TMatrixT.h \
+  /usr/local/include/root/TMatrixTBase.h \
+  /usr/local/include/root/TNamed.h /usr/local/include/root/TString.h \
+  /usr/local/include/root/TMathBase.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cmath \
-  /usr/include/math.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RStringView.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/RConfigure.h \
+  /usr/include/math.h /usr/local/include/root/RStringView.h \
+  /usr/local/include/root/RConfigure.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/string_view \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/experimental/__config \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/iomanip \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixDBasefwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TVectorDfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixTUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtils.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMatrixFUtilsfwd.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TLorentzVector.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TMath.h \
+  /usr/local/include/root/TMatrixFBasefwd.h \
+  /usr/local/include/root/TMatrixDBasefwd.h \
+  /usr/local/include/root/TVectorFfwd.h \
+  /usr/local/include/root/TVectorDfwd.h \
+  /usr/local/include/root/TMatrixTUtils.h \
+  /usr/local/include/root/TMatrixFfwd.h \
+  /usr/local/include/root/TMatrixFUtils.h \
+  /usr/local/include/root/TMatrixFUtilsfwd.h \
+  /usr/local/include/root/TLorentzVector.h \
+  /usr/local/include/root/TMath.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/include/float.h \
-  /usr/local/Cellar/root6/6.06.02/include/root/TRotation.h box.h flash.h \
-  hit.h GENIEinteraction.h
+  /usr/local/include/root/TRotation.h box.h flash.h hit.h \
+  GENIEinteraction.h
