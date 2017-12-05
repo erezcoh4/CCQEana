@@ -34,6 +34,35 @@ Nevents['MC-BNB/Cosmic-MC overlay POT'] = 3.61901e20
 MC_scaling_MCcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-MC overlay POT']
 print "MC_scaling_MCcosmic:",MC_scaling_MCcosmic,"= N(POT on beam)/N(POT MC)"
 
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# Dec-4,2017
+def draw_var(cut_name=None,var=None,x_label=None,bins=None,debug=0
+             ,do_cosmic_only=True,chi2_xrange=None,chi2_xy=None
+             ,reduced_OnBeam=None,reduced_OffBeam=None,MCbnbDATAcosmicSamples=None):
+    fig = plt.figure(figsize=(16,12))
+    if do_cosmic_only:
+        ax = fig.add_subplot(2,1,1)
+        ax,leg=extBNBvsCosmicOverlay(OffBeamSample=reduced_OffBeam[cut_name]
+                                     ,OffBeamFV=OffBeamFV,MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
+                          ,cosmic_overlay_sample = reduced_MCbnbDATAcosmicSamples[cut_name]['cosmic']
+                          ,var=var , color='black' ,x_label=x_label, bins=bins , ax=ax, legend_loc='bbox')
+    ax = fig.add_subplot(2,1,2)
+    ax,leg=OnBeam_minus_OffBeam_1d(debug=debug
+                                   ,OnBeamSample=reduced_OnBeam[cut_name] 
+                                   ,OffBeamSample=reduced_OffBeam[cut_name] 
+                                   ,MCsamples=reduced_MCbnbDATAcosmicSamples[cut_name]
+                                   ,MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
+                                   ,var=var
+                                   ,x_label=x_label 
+                                   ,bins=bins 
+                                   ,ax=ax
+                                   ,legend_loc='bbox'                                       
+                                   ,do_add_chi2_MC_data=True , chi2_xrange=chi2_xrange, chi2_xy=chi2_xy)
+    plt.savefig(figures_path+var+'_'+'after_cut_'+cut_name+'.pdf', bbox_inches='tight')    
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # Nov-9,2017
@@ -42,7 +71,7 @@ def extBNBvsCosmicOverlay(OffBeamSample=None,OffBeamFV=None
                             , bins=np.linspace(0,30,31) 
                             , ax=None, figsize=(14,6),fontsize=25
                             , color='purple'
-                            , do_add_cosmic_overlay=True , cosmic_overlay_sample=None
+                            , do_add_cosmic_overlay=True , cosmic_overlay_sample=None, MCbnbDATAcosmicSamples=None
                             , do_add_legend=True , legend_loc='best', overlay_alpha=0.5):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
@@ -62,7 +91,7 @@ def extBNBvsCosmicOverlay(OffBeamSample=None,OffBeamFV=None
         plot_cosmic_overlay( ax=ax                               
                             , cosmic_overlay_sample = cosmic_overlay_sample , var=var, bins=bins 
                             , Int_OffBeam = Int_OffBeam
-                            , alpha=overlay_alpha)
+                            , alpha=overlay_alpha,MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples)
     set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
     #              ,ylim=(0,1.05*np.max(h_OffBeam))
@@ -80,7 +109,7 @@ def extBNBvsCosmicOverlay(OffBeamSample=None,OffBeamFV=None
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # Nov-9,2017
 def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=None
-                        , alpha=0.5, Int_OffBeam=1):
+                        , alpha=0.5, Int_OffBeam=1,MCbnbDATAcosmicSamples=None):
     x = cosmic_overlay_sample[var]
     bin_width = bins[1]-bins[0]
         
@@ -102,6 +131,12 @@ def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=Non
 # Nov-20,2017
 def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DATAcosmic, MCbnbDATAcosmicSamples=None
                            , var=None, bins=None , N_OnBeam_minus_OffBeam=1, alpha=0.8):
+    '''
+    return: h, bins
+            stacked histogram values and bins,
+            of the samples from the overlay: 
+            (cosmic, other-pairs) + 1mu 1p pairs
+    '''
     Nall_pairs = len(MCsamples['1mu-1p']+MCsamples['cosmic']+MCsamples['other pairs'])
 
     x_array, weights_array = [] , []
@@ -137,21 +172,22 @@ def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DA
         y, dy = 0.99*h[2][bin+1] - hCC1p0pi[bin], hCC1p0pi[bin]
         label=MClabels[3]+' (%.1f'%(100*float(len(sample))/len(MCbnbDATAcosmicSamples['CC 1p 0pi']))+'%)'
         ax.add_patch( patches.Rectangle( (x, y),dx,dy, facecolor=MCcolors[3],alpha=0.8*alpha,label=label if bin==0 else None))
-
+        
+    return h_stack , bins
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 
-
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Sep-3,2017
-def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None
+# last edit Nov-9,2017  (last edit Dec-4)
+def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
                             , var='PIDa_assigned_proton' , x_label='$PID_a^p$' 
                             , bins=np.linspace(0,30,31) 
                             , ax=None, figsize=(14,6),fontsize=25
                             , color='purple'
                             , do_add_MCoverlay=True , MCsamples=None, MCbnbDATAcosmicSamples=None
                             , MC_scaling=MC_scaling_DATAcosmic
-                            , do_add_legend=True , legend_loc='best', MCalpha=0.5):
+                            , do_add_legend=True , legend_loc='best', MCalpha=0.5
+                            , do_add_chi2_MC_data=False , chi2_xrange=None, chi2_xy=(0,0)):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     h_OnBeam,edges = np.histogram( OnBeamSample[var] , bins=bins )
@@ -177,11 +213,20 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None
         N_OnBeam_minus_OffBeam = len(OnBeamSample) - OffBeam_scaling*len(OffBeamSample)
         if debug>1: print 'Number of On-Off:',N_OnBeam_minus_OffBeam
 
-        plot_stacked_MCsamples( ax=ax
+        h_MC, bins_MC = plot_stacked_MCsamples( ax=ax
                                , MCsamples = MCsamples , MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
                                , var=var, bins=bins , MC_scaling=MC_scaling
                                , N_OnBeam_minus_OffBeam=N_OnBeam_minus_OffBeam , alpha=MCalpha)
-    
+    if do_add_chi2_MC_data:
+        chi2 , ndf = chi2_two_histograms( bins=bins, chi2_xrange=chi2_xrange
+                                         , h1=h_MC , h2=h_OnBeam_minus_OffBeam 
+                                         , h1err=np.sqrt(h_MC), h2err=h_OnBeam_minus_OffBeam_err
+                                         , debug=debug )
+        plt.text(chi2_xy[0],chi2_xy[1],r'$\chi^2/ndf=%.1f/%d$'%(chi2,ndf),fontsize=fontsize)
+        if chi2_xrange is not None:
+            plt.plot([chi2_xrange[0],chi2_xrange[0]],ax.get_ylim(),'-',alpha=0.3)
+            plt.plot([chi2_xrange[1],chi2_xrange[1]],ax.get_ylim(),'-',alpha=0.3)
+
     if do_add_legend: 
         if legend_loc=='bbox':
             leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
@@ -190,6 +235,32 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None
     plt.tight_layout()
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# Dec-3, 2017 (last edit Dec-4)
+def chi2_two_histograms( bins=None, chi2_xrange=None
+                        , h1=None , h2=None 
+                        , h1err=None, h2err=None 
+                        , debug=0):
+    '''
+    compare the two histograms using a chi2 test.
+    return: chi2, ndf
+    '''
+    chi2 = 0
+    Nbins_compares = 0
+    for i_bin in range(len(bins)-1):
+        if chi2_xrange is None or (bins[i_bin]>=chi2_xrange[0] and bins[i_bin]<=chi2_xrange[1]):
+            if debug: print 'comparing in bin:',bins[i_bin],'h1:',h1[i_bin],'h2:',h2[i_bin]
+            chi2 += np.square( h1[i_bin] - h2[i_bin] ) / np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1])
+            Nbins_compares += 1
+    ndf = Nbins_compares - 1
+    if debug: print 'chi2,ndf:',chi2,ndf
+    return chi2,ndf
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+
 
 
 
