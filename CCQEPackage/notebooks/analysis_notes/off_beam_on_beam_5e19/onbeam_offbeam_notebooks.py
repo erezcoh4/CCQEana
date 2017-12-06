@@ -178,7 +178,7 @@ def plot_stacked_MCsamples( ax=None, MCsamples = None , MC_scaling=MC_scaling_DA
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# last edit Nov-9,2017  (last edit Dec-4)
+# written Nov-9,2017  (last edit Dec-6)
 def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
                             , var='PIDa_assigned_proton' , x_label='$PID_a^p$' 
                             , bins=np.linspace(0,30,31) 
@@ -187,7 +187,8 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
                             , do_add_MCoverlay=True , MCsamples=None, MCbnbDATAcosmicSamples=None
                             , MC_scaling=MC_scaling_DATAcosmic
                             , do_add_legend=True , legend_loc='best', MCalpha=0.5
-                            , do_add_chi2_MC_data=False , chi2_xrange=None, chi2_xy=(0,0)):
+                            , do_add_chi2_MC_data=False , chi2_xrange=None, chi2_xy=(0,0)
+                            , OriginalOnBeamSample=None , OriginalOffBeamSample=None):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     h_OnBeam,edges = np.histogram( OnBeamSample[var] , bins=bins )
@@ -197,10 +198,13 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     
     h_OnBeam_minus_OffBeam = h_OnBeam - OffBeam_scaling*h_OffBeam
     h_OnBeam_minus_OffBeam_err = np.sqrt( np.square(h_OnBeam_err) + np.square(OffBeam_scaling*h_OffBeam_err)  )
+    Integral = len(OnBeamSample) - OffBeam_scaling*len(OffBeamSample)
+    Integral_Original = len(OriginalOnBeamSample) - OffBeam_scaling*len(OriginalOffBeamSample)
+
     
     plt.errorbar( x = bins[:-1], xerr=bin_width/2.
                  , y=h_OnBeam_minus_OffBeam , yerr=h_OnBeam_minus_OffBeam_err
-                 , fmt='o', color=color , ecolor='black', label='(On-Off) Beam'
+                 , fmt='o', color=color , ecolor='black', label=r'(On-Off) Beam ($\int=$%.1f=%.1f'%(Integral,100*Integral/Integral_Original)+'%)'
                 )
     ax.set_xlim(np.min(bins)-bin_width,np.max(bins)+bin_width);
     ax.set_ylim(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])
@@ -235,6 +239,7 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     plt.tight_layout()
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
