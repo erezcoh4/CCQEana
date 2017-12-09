@@ -198,7 +198,18 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     get_pureff_MCbnbDATAcosmic_cut(cut_name ='tight Pt', cut_label= '$p_{t}<0.15$ GeV/c', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name ='tight Pt', cut_label= '$p_{t}<0.15$ GeV/c', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
 
-    
+
+    # cut on l_p>10 cm
+    cut_name,cut_label='l_p_min_10',r'$l_p>10$ cm'
+    reduced_MCbnbDATAcosmic = dict()
+    for pair_type in pair_types:#{
+        sam = reduced_MCbnbDATAcosmicSamples['soft Pt'][pair_type]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_assigned_proton']>10]
+    #}
+    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
+
+
     # -- -- - -- - -- - -- - -- - -- - -- - -- - -- 
     # cut-sensitivity
     # -- -- - -- - -- - -- - -- - -- - -- - -- - -- 

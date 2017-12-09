@@ -240,10 +240,8 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
-
-
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-3, 2017 (last edit Dec-4)
+# Dec-3, 2017 (last edit Dec-9)
 def chi2_two_histograms( bins=None, chi2_xrange=None
                         , h1=None , h2=None 
                         , h1err=None, h2err=None 
@@ -256,13 +254,16 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
     Nbins_compares = 0
     for i_bin in range(len(bins)-1):
         if chi2_xrange is None or (bins[i_bin]>=chi2_xrange[0] and bins[i_bin]<=chi2_xrange[1]):
-            if debug: print 'comparing in bin:',bins[i_bin],'h1:',h1[i_bin],'h2:',h2[i_bin]
+            if debug: 
+                print 'comparing in bin:',bins[i_bin],'h1:',h1[i_bin],'+/-',h1err[i_bin],'h2:',h2[i_bin],'+/-',h2err[i_bin]
+                print 'chi2+=',(np.square( h1[i_bin] - h2[i_bin] ) / np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1]))
             chi2 += np.square( h1[i_bin] - h2[i_bin] ) / np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1])
             Nbins_compares += 1
     ndf = Nbins_compares - 1
     if debug: print 'chi2,ndf:',chi2,ndf
     return chi2,ndf
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
 
 
 
