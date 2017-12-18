@@ -18,7 +18,6 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Services/Optional/TFileService.h"
-#include "art/Utilities/make_tool.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -65,7 +64,11 @@
 #include "uboone/ErezCCQEana/MyObjects/flash.h"
 #include "uboone/ErezCCQEana/MyObjects/GENIEinteraction.h"
 #include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
-#include "uboone/AnalysisTree/MCTruth/IMCTruthMatching.h"
+
+// for the new MC truth matching (by Wes)
+#include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
+#include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
+
 
 // constants
 constexpr int debug          = 1;
@@ -163,7 +166,7 @@ private:
     std::string fGenieGenModuleLabel;
     std::string fDataSampleLabel;
     std::string fPOTModuleLabel;
-
+    std::string fHitParticleAssnsModuleLabel;
     
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -194,7 +197,7 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
     //    art::ServiceHandle<cheat::BackTracker> bt;
     isdata = evt.isRealData();
-    bool isMC = !evt.isRealData();
+//    bool isMC = !evt.isRealData();
     
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
     Debug(3,"run = evt.run(); subrun = evt.subRun(); event = evt.id().event()");
@@ -329,70 +332,235 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
             }
             track.SetPIDa();
         }
+
         
-        // MC information
-        Debug(0,"before if (!isdata&&fmth.isValid())");
-        if (!isdata&&fmth.isValid()){
+        // new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
+        auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
+        // auto const& hit_vec(*hit_handle);
+        
+        auto const& trk_handle = evt.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
+        auto const& trk_vec(*trk_handle);
+        
+        std::cout << "\tThere are " << trk_vec.size() << " tracks in this event." << std::endl;
+        art::FindManyP<recob::Hit> hits_per_track(trk_handle, evt, fTrackModuleLabel);
+        
+        for(size_t i_t=0; i_t<trk_vec.size(); ++i_t){
             
-            // particle list
-            const sim::ParticleList& plist = fMCTruthMatching->ParticleList();
-            sim::ParticleList::const_iterator itPart = plist.begin(),
-            pend = plist.end(); // iterator to pairs (track id, particle)
-            Debug(0,Form("(size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart), plist.size()=%d",int(plist.size())));
-            for(size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart){
-                const simb::MCParticle* pPart = (itPart++)->second;
-                if (!pPart) {
-                    throw art::Exception(art::errors::LogicError)
-                    << "GEANT particle #" << iPart << " returned a null pointer";
-                }
-                //++geant_particle;
-                auto process = pPart->Process();
-//                bool isPrimary  = pPart->Process();
-                int TrackID     = pPart->TrackId();
-                int MCpdgCode   = pPart->PdgCode();
-                SHOW3( TrackID , process , MCpdgCode );
+            std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i_t);
+            std::cout << "\tThere are " << trk_hits_ptrs.size() << " associated hits." << std::endl;
+            
+            std::unordered_map<int,double> trkide;
+            double maxe=-1, tote=0;
+            simb::MCParticle const* maxp_me=nullptr; //pointer for the particle match we will calculate
+            
+            art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);
+            std::vector<simb::MCParticle const*> particle_vec;
+            std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
+            
+            //loop only over our hits
+            for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h){
+                
+                particle_vec.clear(); match_vec.clear();
+                particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);
+                //the .key() gives us the index in the original collection
+                
+                //std::cout << "\t\tThere are " << particle_vec.size() << " particles matched to hit " << i_h << std::endl;
+                
+                //loop over particles
+                for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
+                    trkide[ particle_vec[i_p]->TrackId() ] += match_vec[i_p]->energy; //store energy per track id
+                    tote += match_vec[i_p]->energy; //calculate total energy deposited
+                    if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
+                        maxe = trkide[ particle_vec[i_p]->TrackId() ];
+                        maxp_me = particle_vec[i_p];
+                    }
+                }//end loop over particles per hit
             }
-            Debug(0,"after (size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart)");
-           
-            // Find true track for each reconstructed track
-            int TrackID = 0;
-            std::vector< art::Ptr<recob::Hit> > allHits = fmth.at(i);
             
-//            std::map<int,double> trkide;
-//            for(size_t h = 0; h < allHits.size(); ++h){
-//                art::Ptr<recob::Hit> hit = allHits[h];
-//                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
-//                for( size_t e = 0; e < TrackIDs.size(); ++e ){
-//                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
+            std::cout << "Final Match (from my loop) is " << maxp_me->TrackId() << " with energy " << maxe << " over " << tote << " (" << maxe/tote << ")"
+            << " \n\tpdg=" << maxp_me->PdgCode()
+            << " trkid=" << maxp_me->TrackId()
+            << " ke=" << maxp_me->E()-maxp_me->Mass()
+            << "\n\tstart (x,y,z)=(" << maxp_me->Vx()
+            << "," << maxp_me->Vy()
+            << "," << maxp_me->Vz()
+            << ")\tend (x,y,z)=(" << maxp_me->EndX()
+            << "," << maxp_me->EndY()
+            << "," << maxp_me->EndZ() << ")" << std::endl;
+            
+        }
+
+        
+//        // MC information
+//        art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
+//        std::vector<art::Ptr<simb::MCTruth> > mclist;
+//        // MC Track information
+//        art::Handle< std::vector<sim::MCTrack> > mctrackh;
+//        int nMCTracks = 0;
+//        int nGeniePrimaries = 0, nGEANTparticles = 0;
+//        art::Ptr<simb::MCTruth> mctruth;
+//
+//        Debug(0,"before if (isMC)");
+//        if (isMC) { //is MC
+//
+//            if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+//            art::fill_ptr_vector(mclist, mctruthListHandle);
+//            
+//            evt.getByLabel(fMCTrackModuleLabel, mctrackh);
+//           
+//            //find origin
+//            std::vector< art::Handle< std::vector<simb::MCTruth> > > allmclists;
+//            evt.getManyByType(allmclists);
+//            for(size_t mcl = 0; mcl < allmclists.size(); ++mcl){
+//                art::Handle< std::vector<simb::MCTruth> > mclistHandle = allmclists[mcl];
+//                for(size_t m = 0; m < mclistHandle->size(); ++m){
+//                    art::Ptr<simb::MCTruth> mct(mclistHandle, m);
+//                    if (mct->Origin() == simb::kCosmicRay) isCosmics = true;
 //                }
 //            }
-//            // Work out which IDE despoited the most charge in the hit if there was more than one.
-//            double max_Edep = -1;
-//            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
-//                if ((ii->second)>max_Edep){
-//                    max_Edep = ii->second;
-//                    TrackID = ii->first;
+//        
+//            // GENIE
+//            if (!mclist.empty()){//at least one mc record
+//                mctruth = mclist[0];
+//                if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
+//                const sim::ParticleList& plist = fMCTruthMatching->ParticleList();
+//                nGEANTparticles = plist.size();
+//                auto NuPDGCode = mctruth -> GetNeutrino().Nu().PdgCode();
+//                auto Ev = mctruth -> GetNeutrino().Nu().E();
+//                Debug(0, "found a neutrino! ");
+//                SHOW2( NuPDGCode , Ev );
+//                for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
+//                    const simb::MCParticle& part(mctruth->GetParticle(iPart));
+//                    SHOW( part.PdgCode() );
+//                }
+//            } // if have MC truth
+//            
+//            //track truth information
+//            //get the hits on each plane
+//            std::vector< art::Ptr<recob::Hit> > allHits = fmht.at(i);
+//            std::vector< art::Ptr<recob::Hit> > hits[3];
+//            
+//            for(size_t ah = 0; ah < allHits.size(); ++ah){
+//                if (
+//                    allHits[ah]->WireID().Plane <  3){
+//                    hits[allHits[ah]->WireID().Plane].push_back(allHits[ah]);
 //                }
 //            }
-//            // Now have trackID, so get PDG code and T0 etc.
-//            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
-//            if (particle){
-//                track.SetMCpdgCode( particle->PdgCode() );
-//                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-//                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-//                track.SetTruthDirection();
-//                
-//                track.SetTruthLength();
-//                track.SetTruthMomentum( particle -> Momentum() );
-//                track.SetTruthMother( particle -> Mother() );
-//                track.SetTruthProcess( particle -> Process() );
-//                
-//                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
-//                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-//                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-//            }//if (particle)
+//            
+//            size_t trk = 0;
+//            for(std::vector<sim::MCTrack>::const_iterator imctrk = mctrackh->begin();imctrk != mctrackh->end(); ++imctrk) {
+//                const sim::MCTrack& mctrk = *imctrk;
+//                TLorentzVector tpcstart, tpcend, tpcmom;
+//                double plen = driftedLength(mctrk, tpcstart, tpcend, tpcmom);
+//                SHOW2( mctrk.Origin() , mctrk.PdgCode());
+//            }
+//            
+//            const sim::ParticleList& plist = fMCTruthMatching->ParticleList();
+//
+//            sim::ParticleList::const_iterator itPart = plist.begin(),
+//            pend = plist.end(); // iterator to pairs (track id, particle)
+//            
+//            // helper map track ID => index
+//            std::map<int, size_t> TrackIDtoIndex;
+//            std::vector<int> gpdg;
+//            std::vector<int> gmother;
+//            for(size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart){
+//                const simb::MCParticle* pPart = (itPart++)->second;
+//                if (!pPart) {
+//                    throw art::Exception(art::errors::LogicError)
+//                    << "GEANT particle #" << iPart << " returned a null pointer";
+//                }
+//                //++geant_particle;
+//                Debug( 0 ,"found a pPart!");
+//                SHOW2( pPart->TrackId() , pPart->PdgCode());
+//            }
+        
+//            for (size_t ipl = 0; ipl < 3; ++ipl){
+////                double maxe = 0;
+////                HitsPurity(hits[ipl],TrackerData.trkidtruth[i][ipl],TrackerData.trkpurtruth[i][ipl],maxe);
+////                //std::cout<<"\n"<<iTracker<<"\t"<<iTrk<<"\t"<<ipl<<"\t"<<trkidtruth[iTracker][iTrk][ipl]<<"\t"<<trkpurtruth[iTracker][iTrk][ipl]<<"\t"<<maxe;
+////                if (TrackerData.trkidtruth[iTrk][ipl]>0){
+////                    const art::Ptr<simb::MCTruth> mc = fMCTruthMatching->TrackIDToMCTruth(TrackerData.trkidtruth[i][ipl]);
+////                    TrackerData.trkorigin[iTrk][ipl] = mc->Origin();
+////                    const simb::MCParticle *particle = fMCTruthMatching->TrackIDToParticle(TrackerData.trkidtruth[i][ipl]);
+////                    double tote = particle->E(); //0;
+////                    TrackerData.trkpdgtruth[iTrk][ipl] = particle->PdgCode();
+////                    TrackerData.trkefftruth[iTrk][ipl] = maxe/(tote/kNplanes); //tote include both induction and collection energies
+////                    //std::cout<<"\n"<<trkpdgtruth[iTracker][iTrk][ipl]<<"\t"<<trkefftruth[iTracker][iTrk][ipl];
+////                }
+////            }
+////            
+////            double maxe = 0;
+////            HitsPurity(allHits,TrackerData.trkg4id[iTrk],TrackerData.trkpurity[iTrk],maxe);
+////            if (TrackerData.trkg4id[iTrk]>0){
+////                const art::Ptr<simb::MCTruth> mc = fMCTruthMatching->TrackIDToMCTruth(TrackerData.trkg4id[iTrk]);
+////                TrackerData.trkorig[iTrk] = mc->Origin();
+//            }
             
-        }//MC
+//            if (allHits.size()){
+//                std::vector<art::Ptr<recob::Hit> > all_hits;
+//                art::Handle<std::vector<recob::Hit> > hithandle;
+//                float totenergy = 0;
+//                if (evt.get(allHits[0].id(), hithandle)){
+//                    art::fill_ptr_vector(all_hits, hithandle);
+//                    for(size_t h = 0; h < all_hits.size(); ++h){
+//                        
+//                        art::Ptr<recob::Hit> hit = all_hits[h];
+//                        std::vector<sim::IDE> ides;
+//                        //bt->HitToSimIDEs(hit,ides);
+//                        std::vector<sim::TrackIDE> eveIDs = fMCTruthMatching->HitToEveID(hit);
+//                        
+//                        for(size_t e = 0; e < eveIDs.size(); ++e){
+//                            //std::cout<<h<<" "<<e<<" "<<eveIDs[e].trackID<<" "<<eveIDs[e].energy<<" "<<eveIDs[e].energyFrac<<std::endl;
+//                            if (eveIDs[e].trackID==TrackerData.trkg4id[iTrk]) totenergy += eveIDs[e].energy;
+//                        }
+//                    }	      
+//                }
+//                if (totenergy) TrackerData.trkcompleteness[iTrk] = maxe/totenergy;
+//            }
+
+//        }
+        
+//        Debug(0,"before if (!isdata&&fmth.isValid())");
+//        if (!isdata&&fmth.isValid()){
+//            
+//
+//            
+////            std::map<int,double> trkide;
+////            for(size_t h = 0; h < allHits.size(); ++h){
+////                art::Ptr<recob::Hit> hit = allHits[h];
+////                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
+////                for( size_t e = 0; e < TrackIDs.size(); ++e ){
+////                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
+////                }
+////            }
+////            // Work out which IDE despoited the most charge in the hit if there was more than one.
+////            double max_Edep = -1;
+////            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
+////                if ((ii->second)>max_Edep){
+////                    max_Edep = ii->second;
+////                    TrackID = ii->first;
+////                }
+////            }
+////            // Now have trackID, so get PDG code and T0 etc.
+////            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
+////            if (particle){
+////                track.SetMCpdgCode( particle->PdgCode() );
+////                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+////                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+////                track.SetTruthDirection();
+////                
+////                track.SetTruthLength();
+////                track.SetTruthMomentum( particle -> Momentum() );
+////                track.SetTruthMother( particle -> Mother() );
+////                track.SetTruthProcess( particle -> Process() );
+////                
+////                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
+////                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+////                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
+////            }//if (particle)
+//            
+//        }//MC
         
         tracks.push_back( track );
     }
@@ -553,8 +721,21 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::reconfigure(fhicl::ParameterSet c
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
     debug = p.get< int >("VerbosityLevel");
-    // Get the tool for MC Truth matching
-    fMCTruthMatching = art::make_tool<truth::IMCTruthMatching>(pset.get<fhicl::ParameterSet>("MCTruthMatching"));
+    fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
+    
+    
+//    // Get the tool for MC Truth matching
+//    const fhicl::ParameterSet& truthParams = p.get<fhicl::ParameterSet>("MCTruthMatching");
+//    
+//    if (truthParams.get<std::string>("tool_type") == "AssociationsTruth")
+//    {
+//        fMCTruthMatching = std::unique_ptr<truth::IMCTruthMatching>(new truth::AssociationsTruth(truthParams));
+//    }
+//    else
+//    {
+//        fMCTruthMatching = std::unique_ptr<truth::IMCTruthMatching>(new truth::BackTrackerTruth(truthParams));
+//    }
+
 }
 
 
