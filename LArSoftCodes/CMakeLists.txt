@@ -26,6 +26,7 @@ art_make(
 			art_Persistency_Common canvas
 			art_Persistency_Provenance canvas
 			art_Utilities canvas
+			art_Utilities canvas_Utilities
 			${MF_MESSAGELOGGER}
 			${MF_UTILITIES}
 	                ${FHICLCPP}

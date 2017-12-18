@@ -18,6 +18,7 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Services/Optional/TFileService.h"
+#include "art/Utilities/make_tool.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -345,50 +346,51 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
                     << "GEANT particle #" << iPart << " returned a null pointer";
                 }
                 //++geant_particle;
-                bool isPrimary = pPart->Process() == pri;
-                int TrackID = pPart->TrackId();
-                int MCpdgCode = pPart->PdgCode();
-                SHOW3( TrackID , isPrimary , MCpdgCode );
+                auto process = pPart->Process();
+//                bool isPrimary  = pPart->Process();
+                int TrackID     = pPart->TrackId();
+                int MCpdgCode   = pPart->PdgCode();
+                SHOW3( TrackID , process , MCpdgCode );
             }
             Debug(0,"after (size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart)");
            
             // Find true track for each reconstructed track
             int TrackID = 0;
             std::vector< art::Ptr<recob::Hit> > allHits = fmth.at(i);
-            3
-            std::map<int,double> trkide;
-            for(size_t h = 0; h < allHits.size(); ++h){
-                art::Ptr<recob::Hit> hit = allHits[h];
-                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
-                for( size_t e = 0; e < TrackIDs.size(); ++e ){
-                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
-                }
-            }
-            // Work out which IDE despoited the most charge in the hit if there was more than one.
-            double max_Edep = -1;
-            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
-                if ((ii->second)>max_Edep){
-                    max_Edep = ii->second;
-                    TrackID = ii->first;
-                }
-            }
-            // Now have trackID, so get PDG code and T0 etc.
-            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
-            if (particle){
-                track.SetMCpdgCode( particle->PdgCode() );
-                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-                track.SetTruthDirection();
-                
-                track.SetTruthLength();
-                track.SetTruthMomentum( particle -> Momentum() );
-                track.SetTruthMother( particle -> Mother() );
-                track.SetTruthProcess( particle -> Process() );
-                
-                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
-                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-            }//if (particle)
+            
+//            std::map<int,double> trkide;
+//            for(size_t h = 0; h < allHits.size(); ++h){
+//                art::Ptr<recob::Hit> hit = allHits[h];
+//                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
+//                for( size_t e = 0; e < TrackIDs.size(); ++e ){
+//                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
+//                }
+//            }
+//            // Work out which IDE despoited the most charge in the hit if there was more than one.
+//            double max_Edep = -1;
+//            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
+//                if ((ii->second)>max_Edep){
+//                    max_Edep = ii->second;
+//                    TrackID = ii->first;
+//                }
+//            }
+//            // Now have trackID, so get PDG code and T0 etc.
+//            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
+//            if (particle){
+//                track.SetMCpdgCode( particle->PdgCode() );
+//                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+//                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+//                track.SetTruthDirection();
+//                
+//                track.SetTruthLength();
+//                track.SetTruthMomentum( particle -> Momentum() );
+//                track.SetTruthMother( particle -> Mother() );
+//                track.SetTruthProcess( particle -> Process() );
+//                
+//                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
+//                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+//                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
+//            }//if (particle)
             
         }//MC
         

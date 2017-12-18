@@ -747,7 +747,11 @@ void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
            
             // set vertex position in the three wire planes
-            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
+//             // version for v06_42_00
+//            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
+            // version for v06_26_01
+            double const v_position[3] = {v.GetPosition().X(),v.GetPosition().Y(),v.GetPosition().Z()};
+            geo::TPCID tpcID = geom->FindTPCAtPosition( v_position );
             if (tpcID.isValid) {
                 int tpc = tpcID.TPC;
                 for (int plane = 0 ; plane < 3 ; plane ++){
