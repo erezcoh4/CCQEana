@@ -4,7 +4,7 @@ process_name: runErezTracksana
 
 services:
 {
-  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2_tracks.root" closeFileFast: false}
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/slimmed_MC_genie_Dec2017.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -36,7 +36,7 @@ physics:
       GenieGenModuleLabel:	"generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
       VerbosityLevel:		4
-      DataSampleLabel:		"prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2"
+      DataSampleLabel:		"slimmed_MC_genie_Dec2017.list"
       POTModuleLabel:     	"generator"
       FlashModuleLabel:     	"simpleFlashBeam"
 	HitParticleAssnsModuleLabel: "gaushitTruthMatch"
