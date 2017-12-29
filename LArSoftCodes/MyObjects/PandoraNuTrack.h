@@ -14,6 +14,7 @@
 #ifndef PANDORANUTRACK_H
 #define PANDORANUTRACK_H
 
+
 #include "Rtypes.h"
 #include "TVector3.h"
 #include "TLorentzVector.h"
@@ -108,7 +109,6 @@ public:
     
     
     
-    
     // GETters
 
     std::string     GetTruthProcess () const {return truth_process;};
@@ -167,7 +167,6 @@ public:
     
     
     
-    
     // functionallity
     void            FlipTrack ();
     void           CreateROIs ();
@@ -198,6 +197,9 @@ public:
         if( ( end_pos.z() < min_FV_z )      | ( end_pos.z() > max_FV_z ) )      return false;
         return true;
     };
+    
+    
+    
     
     Float_t           DistanceFromPoint ( TVector3 position , std::string * StartOrEnd=nullptr );
     Float_t ClosestDistanceToOtherTrack ( PandoraNuTrack other_track , std::string * StartOrEnd=nullptr );

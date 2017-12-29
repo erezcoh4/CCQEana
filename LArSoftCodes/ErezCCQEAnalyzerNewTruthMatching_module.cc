@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       ErezCCQEAnalyzer
+// Class:       ErezCCQEAnalyzerNewTruthMatching
 // Plugin Type: analyzer (art v2_05_00)
-// File:        ErezCCQEAnalyzer_module.cc
+// File:        ErezCCQEAnalyzerNewTruthMatching_module.cc
 //
 // Generated at Wed Jul 12 16:10:16 2017 by Erez Cohen using cetskelgen
 // from cetlib version v1_21_00.
@@ -33,13 +33,16 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
-#include "larsim/MCCheater/BackTracker.h"
+//#include "larsim/MCCheater/BackTracker.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "larreco/RecoAlg/PMAlg/Utilities.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
+// for the new MC truth matching (by Wes)
+#include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
+#include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
 
 
 // ROOT includes
@@ -80,20 +83,20 @@ constexpr int dNticksBox     = 10;
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-namespace ub { class ErezCCQEAnalyzer; }
+namespace ub { class ErezCCQEAnalyzerNewTruthMatching; }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-class ub::ErezCCQEAnalyzer : public art::EDAnalyzer {
+class ub::ErezCCQEAnalyzerNewTruthMatching : public art::EDAnalyzer {
 public:
-    explicit ErezCCQEAnalyzer(fhicl::ParameterSet const & p);
+    explicit ErezCCQEAnalyzerNewTruthMatching(fhicl::ParameterSet const & p);
     // The compiler-generated destructor is fine for non-base
     // classes without bare pointers or other resource use.
     
     // Plugins should not be copied or assigned.
-    ErezCCQEAnalyzer(ErezCCQEAnalyzer const &) = delete;
-    ErezCCQEAnalyzer(ErezCCQEAnalyzer &&) = delete;
-    ErezCCQEAnalyzer & operator = (ErezCCQEAnalyzer const &) = delete;
-    ErezCCQEAnalyzer & operator = (ErezCCQEAnalyzer &&) = delete;
+    ErezCCQEAnalyzerNewTruthMatching(ErezCCQEAnalyzerNewTruthMatching const &) = delete;
+    ErezCCQEAnalyzerNewTruthMatching(ErezCCQEAnalyzerNewTruthMatching &&) = delete;
+    ErezCCQEAnalyzerNewTruthMatching & operator = (ErezCCQEAnalyzerNewTruthMatching const &) = delete;
+    ErezCCQEAnalyzerNewTruthMatching & operator = (ErezCCQEAnalyzerNewTruthMatching &&) = delete;
     
     // Required functions.
     void                   analyze (art::Event const & e) override;
@@ -170,6 +173,8 @@ private:
     std::string fGenieGenModuleLabel;
     std::string fDataSampleLabel;
     std::string fPOTModuleLabel;
+    std::string fHitParticleAssnsModuleLabel;
+    std::string fG4ModuleLabel;
 
     
     //mctruth information
@@ -184,19 +189,18 @@ private:
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-ub::ErezCCQEAnalyzer::ErezCCQEAnalyzer(fhicl::ParameterSet const & p):EDAnalyzer(p){
+ub::ErezCCQEAnalyzerNewTruthMatching::ErezCCQEAnalyzerNewTruthMatching(fhicl::ParameterSet const & p):EDAnalyzer(p){
     reconfigure(p);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
+void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     ResetVars();
     
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    art::ServiceHandle<cheat::BackTracker> bt;
-    //    const sim::ParticleList& plist = bt->ParticleList();
+    
     isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
     
@@ -222,7 +226,22 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
     // * associations
     art::FindManyP<recob::Hit> fmth(trackListHandle, evt, fTrackModuleLabel);
     art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
+    
+    // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
+    auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
+    auto const& trk_handle = evt.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
+    auto const& trk_vec(*trk_handle);
+    
+    std::cout << "\tThere are " << trk_vec.size() << " tracks in this event." << std::endl;
+    art::FindManyP<recob::Hit> hits_per_track(trk_handle, evt, fTrackModuleLabel);
+    
+    // * MCTruth information
+    // get the particles from the event
+    art::Handle<std::vector<simb::MCParticle>> pHandle;
+    evt.getByLabel(fG4ModuleLabel, pHandle);
+    art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
 
+    
     
     // ----------------------------------------
     // hits information
@@ -358,55 +377,6 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
             track.SetPIDa();
         }
         
-        // MC information
-        Debug(0,"before MC information (if(!isdata&&fmth.isValid()))");
-        SHOW2(isdata,fmth.isValid())
-        if (!isdata&&fmth.isValid()){
-            Debug(0,"MC information !isdata&&fmth.isValid()");
-            
-            // Find true track for each reconstructed track
-            int TrackID = 0;
-            std::vector< art::Ptr<recob::Hit> > allHits = fmth.at(i);
-            
-            std::map<int,double> trkide;
-            for(size_t h = 0; h < allHits.size(); ++h){
-                art::Ptr<recob::Hit> hit = allHits[h];
-                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
-                for( size_t e = 0; e < TrackIDs.size(); ++e ){
-                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
-                }
-            }
-            // Work out which IDE despoited the most charge in the hit if there was more than one.
-            double max_Edep = -1;
-            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
-                if ((ii->second)>max_Edep){
-                    max_Edep = ii->second;
-                    TrackID = ii->first;
-                }
-            }
-            // Now have trackID, so get PDG code and T0 etc.
-            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
-            Debug(0,"particle = bt->TrackIDToParticle( TrackID )");
-            SHOW(particle);
-            if (particle){
-                Debug(0, Form("particle: pdg=%d",particle->PdgCode()));
-                track.SetMCpdgCode( particle->PdgCode() );
-                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-                track.SetTruthDirection();
-                
-                track.SetTruthLength();
-                track.SetTruthMomentum( particle -> Momentum() );
-                track.SetTruthMother( particle -> Mother() );
-                track.SetTruthProcess( particle -> Process() );
-                
-                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
-                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-            }//if (particle)
-            
-        }//MC
-        
         // flash - matching
         // find the closest flash to the track
         if (flashes.size()){
@@ -419,7 +389,128 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
                 }
             }
         }
+//
+//        
+//        // MC information
+//        Debug(0,"before MC information (if(!isdata&&fmth.isValid()))");
+//        SHOW2(isdata,fmth.isValid())
+//        if (!isdata&&fmth.isValid()){
+//            Debug(0,"MC information !isdata&&fmth.isValid()");
+//            
+//            // Find true track for each reconstructed track
+//            int TrackID = 0;
+//            std::vector< art::Ptr<recob::Hit> > allHits = fmth.at(i);
+//            
+//            std::map<int,double> trkide;
+//            for(size_t h = 0; h < allHits.size(); ++h){
+//                art::Ptr<recob::Hit> hit = allHits[h];
+//                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
+//                for( size_t e = 0; e < TrackIDs.size(); ++e ){
+//                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
+//                }
+//            }
+//            // Work out which IDE despoited the most charge in the hit if there was more than one.
+//            double max_Edep = -1;
+//            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
+//                if ((ii->second)>max_Edep){
+//                    max_Edep = ii->second;
+//                    TrackID = ii->first;
+//                }
+//            }
+//            // Now have trackID, so get PDG code and T0 etc.
+//            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
+//            Debug(0,"particle = bt->TrackIDToParticle( TrackID )");
+//            SHOW(particle);
+//            if (particle){
+//                Debug(0, Form("particle: pdg=%d",particle->PdgCode()));
+//                track.SetMCpdgCode( particle->PdgCode() );
+//                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+//                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+//                track.SetTruthDirection();
+//                
+//                track.SetTruthLength();
+//                track.SetTruthMomentum( particle -> Momentum() );
+//                track.SetTruthMother( particle -> Mother() );
+//                track.SetTruthProcess( particle -> Process() );
+//                
+//                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
+//                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+//                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
+//            }//if (particle)
+//            
+//        }//MC
+        
+        // MC information
+        if (!isdata&&fmth.isValid()){
+            
+            std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
+            std::unordered_map<int,double> trkide;
+            double maxe=-1, tote=0;
+            art::Ptr< simb::MCParticle > maxp_me; //pointer for the particle match we will calculate
+            
+            art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);
+            std::vector<art::Ptr<simb::MCParticle>> particle_vec;
+            std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
+            
+            //loop only over our hits
+            for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h){
+                
+                // for each hit, ask how many particles match this hit
+                Debug(4,Form("i_h: %d, particle_vec.clear(); match_vec.clear();",(int)i_h));
+                particle_vec.clear(); match_vec.clear();
+                particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);
+                //the .key() gives us the index in the original collection
+                Debug(4,Form("There are %d particles matched to hit %d" , (int)particle_vec.size() ,(int)i_h ));
+                
+                if (particle_vec.size()>0){
+                    Debug(5,Form("%d",(int)particle_vec.size()));
+                    //loop over particles
+                    for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
+                        Debug(5,Form("i_p: %d, particle_vec[i_p]->TrackId(): %d...",(int)i_p,(int)particle_vec[i_p]->TrackId()));
+                        trkide[ particle_vec[i_p]->TrackId() ] += match_vec[i_p]->energy; //store energy per track id
+                        tote += match_vec[i_p]->energy; //calculate total energy deposited
+                        if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
+                            maxe = trkide[ particle_vec[i_p]->TrackId() ];
+                            maxp_me = particle_vec[i_p];
+                        }
+                    }//end loop over particles per hit
+                }
+                Debug(4,"after if (particle_vec.size()>0)");
+            }
+            // Now have matched the truth information - plug into the track object
+            const art::Ptr< simb::MCParticle > particle = maxp_me;
+            track.SetMCpdgCode( particle->PdgCode() );
+            track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+            track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+            track.SetTruthDirection();
+            track.SetTruthLength();
+            track.SetTruthMomentum( particle -> Momentum() );
+            track.SetTruthMother( particle -> Mother() );
+            track.SetTruthProcess( particle -> Process() );
+            // art::Ptr< simb::MCParticle >  track_truth_particle = particle;
+            
+            // * MC-truth information
+            // To this end, we need to back-track the MCTruth/MCParticle association.
+            // we do this with art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+            // but pHandle must get the correct particle Key,
+            // which, since we defined it as an art::Ptr, is obtained from key() method
+            int particle_key = (int)particle.key();
+            if( fo.isValid() ){
+                auto pHandle_at_particle_key = pHandle->at(particle_key);
+                art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
+                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
+                if (debug>5) {SHOW( mc_truth -> Origin() );}
+            }// end if fo.isValid()
+        }//MC
+
+        Debug(5 , Form("adding track %d to list of tracks in this event",track.GetTrackID()) );
         tracks.push_back( track );
+        if (debug>5){
+            cout << "track list includes:" << endl;
+            for (auto t: tracks) cout << t.GetTrackID() << "\t";
+            cout << endl;
+        }
     }
     
     
@@ -524,7 +615,7 @@ void ub::ErezCCQEAnalyzer::analyze(art::Event const & evt){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::ConstructVertices(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::ConstructVertices(){
     
     // cluster all tracks at close proximity to vertices
     ClusterTracksToVertices();
@@ -539,7 +630,7 @@ void ub::ErezCCQEAnalyzer::ConstructVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::ClusterTracksToVertices(){
     // July-25, 2017
     // cluster all tracks at close proximity to vertices
     // and fix the position of each vertex
@@ -661,7 +752,7 @@ void ub::ErezCCQEAnalyzer::ClusterTracksToVertices(){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-bool ub::ErezCCQEAnalyzer::TrackAlreadyInVertices(int ftrack_id){
+bool ub::ErezCCQEAnalyzerNewTruthMatching::TrackAlreadyInVertices(int ftrack_id){
     for (auto v:vertices){
         if ( v.IncludesTrack( ftrack_id ) ) return true;
     }
@@ -669,7 +760,7 @@ bool ub::ErezCCQEAnalyzer::TrackAlreadyInVertices(int ftrack_id){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::AnalyzeVertices(){
     if (vertices.size()>0){
         for (auto & v:vertices){
             // after fixing the vertext position, remove far tracks
@@ -709,7 +800,7 @@ void ub::ErezCCQEAnalyzer::AnalyzeVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
 
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
@@ -723,7 +814,7 @@ void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
     std::vector<pairVertex> tmp_vertices = vertices;
     vertices.clear();
     
-    Debug(3 , "ub::ErezCCQEAnalyzer::FilterGoodPairVertices()");
+    Debug(3 , "ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices()");
     for (auto & v:tmp_vertices) {
         // vertices with only two tracks at close proximity and nothing else
         if (
@@ -776,7 +867,7 @@ void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::TagVertices(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
     
     // tag vertices
     // ------------
@@ -824,7 +915,7 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     
     vertices_ctr = 0;
     
@@ -918,9 +1009,9 @@ void ub::ErezCCQEAnalyzer::HeaderVerticesInCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
     // July-25, 2017
-    // whatever you add here - must add also in header - ub::ErezCCQEAnalyzer::HeaderVerticesInCSV()
+    // whatever you add here - must add also in header - ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV()
     for (auto v:vertices){
         
         
@@ -1059,7 +1150,7 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::PrintInformation(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(){
     
     PrintXLine();
     Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
@@ -1113,7 +1204,7 @@ void ub::ErezCCQEAnalyzer::PrintInformation(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::beginJob(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
     for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
@@ -1154,7 +1245,7 @@ void ub::ErezCCQEAnalyzer::beginJob(){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::endSubRun(const art::SubRun& sr){
+void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
     
     art::Handle< sumdata::POTSummary > potListHandle;
     
@@ -1178,7 +1269,7 @@ void ub::ErezCCQEAnalyzer::endSubRun(const art::SubRun& sr){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
+void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const & p){
     fTrackModuleLabel       = p.get< std::string >("TrackModuleLabel");
     fHitsModuleLabel        = p.get< std::string >("HitsModuleLabel");
     fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
@@ -1188,11 +1279,14 @@ void ub::ErezCCQEAnalyzer::reconfigure(fhicl::ParameterSet const & p){
     fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
 
     debug = p.get< int >("VerbosityLevel");
+    fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
+    fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
+
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzer::ResetVars(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::ResetVars(){
     
     MCmode = false;
     run = subrun = event = -9999;
@@ -1211,5 +1305,5 @@ void ub::ErezCCQEAnalyzer::ResetVars(){
 
 
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
-DEFINE_ART_MODULE(ub::ErezCCQEAnalyzer)
+DEFINE_ART_MODULE(ub::ErezCCQEAnalyzerNewTruthMatching)
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -

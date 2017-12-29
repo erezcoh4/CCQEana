@@ -12,11 +12,11 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
 
-process_name: runErezTracksana
+process_name: RunErezCCQEana 
 
 services:
 {
-  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/slimmed_MC_genie_Dec2017.root" closeFileFast: false}
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/CCQEgenieMCBNBCosmicDataOverlay_newTruthMatching.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -42,17 +42,17 @@ physics:
   {
     EventsAnalyzer: 
     {
-      DataSampleLabel:		"slimmed_MC_genie_Dec2017"
-      module_type:      	"ErezTracksAnalyzerNewMCTruthMatching"
+      module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
+      DataSampleLabel:		"Adi_new_overlay_small"
       TrackModuleLabel: 	"pandoraNu"
-      HitsModuleLabel:        "pandoraCosmicHitRemoval"
+      HitsModuleLabel:          "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
       VerbosityLevel:		2
-      POTModuleLabel:     	"generator"
-      FlashModuleLabel:     	"simpleFlashBeam"
-	HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
+      POTModuleLabel:     "generator"
+      FlashModuleLabel:     "simpleFlashBeam"
+      HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

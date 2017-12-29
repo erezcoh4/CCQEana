@@ -1,13 +1,10 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       ErezTracksAnalyzerNewMCTruthMatching
+// Class:       ErezCCQEGENIENewTruthMatching
 // Plugin Type: analyzer (art v2_05_00)
-// File:        ErezTracksAnalyzerNewMCTruthMatching_module.cc
+// File:        ErezCCQEGENIENewTruthMatching_module.cc
 //
-// Generated at Fri Oct 13 13:12:16 2017 by Erez Cohen using cetskelgen
+// Generated at Wed Jul 12 16:10:16 2017 by Erez Cohen using cetskelgen
 // from cetlib version v1_21_00.
-//
-// The purpose of this module is only to collect tracks
-// with reconstructed features
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -36,13 +33,15 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
-//#include "larsim/MCCheater/BackTracker.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "larreco/RecoAlg/PMAlg/Utilities.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
+// for the new MC truth matching (by Wes)
+#include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
+#include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
 
 
 // ROOT includes
@@ -65,35 +64,38 @@
 #include "uboone/ErezCCQEana/MyObjects/GENIEinteraction.h"
 #include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
 
-// for the new MC truth matching (by Wes)
-#include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
-#include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
-
-
 // constants
 constexpr int debug          = 1;
 constexpr int kMaxTrack      = 1000;  //maximum number of tracks
 constexpr int kMaxHits       = 40000; //maximum number of hits;
 constexpr int kMaxTruth      = 100;
 constexpr int kMaxNgenie     = 100;
+constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal distance for clustering
+constexpr float EPSILON      = 0.1;   // tollerance for equations
 
+// charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+constexpr int N_box_sizes    = 30;
+constexpr int MinNwiresBox   = 5;
+constexpr int dNwiresBox     = 5;
+constexpr int MinNticksBox   = 10;
+constexpr int dNticksBox     = 10;
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-namespace ub { class ErezTracksAnalyzerNewMCTruthMatching; }
+namespace ub { class ErezCCQEGENIENewTruthMatching; }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-class ub::ErezTracksAnalyzerNewMCTruthMatching : public art::EDAnalyzer {
+class ub::ErezCCQEGENIENewTruthMatching : public art::EDAnalyzer {
 public:
-    explicit ErezTracksAnalyzerNewMCTruthMatching(fhicl::ParameterSet const & p);
+    explicit ErezCCQEGENIENewTruthMatching(fhicl::ParameterSet const & p);
     // The compiler-generated destructor is fine for non-base
     // classes without bare pointers or other resource use.
     
     // Plugins should not be copied or assigned.
-    ErezTracksAnalyzerNewMCTruthMatching(ErezTracksAnalyzerNewMCTruthMatching const &) = delete;
-    ErezTracksAnalyzerNewMCTruthMatching(ErezTracksAnalyzerNewMCTruthMatching &&) = delete;
-    ErezTracksAnalyzerNewMCTruthMatching & operator = (ErezTracksAnalyzerNewMCTruthMatching const &) = delete;
-    ErezTracksAnalyzerNewMCTruthMatching & operator = (ErezTracksAnalyzerNewMCTruthMatching &&) = delete;
+    ErezCCQEGENIENewTruthMatching(ErezCCQEGENIENewTruthMatching const &) = delete;
+    ErezCCQEGENIENewTruthMatching(ErezCCQEGENIENewTruthMatching &&) = delete;
+    ErezCCQEGENIENewTruthMatching & operator = (ErezCCQEGENIENewTruthMatching const &) = delete;
+    ErezCCQEGENIENewTruthMatching & operator = (ErezCCQEGENIENewTruthMatching &&) = delete;
     
     // Required functions.
     void                   analyze (art::Event const & e) override;
@@ -106,15 +108,10 @@ public:
 
     
     // functionallity
-    void         ConstructVertices ();
-    void   ClusterTracksToVertices ();
-    void           AnalyzeVertices ();
-    void          FilterGoodPairVertices ();
-    void               TagVertices ();
+    void       FindGENIECCVertices ();
     void          PrintInformation ();
-    bool    TrackAlreadyInVertices (int ftrack_id);
-    void         HeaderTracksInCSV ();
-    void         StreamTracksToCSV ();
+    void       HeaderVerticesInCSV ();
+    void       StreamVerticesToCSV ();
     
     
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
@@ -137,9 +134,6 @@ private:
     // Declare member data here.
     TTree *fTree;
     TTree* fPOTTree;
-    
-    // For keeping track of the replacement backtracker
-    std::unique_ptr<truth::IMCTruthMatching> fMCTruthMatching;
 
     Int_t run, subrun, event;
     
@@ -149,19 +143,26 @@ private:
     
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
-    int     tracks_ctr;
+    int     Nflashes;
+    int     N_CC_interactions;
+    int     CC_interactions_ctr;
     
+    int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
     double  pot, pot_total;
 
     // my objects
     std::vector<PandoraNuTrack>     tracks;
     std::vector<hit>                hits;
+    std::vector<GENIEinteraction>   genie_interactions, genie_CC_interactions;
+    std::vector<pairVertex>         vertices;
+    std::vector<flash>              flashes;
     
     
     //Module labels to get data products
     std::string fHitsModuleLabel;
     std::string fTrackModuleLabel;
+    std::string fFlashModuleLabel;
     std::string fCalorimetryModuleLabel;
     std::string fGenieGenModuleLabel;
     std::string fDataSampleLabel;
@@ -169,76 +170,74 @@ private:
     std::string fHitParticleAssnsModuleLabel;
     std::string fG4ModuleLabel;
     
+    
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
     
     // time stamp
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
-    // output csv file of tracks
-    ofstream tracks_file;
+    // output csv file of vertices
+    ofstream vertices_file;
 
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-ub::ErezTracksAnalyzerNewMCTruthMatching::ErezTracksAnalyzerNewMCTruthMatching(fhicl::ParameterSet const & p):EDAnalyzer(p){
-    Debug(0,"ErezTracksAnalyzerNewMCTruthMatching::ErezTracksAnalyzerNewMCTruthMatching();");
+ub::ErezCCQEGENIENewTruthMatching::ErezCCQEGENIENewTruthMatching(fhicl::ParameterSet const & p):EDAnalyzer(p){
     reconfigure(p);
-    Debug(3,"reconfigure(p);");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
+void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
     
-    Debug(2,"ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt)");
     ResetVars();
-    Debug(3,"ResetVars()");
     
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    //    art::ServiceHandle<cheat::BackTracker> bt;
-    isdata = evt.isRealData();
-    bool isMC = !evt.isRealData();
     
     // * run data
+    isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
-    Debug(3,"run = evt.run(); subrun = evt.subRun(); event = evt.id().event()");
     
     // * hits
-    Debug(3,"// * hits");
     art::Handle< std::vector<recob::Hit> > hitListHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
     if (evt.getByLabel(fHitsModuleLabel,hitListHandle))
     art::fill_ptr_vector(hitlist, hitListHandle);
+
+    // * flashes
+    art::Handle< std::vector<recob::OpFlash> > flashListHandle;
+    std::vector<art::Ptr<recob::OpFlash> > flashlist;
+    if (evt.getByLabel(fFlashModuleLabel, flashListHandle))
+    art::fill_ptr_vector(flashlist, flashListHandle);
+
     
     // * tracks
-    Debug(3,"// * tracks");
     art::Handle< std::vector<recob::Track> > trackListHandle;
     std::vector<art::Ptr<recob::Track> > tracklist;
     if (evt.getByLabel(fTrackModuleLabel,trackListHandle))
     art::fill_ptr_vector(tracklist, trackListHandle);
     
     // * associations
-    Debug(3,"// * associations");
     art::FindManyP<recob::Hit> fmth(trackListHandle, evt, fTrackModuleLabel);
     art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
-    Debug(3,"art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);");
 
-
+    
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
     auto const& trk_handle = evt.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
     auto const& trk_vec(*trk_handle);
-    
+
     std::cout << "\tThere are " << trk_vec.size() << " tracks in this event." << std::endl;
     art::FindManyP<recob::Hit> hits_per_track(trk_handle, evt, fTrackModuleLabel);
-
+    
     // * MCTruth information
     // get the particles from the event
     art::Handle<std::vector<simb::MCParticle>> pHandle;
     evt.getByLabel(fG4ModuleLabel, pHandle);
     art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
     
+
     
     // ----------------------------------------
     // hits information
@@ -258,18 +257,49 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
         hits.push_back( fhit );
         
     }
-    Debug(3,"after for (int i = 0; i < Nhits_stored ; ++i)");
     
+    
+    // ----------------------------------------
+    // flash information
+    // ----------------------------------------
+    Nflashes = flashlist.size();
+    if (debug>5) SHOW(Nflashes);
+    for ( int f = 0; f < std::min(Nflashes,kMaxHits); f++ ) {
+        
+        if (debug>5){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
+        flash fflash(
+                     flashlist[f]->Time(),         // flash time
+                     flashlist[f]->TimeWidth(),    // flash time width
+                     flashlist[f]->ZCenter(),      // flash z-center
+                     flashlist[f]->ZWidth(),       // flash z-width
+                     flashlist[f]->YCenter(),      // flash y-center
+                     flashlist[f]->YWidth(),       // flash y-width
+                     flashlist[f]->TotalPE()       // flash total PE
+        );
+        
+        // keep only in-time flashes for the event
+        // following Katherine conditions
+        if (debug>5){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
+        if( (0.0 < fflash.GetTime()) && (fflash.GetTime() < 10.0) && (6.5 < fflash.GetTotalPE()) ){
+            flashes.push_back( fflash );
+        }
+    }
 
 
     // ----------------------------------------
     // tracks information
     // ----------------------------------------
     Ntracks = tracklist.size();
+    if (debug>4){
+        SHOW4( run , subrun , event , Ntracks );
+        for (int i=0 ; i<Ntracks ; i++) cout << tracklist[i]->ID() << "\t";
+        cout << endl;
+    }
     for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i ){
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = tracklist[i]->Extent();
         
+        Debug(5 , Form("analyzing track %d in this event",tracklist[i]->ID()) );
         PandoraNuTrack track(
                              run , subrun, event        // r/s/e
                              ,tracklist[i]->ID()        // track id
@@ -302,7 +332,6 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
             // plug into the track
             track.SetStartEndPlane( plane , start_wire , start_time , end_wire , end_time );
         }
-
         
         // Hits-Tracks association
         if (fmth.isValid()){
@@ -348,31 +377,39 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
             track.SetPIDa();
         }
         
+        // flash - matching
+        // find the closest flash to the track
+        if (flashes.size()){
+            float YZdistance = 1000, ClosestFlashYZdistance = 1000;
+            for (auto f : flashes){
+                YZdistance = track.GetDis2Flash(f);
+                if ( YZdistance < ClosestFlashYZdistance ){
+                    ClosestFlashYZdistance = YZdistance;
+                    track.SetClosestFlash( f );
+                }
+            }
+        }
+
         
-        // new MC-truth matching
-        if (isMC){
+        
+        // MC information
+        if (!isdata&&fmth.isValid()){
+
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
-            Debug(3,Form( "\tThere are %d associated hits." ,(int)trk_hits_ptrs.size() ));
-            
             std::unordered_map<int,double> trkide;
             double maxe=-1, tote=0;
             art::Ptr< simb::MCParticle > maxp_me; //pointer for the particle match we will calculate
             
-            Debug(3,"art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit();");
             art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);
             std::vector<art::Ptr<simb::MCParticle>> particle_vec;
             std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
             
-            
-            Debug(3,"before for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h)");
-            if (debug>3) SHOW(trk_hits_ptrs.size());
             //loop only over our hits
             for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h){
                 
                 // for each hit, ask how many particles match this hit
                 Debug(4,Form("i_h: %d, particle_vec.clear(); match_vec.clear();",(int)i_h));
                 particle_vec.clear(); match_vec.clear();
-                Debug(4,"particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);");
                 particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);
                 //the .key() gives us the index in the original collection
                 Debug(4,Form("There are %d particles matched to hit %d" , (int)particle_vec.size() ,(int)i_h ));
@@ -402,6 +439,7 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
             track.SetTruthMomentum( particle -> Momentum() );
             track.SetTruthMother( particle -> Mother() );
             track.SetTruthProcess( particle -> Process() );
+            // art::Ptr< simb::MCParticle >  track_truth_particle = particle;
             
             // * MC-truth information
             // To this end, we need to back-track the MCTruth/MCParticle association.
@@ -409,109 +447,279 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
             // but pHandle must get the correct particle Key,
             // which, since we defined it as an art::Ptr, is obtained from key() method
             int particle_key = (int)particle.key();
-            if (debug>5){
-                SHOW(particle.key());
-                SHOW( particle->PdgCode() );
-                SHOW3( particle->Vx() , particle->Vy() , particle->Vz() );
-            }
             if( fo.isValid() ){
-                Debug(5,"fo.isValid()");
                 auto pHandle_at_particle_key = pHandle->at(particle_key);
-                if (debug>5){
-                    Printf("particle handle at particle_key %d",particle_key);
-                    SHOW( pHandle_at_particle_key.PdgCode() );
-                    SHOW3( pHandle_at_particle_key.Vx(),pHandle_at_particle_key.Vy(),pHandle_at_particle_key.Vz() );
-                }
                 art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
                 if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
                 else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-                SHOW( mc_truth -> Origin() );
+                if (debug>5) {SHOW( mc_truth -> Origin() );}
             }// end if fo.isValid()
-            else {
-                Debug(0,"fo.isValid() is false");
+        }//MC
+        
+        
+        Debug(5 , Form("adding track %d to list of tracks in this event",track.GetTrackID()) );
+        tracks.push_back( track );
+        if (debug>5){
+            cout << "track list includes:" << endl;
+            for (auto t: tracks) cout << t.GetTrackID() << "\t";
+            cout << endl;
+        }
+    
+        
+        
+        // * MC truth information
+        art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
+        std::vector<art::Ptr<simb::MCTruth> > mclist;
+        if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+        art::fill_ptr_vector(mclist, mctruthListHandle);
+        
+        art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
+        std::vector<art::Ptr<simb::MCFlux> > fluxlist;
+        if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
+        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
+        
+        
+        mcevts_truth = mclist.size();
+        if (mcevts_truth){
+            MCmode = true;
+            
+            for( int mcevent_id = 0; (mcevent_id < mcevts_truth) && (mcevent_id < kMaxTruth) ; mcevent_id++ ){
+                art::Ptr<simb::MCTruth> mctruth = mclist[mcevent_id];
+                
+                if (mctruth->Origin() == simb::kBeamNeutrino){
+                    
+                    GENIEinteraction genie_interaction( run , subrun , event , mcevent_id );
+                    genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
+                    genie_interaction.SetKinematics(
+                                                    mctruth->GetNeutrino().QSqr() // Q2
+                                                    ,mctruth->GetNeutrino().W()     // W
+                                                    ,mctruth->GetNeutrino().X()     // Bjorken x
+                                                    ,mctruth->GetNeutrino().Y()     // y
+                                                    ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
+                                                    ,mctruth->GetNeutrino().Mode()  // QE=0
+                                                    );
+                    genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
+                                                                  ,mctruth->GetNeutrino().Nu().Vy()
+                                                                  ,mctruth->GetNeutrino().Nu().Vz()));
+                    
+                    genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
+                    genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
+                    genie_interaction.SetMomentumTransfer();
+                    
+                    // all other particles in the interaction
+                    Int_t NgenieParticles = (Int_t)mctruth->NParticles();
+                    if ( NgenieParticles ){
+                        for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
+                            const simb::MCParticle& part( mctruth->GetParticle(iPart) );
+                            // add a primary to genie-interaction
+                            genie_interaction.AddPrimary( part.PdgCode()    // pdg code
+                                                         ,part.Momentum()   // 4-momentum
+                                                         ,part.StatusCode() // status code
+                                                         ,part.Mother()     // mother
+                                                         ,part.Process()    // process
+                                                         ) ;
+                            
+                            // match the primary particle with a track
+                            for (auto & track : tracks){
+                                if (
+                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
+                                    &&
+                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
+                                    &&
+                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                    &&
+                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
+                                    ) {
+                                    // Printf("found a primary-track match! plugging mcevent_id=%d into track %d",mcevent_id,track.GetTrackID());
+                                    genie_interaction.AddTrack ( track );
+                                    track.SetMCeventID( mcevent_id );
+                                }
+                            }
+
+                        } // for particle
+                    }
+                    genie_interaction.SortNucleons();
+                    genie_interaction.ComputePmissPrec();
+                    genie_interaction.SetTruthTopology();
+                    genie_interaction.SetReconstructedTopology();
+
+                    if (debug>6){
+                        cout << "finished analyzing genie interaction " << mcevent_id << ", genie track list includes:" << endl;
+                        for (auto t: genie_interaction.GetTracks()) cout << t.GetTrackID() << "\t";
+                        cout << endl;
+                    }
+
+                    genie_interactions.push_back( genie_interaction );
+                    
+                }//mctruth->Origin()
             }
         }
-        tracks.push_back( track );
+    }//is neutrino
+
+    if (debug>4){
+        cout << "after MC truth information loop ended, track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
     }
-    Debug(3,"after for (int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i )");
+    FindGENIECCVertices();
     
+    if (debug>4){
+        cout << "after FindGENIECCVertices() ended, track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+    }
+    if(!genie_CC_interactions.empty() && !tracks.empty()){
+        PrintInformation();
+    } else {
+        cout << "either genie_CC_interactions or tracks is empty in this event" << endl;
+    }
     fTree -> Fill();
-    StreamTracksToCSV();
-    PrintInformation();
-    Debug(3,"PrintInformation()");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::HeaderTracksInCSV(){
+void ub::ErezCCQEGENIENewTruthMatching::FindGENIECCVertices(){
     
-    tracks_ctr = 0;
+    // out of all GENIE interactions in this event (there is typically 1 per event)
+    // keep only ones that are CC interactions (to this end we use genie's "ccnc" flag: CC=0/NC=1
+    // store them into genie_CC_interactions
+    for (auto g:genie_interactions){
+        if ( g.GetCCNC() == 0 ) {
+            genie_CC_interactions.push_back(g);
+        }
+    }
+    if (debug>4){
+        cout << "after generating genie_CC_interactions, track list includes:" << endl;
+        for (auto t: tracks) cout << t.GetTrackID() << "\t";
+        cout << endl;
+    }
+    N_CC_interactions = (int)genie_CC_interactions.size();
     
-    tracks_file
-    << "run"        << "," << "subrun" << "," << "event" << ","
-    << "track_id"   << ",";
+    // output to csv file
+    StreamVerticesToCSV();
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV(){
     
-    // reconstructed features
-    tracks_file
-    << "start_x"<< "," << "start_y" << "," << "start_z" << ","
-    << "end_x"  << "," << "end_y"   << "," << "end_z"   << ","
-    << "theta"  << "," << "phi"     << ","
-    << "PIDa"   << "," << "length"  << ",";
+    CC_interactions_ctr = 0;
     
-    // truth information
-    tracks_file
-    << "pdg" << ","
-    << "origin";
+    vertices_file
+    << "run" << "," << "subrun" << "," << "event" << "," ;
     
-    // finish header
-    tracks_file << endl;
+    // truth topology
+    vertices_file
+    << "IsCC_Np_200MeVc" << ","
+    << "IsCC_1p_200MeVc" << ","
+    << "IsCC_1p_200MeVc_0pi" << ","
+    << "IsCCQE" << ",";
+    
+    // reconstructed topology
+    vertices_file
+    << "IsVertexContained" << ","
+    << "IsInActiveVolume" << ","
+    << "Is1mu1p" << ","
+    << "Is_mu_TrackReconstructed" << ","
+    << "Is_mu_TrackInFV" << ","
+    << "Is_p_TrackReconstructed" << ","
+    << "Is_p_TrackInFV" << ","
+    << "IsVertexReconstructed" << ","
+    << "IsVertexInFV" << ",";
+    
+    // general for CC events
+    vertices_file
+    << "truth_Pmu" << ","
+    << "truth_Pmu_theta" << ","
+    << "truth_Pp" << ","
+    << "truth_Pp_theta" << ",";
+    
+    // relevant truth-information
+    vertices_file
+    << "truth_Ev" << ","
+    << "truth_Q2" << ",";
+    
+    
+    // only for 1mu-1p vertices
+    vertices_file
+    << "reconstructed mu-p distance" ;
+    
+    
+    // finish
+    vertices_file << endl;
+    
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::StreamTracksToCSV(){
-
-    // whatever you add here - must add also in header
-    // i.e. in
-    // ub::ErezTracksAnalyzerNewMCTruthMatching::HeaderTracksInCSV()
-    for (auto t:tracks){
+void ub::ErezCCQEGENIENewTruthMatching::StreamVerticesToCSV(){
+    // Oct-22, 2017
+    // whatever you add here - must add also in header - ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV()
+    for (auto g:genie_CC_interactions){
         
-        tracks_ctr++;
+        CC_interactions_ctr++;
         
-        tracks_file
-        << t.GetRun()       << "," << t.GetSubrun() << "," << t.GetEvent() << ","
-        << t.GetTrackID()   << ",";
+        vertices_file
+        << g.GetRun() << "," << g.GetSubrun() << "," << g.GetEvent() << "," ;
         
-        // reconstructed features
-        tracks_file
-        << t.GetStartPos().x()  << "," << t.GetStartPos().y()   << "," << t.GetStartPos().z() << ","
-        << t.GetEndPos().x()    << "," << t.GetEndPos().y()     << "," << t.GetEndPos().z() << ","
-        << t.GetTheta()         << "," << t.GetPhi()            << ","
-        << t.GetPIDa()          << "," << t.GetLength()         << ",";
         
-        // truth information
-        tracks_file
-        << t.GetMCpdgCode() << ","
-        << t.GetOrigin();
+        // truth topology
+        vertices_file
+        << g.GetIsCC_Np_200MeVc() << ","
+        << g.GetIsCC_1p_200MeVc() << ","
+        << g.GetIsCC_1p_200MeVc_0pi() << ","
+        << g.GetIsCCQE() << ",";
         
-        // finish track features
-        tracks_file << endl;
+        // reconstructed topology
+        vertices_file
+        << g.GetVertexContained() << ","
+        << g.GetIsInActiveVolume() << ","
+        << g.GetIs1mu1p() << ","
+        << g.GetIs_mu_TrackReconstructed() << ","
+        << g.GetIs_mu_TrackInFV() << ","
+        << g.GetIs_p_TrackReconstructed() << ","
+        << g.GetIs_p_TrackInFV() << ","
+        << g.GetIsVertexReconstructed() << ","
+        << g.GetIsVertexInFV() << ",";
+        
+        
+        // general for CC events
+        vertices_file
+        << g.GetPmu().P() << ","
+        << g.GetPmu().Theta() << ","
+        << g.GetPp().P() << ","
+        << g.GetPp().Theta() << ",";
+        
+        // relevant truth-information
+        vertices_file
+        << g.GetEv() << ","
+        << g.GetQ2() << ",";
+        
+        // only for 1mu-1p vertices
+        vertices_file << g.GetReco_mu_p_distance();
+        
+        
+        
+        // finish
+        vertices_file << endl;
     }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::PrintInformation(){
+void ub::ErezCCQEGENIENewTruthMatching::PrintInformation(){
     
     PrintXLine();
     Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
-    if(!tracks.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-        for (auto t: tracks) {
-            t.Print( true );
-        }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-    
 
+    if(!genie_CC_interactions.empty()){
+        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_CC_interactions.size() << " genie CC-interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        for (auto g: genie_CC_interactions) {
+            g.Print(true);
+        }
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    
+    
     // time stamp
     PrintLine();
     end_ana_time = std::chrono::system_clock::now();
@@ -522,25 +730,34 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::PrintInformation(){
     << "time elapsed: " << elapsed_seconds.count() << "s"
     << "\033[31m" << endl;
 
-    cout << "wrote " << tracks_ctr << " tracks to output file " << endl;
+    cout << "wrote " << CC_interactions_ctr << " vertices to output file " << endl;
     EndEventBlock();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::beginJob(){
+void ub::ErezCCQEGENIENewTruthMatching::beginJob(){
     
+    // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
+    for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
+        NwiresBox[i_box_size] = MinNwiresBox + i_box_size * dNwiresBox;
+        NticksBox[i_box_size] = MinNticksBox + i_box_size * dNticksBox;
+    }
+
     
     art::ServiceHandle<art::TFileService> tfs;
-    fTree = tfs->make<TTree>("eventsTree","analysis tree of events");
+    fTree = tfs->make<TTree>("eventsTree","analysis tree of genie interactions");
     fTree->Branch("run"     ,&run           ,"run/I");
     fTree->Branch("subrun"  ,&subrun        ,"subrun/I");
     fTree->Branch("event"   ,&event         ,"event/I");
     fTree->Branch("Ntracks" ,&Ntracks       ,"Ntracks/I");
     fTree->Branch("Nhits"   ,&Nhits_stored  ,"Nhits/I");
+    fTree->Branch("N_CC_interactions",&N_CC_interactions    ,"N_CC_interactions/I");
     
     // my objects
     fTree->Branch("tracks"              ,&tracks);
     fTree->Branch("hits"                ,&hits);
+    fTree->Branch("genie_interactions"  ,&genie_interactions);
+    fTree->Branch("genie_CC_interactions"  ,&genie_CC_interactions);
 
     
     fPOTTree = tfs->make<TTree>("pottree","pot tree");
@@ -549,16 +766,17 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::beginJob(){
     fPOTTree->Branch("subrun",&subrun,"subrun/I");
 
     // output csv file
-    tracks_file.open(fDataSampleLabel+"_tracks.csv");
-    cout << "opened tracks file: "+fDataSampleLabel+"_tracks" << endl;
-    HeaderTracksInCSV();
+    //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
+    vertices_file.open(fDataSampleLabel+"_genie.csv");
+    cout << "opened vertices file: "+fDataSampleLabel+"_genie.csv" << endl;
+    HeaderVerticesInCSV();
     
     pot_total = 0;
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::endSubRun(const art::SubRun& sr){
+void ub::ErezCCQEGENIENewTruthMatching::endSubRun(const art::SubRun& sr){
     
     art::Handle< sumdata::POTSummary > potListHandle;
     
@@ -580,31 +798,35 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::endSubRun(const art::SubRun& sr){
     Printf( "POT from this subrun: %16.0lf" ,pot );
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::reconfigure(fhicl::ParameterSet const & p){
+void ub::ErezCCQEGENIENewTruthMatching::reconfigure(fhicl::ParameterSet const & p){
     fTrackModuleLabel       = p.get< std::string >("TrackModuleLabel");
     fHitsModuleLabel        = p.get< std::string >("HitsModuleLabel");
     fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
     fCalorimetryModuleLabel = p.get< std::string >("CalorimetryModuleLabel");
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
+    fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
+
     debug = p.get< int >("VerbosityLevel");
+    
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
-
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezTracksAnalyzerNewMCTruthMatching::ResetVars(){
+void ub::ErezCCQEGENIENewTruthMatching::ResetVars(){
     
     MCmode = false;
     run = subrun = event = -9999;
-    Ntracks = Nhits = Nhits_stored = 0 ;
+    Ntracks = Nhits = Nhits_stored = N_CC_interactions = 0 ;
     pot = 0;
     tracks.clear();
     hits.clear();
+    flashes.clear();
+    genie_interactions.clear();
+    genie_CC_interactions.clear();
     
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
@@ -613,5 +835,5 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::ResetVars(){
 
 
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
-DEFINE_ART_MODULE(ub::ErezTracksAnalyzerNewMCTruthMatching)
+DEFINE_ART_MODULE(ub::ErezCCQEGENIENewTruthMatching)
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
