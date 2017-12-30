@@ -11,6 +11,17 @@ mu_n = -1.913 # neutron dipole moment
 M2 = M * M
 m2 = m * m
 
+
+def normalize_yield(y,yerr,label):
+    total_yield = np.sum(y)
+    y = np.array([100*np.float(y[i])/total_yield for i in range(len(y))])
+    yerr = np.array([100*np.float(yerr[i])/total_yield for i in range(len(yerr))])
+    print label
+    print ['%.1f+/-%.1f'%(y[i],yerr[i])+'%' for i in range(len(yerr))]
+    return y,yerr
+
+
+
 def tau( Q2 = 0.0 ):
     return (Q2 / (4.*M2))
 
