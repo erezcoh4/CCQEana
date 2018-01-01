@@ -12,7 +12,43 @@ M2 = M * M
 m2 = m * m
 
 
-def normalize_yield(y,yerr,label):
+def plot_Q2_Ev_distribution_in_reQ2_bins(histo_array=None,histtitle=''):
+    fig = plt.figure(figsize=(20,20))
+    for i,recQ2bin in zip(range(len(Q2bins)-1),Q2bins):
+        ax = fig.add_subplot(len(Q2bins)/3,3,i+1)
+        sns.heatmap(histo_array[i].T,cmap='hot_r'#                 ,annot=True#,fmt='%.1f'            
+                    ,xticklabels=['%.1f'%largeQ2bins[j] if j%3==0 else '' for j in range(len(largeQ2bins)-1)]
+                    ,yticklabels=['%.1f'%largeEvbins[j] if j%3==0 else '' for j in range(len(largeEvbins)-1)]
+               )
+        ax.invert_yaxis()
+        set_axes(ax
+             ,title=r"%s $%.2f<Q^{2}_{rec.}<%.2f$"%(histtitle,Q2bins[i],Q2bins[i+1])
+             ,x_label=r'$Q^2_{gen.}$ (GeV/c)$^2$' if i>=(len(Q2bins)-1-3) else ''
+             ,y_label=r'$E^\nu_{gen.}$ (GeV)' if i%3==0 else ''
+             ,fontsize=25,do_add_grid=True,do_add_legend=True
+            )
+        if i%3>0: ax.yaxis.set_major_formatter(ticker.NullFormatter())    
+    plt.tight_layout()        
+    
+    
+def fill_2d_histogram( xbins , ybins , samlpe , varx , vary ):
+    '''
+    return: 
+            histo: np.array((len(xbins),len(ybins))) 
+    '''
+    histo = np.zeros((len(xbins),len(ybins)))
+    for i_xbin,xbin in zip(range(len(xbins)-1),xbins):
+        xmin,xmax = xbins[i_xbin],xbins[i_xbin+1]
+        for j_ybin,ybin in zip(range(len(ybins)-1),ybins):
+            ymin,ymax = ybins[j_ybin],ybins[j_ybin+1]
+
+            histo[i_xbin][j_ybin] = len(samlpe[(samlpe[varx]>xmin)
+                                                  &(samlpe[varx]<xmax)
+                                                  &(samlpe[vary]>ymin)
+                                                  &(samlpe[vary]<ymax)]) 
+    return histo
+
+def normalize_yield(y,yerr,label=''):
     total_yield = np.sum(y)
     y = np.array([100*np.float(y[i])/total_yield for i in range(len(y))])
     yerr = np.array([100*np.float(yerr[i])/total_yield for i in range(len(yerr))])
