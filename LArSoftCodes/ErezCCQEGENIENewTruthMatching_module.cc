@@ -237,6 +237,17 @@ void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
     evt.getByLabel(fG4ModuleLabel, pHandle);
     art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
     
+    
+    // * MC truth information
+    art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
+    std::vector<art::Ptr<simb::MCTruth> > mclist;
+    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+        art::fill_ptr_vector(mclist, mctruthListHandle);
+    
+    art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
+    std::vector<art::Ptr<simb::MCFlux> > fluxlist;
+    if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
+        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
 
     
     // ----------------------------------------
@@ -393,7 +404,9 @@ void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
         
         
         // MC information
-        if (!isdata&&fmth.isValid()){
+        if (debug>0){ SHOW2(isdata,fmth.isValid());}
+        //        if (!isdata&&fmth.isValid()){ // These are the conditions I would like to apply, however the isdata flag in the new overlay sample is set to 'true'...
+        if (mclist.size()){
 
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
             std::unordered_map<int,double> trkide;
@@ -464,97 +477,100 @@ void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
             for (auto t: tracks) cout << t.GetTrackID() << "\t";
             cout << endl;
         }
+    }// for loop on tracks: for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i )
     
+    
+    
+    // ----------------------------------------
+    // MC-truth information
+    // ----------------------------------------
+    mcevts_truth = mclist.size();
+    if (mcevts_truth){
+        MCmode = true;
         
-        
-        // * MC truth information
-        art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
-        std::vector<art::Ptr<simb::MCTruth> > mclist;
-        if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
-        art::fill_ptr_vector(mclist, mctruthListHandle);
-        
-        art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
-        std::vector<art::Ptr<simb::MCFlux> > fluxlist;
-        if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
-        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
-        
-        
-        mcevts_truth = mclist.size();
-        if (mcevts_truth){
-            MCmode = true;
+        for( int mcevent_id = 0; (mcevent_id < mcevts_truth) && (mcevent_id < kMaxTruth) ; mcevent_id++ ){
             
-            for( int mcevent_id = 0; (mcevent_id < mcevts_truth) && (mcevent_id < kMaxTruth) ; mcevent_id++ ){
-                art::Ptr<simb::MCTruth> mctruth = mclist[mcevent_id];
-                
-                if (mctruth->Origin() == simb::kBeamNeutrino){
-                    
-                    GENIEinteraction genie_interaction( run , subrun , event , mcevent_id );
-                    genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
-                    genie_interaction.SetKinematics(
-                                                    mctruth->GetNeutrino().QSqr() // Q2
-                                                    ,mctruth->GetNeutrino().W()     // W
-                                                    ,mctruth->GetNeutrino().X()     // Bjorken x
-                                                    ,mctruth->GetNeutrino().Y()     // y
-                                                    ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
-                                                    ,mctruth->GetNeutrino().Mode()  // QE=0
-                                                    );
-                    genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
-                                                                  ,mctruth->GetNeutrino().Nu().Vy()
-                                                                  ,mctruth->GetNeutrino().Nu().Vz()));
-                    
-                    genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
-                    genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
-                    genie_interaction.SetMomentumTransfer();
-                    
-                    // all other particles in the interaction
-                    Int_t NgenieParticles = (Int_t)mctruth->NParticles();
-                    if ( NgenieParticles ){
-                        for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
-                            const simb::MCParticle& part( mctruth->GetParticle(iPart) );
-                            // add a primary to genie-interaction
-                            genie_interaction.AddPrimary( part.PdgCode()    // pdg code
-                                                         ,part.Momentum()   // 4-momentum
-                                                         ,part.StatusCode() // status code
-                                                         ,part.Mother()     // mother
-                                                         ,part.Process()    // process
-                                                         ) ;
-                            
-                            // match the primary particle with a track
-                            for (auto & track : tracks){
-                                if (
-                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
-                                    &&
-                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
-                                    &&
-                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
-                                    &&
-                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
-                                    ) {
-                                    // Printf("found a primary-track match! plugging mcevent_id=%d into track %d",mcevent_id,track.GetTrackID());
-                                    genie_interaction.AddTrack ( track );
-                                    track.SetMCeventID( mcevent_id );
-                                }
-                            }
-
-                        } // for particle
-                    }
-                    genie_interaction.SortNucleons();
-                    genie_interaction.ComputePmissPrec();
-                    genie_interaction.SetTruthTopology();
-                    genie_interaction.SetReconstructedTopology();
-
-                    if (debug>6){
-                        cout << "finished analyzing genie interaction " << mcevent_id << ", genie track list includes:" << endl;
-                        for (auto t: genie_interaction.GetTracks()) cout << t.GetTrackID() << "\t";
-                        cout << endl;
-                    }
-
-                    genie_interactions.push_back( genie_interaction );
-                    
-                }//mctruth->Origin()
+            if (debug>0){
+                Printf("in loop for( int mcevent_id = 0; (mcevent_id < mcevts_truth) && (mcevent_id < kMaxTruth) ; mcevent_id++ )");
+                SHOW( mcevent_id);
+                cout << "genie_interactions: " ;
+                for (auto g: genie_interactions) {
+                    cout << " " << g.GetMCeventID();
+                }
+                cout << endl;
             }
-        }
-    }//is neutrino
+            Debug(0,Form("in for loop: mcevent_id:%d",mcevent_id));
+            
+            art::Ptr<simb::MCTruth> mctruth = mclist[mcevent_id];
+            
+            if (mctruth->Origin() == simb::kBeamNeutrino){
+                
+                GENIEinteraction genie_interaction( run , subrun , event , mcevent_id );
+                genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
+                genie_interaction.SetKinematics(
+                                                mctruth->GetNeutrino().QSqr() // Q2
+                                                ,mctruth->GetNeutrino().W()     // W
+                                                ,mctruth->GetNeutrino().X()     // Bjorken x
+                                                ,mctruth->GetNeutrino().Y()     // y
+                                                ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
+                                                ,mctruth->GetNeutrino().Mode()  // QE=0
+                                                );
+                genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
+                                                              ,mctruth->GetNeutrino().Nu().Vy()
+                                                              ,mctruth->GetNeutrino().Nu().Vz()));
+                
+                genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
+                genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
+                genie_interaction.SetMomentumTransfer();
+                
+                // all other particles in the interaction
+                Int_t NgenieParticles = (Int_t)mctruth->NParticles();
+                if ( NgenieParticles ){
+                    for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
+                        const simb::MCParticle& part( mctruth->GetParticle(iPart) );
+                        // add a primary to genie-interaction
+                        genie_interaction.AddPrimary( part.PdgCode()    // pdg code
+                                                     ,part.Momentum()   // 4-momentum
+                                                     ,part.StatusCode() // status code
+                                                     ,part.Mother()     // mother
+                                                     ,part.Process()    // process
+                                                     ) ;
+                        
+                        // match the primary particle with a track
+                        for (auto & track : tracks){
+                            if (
+                                ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
+                                &&
+                                ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
+                                &&
+                                ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                &&
+                                ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
+                                ) {
+                                // Printf("found a primary-track match! plugging mcevent_id=%d into track %d",mcevent_id,track.GetTrackID());
+                                genie_interaction.AddTrack ( track );
+                                track.SetMCeventID( mcevent_id );
+                            }
+                        }
+                        
+                    } // for particle
+                }
+                genie_interaction.SortNucleons();
+                genie_interaction.ComputePmissPrec();
+                genie_interaction.SetTruthTopology();
+                genie_interaction.SetReconstructedTopology();
+                
+                if (debug>6){
+                    cout << "finished analyzing genie interaction " << mcevent_id << ", genie track list includes:" << endl;
+                    for (auto t: genie_interaction.GetTracks()) cout << t.GetTrackID() << "\t";
+                    cout << endl;
+                }
+                
+                genie_interactions.push_back( genie_interaction );
+                
+            }//mctruth->Origin()
+        } // for loop on mcevent_id: for( int mcevent_id = 0; (mcevent_id < mcevts_truth) && (mcevent_id < kMaxTruth) ; mcevent_id++ )
+    }
 
     if (debug>4){
         cout << "after MC truth information loop ended, track list includes:" << endl;
@@ -719,6 +735,13 @@ void ub::ErezCCQEGENIENewTruthMatching::PrintInformation(){
         }
     } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
     
+    if(!tracks.empty()){
+        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        for (auto t: tracks) {
+            t.Print( true );
+        }
+    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+
     
     // time stamp
     PrintLine();
@@ -733,6 +756,7 @@ void ub::ErezCCQEGENIENewTruthMatching::PrintInformation(){
     cout << "wrote " << CC_interactions_ctr << " vertices to output file " << endl;
     EndEventBlock();
 }
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEGENIENewTruthMatching::beginJob(){
