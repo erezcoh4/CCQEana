@@ -11,6 +11,9 @@ mu_n = -1.913 # neutron dipole moment
 M2 = M * M
 m2 = m * m
 
+def Q2label(subscript=''):
+    return r'$Q^2_{'+subscript+'}$ (GeV/c)$^2$'
+
 
 def plot_Q2_Ev_distribution_in_reQ2_bins(histo_array=None,histtitle=''):
     fig = plt.figure(figsize=(20,20))
