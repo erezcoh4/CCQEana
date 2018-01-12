@@ -413,9 +413,13 @@ void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
             double maxe=-1, tote=0;
             art::Ptr< simb::MCParticle > maxp_me; //pointer for the particle match we will calculate
             
+            SHOW(fHitParticleAssnsModuleLabel);
             art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);
+            Debug(2,"art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);");
             std::vector<art::Ptr<simb::MCParticle>> particle_vec;
+            Debug(2,"std::vector<art::Ptr<simb::MCParticle>> particle_vec;");
             std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
+            Debug(2,"std::vector<anab::BackTrackerHitMatchingData const*> match_vec;");
             
             //loop only over our hits
             for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h){
@@ -442,32 +446,39 @@ void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
                 }
                 Debug(4,"after if (particle_vec.size()>0)");
             }
+            Debug(2,"after for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h) loop");
             // Now have matched the truth information - plug into the track object
             const art::Ptr< simb::MCParticle > particle = maxp_me;
-            track.SetMCpdgCode( particle->PdgCode() );
-            track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-            track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-            track.SetTruthDirection();
-            track.SetTruthLength();
-            track.SetTruthMomentum( particle -> Momentum() );
-            track.SetTruthMother( particle -> Mother() );
-            track.SetTruthProcess( particle -> Process() );
-            // art::Ptr< simb::MCParticle >  track_truth_particle = particle;
-            
-            // * MC-truth information
-            // To this end, we need to back-track the MCTruth/MCParticle association.
-            // we do this with art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
-            // but pHandle must get the correct particle Key,
-            // which, since we defined it as an art::Ptr, is obtained from key() method
-            int particle_key = (int)particle.key();
-            if( fo.isValid() ){
-                auto pHandle_at_particle_key = pHandle->at(particle_key);
-                art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
-                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-                if (debug>5) {SHOW( mc_truth -> Origin() );}
-            }// end if fo.isValid()
+            Debug(2 , "const art::Ptr< simb::MCParticle > particle = maxp_me;" );
+            if (!particle.isNull()){
+                Debug(2,"particle.isNull() = false!...");
+
+                track.SetMCpdgCode( particle->PdgCode() );
+                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                track.SetTruthDirection();
+                track.SetTruthLength();
+                track.SetTruthMomentum( particle -> Momentum() );
+                track.SetTruthMother( particle -> Mother() );
+                track.SetTruthProcess( particle -> Process() );
+                // art::Ptr< simb::MCParticle >  track_truth_particle = particle;
+                
+                // * MC-truth information of this particle
+                int particle_key = (int)particle.key();
+                Debug(2,"before if( fo.isValid() )");
+                if( fo.isValid() ){
+                    auto pHandle_at_particle_key = pHandle->at(particle_key);
+                    art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
+                    if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+                    else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
+                    if (debug>5) {SHOW( mc_truth -> Origin() );}
+                }// end if fo.isValid()
+                Debug(2,"end if fo.isValid()");
+            } else {
+                Debug(2,"particle.isNull() = true!...");
+            }
         }//MC
+        Debug(2,"end {}//MC");
         
         
         Debug(5 , Form("adding track %d to list of tracks in this event",track.GetTrackID()) );
@@ -561,7 +572,10 @@ void ub::ErezCCQEGENIENewTruthMatching::analyze(art::Event const & evt){
                 genie_interaction.SetReconstructedTopology();
                 
                 if (debug>6){
-                    cout << "finished analyzing genie interaction " << mcevent_id << ", genie track list includes:" << endl;
+                    cout << "finished analyzing genie interaction "
+                    << mcevent_id << ", genie track list includes:"
+                    << endl;
+                    
                     for (auto t: genie_interaction.GetTracks()) cout << t.GetTrackID() << "\t";
                     cout << endl;
                 }

@@ -14,6 +14,8 @@
 #pragma link C++ class PandoraNuTrack+;
 #pragma link C++ class pairVertex+;
 #pragma link C++ class AnalyseEvents+;
+#pragma link C++ class GenieFile+;
 //ADD_NEW_CLASS ... do not change this line
 #endif
+
 

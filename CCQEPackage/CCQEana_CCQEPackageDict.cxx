@@ -40,6 +40,7 @@ namespace std {} using namespace std;
 // Header files passed as explicit arguments
 #include "AnalyseEvents.h"
 #include "GENIEinteraction.h"
+#include "GenieFile.h"
 #include "PandoraNuTrack.h"
 #include "box.h"
 #include "flash.h"
@@ -274,6 +275,51 @@ namespace ROOT {
 } // end of namespace ROOT
 
 namespace ROOT {
+   static TClass *GenieFile_Dictionary();
+   static void GenieFile_TClassManip(TClass*);
+   static void *new_GenieFile(void *p = 0);
+   static void *newArray_GenieFile(Long_t size, void *p);
+   static void delete_GenieFile(void *p);
+   static void deleteArray_GenieFile(void *p);
+   static void destruct_GenieFile(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::GenieFile*)
+   {
+      ::GenieFile *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::GenieFile));
+      static ::ROOT::TGenericClassInfo 
+         instance("GenieFile", "GenieFile.h", 32,
+                  typeid(::GenieFile), DefineBehavior(ptr, ptr),
+                  &GenieFile_Dictionary, isa_proxy, 4,
+                  sizeof(::GenieFile) );
+      instance.SetNew(&new_GenieFile);
+      instance.SetNewArray(&newArray_GenieFile);
+      instance.SetDelete(&delete_GenieFile);
+      instance.SetDeleteArray(&deleteArray_GenieFile);
+      instance.SetDestructor(&destruct_GenieFile);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::GenieFile*)
+   {
+      return GenerateInitInstanceLocal((::GenieFile*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const ::GenieFile*)0x0); R__UseDummy(_R__UNIQUE_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *GenieFile_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::GenieFile*)0x0)->GetClass();
+      GenieFile_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void GenieFile_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
    // Wrappers around operator new
    static void *new_hit(void *p) {
       return  p ? new(p) ::hit : new ::hit;
@@ -377,6 +423,27 @@ namespace ROOT {
       ((current_t*)p)->~current_t();
    }
 } // end of namespace ROOT for class ::AnalyseEvents
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_GenieFile(void *p) {
+      return  p ? new(p) ::GenieFile : new ::GenieFile;
+   }
+   static void *newArray_GenieFile(Long_t nElements, void *p) {
+      return p ? new(p) ::GenieFile[nElements] : new ::GenieFile[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_GenieFile(void *p) {
+      delete ((::GenieFile*)p);
+   }
+   static void deleteArray_GenieFile(void *p) {
+      delete [] ((::GenieFile*)p);
+   }
+   static void destruct_GenieFile(void *p) {
+      typedef ::GenieFile current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::GenieFile
 
 namespace ROOT {
    static TClass *vectorlEvectorlEfloatgRsPgR_Dictionary();
@@ -761,6 +828,7 @@ namespace {
     static const char* headers[] = {
 "AnalyseEvents.h",
 "GENIEinteraction.h",
+"GenieFile.h",
 "PandoraNuTrack.h",
 "box.h",
 "flash.h",
@@ -792,6 +860,7 @@ class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  box;
 class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  PandoraNuTrack;
 class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  pairVertex;
 class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  AnalyseEvents;
+class __attribute__((annotate("$clingAutoload$GenieFile.h")))  GenieFile;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 
@@ -802,6 +871,7 @@ class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  AnalyseEvents
 #define _BACKWARD_BACKWARD_WARNING_H
 #include "AnalyseEvents.h"
 #include "GENIEinteraction.h"
+#include "GenieFile.h"
 #include "PandoraNuTrack.h"
 #include "box.h"
 #include "flash.h"
@@ -812,6 +882,7 @@ class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  AnalyseEvents
 )DICTPAYLOAD";
     static const char* classesHeaders[]={
 "AnalyseEvents", payloadCode, "@",
+"GenieFile", payloadCode, "@",
 "PandoraNuTrack", payloadCode, "@",
 "box", payloadCode, "@",
 "hit", payloadCode, "@",
