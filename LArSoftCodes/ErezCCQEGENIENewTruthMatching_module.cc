@@ -660,16 +660,24 @@ void ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV(){
     // general for CC events
     vertices_file
     << "truth_Pmu" << ","
+    << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
     << "truth_Pmu_theta" << ","
     << "truth_Pp" << ","
     << "truth_Pp_theta" << ",";
+    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
     
     // relevant truth-information
     vertices_file
     << "truth_Ev" << ","
     << "truth_Q2" << ",";
     
-    
+    vertices_file
+    << "truth_Pv_x" << ","
+    << "truth_Pv_y" << ","
+    << "truth_Pv_z" << ",";
+
+
+
     // only for 1mu-1p vertices
     vertices_file
     << "reconstructed mu-p distance" ;
@@ -716,13 +724,21 @@ void ub::ErezCCQEGENIENewTruthMatching::StreamVerticesToCSV(){
         vertices_file
         << g.GetPmu().P() << ","
         << g.GetPmu().Theta() << ","
+        << g.GetPmu().Px() << "," << g.GetPmu().Py() << "," << g.GetPmu().Pz() << ","
         << g.GetPp().P() << ","
         << g.GetPp().Theta() << ",";
+        << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ","
         
         // relevant truth-information
         vertices_file
         << g.GetEv() << ","
         << g.GetQ2() << ",";
+        
+        vertices_file
+        << g.GetPv().Px() << ","
+        << g.GetPv().Py() << ","
+        << g.GetPv().Pz() << ",";
+        
         
         // only for 1mu-1p vertices
         vertices_file << g.GetReco_mu_p_distance();

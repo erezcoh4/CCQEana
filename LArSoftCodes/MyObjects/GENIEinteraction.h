@@ -145,6 +145,7 @@ public:
     TLorentzVector             GetMomentumTransfer () const {return q;}; // if the neutrino is v(e) this will be the e!
     TLorentzVector                          GetPmu () const {return GetLeptonMomentum();};
     TLorentzVector                           GetPp () const {return ((protons.size()>0) ? protons.at(0) : TLorentzVector());};
+    TLorentzVector                           GetPv () const {return nu;};
     
     std::vector<TLorentzVector>  GetProtonsMomenta () const {return protons;}; // when taking this, check if the vector is not empty...
     
