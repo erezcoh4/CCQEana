@@ -34,11 +34,15 @@ bool GenieFile::SetInTree(){
     GenieTree -> SetBranchAddress("Q2"             , &Q2);
     GenieTree -> SetBranchAddress("W"              , &W);
     GenieTree -> SetBranchAddress("x"              , &x);
-    
+    // neutrino
     GenieTree -> SetBranchAddress("pxv"            , &pxv);
     GenieTree -> SetBranchAddress("pyv"            , &pyv);
     GenieTree -> SetBranchAddress("pzv"            , &pzv);
-    
+    // initial state hit nucleon
+    GenieTree -> SetBranchAddress("pxn"            , &pxn);
+    GenieTree -> SetBranchAddress("pyn"            , &pyn);
+    GenieTree -> SetBranchAddress("pzn"            , &pzn);
+    // lepton
     GenieTree -> SetBranchAddress("pxl"            , &pxl);
     GenieTree -> SetBranchAddress("pyl"            , &pyl);
     GenieTree -> SetBranchAddress("pzl"            , &pzl);
@@ -49,6 +53,12 @@ bool GenieFile::SetInTree(){
     GenieTree -> SetBranchAddress("pzf"            , &pzf);
     GenieTree -> SetBranchAddress("pdgf"           , &pdgf);
 
+    // kth particle in ‘primary’ hadronic system (in GeV).
+    GenieTree -> SetBranchAddress("ni"             , &ni);
+    GenieTree -> SetBranchAddress("pxi"            , &pxi);
+    GenieTree -> SetBranchAddress("pyi"            , &pyi);
+    GenieTree -> SetBranchAddress("pzi"            , &pzi);
+    GenieTree -> SetBranchAddress("pdgi"           , &pdgi);
     
     return true;
 }
@@ -82,6 +92,7 @@ bool GenieFile::HeaderCSV (){
     csv_file
     << "cc"  << "," << "qel" <<  "," << "res" <<  "," << "dis" <<  "," << "coh" <<  ","
     << "Q2"  <<  "," << "W" <<  "," << "x" <<  ","
+    << "pxn" <<  "," << "pyn" <<  "," << "pzn" <<  "," // Initial state hit nucleon
     << "pxv" <<  "," << "pyv" <<  "," << "pzv" <<  ","
     << "pxl" <<  "," << "pyl" <<  "," << "pzl" << ","
     << "nf"  <<  ",";
@@ -125,6 +136,7 @@ bool GenieFile::StreamToCSV (){
     csv_file
     << cc  << "," << qel <<  "," << res <<  "," << dis <<  "," << coh <<  ","
     << Q2  <<  "," << W <<  "," << x <<  ","
+    << pxn <<  "," << pyn <<  "," << pzn <<  "," // Initial state hit nucleon
     << pxv <<  "," << pyv <<  "," << pzv <<  ","
     << pxl <<  "," << pyl <<  "," << pzl << ","
     << nf  <<  ",";
