@@ -71,7 +71,7 @@ bool GenieFile::Initialize(){
         pxf[i] = pyf[i] = pzf[i] = -9999;
     }
     CC1p0pi = false;
-    Pmiss = muon  = proton = q = nu = TLorentzVector();
+    Pmiss = muon  = proton = q = nu = proton_before_FSI = TLorentzVector();
     return true;
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -123,6 +123,8 @@ bool GenieFile::HeaderCSV (){
     << "alpha_p"    << ","
     << "alpha_q"    << ","
     << "alpha_miss"
+    << "Pp_before_FSI"         << "," << "Pp_before_FSI_theta"    << ","
+    << "Pp_before_FSI_x"       << "," << "Pp_before_FSI_y"        << "," << "Pp_before_FSI_z"    << ","
     << endl;
     
     return true;
@@ -166,6 +168,8 @@ bool GenieFile::StreamToCSV (){
     << LightConeAlpha( proton ) << ","
     << LightConeAlpha( q )      << ","
     << LightConeAlpha( proton ) - LightConeAlpha( q )   
+    << proton_before_FSI.P()   << "," << proton_before_FSI.Theta()    << ","
+    << proton_before_FSI.Px()  << "," << proton_before_FSI.Py()       << "," << proton_before_FSI.Pz()   << ","
     << endl;
     
 
@@ -181,7 +185,15 @@ bool GenieFile::SetTopology (){
         q = nu - muon;
         proton.SetXYZM( pxf[0], pyf[0], pzf[0], 0.9382720813 );
         Pmiss = proton - q;
+        proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 );
+        
+        //        SHOW(ni);
+        //        SHOW(pdgi[0]);
+        //        SHOW3(pxi[0],pyi[0],pzi[0])
+        //        SHOW(pdgf[0]);
+        //        SHOW3(pxf[0],pyf[0],pzf[0])
     }
+    
     return true;
 }
 

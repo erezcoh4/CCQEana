@@ -663,8 +663,8 @@ void ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV(){
     << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
     << "truth_Pmu_theta" << ","
     << "truth_Pp" << ","
-    << "truth_Pp_theta" << ",";
-    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
+    << "truth_Pp_theta" << ","
+    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ",";
     
     // relevant truth-information
     vertices_file
@@ -726,8 +726,8 @@ void ub::ErezCCQEGENIENewTruthMatching::StreamVerticesToCSV(){
         << g.GetPmu().Theta() << ","
         << g.GetPmu().Px() << "," << g.GetPmu().Py() << "," << g.GetPmu().Pz() << ","
         << g.GetPp().P() << ","
-        << g.GetPp().Theta() << ",";
-        << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ","
+        << g.GetPp().Theta() << ","
+        << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ",";
         
         // relevant truth-information
         vertices_file

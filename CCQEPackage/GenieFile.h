@@ -80,9 +80,12 @@ private:
     double  pxn, pyn, pzn; // Initial state hit nucleon px (in GeV).
     double  pxv, pyv, pzv; // Incoming neutrino px/y/z (in GeV).
     double  pxl, pyl, pzl; // Final state primary lepton px/py/pz (in GeV)
+    
     int     nf; // Number of final state particles in hadronic system.
     Int_t   pdgf[NMAX]; //PDG code of kth final state particle in hadronic system
     double  pxf[NMAX],pyf[NMAX],pzf[NMAX]; //Px/y/z of kth final state particle in hadronic system (in GeV).
+    
+    int     ni; // Number of 'primary' particles in hadronic system.
     Int_t   pdgi[NMAX]; //PDG code of kth 'primary' particle in hadronic system (before FSI)
     double  pxi[NMAX],pyi[NMAX],pzi[NMAX];
     
@@ -90,6 +93,7 @@ private:
     // my variables for CC 1p 0pi
     bool            CC1p0pi=false;
     TLorentzVector  proton, muon, nu, q, Pmiss;
+    TLorentzVector  proton_before_FSI;   // before FSI
 };
 
 #endif
