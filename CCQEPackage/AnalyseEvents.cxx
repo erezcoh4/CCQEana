@@ -38,6 +38,9 @@ void AnalyseEvents::GetEntry (int entry){
     
     std::vector <PandoraNuTrack> * ftracks = 0;
     InTree -> SetBranchAddress("tracks" , &ftracks);
+    
+    std::vector <PandoraNuTrack> * fcosmic_tracks = 0;
+    InTree -> SetBranchAddress("cosmic_tracks" , &fcosmic_tracks);
 
     std::vector <hit> * fhits = 0;
     InTree -> SetBranchAddress("hits" , &fhits);
@@ -46,14 +49,21 @@ void AnalyseEvents::GetEntry (int entry){
     std::vector <pairVertex> * fvertices = 0;
     InTree -> SetBranchAddress("vertices" , &fvertices);
 
+    std::vector <pairVertex> * fcosmic_vertices = 0;
+    InTree -> SetBranchAddress("cosmic_vertices" , &fcosmic_vertices);
+    
     InTree -> GetEntry(entry);
     
     hits = *fhits;
     tracks = *ftracks;
+    cosmic_tracks = *fcosmic_tracks;
     vertices = *fvertices;
+    cosmic_vertices = *fcosmic_vertices;
 
     delete ftracks;
+    delete fcosmic_tracks;
     delete fhits;
     delete fvertices;
+    delete fcosmic_vertices;
 }
 #endif

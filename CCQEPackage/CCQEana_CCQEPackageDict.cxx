@@ -154,7 +154,7 @@ namespace ROOT {
       ::PandoraNuTrack *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::PandoraNuTrack));
       static ::ROOT::TGenericClassInfo 
-         instance("PandoraNuTrack", "PandoraNuTrack.h", 60,
+         instance("PandoraNuTrack", "PandoraNuTrack.h", 65,
                   typeid(::PandoraNuTrack), DefineBehavior(ptr, ptr),
                   &PandoraNuTrack_Dictionary, isa_proxy, 4,
                   sizeof(::PandoraNuTrack) );

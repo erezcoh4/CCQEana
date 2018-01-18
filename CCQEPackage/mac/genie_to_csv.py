@@ -18,7 +18,7 @@ flags = input_flags.get_args()
 
 infilename = flags.DataType
 
-gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/analysis/mA/genie_files/" # path
+gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/genie_files/" # path
                ,infilename #RootFileName
                ,"gst" #RootFileName
                )

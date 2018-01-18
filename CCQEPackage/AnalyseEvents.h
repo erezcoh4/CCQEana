@@ -45,10 +45,12 @@ public:
     void                  SetInTree (TTree * tree)       {InTree = tree;};
     
     // GETters
-    void                           GetEntry ( int );
-    std::vector<hit>                GetHits ()  const {return hits;};
-    std::vector<PandoraNuTrack>   GetTracks ()  const {return tracks;};
-    std::vector<pairVertex>     GetVertices ()  const {return vertices;};
+    void                                   GetEntry ( int );
+    std::vector<hit>                        GetHits ()  const {return hits;};
+    std::vector<PandoraNuTrack>           GetTracks ()  const {return tracks;};
+    std::vector<PandoraNuTrack>     GetCosmicTracks ()  const {return cosmic_tracks;};
+    std::vector<pairVertex>             GetVertices ()  const {return vertices;};
+    std::vector<pairVertex>       GetCosmicVertices ()  const {return cosmic_vertices;};
     
     
     // INITializers
@@ -65,11 +67,11 @@ private:
     
     TTree   * InTree;
     
-    std::vector<PandoraNuTrack> tracks;
+    std::vector<PandoraNuTrack> tracks, cosmic_tracks;
     
     std::vector<hit>            hits;
 
-    std::vector<pairVertex>     vertices;
+    std::vector<pairVertex>     vertices, cosmic_vertices;
 
 };
 
