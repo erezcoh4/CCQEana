@@ -113,6 +113,10 @@ public:
     void     FindTwoTracksVertices (std::vector<PandoraNuTrack> & tracks_vector // tracks to be clustered
                                      ,std::vector<pairVertex> & vertices_vector  // vertices vector to hold the pairs
                                     );
+    void           AnalyzeVertices (std::vector<pairVertex> & vertices_vector  // vertices vector to hold the pairs
+                                    );
+    void    FilterGoodPairVertices (std::vector<pairVertex> & vertices_vector
+                                    );
     void          PrintInformation (bool Do_cosmic_tracks=false, bool Do_tracks=false);
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
@@ -139,7 +143,7 @@ private:
     TTree *fTree;
     TTree* fPOTTree;
 
-    Int_t run, subrun, event;
+    Int_t   run, subrun, event;
     
     short   isdata;
     
@@ -149,8 +153,7 @@ private:
     int     NCosmicTracks, Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
-    int     N_CC_interactions;
-    int     CC_interactions_ctr;
+    int     vertices_counter;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
     double  pot, pot_total;
@@ -242,8 +245,6 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
     auto const& trk_handle = evt.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
-//    auto const& trk_vec(*trk_handle);
-//    Debug(5,Form("trk_vec.size(): %d",(int)trk_vec.size()));
     art::FindManyP<recob::Hit> hits_per_track(trk_handle, evt, fTrackModuleLabel);
     
     // * MCTruth information
@@ -317,12 +318,6 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // ----------------------------------------
     NCosmicTracks = CosmicTracklist.size();
     NCosmicTracks_total += NCosmicTracks;
-    if (debug>0){
-        cout << fCosmicTrackModuleLabel + " tracks:" << endl;
-        SHOW( NCosmicTracks );
-        for (int i=0 ; i<NCosmicTracks ; i++) cout << CosmicTracklist[i]->ID() << "\t";
-        cout << endl;
-    }
     for(int i=0; i < std::min(int(CosmicTracklist.size()),kMaxTrack); ++i ){
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = CosmicTracklist[i]->Extent();
@@ -336,15 +331,11 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
                                     ,TVector3(end_pos.X(),end_pos.Y(),end_pos.Z())         // end position
                                     );
         
-        Debug(5 , Form("adding track %d to list of tracks in this event",cosmic_track.GetTrackID()) );
         cosmic_tracks.push_back( cosmic_track );
-        if (debug>5){
-            cout << "track list includes:" << endl;
-            for (auto t: cosmic_tracks) cout << t.GetTrackID() << "\t";
-            cout << endl;
-        }
     } // end loop of cosmic tracks
     FindTwoTracksVertices( cosmic_tracks , cosmic_vertices );
+    AnalyzeVertices( cosmic_vertices );
+    FilterGoodPairVertices( cosmic_vertices );
     
     // ----------------------------------------
     // tracks information
@@ -445,8 +436,6 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
                 }
             }
         }
-
-        
         
         // MC information
         bool DoNewMCtruthMatching = false;
@@ -522,26 +511,25 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
                 Debug(2,"particle.isNull() = true!...");
             }
         }//MC
-        Debug(2,"end {}//MC");
-        
-        
-        Debug(5 , Form("adding track %d to list of tracks in this event",track.GetTrackID()) );
+
         tracks.push_back( track );
-        if (debug>5){
-            cout << "track list includes:" << endl;
-            for (auto t: tracks) cout << t.GetTrackID() << "\t";
-            cout << endl;
-        }
     }// for loop on tracks: for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i )
     FindTwoTracksVertices( tracks , vertices );
-    
+    AnalyzeVertices( vertices );
+    FilterGoodPairVertices( vertices );
+
     // check if the pandoraCosmic vertices match the pandoraNu vertices
     MatchPairVertices();
+    // this is seemingly irrelevant since the pandoraNu tracks != pandoraCosmic tracks
     
+    
+    StreamVerticesToCSV();
     
     // print out
     if(!tracks.empty() && !cosmic_tracks.empty()){
-        PrintInformation();
+        PrintInformation((debug>2)?true:false   // print pandoraCosmic tracks
+                         ,(debug>2)?true:false  // print pandoraNu tracks
+                         );
     }    else {
         cout << "tracks and cosmic_tracks are empty in this event" << endl;
     }
@@ -589,89 +577,151 @@ void ub::CosmicTracksAnalyzer::FindTwoTracksVertices(std::vector<PandoraNuTrack>
             }
         } // end loop on track-j
         if (FoundCloseTracks) { // plug into vertices list
+            vertex.BuildVertexIDFromTracks();
             vertices_vector.push_back( vertex );
         }
     } // end loop on track-i
 }
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::AnalyzeVertices( std::vector<pairVertex> & vertices_vector  ){
+    if (vertices_vector.size()>0){
+        for (auto & v:vertices_vector){
+            // after fixing the vertext position, remove far tracks
+            Debug( 4 , "v.RemoveFarTracks( kMaxInterTrackDistance );");
+            if (v.GetTracks().size()<2) continue;
+            
+            v.RemoveFarTracks( kMaxInterTrackDistance );
+            
+            // and the relations between the tracks
+            // inter-track distances, delta-theta, delta-phi...
+            Debug( 4 , "SetTracksRelations;" );
+            v.SetTracksRelations ();
+            
+            // flash - matching
+            // find the closest flash to the vertex
+            Debug( 4 , "vertices flash matching" );
+            
+            if (flashes.size()){
+                float YZdistance = 1000, ClosestFlashYZdistance = 1000;
+                for (auto f : flashes){
+                    YZdistance = v.GetDis2Flash(f);
+                    if ( YZdistance < ClosestFlashYZdistance ){
+                        ClosestFlashYZdistance = YZdistance;
+                        v.SetClosestFlash( f );
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::FilterGoodPairVertices(std::vector<pairVertex> & vertices_vector ){
+    
+    art::ServiceHandle<geo::Geometry> geom;
+    auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    std::vector<pairVertex> tmp_vertices = vertices_vector;
+    vertices_vector.clear();
+    trkf::TrackMomentumCalculator trkm;
+
+    Debug(3 , "ub::CosmicTracksAnalyzer::FilterGoodPairVertices()");
+    for (auto & v:tmp_vertices) {
+        // vertices with only two tracks at close proximity and nothing else
+        if (
+            // we are looking for clusters of only two tracks that are fully contained
+            v.GetNtracks() == 2
+            // if there is a semi-contained track, with start/end point too close to the vertex, we don't want the vertex...
+            &&  v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size() == 0
+            ){
+            v.FixTracksDirections ();
+            // version for v06_26_01
+            double const v_position[3] = {v.GetPosition().X(),v.GetPosition().Y(),v.GetPosition().Z()};
+            geo::TPCID tpcID = geom->FindTPCAtPosition( v_position );
+            if (tpcID.isValid) {
+                int tpc = tpcID.TPC;
+                for (int plane = 0 ; plane < 3 ; plane ++){
+                    geo::PlaneID planeID = geo::PlaneID( 0 , tpc , plane ); // cryostat=0
+                    float wire = geom->WireCoordinate( v.GetPosition().Y() , v.GetPosition().Z() ,  planeID );
+                    float time = detprop->ConvertXToTicks( v.GetPosition().X() , planeID ) ;
+                    // plug into the track
+                    v.SetPlaneProjection( plane , wire , time );
+                }
+            }
+            vertices_vector.push_back( v );
+        }
+    }
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::CosmicTracksAnalyzer::MatchPairVertices(){
     // check if the pandoraCosmic vertices match the pandoraNu vertices
-    
+    int fdebug=3;
+    Debug(fdebug,"ub::CosmicTracksAnalyzer::MatchPairVertices()");
     for( auto pandoraCosmic_vertex: cosmic_vertices){
         auto pandoraCosmic_vertex_tracks = pandoraCosmic_vertex.GetTracks();
+        if (debug>fdebug) {
+            cout << "pandoraCosmic_vertex" << endl;
+            pandoraCosmic_vertex.Print(false,false);
+        }
+        
         
         int N_pandoraCosmic_tracks_in_pandoraNu_vertex = 0;
         for( auto pandoraNu_vertex: vertices){
+            if (debug>fdebug) {
+                cout << "pandoraNu_vertex" << endl;
+                pandoraNu_vertex.Print(false,false);
+            }
             
             // the vertices are matched if all of the tracks in the pandoraCosmic-vertex exist in the pandoraNu-vertex
             for (auto pandoraCosmic_track:pandoraCosmic_vertex_tracks) {
+                Debug(fdebug,Form("looking for match for track %d in pandoraNu_vertex",pandoraCosmic_track.GetTrackID()));
                 if ( pandoraNu_vertex.IncludesTrack( pandoraCosmic_track.GetTrackID() ) ) {
+                    Debug(fdebug,Form("!found a match for track %d in pandoraNu_vertex!",pandoraCosmic_track.GetTrackID()));
                     N_pandoraCosmic_tracks_in_pandoraNu_vertex += 1;
+                } else {
+                    Debug(fdebug,Form("!did not find a match for track %d in pandoraNu_vertex!",pandoraCosmic_track.GetTrackID()));
                 }
             }
             
         }
         if (N_pandoraCosmic_tracks_in_pandoraNu_vertex == (int)pandoraCosmic_vertex_tracks.size()){
-            Debug(0,Form("Reproduction: cosmic vertex %d was reproduced also in pandoraNu stage",pandoraCosmic_vertex.GetVertexID()));
+            Debug(fdebug,Form("Reproduction: cosmic vertex %d was reproduced also in pandoraNu stage",pandoraCosmic_vertex.GetVertexID()));
         } else {
-            Debug(0,Form("Cosmic rejection: cosmic vertex %d was not reproduced also in pandoraNu stage",pandoraCosmic_vertex.GetVertexID()));
+            Debug(fdebug,Form("Cosmic rejection: cosmic vertex %d was not reproduced also in pandoraNu stage",pandoraCosmic_vertex.GetVertexID()));
         }
     }
+    Debug(fdebug,"ub::CosmicTracksAnalyzer::MatchPairVertices()");
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::CosmicTracksAnalyzer::HeaderVerticesInCSV(){
     
-    CC_interactions_ctr = 0;
+    // we will stream to the output file all the vertices,
+    // both those of PandoraCosmic and those from PandoraNu,
+    // and all the relevant information
+    // ( for example, the reconstructed distacne between the tracks in the pair )
+    // Then, in the analysis stage
+    // we can separate to the desired vertices and draw the distributions
+    vertices_counter = 0;
     
     vertices_file
-    << "run" << "," << "subrun" << "," << "event" << "," ;
+    << "run" << "," << "subrun" << "," << "event" << ","
+    << "vertex_id" << ","
+    << "Ntracks" << ",";
     
-    // truth topology
+    // which tracks are populating this vertex topology
     vertices_file
-    << "IsCC_Np_200MeVc" << ","
-    << "IsCC_1p_200MeVc" << ","
-    << "IsCC_1p_200MeVc_0pi" << ","
-    << "IsCCQE" << ",";
+    << "isPandoraCosmic" << ","
+    << "isPandoraNu" << ",";
     
-    // reconstructed topology
-    vertices_file
-    << "IsVertexContained" << ","
-    << "IsInActiveVolume" << ","
-    << "Is1mu1p" << ","
-    << "Is_mu_TrackReconstructed" << ","
-    << "Is_mu_TrackInFV" << ","
-    << "Is_p_TrackReconstructed" << ","
-    << "Is_p_TrackInFV" << ","
-    << "IsVertexReconstructed" << ","
-    << "IsVertexInFV" << ",";
-    
-    // general for CC events
-    vertices_file
-    << "truth_Pmu" << ","
-    << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
-    << "truth_Pmu_theta" << ","
-    << "truth_Pp" << ","
-    << "truth_Pp_theta" << ","
-    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ",";
-    
-    // relevant truth-information
-    vertices_file
-    << "truth_Ev" << ","
-    << "truth_Q2" << ",";
-    
-    vertices_file
-    << "truth_Pv_x" << ","
-    << "truth_Pv_y" << ","
-    << "truth_Pv_z" << ",";
 
-
-    // only for 1mu-1p vertices
+    // reconstructed distance between the tracks
     vertices_file
-    << "reconstructed mu-p distance" ;
+    << "distance" ;
     
     
     // finish
@@ -683,6 +733,35 @@ void ub::CosmicTracksAnalyzer::HeaderVerticesInCSV(){
 void ub::CosmicTracksAnalyzer::StreamVerticesToCSV(){
     // Oct-22, 2017
     // whatever you add here - must add also in header - ub::CosmicTracksAnalyzer::HeaderVerticesInCSV()
+    for (int i_vertices_vector = 0; i_vertices_vector < 2 ; i_vertices_vector++){
+        
+        std::vector<pairVertex> vertices_vector = (i_vertices_vector==0) ? cosmic_vertices : vertices;
+        bool isPandoraCosmic = (i_vertices_vector==0) ? true : false;
+        
+        for (auto v : vertices_vector) {
+            vertices_counter ++;
+            
+            vertices_file
+            << v.GetRun() << "," << v.GetSubrun() << "," << v.GetEvent() << ","
+            << v.GetVertexID() << ","
+            << v.GetTracks().size() << ",";
+            
+            // which tracks are populating this vertex topology
+            vertices_file
+            << isPandoraCosmic << ","
+            << (!isPandoraCosmic) << ",";
+            
+            
+            // reconstructed distance between the tracks
+            for ( auto d : v.Get_distances_ij()){
+                vertices_file << d ; //  for more than 2 tracks add << ";" ;
+            }
+            
+            
+            // finish
+            vertices_file << endl;
+        }
+    }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -693,36 +772,36 @@ void ub::CosmicTracksAnalyzer::PrintInformation(bool Do_cosmic_tracks,bool Do_tr
     SHOW3( run , subrun , event );
     
     if(!cosmic_tracks.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << cosmic_tracks.size() << " pandoraCosmic tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        PrintHeader(Form("%d pandoraCosmic-tracks",(int)cosmic_tracks.size()));
         for (auto t: cosmic_tracks) {
             if (Do_cosmic_tracks) t.Print( true );
             else cout << t.GetTrackID() << "\t";
-            cout << endl;
         }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco cosmic_tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+        cout << endl;
+    } else { PrintHeader("no pandoraCosmic-tracks");    }
 
     if(!cosmic_vertices.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << cosmic_vertices.size() << " cosmic pair vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-        for (auto v: vertices) {
-            v.Print();
+        PrintHeader(Form("%d pandoraCosmic pair-vertices",(int)cosmic_vertices.size()));
+        for (auto v: cosmic_vertices) {
+            v.Print(false, false);
         }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no cosmic pair vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    } else { PrintHeader("no pandoraCosmic pair-vertices");}
     
-    if(!tracks.empty()&& Do_tracks){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+    if(!tracks.empty()){
+        PrintHeader(Form("%d pandoraNu-tracks",(int)tracks.size()));
         for (auto t: tracks) {
-            if (Do_cosmic_tracks) t.Print( true );
+            if (Do_tracks) t.Print( true );
             else cout << t.GetTrackID() << "\t";
-            cout << endl;
         }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+        cout << endl;
+    } else { PrintHeader("no pandoraNu-tracks");    }
 
     if(!vertices.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << vertices.size() << " pair vertices\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        PrintHeader(Form("%d pandoraNu pair-vertices",(int)vertices.size()));
         for (auto v: vertices) {
-            v.Print();
+            v.Print(false, false);
         }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no pair vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    } else { PrintHeader("no pandoraNu pair-vertices"); }
   
     // time stamp
     PrintLine();
@@ -734,7 +813,7 @@ void ub::CosmicTracksAnalyzer::PrintInformation(bool Do_cosmic_tracks,bool Do_tr
     << "time elapsed: " << elapsed_seconds.count() << "s"
     << "\033[31m" << endl;
 
-    cout << "wrote " << CC_interactions_ctr << " vertices to output file " << endl;
+    cout << "wrote " << vertices_counter << " vertices to output file " << endl;
     EndEventBlock();
 }
 
@@ -751,15 +830,18 @@ void ub::CosmicTracksAnalyzer::beginJob(){
     
     art::ServiceHandle<art::TFileService> tfs;
     fTree = tfs->make<TTree>("eventsTree","analysis tree of genie interactions");
-    fTree->Branch("run"     ,&run           ,"run/I");
-    fTree->Branch("subrun"  ,&subrun        ,"subrun/I");
-    fTree->Branch("event"   ,&event         ,"event/I");
-    fTree->Branch("Ntracks" ,&Ntracks       ,"Ntracks/I");
-    fTree->Branch("Nhits"   ,&Nhits_stored  ,"Nhits/I");
-    fTree->Branch("N_CC_interactions",&N_CC_interactions    ,"N_CC_interactions/I");
+    fTree->Branch("run"             ,&run           ,"run/I");
+    fTree->Branch("subrun"          ,&subrun        ,"subrun/I");
+    fTree->Branch("event"           ,&event         ,"event/I");
+    fTree->Branch("Ntracks"         ,&Ntracks       ,"Ntracks/I");
+    fTree->Branch("NCosmicTracks"   ,&NCosmicTracks ,"NCosmicTracks/I");
+    fTree->Branch("Nhits"           ,&Nhits_stored  ,"Nhits/I");
     
     // my objects
+    fTree->Branch("cosmic_tracks"       ,&cosmic_tracks);
+    fTree->Branch("cosmic_vertices"     ,&cosmic_vertices);
     fTree->Branch("tracks"              ,&tracks);
+    fTree->Branch("vertices"            ,&vertices);
     fTree->Branch("hits"                ,&hits);
 
     
@@ -770,8 +852,8 @@ void ub::CosmicTracksAnalyzer::beginJob(){
 
     // output csv file
     //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
-    vertices_file.open(fDataSampleLabel+"_genie.csv");
-    cout << "opened vertices file: "+fDataSampleLabel+"_genie.csv" << endl;
+    vertices_file.open(fDataSampleLabel+"_pandora_vertices.csv");
+    cout << "opened vertices file: "+fDataSampleLabel+"_pandora_vertices.csv" << endl;
     HeaderVerticesInCSV();
     
     pot_total = 0;
@@ -824,7 +906,7 @@ void ub::CosmicTracksAnalyzer::ResetVars(){
     
     MCmode = false;
     run = subrun = event = -9999;
-    Ntracks = Nhits = Nhits_stored = N_CC_interactions = 0 ;
+    Ntracks = Nhits = Nhits_stored = 0 ;
     pot = 0;
     tracks.clear();
     cosmic_tracks.clear();

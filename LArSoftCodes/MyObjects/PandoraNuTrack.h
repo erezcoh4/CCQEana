@@ -30,6 +30,11 @@ using namespace std;
 #define EndEventBlock() std::cout << "\033[32m"<< "....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......" << "\033[0m"<< endl
 #define PrintLine() std::cout << "--------------------------------------------------------------" << std::endl
 #define PrintXLine() std::cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << std::endl
+#define PrintXLine() std::cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << std::endl
+#define PrintHeader(header) std::cout << "\033[33m" << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" << (header) << "\n" << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<< "\033[31m" << std::endl
+
+
+
 #define SHOW(a) std::cout << setprecision(2) << fixed << #a << ": " << (a) << std::endl;
 #define SHOW2(a,b) std::cout <<"\033[34m"<<#a<<": "<<(a)<<"," << #b <<": "<<(b)<< "\033[0m"<< std::endl;
 #define SHOW3(a,b,c) std::cout <<"\033[36m"<<#a<<": "<<(a)<<"," << #b <<": "<<(b)<<","<<#c<<": "<<(c)<< "\033[0m"<< std::endl;

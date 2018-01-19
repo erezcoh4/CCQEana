@@ -333,7 +333,7 @@ void GENIEinteraction::SetReconstructedTopology(){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void GENIEinteraction::Print(bool DoPrintTracks) const{
+void GENIEinteraction::Print(bool DoPrintTracks, bool DoPrintAssignedMuonProtonTracks) const{
 
     cout << "\033[31m" << "GENIE interaction " << mcevent_id << "\n~~~~~~~~~~~~~~~~~~~~~ "<< "\033[0m" << endl;
     SHOW(mcevent_id);
@@ -364,12 +364,10 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
     }
     SHOW2( Xb , Q2 );
     SHOW3( theta_pq , p_over_q , Mmiss );
-    SHOW( Nprimaries );
-    SHOW3( Np , Nn , Npi );
+    SHOW4( Nprimaries ,  Np , Nn , Npi );
     SHOW3( Nmu , Nel , Ngamma );
     SHOW2( ccnc , mode );
-    SHOW( IsVertexContained );
-    SHOW( IsCCQE );
+    SHOW2( IsVertexContained , IsCCQE);
     SHOW3( Is_mu_TrackReconstructed , Is_p_TrackReconstructed , IsVertexReconstructed );
     SHOW3( Is_mu_TrackInFV , Is_p_TrackInFV , IsVertexInFV );
     SHOW2( Is1mu1p, IsCC_1p_200MeVc_0pi );
@@ -388,17 +386,19 @@ void GENIEinteraction::Print(bool DoPrintTracks) const{
         }
     }
     
-    if (Is_mu_TrackReconstructed){
-        cout  << "\033[33m" << "muon track:"  << "\033[30m" << endl;
-        muonTrack.Print();
-    } else {
-        cout  << "\033[33m" << "no muon track reconstructed"  << "\033[30m" << endl;
-    }
-    if (Is_p_TrackReconstructed){
-        cout  << "\033[33m" << "proton track:"  << "\033[30m" << endl;
-        protonTrack.Print();
-    } else {
-        cout  << "\033[33m" << "no proton track reconstructed"  << "\033[30m" << endl;
+    if (DoPrintAssignedMuonProtonTracks) {
+        if (Is_mu_TrackReconstructed){
+            cout  << "\033[33m" << "muon track:"  << "\033[30m" << endl;
+            muonTrack.Print();
+        } else {
+            cout  << "\033[33m" << "no muon track reconstructed"  << "\033[30m" << endl;
+        }
+        if (Is_p_TrackReconstructed){
+            cout  << "\033[33m" << "proton track:"  << "\033[30m" << endl;
+            protonTrack.Print();
+        } else {
+            cout  << "\033[33m" << "no proton track reconstructed"  << "\033[30m" << endl;
+        }
     }
     if (IsVertexReconstructed) SHOW(reco_mu_p_distance);
 

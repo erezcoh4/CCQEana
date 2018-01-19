@@ -60,7 +60,7 @@ public:
         if( ( vertex_position.z() < min_z )    | ( vertex_position.z() > max_z ) )    IsVertexContained=false;
         return  IsVertexContained;
     }
-    void                   Print (bool DoPrintTracks=false) const;
+    void                   Print (bool DoPrintTracks=false, bool DoPrintAssignedMuonProtonTracks=false) const;
     void                AddTrack (PandoraNuTrack ftrack);
     bool           IncludesTrack (Int_t ftrackID=0) const;    // ask if the track (ftrackID) is in the list of tracks belonging to this genie interaction
 

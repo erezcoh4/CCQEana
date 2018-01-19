@@ -485,11 +485,30 @@ Float_t pairVertex::GetDis2ClosestFlash () const {
     return GetDis2Flash(ClosestFlash);
 }
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void pairVertex::BuildVertexIDFromTracks () {
+    // build the vertex ID from the tracks in the vertex
+    int vertex_id = 0,i=0;
+    for (auto t:tracks) {
+        vertex_id += t.GetTrackID() * pow(10,i);
+        i++;
+    }
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void pairVertex::Print(bool DoPrintTracks) const {
+void pairVertex::Print(bool DoPrintTracks,bool DoPrintFull,bool DoPrintGENIE) const {
     
-    cout << "\033[35m" << "~~~~~~~~~~~~~~\n vertex " << vertex_id << "\n~~~~~~~~~~~~~~"<< "\033[0m" << endl;
+    cout << "\033[35m" << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n vertex " << vertex_id ;
+    if (DoPrintFull==false){
+        cout << ", tracks: ";
+        for (auto t: tracks) {
+            cout << t.GetTrackID() << "\t";
+        }
+        cout << endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< "\033[0m" << endl;
+        return;
+    }
+    cout << endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< "\033[0m" << endl;
+    
     if (Is1mu1p) Printf("1mu-1p vertex!");
     // SHOW3( run , subrun , event );
     SHOWTVector3( position );
@@ -549,17 +568,21 @@ void pairVertex::Print(bool DoPrintTracks) const {
     cout << "truth topology: " << TruthTopologyString << endl;
     if (Is1mu1p){
         if ( genie_interaction.GetMCeventID() == -9999 ) Printf("vertex does not have a matching GENIE interaction");
-        else genie_interaction.Print();
+        else {
+            if (DoPrintGENIE) genie_interaction.Print();
+            else SHOW( genie_interaction.GetMCeventID() );
+        }
         PrintLine();
         if ( closest_genie_interaction.GetMCeventID() == -9999 ) Printf("vertex does not have a matching closest GENIE interaction around");
         else {
-            Printf("closest GENIE interaction is %.1f cm away from reconstructed vertex:",(closest_genie_interaction.GetVertexPosition() - position).Mag());
-            closest_genie_interaction.Print();
+            if (DoPrintGENIE) {
+                Printf("closest GENIE interaction is %.1f cm away from reconstructed vertex:",(closest_genie_interaction.GetVertexPosition() - position).Mag());
+                closest_genie_interaction.Print();
+            }
+            else SHOW( closest_genie_interaction.GetMCeventID() );
         }
         PrintLine();
     }
-    
-//    if (!tracks.empty()) for (int plane = 0 ; plane<3 ; plane ++ ) {printf("ROI in plane %d: ",plane); roi[plane].Print();}
 }
 
 

@@ -53,7 +53,7 @@ public:
     void                                        AddTrack (PandoraNuTrack ftrack);
     void                                      AddTrackID (Int_t ftrack_id)               {track_id.push_back(ftrack_id);};
     
-    void                                          Print (bool DoPrintTracks=false) const;
+    void                                          Print (bool DoPrintTracks=false, bool DoPrintFull=true, bool DoPrintGENIE=false) const;
     bool                                  IncludesTrack (Int_t ftrack_id);
     bool                                RemoveFarTracks (float max_mu_p_distance );
     
@@ -65,7 +65,7 @@ public:
     void                          ReconstructKinematics ();
     
     void                          AssociateHitsToTracks (std::vector<hit> hits);
-    
+    void                        BuildVertexIDFromTracks ();
     
     // SETters
     void                SetVertexID (Int_t fvertex_id)                              {vertex_id = fvertex_id;};

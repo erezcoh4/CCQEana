@@ -103,6 +103,7 @@ public:
     
     // Selected optional functions.
     void                  beginJob () override;
+    void                    endJob () override;
     void               reconfigure (fhicl::ParameterSet const& p) override;
     
     void                 endSubRun (const art::SubRun& sr);
@@ -114,7 +115,7 @@ public:
     void           AnalyzeVertices ();
     void          FilterGoodPairVertices ();
     void               TagVertices ();
-    void          PrintInformation ();
+    void          PrintInformation (bool DoPrintTracksFull=false);
     bool    TrackAlreadyInVertices (int ftrack_id);
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
@@ -184,7 +185,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
     // output csv file of vertices
-    ofstream vertices_file;
+    ofstream vertices_file, summary_file;
 
 };
 
@@ -230,9 +231,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
     auto const& trk_handle = evt.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
-    auto const& trk_vec(*trk_handle);
-    
-    std::cout << "\tThere are " << trk_vec.size() << " tracks in this event." << std::endl;
     art::FindManyP<recob::Hit> hits_per_track(trk_handle, evt, fTrackModuleLabel);
     
     // * MCTruth information
@@ -241,6 +239,17 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     evt.getByLabel(fG4ModuleLabel, pHandle);
     art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
 
+    // * MC truth information
+    // check if this makes data runs crash. If so, change to: fMCmodeLabel != "MC"
+    art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
+    std::vector<art::Ptr<simb::MCTruth> > mclist;
+    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+        art::fill_ptr_vector(mclist, mctruthListHandle);
+    
+    art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
+    std::vector<art::Ptr<simb::MCFlux> > fluxlist;
+    if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
+        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
     
     
     // ----------------------------------------
@@ -267,10 +276,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // flash information
     // ----------------------------------------
     Nflashes = flashlist.size();
-    if (debug>0) SHOW(Nflashes);
+    if (debug>3) SHOW(Nflashes);
     for ( int f = 0; f < std::min(Nflashes,kMaxHits); f++ ) {
         
-        if (debug>0){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
+        if (debug>3){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
         flash fflash(
                      flashlist[f]->Time(),         // flash time
                      flashlist[f]->TimeWidth(),    // flash time width
@@ -280,10 +289,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                      flashlist[f]->YWidth(),       // flash y-width
                      flashlist[f]->TotalPE()       // flash total PE
         );
-        
         // keep only in-time flashes for the event
         // following Katherine conditions
-        if (debug>0){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
+        if (debug>3){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
         if( (0.0 < fflash.GetTime()) && (fflash.GetTime() < 10.0) && (6.5 < fflash.GetTotalPE()) ){
             flashes.push_back( fflash );
         }
@@ -331,7 +339,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             // plug into the track
             track.SetStartEndPlane( plane , start_wire , start_time , end_wire , end_time );
         }
-
         
         // Hits-Tracks association
         if (fmth.isValid()){
@@ -377,8 +384,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             track.SetPIDa();
         }
         
-        // flash - matching
-        // find the closest flash to the track
+        // flash - matching: find the closest flash to the track
         if (flashes.size()){
             float YZdistance = 1000, ClosestFlashYZdistance = 1000;
             for (auto f : flashes){
@@ -389,61 +395,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 }
             }
         }
-//
-//        
-//        // MC information
-//        Debug(0,"before MC information (if(!isdata&&fmth.isValid()))");
-//        SHOW2(isdata,fmth.isValid())
-//        if (!isdata&&fmth.isValid()){
-//            Debug(0,"MC information !isdata&&fmth.isValid()");
-//            
-//            // Find true track for each reconstructed track
-//            int TrackID = 0;
-//            std::vector< art::Ptr<recob::Hit> > allHits = fmth.at(i);
-//            
-//            std::map<int,double> trkide;
-//            for(size_t h = 0; h < allHits.size(); ++h){
-//                art::Ptr<recob::Hit> hit = allHits[h];
-//                std::vector<sim::TrackIDE> TrackIDs = bt->HitToTrackID(hit);
-//                for( size_t e = 0; e < TrackIDs.size(); ++e ){
-//                    trkide[TrackIDs[e].trackID] += TrackIDs[e].energy;
-//                }
-//            }
-//            // Work out which IDE despoited the most charge in the hit if there was more than one.
-//            double max_Edep = -1;
-//            for (std::map<int,double>::iterator ii = trkide.begin(); ii!=trkide.end(); ++ii){
-//                if ((ii->second)>max_Edep){
-//                    max_Edep = ii->second;
-//                    TrackID = ii->first;
-//                }
-//            }
-//            // Now have trackID, so get PDG code and T0 etc.
-//            const simb::MCParticle *particle = bt->TrackIDToParticle( TrackID );
-//            Debug(0,"particle = bt->TrackIDToParticle( TrackID )");
-//            SHOW(particle);
-//            if (particle){
-//                Debug(0, Form("particle: pdg=%d",particle->PdgCode()));
-//                track.SetMCpdgCode( particle->PdgCode() );
-//                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-//                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-//                track.SetTruthDirection();
-//                
-//                track.SetTruthLength();
-//                track.SetTruthMomentum( particle -> Momentum() );
-//                track.SetTruthMother( particle -> Mother() );
-//                track.SetTruthProcess( particle -> Process() );
-//                
-//                const art::Ptr<simb::MCTruth> mc_truth = bt->TrackIDToMCTruth(particle->TrackId());
-//                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-//                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-//            }//if (particle)
-//            
-//        }//MC
         
-        // MC information
-        if (!isdata&&fmth.isValid()){
-            
+        // MC-truth mathching for the tracks
+        bool DoNewMCtruthMatching = true;
+        bool isMC = true;
+        Debug(5,"before if (isMC && DoNewMCtruthMatching)");
+        if (isMC && DoNewMCtruthMatching){
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
+            Debug(3,Form( "\tThere are %d associated hits." ,(int)trk_hits_ptrs.size() ));
+            
             std::unordered_map<int,double> trkide;
             double maxe=-1, tote=0;
             art::Ptr< simb::MCParticle > maxp_me; //pointer for the particle match we will calculate
@@ -479,38 +439,32 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }
             // Now have matched the truth information - plug into the track object
             const art::Ptr< simb::MCParticle > particle = maxp_me;
-            track.SetMCpdgCode( particle->PdgCode() );
-            track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-            track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-            track.SetTruthDirection();
-            track.SetTruthLength();
-            track.SetTruthMomentum( particle -> Momentum() );
-            track.SetTruthMother( particle -> Mother() );
-            track.SetTruthProcess( particle -> Process() );
-            // art::Ptr< simb::MCParticle >  track_truth_particle = particle;
+            if (!particle.isNull()){
+                track.SetMCpdgCode( particle->PdgCode() );
+                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                track.SetTruthDirection();
+                track.SetTruthLength();
+                track.SetTruthMomentum( particle -> Momentum() );
+                track.SetTruthMother( particle -> Mother() );
+                track.SetTruthProcess( particle -> Process() );
+                // * MC-truth information related to the associated particle
+                int particle_key = (int)particle.key();
+                if( fo.isValid() ){
+                    auto pHandle_at_particle_key = pHandle->at(particle_key);
+                    art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
+                    track.SetOrigin( (mc_truth->Origin() == simb::kBeamNeutrino)
+                                    ? "beam neutrino"
+                                    : ((mc_truth->Origin() == simb::kCosmicRay)
+                                       ? "cosmic ray"
+                                       : "unkwon origin")  );
+                }// end if fo.isValid()
+            } else {
+                Debug(2,"particle.isNull() = true!...");
+            }
             
-            // * MC-truth information
-            // To this end, we need to back-track the MCTruth/MCParticle association.
-            // we do this with art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
-            // but pHandle must get the correct particle Key,
-            // which, since we defined it as an art::Ptr, is obtained from key() method
-            int particle_key = (int)particle.key();
-            if( fo.isValid() ){
-                auto pHandle_at_particle_key = pHandle->at(particle_key);
-                art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
-                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-                if (debug>5) {SHOW( mc_truth -> Origin() );}
-            }// end if fo.isValid()
         }//MC
-
-        Debug(5 , Form("adding track %d to list of tracks in this event",track.GetTrackID()) );
         tracks.push_back( track );
-        if (debug>5){
-            cout << "track list includes:" << endl;
-            for (auto t: tracks) cout << t.GetTrackID() << "\t";
-            cout << endl;
-        }
     }
     
     
@@ -518,92 +472,86 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // ----------------------------------------
     // MC truth information
     // ----------------------------------------
-    if (!isdata){
+    mcevts_truth = mclist.size();
+    Debug(0,"before if (mcevts_truth)");
+    if (mcevts_truth){
+        MCmode = true;
+        Debug(0,"MCmode = true;");
         
-        // * MC truth information
-        art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
-        std::vector<art::Ptr<simb::MCTruth> > mclist;
-        if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
-        art::fill_ptr_vector(mclist, mctruthListHandle);
-        
-        art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
-        std::vector<art::Ptr<simb::MCFlux> > fluxlist;
-        if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
-        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
-        
-        
-        mcevts_truth = mclist.size();
-        if (mcevts_truth){
-            MCmode = true;
-            
-            for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
-                art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
+        for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
+            art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
+            Debug(5,"art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];");
+            if (mctruth->Origin() == simb::kBeamNeutrino){
+                Debug(5,"mctruth->Origin() == simb::kBeamNeutrino");
                 
-                if (mctruth->Origin() == simb::kBeamNeutrino){
-                    
-                    GENIEinteraction genie_interaction( run , subrun , event , mc_evend_id );
-                    genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
-                    genie_interaction.SetKinematics(
-                                                    mctruth->GetNeutrino().QSqr() // Q2
-                                                    ,mctruth->GetNeutrino().W()     // W
-                                                    ,mctruth->GetNeutrino().X()     // Bjorken x
-                                                    ,mctruth->GetNeutrino().Y()     // y
-                                                    ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
-                                                    ,mctruth->GetNeutrino().Mode()  // QE=0
-                                                    );
-                    genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
-                                                                  ,mctruth->GetNeutrino().Nu().Vy()
-                                                                  ,mctruth->GetNeutrino().Nu().Vz()));
-                    
-                    genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
-                    genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
-                    genie_interaction.SetMomentumTransfer();
-                    
-                    // all other particles in the interaction
-                    Int_t NgenieParticles = (Int_t)mctruth->NParticles();
-                    if ( NgenieParticles ){
-                        for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
-                            const simb::MCParticle& part( mctruth->GetParticle(iPart) );
-                            // add a primary to genie-interaction
-                            genie_interaction.AddPrimary( part.PdgCode()    // pdg code
-                                                         ,part.Momentum()   // 4-momentum
-                                                         ,part.StatusCode() // status code
-                                                         ,part.Mother()     // mother
-                                                         ,part.Process()    // process
-                                                         ) ;
-                            
-                            // match the primary particle with a track
-                            for (auto & track : tracks){
-                                if (
-                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
-                                    &&
-                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
-                                    &&
-                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
-                                    &&
-                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
-                                    ) {
-                                    // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
-                                    genie_interaction.AddTrack ( track );
-                                    track.SetMCeventID( mc_evend_id );
-                                }
+                GENIEinteraction genie_interaction( run , subrun , event , mc_evend_id );
+                genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
+                genie_interaction.SetKinematics(
+                                                mctruth->GetNeutrino().QSqr() // Q2
+                                                ,mctruth->GetNeutrino().W()     // W
+                                                ,mctruth->GetNeutrino().X()     // Bjorken x
+                                                ,mctruth->GetNeutrino().Y()     // y
+                                                ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
+                                                ,mctruth->GetNeutrino().Mode()  // QE=0
+                                                );
+                genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
+                                                              ,mctruth->GetNeutrino().Nu().Vy()
+                                                              ,mctruth->GetNeutrino().Nu().Vz()));
+                
+                genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
+                genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
+                genie_interaction.SetMomentumTransfer();
+                
+                // all other particles in the interaction
+                Int_t NgenieParticles = (Int_t)mctruth->NParticles();
+                if ( NgenieParticles ){
+                    Debug(0,"inside if ( NgenieParticles )");
+                    for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
+                        const simb::MCParticle& part( mctruth->GetParticle(iPart) );
+                        // add a primary to genie-interaction
+                        genie_interaction.AddPrimary( part.PdgCode()    // pdg code
+                                                     ,part.Momentum()   // 4-momentum
+                                                     ,part.StatusCode() // status code
+                                                     ,part.Mother()     // mother
+                                                     ,part.Process()    // process
+                                                     ) ;
+                        
+                        // match the primary particle with a track
+                        for (auto & track : tracks){
+                            if (debug>0){
+                                cout << "in for (auto & track : tracks)" << endl;
+                                SHOW2(track.GetTrackID(),track.GetMCpdgCode());
+                                SHOW2(part.Momentum().P(),track.GetTruthMomentum().P());
+                                SHOW2(part.Momentum().M(),track.GetTruthMomentum().M());
                             }
-
-                        } // for particle
-                    }
-                    genie_interaction.SortNucleons();
-                    genie_interaction.ComputePmissPrec();
-                    genie_interaction.SetTruthTopology();
-                    genie_interaction.SetReconstructedTopology();
-
-                    genie_interactions.push_back( genie_interaction );
-                    
-                }//mctruth->Origin()
-            }
-        }
+                            if (
+                                ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
+                                &&
+                                ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
+                                &&
+                                ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                &&
+                                ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
+                                ) {
+                                // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
+                                genie_interaction.AddTrack ( track );
+                                track.SetMCeventID( mc_evend_id );
+                                Debug(0,Form("adding track %d to genie interaction %d as a particle %d",track.GetTrackID(),mc_evend_id,part.PdgCode()));
+                            }
+                        }
+                        
+                    } // for particle
+                }
+                genie_interaction.SortNucleons();
+                genie_interaction.ComputePmissPrec();
+                genie_interaction.SetTruthTopology();
+                genie_interaction.SetReconstructedTopology();
+                genie_interactions.push_back( genie_interaction );
+            }//mctruth->Origin()
+        } //  for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth))
     }//is neutrino
-
-
+    
+    
     // ----------------------------------------
     // event topology (my-vertex....)
     // ----------------------------------------
@@ -631,80 +579,46 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::ConstructVertices(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::ClusterTracksToVertices(){
-    // July-25, 2017
-    // cluster all tracks at close proximity to vertices
-    // and fix the position of each vertex
-    bool    FoundCloseTracks , AlreadySetPosition;
+    
+    // Jan-18, 2018
+    // cluster all tracks at close proximity to vertices, and fix the position of each vertex
+    bool    FoundCloseTracks=false;
     float   closest_distance_ij;
     TVector3 vertex_position;
     
     for (int i=0; i < Ntracks; i++){
-        
-        // if (!tracks[i].IsFullyContained) continue;
-        if (!tracks[i].IsTrackContainedSoft()) continue;
-        
-        //        // skip if track was clustered to a vertex by in one of the previous loop steps
-        //        if ( TrackAlreadyInVertices( tracks[i].GetTrackID() )) continue;
-        
+        if (!tracks[i].IsTrackContainedSoft()) continue; // 3<x<257, -115<y<115, 5<z<1045
         pairVertex vertex( run, subrun, event , vertices.size() );
         vertex.AddTrack( tracks[i] );
-        
-        FoundCloseTracks = AlreadySetPosition = false;
-        
-        for ( int j=i+1 ; j < Ntracks ; j++ ){ // i+1?
-            
-            // if (!tracks[j].IsFullyContained) continue;
-            if (tracks[j].IsTrackContainedSoft() && j!=i){
-                
+        FoundCloseTracks = false;
+        for ( int j=i+1 ; j < Ntracks ; j++ ){ // for each track i, loop over all other tracks j!=i
+            if (tracks[j].IsTrackContainedSoft() && j!=i){ // 3<x<257, -115<y<115, 5<z<1045
                 // if this is the first time we go over these two tracks
                 // and they are close enough to define a vertex,
                 // we also define the position of their mutual vertex
-                if (!AlreadySetPosition){
-                    
-                    // two close tracks (at a separation distance smaller that max_mu_p_distance)
+                if (!FoundCloseTracks){
                     std::string StartOrEnd = "None";
                     closest_distance_ij = tracks[i].ClosestDistanceToOtherTrack(tracks[j],&StartOrEnd);
-                    
-                    if ( closest_distance_ij < kMaxInterTrackDistance ){
-                        
+                    if ( closest_distance_ij < kMaxInterTrackDistance ){ // if track-i and track-j are close enough we want to keep this vertex
                         vertex.AddTrack( tracks[j] );
                         FoundCloseTracks = true;
-                        
-                        if (StartOrEnd.compare("Start")==0)     vertex_position = tracks[i].GetStartPos();
-                        else if (StartOrEnd.compare("End")==0)  vertex_position = tracks[i].GetEndPos() ;
-                        else                                    vertex_position = TVector3(-1000,-1000,-1000) ;
-                        
-                        vertex.SetPosition( vertex_position );
-                        AlreadySetPosition = true;
-                    }
-                }
-                
-                // else, namely if we have already clustered a vertex
-                // and positioned it in space,
-                // we only need to check wether the new track (j) is close enough to this vertex
-                // to be also associated with it
-                else {
-                    // Debug(3, Form("cheking track %d distance from vertex %d ",tracks[j].track_id,c_vertex.vertex_id));
+                        vertex.SetPosition( (StartOrEnd.compare("Start")==0)
+                                           ?
+                                           tracks[i].GetStartPos()
+                                           :
+                                           tracks[i].GetEndPos());
+                    }// end if keep vertex
+                }// end if !FoundCloseTracks
+                else { // if we have already clustered a vertex, and positioned it in space, we only need to check wether the new track (j) is close enough to this vertex
                     if ( tracks[j].DistanceFromPoint(vertex.GetPosition()) < kMaxInterTrackDistance ){
-                        
-                        // SHOWTVector3(c_vertex.position);
-                        // Printf("track %d close enough...",tracks[j].track_id);
-                        // SHOW(tracks[j].DistanceFromPoint(c_vertex.position));
-                        
                         vertex.AddTrack( tracks[j] );
                     }
                 }
             }
-        }
-        
-        Debug( 4 , "if (FoundCloseTracks) {");
+        }// end loop on track-j
         if (FoundCloseTracks) {
-            
-            // if this is an MC event,
-            // match a GENIE interaction to the vertex
             Debug( 5 , "if (MCmode)");
-            if (MCmode){
-
+            if (MCmode){ // if this is an MC event, match a GENIE interaction to the vertex
                 // 1st (and best) method: match the GENIE interaction by the mc event-id
                 // use the mc event-id of the first/second track. This is the mc event-id of the proper GENIE interaction
                 Debug( 6 , "(vertex.GetTracks().size()>1){");
@@ -801,14 +715,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::AnalyzeVertices(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
-
+    
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-
+    
     
     // for momentum reconstuction from range / otherwise
     trkf::TrackMomentumCalculator trkm;
-
+    
     // this funciton also kiils all vertices which are not up to standard.
     // to this end, we create a temporary vertices array and clear all vertices
     std::vector<pairVertex> tmp_vertices = vertices;
@@ -836,10 +750,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
             
             v.FixTracksDirections ();
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
-           
+            
             // set vertex position in the three wire planes
-//             // version for v06_42_00
-//            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
+            //             // version for v06_42_00
+            //            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
             // version for v06_26_01
             double const v_position[3] = {v.GetPosition().X(),v.GetPosition().Y(),v.GetPosition().Z()};
             geo::TPCID tpcID = geom->FindTPCAtPosition( v_position );
@@ -858,11 +772,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
             
             vertices.push_back( v );
         }
-        // if the vertex is not such, kill it
-        else {
-            Debug( 0 , Form("erasing vertex %d, since its not up to standards: N(tracks)=%d, N(close semi-contained tracks):%d"
-                            , v.GetVertexID(), v.GetNtracks(), (int)(v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size()) ) );
-        }
+        // if the vertex is not with only two tracks at close proximity and nothing else, kill it
+        else { Debug( 0 , Form("erasing vertex %d, since N(tracks)=%d, N(close semi-contained tracks):%d"
+                               , v.GetVertexID(), v.GetNtracks(), (int)(v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size()) ) );}
     }
 }
 
@@ -960,7 +872,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "reco_Pt" << "," << "reco_theta_pq" << ","
     << "reco_Pmu" << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
     << "reco_Pp" << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
-
+    
     // missing momentum (reconstructed struck neutron)
     << "reco_Pmiss" << ","  << "reco_Pmiss_x" << ","  << "reco_Pmiss_y" << ","  << "reco_Pmiss_z" << "," << "reco_Pmiss_t" << ","
     
@@ -975,7 +887,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "genie_distance" << ","
     << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
     << "truth_Pt" << "," << "truth_theta_pq" << ","
-
+    
     // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
     << "closest_genie_distance" << ","
     << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
@@ -986,7 +898,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     // pdg code of long / short tracks and small / large PIDa
     << "pdg_long"<< "," << "pdg_short" << ","
     << "pdg_small_PIDa"<< "," << "pdg_large_PIDa" << ",";
-
+    
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
     // see description of the observable at docdb-10958
@@ -996,10 +908,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
                                   , plane , NwiresBox[i_box_size] , NticksBox[i_box_size] ) << "," ;
         }
     }
-
+    
     // flash matching of vertex
     vertices_file << "ClosestFlash_YZdistance" << "," << "ClosestFlash_TotalPE" << ",";
-
+    
     // vertex truth-topology in MC
     vertices_file
     << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
@@ -1048,7 +960,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file
         << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
         << v.GetAssignedMuonTrack().GetClosestFlash().GetTotalPE() << "," << v.GetAssignedProtonTrack().GetClosestFlash().GetTotalPE() << "," ;
-
+        
         // start/end points, for FV cuts
         vertices_file
         << v.GetAssignedMuonTrack().GetStartPos().x() << ","
@@ -1093,7 +1005,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
         vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
         vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";
-
+        
         // missing momentum (reconstructed struck neutron)
         vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";
         
@@ -1108,7 +1020,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         << v.GetAssignedProtonTrack().GetTruthMomentum().P() << ","
         << v.GetAssignedProtonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Phi() << ",";
         
-
+        
         // mathing genie interaction
         vertices_file << v.GetDistanceToGENIE() << ",";
         vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
@@ -1121,13 +1033,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << v.GetClosestGENIE().GetEv() << "," << v.GetClosestGENIE().GetQ2() << "," << v.GetClosestGENIE().GetXb() << "," << v.GetClosestGENIE().GetY() << "," << v.GetClosestGENIE().GetW2() << ",";
         vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
         
-       
+        
         // truth delta-phi
         vertices_file << v.GetTruthDeltaPhi() << ",";
         // pdg code of long / short tracks and small / large PIDa
         vertices_file << v.GetLongestTrack().GetMCpdgCode() << "," << v.GetShortestTrack().GetMCpdgCode() << ",";
         vertices_file << v.GetSmallPIDaTrack().GetMCpdgCode() << "," << v.GetLargePIDaTrack().GetMCpdgCode() << ",";
-
+        
         
         
         // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
@@ -1139,7 +1051,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         }
         // flash matching of vertex
         vertices_file << v.GetDis2ClosestFlash() << "," << v.GetClosestFlash().GetTotalPE() << ",";
-
+        
         
         // vertex truth-topology in MC
         vertices_file << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
@@ -1149,56 +1061,58 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
     }
 }
 
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(){
+void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(bool DoPrintTracksFull){
     
     PrintXLine();
-    Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
-    
-    if (MCmode){
-        if(!genie_interactions.empty()){
-            cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << genie_interactions.size() << " genie interactions\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-            for (auto g: genie_interactions) {
-                g.Print();
-            }
-        } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no interactions\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-    }
+    if(MCmode && !genie_interactions.empty()){
+        PrintHeader(Form("%d genie-interactions",(int)genie_interactions.size()));
+        for (auto g: genie_interactions) {
+            g.Print();
+        }
+    } else { PrintHeader("no genie-interactions"); }
     
     if(!flashes.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << flashes.size() << " flashes\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        PrintHeader(Form("%d flashes",(int)flashes.size()));
         for (auto f: flashes) {
             f.Print();
         }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no flashes\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-   
-    if(!tracks.empty()){
-        cout << "\033[33m" << "xxxxxxxxxxxxxx\n\n" << tracks.size() << " pandoraNu tracks\n\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
-        for (auto t: tracks) {
-            t.Print( true );
-        }
-    } else {cout << "\033[33m" << "xxxxxxxxxxxxxx\n" << "no reco tracks\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
+    } else { PrintHeader("no flashes"); }
     
+    if(!tracks.empty()){ PrintHeader(Form("%d pandoraNu-tracks",(int)tracks.size()));
+        for (auto t: tracks) {
+            if (DoPrintTracksFull) t.Print( true );
+            else cout << t.GetTrackID() << "\t";
+        }
+        cout << endl;
+    } else { PrintHeader("no pandoraNu-tracks");    }
     
     if(!vertices.empty()){
-        cout << "\033[36m" << "xxxxxxxxxxxxxx\n\n" << vertices.size() << " vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;
+        PrintHeader(Form("%d pair-vertices",(int)vertices.size()));
         for (auto v: vertices) {
-            v.Print( (debug>2) ? true : false       // do print pandoraNu tracks
+            v.Print((debug>2) ? true : false        // DoPrintTracks
+                    ,(debug>0) ? true : false       // DoPrintFull
                     );
         }
-    } else {cout << "\033[36m" << "xxxxxxxxxxxxxx\n" << "no vertices\n" << "xxxxxxxxxxxxxx"<< "\033[31m" << endl;}
-
+    } else { PrintHeader("no pair-vertices"); }
+    
+    
     // time stamp
-    PrintLine();
-    end_ana_time = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end_ana_time - start_ana_time;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end_ana_time);
-    std::cout << "\033[33m"
-    << "finished analysis of this event at " << std::ctime(&end_time)
-    << "time elapsed: " << elapsed_seconds.count() << "s"
-    << "\033[31m" << endl;
-
+    if (debug>2){
+        PrintLine();
+        end_ana_time = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end_ana_time - start_ana_time;
+        std::time_t end_time = std::chrono::system_clock::to_time_t(end_ana_time);
+        std::cout << "\033[33m"
+        << "finished analysis of this event at " << std::ctime(&end_time)
+        << "time elapsed: " << elapsed_seconds.count() << "s"
+        << "\033[31m" << endl;
+    }
+    cout << "processed so far " << (int)(fTree->GetEntries()) << " events" << endl;
     cout << "wrote " << vertices_ctr << " vertices to output file " << endl;
     EndEventBlock();
 }
@@ -1211,7 +1125,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
         NwiresBox[i_box_size] = MinNwiresBox + i_box_size * dNwiresBox;
         NticksBox[i_box_size] = MinNticksBox + i_box_size * dNticksBox;
     }
-
+    
     
     art::ServiceHandle<art::TFileService> tfs;
     fTree = tfs->make<TTree>("eventsTree","analysis tree of events");
@@ -1227,13 +1141,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     fTree->Branch("hits"                ,&hits);
     fTree->Branch("genie_interactions"  ,&genie_interactions);
     fTree->Branch("vertices"            ,&vertices);
-
+    
     
     fPOTTree = tfs->make<TTree>("pottree","pot tree");
     fPOTTree->Branch("pot",&pot,"pot/D");
     fPOTTree->Branch("run",&run,"run/I");
     fPOTTree->Branch("subrun",&subrun,"subrun/I");
-
+    
     // output csv file
     //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
     vertices_file.open(fDataSampleLabel+"_vertices.csv");
@@ -1243,6 +1157,29 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     pot_total = 0;
 }
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
+    Debug(3,"ub::ErezCCQEAnalyzerNewTruthMatching::endJob()");
+    
+    std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    summary_file.open(fDataSampleLabel+"_summary.csv");
+    summary_file << "time" << ","
+    << "POT" << ","
+    << "Nevents" << ","
+    << "Nvertices"
+    << endl;
+    
+    summary_file << std::ctime(&now_time) << ","
+    << pot_total << ","
+    << fTree->GetEntries() <<","
+    << vertices_ctr
+    << endl;
+    
+    summary_file.close();
+    
+    cout << "Ended job. Wrote summary into file: "+fDataSampleLabel+"_summary.csv" << endl;
+
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
@@ -1260,11 +1197,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
     if (fPOTTree) fPOTTree->Fill();
     pot_total += pot;
     
-    if (debug){
+    if (debug>1){
         Printf("end subrun %d",subrun);
         SHOW2( pot , pot_total );
     }
-    Printf( "POT from this subrun: %16.0lf" ,pot );
+    Debug(2,Form( "POT from this subrun: %16.0lf" ,pot ));
 }
 
 
@@ -1277,7 +1214,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
     fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
-
     debug = p.get< int >("VerbosityLevel");
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
