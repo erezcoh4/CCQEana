@@ -49,7 +49,7 @@ physics:
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
-      VerbosityLevel:		7
+      VerbosityLevel:		2
       POTModuleLabel:     "generator"
       FlashModuleLabel:     "simpleFlashBeam"
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"

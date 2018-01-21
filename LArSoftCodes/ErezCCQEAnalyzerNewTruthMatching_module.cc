@@ -72,6 +72,7 @@ constexpr int kMaxHits       = 40000; //maximum number of hits;
 constexpr int kMaxTruth      = 100;
 constexpr int kMaxNgenie     = 100;
 constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal distance for clustering
+constexpr float kMin_dQ_inTruthMatchedHits = 0.1; // the minimal fraction of hits-charge for MC-truth matching
 constexpr float EPSILON      = 0.1;   // tollerance for equations
 
 // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
@@ -296,8 +297,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         }
     }
 
-    if (event==2117) debug=7;
-    else debug=0;
 
     // ----------------------------------------
     // tracks information
@@ -412,7 +411,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
             
             //loop only over our hits
+            float dQinAllHits=0;
+            double max_dQinTruthMatchedHits=-1;
+            std::unordered_map<int,double> trackid_dQinTruthMatchedHits;
+
             for(size_t i_h=0; i_h < trk_hits_ptrs.size(); ++i_h){
+                
+                float dQinHit = trk_hits_ptrs[i_h]->Integral();
+                dQinAllHits += dQinHit;
                 
                 // for each hit, ask how many particles match this hit
                 Debug(4,Form("in track %d, associated hit: %d",track.GetTrackID(),(int)i_h));
@@ -425,20 +431,33 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                     //loop over particles that match this hit and ask which one deposited the most energy
                     for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
                         Debug(5,Form("i_p: %d, particle_vec[i_p]->TrackId(): %d...",(int)i_p,(int)particle_vec[i_p]->TrackId()));
-                        trkide[ particle_vec[i_p]->TrackId() ] += match_vec[i_p]->energy; //store energy [MeV] deposited by track id
-                        tote += match_vec[i_p]->energy; //calculate total energy deposited
+                        float Edep_particle = match_vec[i_p]->energy;  // energy deposited by ionization by this track ID [MeV]
+                        float Edep_particle_frac = match_vec[i_p]->ideFraction; // fraction of energy in hit from this particle
+                        
+                        Debug(5, Form("Edep_particle:%f, Edep_particle_frac:%f",Edep_particle,Edep_particle_frac));
+
+                        trkide[ particle_vec[i_p]->TrackId() ] += Edep_particle; //store energy [MeV] deposited by track id
+                        trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ] += dQinHit; // store the integral on the hit by the track id
+                        
+                        tote += Edep_particle; //calculate total energy deposited
                         if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
                             maxe = trkide[ particle_vec[i_p]->TrackId() ];
                             maxp_me = particle_vec[i_p];
                             Debug(5,Form("changing maxp_me to particle_vec[%d], pdg:%d, deposited maxe:%f",(int)i_p,maxp_me->PdgCode(),maxe));
+                            max_dQinTruthMatchedHits = trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ];
+                            Debug(5,Form("max_dQinTruthMatchedHits:%f",max_dQinTruthMatchedHits));
                         }
                     }//end loop over particles per hit
                 }
                 Debug(5,Form("after if (particle_vec.size()>0); maxe=%lf",maxe));
             }
-            // Now have matched the truth information - plug into the track object
+            
             const art::Ptr< simb::MCParticle > particle = maxp_me;
-            if (!particle.isNull()){
+            // Now have matched the truth information - plug into the track object
+            // first, check completeness of the track MC-truth matching:
+            // if a particle is to be matched with a track, require that it deposited more than some fraction kMin_dQ_inTruthMatchedHits in the charge deposited in the track
+            if (debug>5) SHOW3( max_dQinTruthMatchedHits , dQinAllHits, max_dQinTruthMatchedHits / dQinAllHits );
+            if ( (!particle.isNull()) && (max_dQinTruthMatchedHits / dQinAllHits >= kMin_dQ_inTruthMatchedHits )) {
                 if (debug>5) {
                     cout << "matched track " << track.GetTrackID() << " with particle " << particle->PdgCode() << endl;
                     SHOW2( particle -> Mother() , particle -> Process() );
@@ -462,9 +481,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                        ? "cosmic ray"
                                        : "unkwon origin")  );
                 }// end if fo.isValid()
-            } else {
+            }else {
                 Debug(2,"particle.isNull() = true!...");
+                if (!maxp_me.isNull()) {
+                    Debug(5, Form( "Un-Matching particle %d since it deposited too few of hit-charge in track (max_dQinTruthMatchedHits/dQinAllHits = %.2f)" , maxp_me->PdgCode() , max_dQinTruthMatchedHits / dQinAllHits) );
+                }
             }
+            
             
         }//MC
         tracks.push_back( track );
@@ -1115,8 +1138,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(bool DoPrintTracksFu
         << "time elapsed: " << elapsed_seconds.count() << "s"
         << "\033[31m" << endl;
     }
-    cout << "processed so far " << (int)(fTree->GetEntries()) << " events" << endl;
-    cout << "wrote " << vertices_ctr << " vertices to output file " << endl;
+    PrintLine();
+    std::cout << "\033[33m"
+    << "processed so far " << (int)(fTree->GetEntries()) << " events" << endl;
+    cout << "wrote " << vertices_ctr << " vertices to output file " << "\033[31m"  << endl;
     EndEventBlock();
 }
 
@@ -1172,7 +1197,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     << "Nvertices"
     << endl;
     
-    summary_file << std::ctime(&now_time) << ","
+    std::string sTimeS = std::ctime(&now_time);
+    
+    summary_file << sTimeS.substr(0,sTimeS.length()-1) << ","
     << pot_total << ","
     << fTree->GetEntries() <<","
     << vertices_ctr

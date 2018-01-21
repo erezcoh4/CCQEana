@@ -383,8 +383,13 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
                     //loop over particles
                     for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
                         Debug(5,Form("i_p: %d, particle_vec[i_p]->TrackId(): %d...",(int)i_p,(int)particle_vec[i_p]->TrackId()));
-                        trkide[ particle_vec[i_p]->TrackId() ] += match_vec[i_p]->energy; //store energy per track id
-                        tote += match_vec[i_p]->energy; //calculate total energy deposited
+                        float Edep_particle = match_vec[i_p]->energy;  // energy deposited by ionization by this track ID [MeV]
+                        float Edep_particle_frac = match_vec[i_p]->ideFraction; // fraction of energy in hit from this particle
+                        Debug(5, Form("Edep_particle:%f, Edep_particle_frac:%f",Edep_particle,Edep_particle_frac));
+                        
+                        trkide[ particle_vec[i_p]->TrackId() ] += Edep_particle; //store energy per track id
+                        tote += Edep_particle; //calculate total energy deposited
+                        
                         if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
                             maxe = trkide[ particle_vec[i_p]->TrackId() ];
                             maxp_me = particle_vec[i_p];
@@ -393,43 +398,48 @@ void ub::ErezTracksAnalyzerNewMCTruthMatching::analyze(art::Event const & evt){
                 }
                 Debug(4,"after if (particle_vec.size()>0)");
             }
+            // We want to add a completeness variable,
+            // defined as the ratio of the energy of the particle that contributed most to this track to the total true energy associated to this trackID
+            
             // Now have matched the truth information - plug into the track object
             const art::Ptr< simb::MCParticle > particle = maxp_me;
-            track.SetMCpdgCode( particle->PdgCode() );
-            track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
-            track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
-            track.SetTruthDirection();
-            track.SetTruthLength();
-            track.SetTruthMomentum( particle -> Momentum() );
-            track.SetTruthMother( particle -> Mother() );
-            track.SetTruthProcess( particle -> Process() );
-            
-            // * MC-truth information
-            // To this end, we need to back-track the MCTruth/MCParticle association.
-            // we do this with art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
-            // but pHandle must get the correct particle Key,
-            // which, since we defined it as an art::Ptr, is obtained from key() method
-            int particle_key = (int)particle.key();
-            if (debug>5){
-                SHOW(particle.key());
-                SHOW( particle->PdgCode() );
-                SHOW3( particle->Vx() , particle->Vy() , particle->Vz() );
-            }
-            if( fo.isValid() ){
-                Debug(5,"fo.isValid()");
-                auto pHandle_at_particle_key = pHandle->at(particle_key);
+            if (!particle.isNull()){
+                track.SetMCpdgCode( particle->PdgCode() );
+                track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+                track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                track.SetTruthDirection();
+                track.SetTruthLength();
+                track.SetTruthMomentum( particle -> Momentum() );
+                track.SetTruthMother( particle -> Mother() );
+                track.SetTruthProcess( particle -> Process() );
+                
+                // * MC-truth information
+                // To this end, we need to back-track the MCTruth/MCParticle association.
+                // we do this with art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+                // but pHandle must get the correct particle Key,
+                // which, since we defined it as an art::Ptr, is obtained from key() method
+                int particle_key = (int)particle.key();
                 if (debug>5){
-                    Printf("particle handle at particle_key %d",particle_key);
-                    SHOW( pHandle_at_particle_key.PdgCode() );
-                    SHOW3( pHandle_at_particle_key.Vx(),pHandle_at_particle_key.Vy(),pHandle_at_particle_key.Vz() );
+                    SHOW(particle.key());
+                    SHOW( particle->PdgCode() );
+                    SHOW3( particle->Vx() , particle->Vy() , particle->Vz() );
                 }
-                art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
-                if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
-                else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
-                SHOW( mc_truth -> Origin() );
-            }// end if fo.isValid()
-            else {
-                Debug(0,"fo.isValid() is false");
+                if( fo.isValid() ){
+                    Debug(5,"fo.isValid()");
+                    auto pHandle_at_particle_key = pHandle->at(particle_key);
+                    if (debug>5){
+                        Printf("particle handle at particle_key %d",particle_key);
+                        SHOW( pHandle_at_particle_key.PdgCode() );
+                        SHOW3( pHandle_at_particle_key.Vx(),pHandle_at_particle_key.Vy(),pHandle_at_particle_key.Vz() );
+                    }
+                    art::Ptr<simb::MCTruth> mc_truth = fo.at(particle_key);
+                    if (mc_truth->Origin() == simb::kBeamNeutrino)      track.SetOrigin( "beam neutrino" );
+                    else if (mc_truth->Origin() == simb::kCosmicRay)    track.SetOrigin( "cosmic ray" );
+                    SHOW( mc_truth -> Origin() );
+                }// end if fo.isValid()
+                else {
+                    Debug(5,"fo.isValid() is false");
+                }
             }
         }
         tracks.push_back( track );
