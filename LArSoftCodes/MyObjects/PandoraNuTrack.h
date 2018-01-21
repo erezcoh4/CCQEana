@@ -28,10 +28,10 @@ using namespace std;
 
 // prints....
 #define EndEventBlock() std::cout << "\033[32m"<< "....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......" << "\033[0m"<< endl
-#define PrintLine() std::cout << "--------------------------------------------------------------" << std::endl
-#define PrintXLine() std::cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << std::endl
-#define PrintXLine() std::cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << std::endl
-#define PrintHeader(header) std::cout << "\033[33m" << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" << (header) << "\n" << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<< "\033[31m" << std::endl
+#define PrintLine() std::cout << "--------------------------------------------------------------" << "\033[0m" << std::endl
+#define PrintXLine() std::cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << "\033[0m" << std::endl
+#define PrintXLine() std::cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << "\033[0m" << std::endl
+#define PrintHeader(header) std::cout << "\033[33m" << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" << (header) << "\n" << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<< "\033[30m" << std::endl
 
 
 

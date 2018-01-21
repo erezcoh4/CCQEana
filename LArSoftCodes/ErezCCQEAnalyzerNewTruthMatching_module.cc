@@ -297,6 +297,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         }
     }
 
+    if (event==2117) debug=7;
+    else debug=0;
 
     // ----------------------------------------
     // tracks information
@@ -318,8 +320,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         
         // U / V / Y coordinates
         for (int plane = 0; plane < 3; plane++){
-            
-            
             Debug(5,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
             geo::TPCID tpcID = geom->FindTPCAtPosition( StartLoc );
             int tpc = 0;
@@ -399,10 +399,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         // MC-truth mathching for the tracks
         bool DoNewMCtruthMatching = true;
         bool isMC = true;
-        Debug(5,"before if (isMC && DoNewMCtruthMatching)");
+        Debug(4,"before if (isMC && DoNewMCtruthMatching)");
         if (isMC && DoNewMCtruthMatching){
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
-            Debug(3,Form( "\tThere are %d associated hits." ,(int)trk_hits_ptrs.size() ));
+            Debug(4,Form( "\tThere are %d associated hits to track %d." ,(int)trk_hits_ptrs.size(), track.GetTrackID()));
             
             std::unordered_map<int,double> trkide;
             double maxe=-1, tote=0;
@@ -413,33 +413,37 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
             
             //loop only over our hits
-            for(size_t i_h=0; i_h<trk_hits_ptrs.size(); ++i_h){
+            for(size_t i_h=0; i_h < trk_hits_ptrs.size(); ++i_h){
                 
                 // for each hit, ask how many particles match this hit
-                Debug(4,Form("i_h: %d, particle_vec.clear(); match_vec.clear();",(int)i_h));
+                Debug(4,Form("in track %d, associated hit: %d",track.GetTrackID(),(int)i_h));
                 particle_vec.clear(); match_vec.clear();
                 particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);
                 //the .key() gives us the index in the original collection
-                Debug(4,Form("There are %d particles matched to hit %d" , (int)particle_vec.size() ,(int)i_h ));
+                Debug(4,Form("in track %d, There are %d particles matched to hit %d" ,track.GetTrackID(), (int)particle_vec.size() ,(int)i_h ));
                 
                 if (particle_vec.size()>0){
-                    Debug(5,Form("%d",(int)particle_vec.size()));
-                    //loop over particles
+                    //loop over particles that match this hit and ask which one deposited the most energy
                     for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
                         Debug(5,Form("i_p: %d, particle_vec[i_p]->TrackId(): %d...",(int)i_p,(int)particle_vec[i_p]->TrackId()));
-                        trkide[ particle_vec[i_p]->TrackId() ] += match_vec[i_p]->energy; //store energy per track id
+                        trkide[ particle_vec[i_p]->TrackId() ] += match_vec[i_p]->energy; //store energy [MeV] deposited by track id
                         tote += match_vec[i_p]->energy; //calculate total energy deposited
                         if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
                             maxe = trkide[ particle_vec[i_p]->TrackId() ];
                             maxp_me = particle_vec[i_p];
+                            Debug(5,Form("changing maxp_me to particle_vec[%d], pdg:%d, deposited maxe:%f",(int)i_p,maxp_me->PdgCode(),maxe));
                         }
                     }//end loop over particles per hit
                 }
-                Debug(4,"after if (particle_vec.size()>0)");
+                Debug(5,Form("after if (particle_vec.size()>0); maxe=%lf",maxe));
             }
             // Now have matched the truth information - plug into the track object
             const art::Ptr< simb::MCParticle > particle = maxp_me;
             if (!particle.isNull()){
+                if (debug>5) {
+                    cout << "matched track " << track.GetTrackID() << " with particle " << particle->PdgCode() << endl;
+                    SHOW2( particle -> Mother() , particle -> Process() );
+                }
                 track.SetMCpdgCode( particle->PdgCode() );
                 track.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
                 track.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
@@ -473,10 +477,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // MC truth information
     // ----------------------------------------
     mcevts_truth = mclist.size();
-    Debug(0,"before if (mcevts_truth)");
+    Debug(4,"before if (mcevts_truth)");
     if (mcevts_truth){
         MCmode = true;
-        Debug(0,"MCmode = true;");
+        Debug(4,"MCmode = true;");
         
         for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
             art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
@@ -505,7 +509,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 // all other particles in the interaction
                 Int_t NgenieParticles = (Int_t)mctruth->NParticles();
                 if ( NgenieParticles ){
-                    Debug(0,"inside if ( NgenieParticles )");
+                    Debug(5,"inside if ( NgenieParticles )");
                     for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
                         const simb::MCParticle& part( mctruth->GetParticle(iPart) );
                         // add a primary to genie-interaction
@@ -515,31 +519,31 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                                      ,part.Mother()     // mother
                                                      ,part.Process()    // process
                                                      ) ;
-                        
-                        // match the primary particle with a track
-                        for (auto & track : tracks){
-                            if (debug>0){
-                                cout << "in for (auto & track : tracks)" << endl;
-                                SHOW2(track.GetTrackID(),track.GetMCpdgCode());
-                                SHOW2(part.Momentum().P(),track.GetTruthMomentum().P());
-                                SHOW2(part.Momentum().M(),track.GetTruthMomentum().M());
-                            }
-                            if (
-                                ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
-                                &&
-                                ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
-                                &&
-                                ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
-                                &&
-                                ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
-                                ) {
-                                // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
-                                genie_interaction.AddTrack ( track );
-                                track.SetMCeventID( mc_evend_id );
-                                Debug(0,Form("adding track %d to genie interaction %d as a particle %d",track.GetTrackID(),mc_evend_id,part.PdgCode()));
-                            }
-                        }
-                        
+                        if (part.StatusCode()==1) {
+                            // try to match the primary particle with a track
+                            for (auto & track : tracks){
+                                if (debug>6){
+                                    cout << "in for (auto & track : tracks) of iPart " << iPart << ", which is a particle with PDG code " << part.PdgCode() << endl;
+                                    SHOW2(track.GetTrackID(),track.GetMCpdgCode());
+                                    SHOW2(part.Momentum().P(),track.GetTruthMomentum().P());
+                                    SHOW2(part.Momentum().M(),track.GetTruthMomentum().M());
+                                }
+                                if (
+                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
+                                    &&
+                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
+                                    &&
+                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                    &&
+                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
+                                    ) {
+                                    // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
+                                    genie_interaction.AddTrack ( track );
+                                    track.SetMCeventID( mc_evend_id );
+                                    Debug(6,Form("adding track %d to genie interaction %d as a particle %d",track.GetTrackID(),mc_evend_id,part.PdgCode()));
+                                }
+                            } // for (auto & track : tracks)
+                        } // end if (part.StatusCode()==1)
                     } // for particle
                 }
                 genie_interaction.SortNucleons();
@@ -558,7 +562,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     ConstructVertices();
     
     
-    PrintInformation();
+    PrintInformation( (debug>0) ? true : false );
     fTree -> Fill();
 }
 

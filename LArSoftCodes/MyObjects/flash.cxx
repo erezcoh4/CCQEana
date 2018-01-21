@@ -28,7 +28,8 @@ void flash::Print() const{
     << "time: " << time << ",timewidth: " << timewidth << std::endl
     << "Zcenter: " << Zcenter << ",Zwidth: " << Zwidth << std::endl
     << "Ycenter: " << Ycenter << ",Ywidth: " << Ywidth << std::endl
-    << "totalPE: " << totalPE << std::endl;
+    << "totalPE: " << totalPE
+    << "\033[30m" << std::endl;
 }
 
 
