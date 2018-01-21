@@ -147,13 +147,12 @@ private:
     short   isdata;
     
     bool    MCmode;
-    
+
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
     int     Nvertices;
     int     vertices_ctr;
-    
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
     double  pot, pot_total;
