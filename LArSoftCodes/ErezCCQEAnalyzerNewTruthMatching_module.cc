@@ -120,7 +120,10 @@ public:
     bool    TrackAlreadyInVertices (int ftrack_id);
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
-    
+    void         HeaderTracksInCSV ();
+    void         StreamTracksToCSV ();
+
+    bool ParticleAlreadyMatchedInThisHit ( std::vector<int> ,int );
     
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     // debug
@@ -148,12 +151,13 @@ private:
     short   isdata;
     
     bool    MCmode;
+    bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
 
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
     int     Nvertices;
-    int     vertices_ctr;
+    int     vertices_ctr, tracks_ctr;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
     double  pot, pot_total;
@@ -185,7 +189,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
     // output csv file of vertices
-    ofstream vertices_file, summary_file;
+    ofstream vertices_file, summary_file, tracks_file;
 
 };
 
@@ -411,41 +415,49 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
             
             //loop only over our hits
-            float dQinAllHits=0;
-            double max_dQinTruthMatchedHits=-1;
             std::unordered_map<int,double> trackid_dQinTruthMatchedHits;
+            double max_dQinTruthMatchedHits=-1, dQinAllHits=0;
 
             for(size_t i_h=0; i_h < trk_hits_ptrs.size(); ++i_h){
-                
+                Debug(4,"--------------------------------");
                 float dQinHit = trk_hits_ptrs[i_h]->Integral();
                 dQinAllHits += dQinHit;
-                
+                Debug(4,Form("in track %d, hit %d, dQinAllHits: %f",track.GetTrackID(),(int)i_h,dQinAllHits));
                 // for each hit, ask how many particles match this hit
-                Debug(4,Form("in track %d, associated hit: %d",track.GetTrackID(),(int)i_h));
                 particle_vec.clear(); match_vec.clear();
                 particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);
                 //the .key() gives us the index in the original collection
                 Debug(4,Form("in track %d, There are %d particles matched to hit %d" ,track.GetTrackID(), (int)particle_vec.size() ,(int)i_h ));
                 
+                // to avoid from matching the same particle more than once
+                // we introduce a vector of matched TrackId-s
+                // and require that the matched particle has not been mathced already for this hit
+                std::vector <int> ParticlesMatchedInThisHit;
                 if (particle_vec.size()>0){
                     //loop over particles that match this hit and ask which one deposited the most energy
                     for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
                         Debug(5,Form("i_p: %d, particle_vec[i_p]->TrackId(): %d...",(int)i_p,(int)particle_vec[i_p]->TrackId()));
                         float Edep_particle = match_vec[i_p]->energy;  // energy deposited by ionization by this track ID [MeV]
                         float Edep_particle_frac = match_vec[i_p]->ideFraction; // fraction of energy in hit from this particle
-                        
                         Debug(5, Form("Edep_particle:%f, Edep_particle_frac:%f",Edep_particle,Edep_particle_frac));
-
-                        trkide[ particle_vec[i_p]->TrackId() ] += Edep_particle; //store energy [MeV] deposited by track id
-                        trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ] += dQinHit; // store the integral on the hit by the track id
                         
+                        trkide[ particle_vec[i_p]->TrackId() ] += Edep_particle; //store energy [MeV] deposited by track id
+
                         tote += Edep_particle; //calculate total energy deposited
                         if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
                             maxe = trkide[ particle_vec[i_p]->TrackId() ];
                             maxp_me = particle_vec[i_p];
                             Debug(5,Form("changing maxp_me to particle_vec[%d], pdg:%d, deposited maxe:%f",(int)i_p,maxp_me->PdgCode(),maxe));
-                            max_dQinTruthMatchedHits = trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ];
-                            Debug(5,Form("max_dQinTruthMatchedHits:%f",max_dQinTruthMatchedHits));
+                            
+                            if (!ParticleAlreadyMatchedInThisHit( ParticlesMatchedInThisHit , (int)particle_vec[i_p]->TrackId()) ) {
+                                ParticlesMatchedInThisHit.push_back( (int)particle_vec[i_p]->TrackId() );
+                                trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ] += dQinHit; // store the integral on the hit by the track id
+                                Debug(5, Form("dQinHit:%f, trackid_dQinTruthMatchedHits[%d]:%f",dQinHit,particle_vec[i_p]->TrackId(),trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ]));
+                                max_dQinTruthMatchedHits = trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ];
+                                Debug(5,Form("max_dQinTruthMatchedHits:%.2f, dQinAllHits:%.2f",max_dQinTruthMatchedHits,dQinAllHits));
+                            } else {
+                                Debug(5,Form("particle of TrackID %d was already matched in this hit",(int)particle_vec[i_p]->TrackId()));
+                            }
                         }
                     }//end loop over particles per hit
                 }
@@ -456,8 +468,12 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             // Now have matched the truth information - plug into the track object
             // first, check completeness of the track MC-truth matching:
             // if a particle is to be matched with a track, require that it deposited more than some fraction kMin_dQ_inTruthMatchedHits in the charge deposited in the track
-            if (debug>5) SHOW3( max_dQinTruthMatchedHits , dQinAllHits, max_dQinTruthMatchedHits / dQinAllHits );
-            if ( (!particle.isNull()) && (max_dQinTruthMatchedHits / dQinAllHits >= kMin_dQ_inTruthMatchedHits )) {
+            // keep track of the ratio max_dQinTruthMatchedHits / dQinAllHits,
+            // in order to select the best value to cut on...
+            track.SetMaxdQinTruthMatchedHits(max_dQinTruthMatchedHits);
+            track.SetdQinAllHits(dQinAllHits);
+            if (debug>5) SHOW3( max_dQinTruthMatchedHits , dQinAllHits, track.GetRatiodQinTruthMatchedHits() );
+            if ( (!particle.isNull()) && (track.GetRatiodQinTruthMatchedHits() >= kMin_dQ_inTruthMatchedHits )) {
                 if (debug>5) {
                     cout << "matched track " << track.GetTrackID() << " with particle " << particle->PdgCode() << endl;
                     SHOW2( particle -> Mother() , particle -> Process() );
@@ -579,6 +595,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     
     // ----------------------------------------
+    // tracks information
+    // ----------------------------------------
+    if (DoWriteTracksInformation){
+        StreamTracksToCSV();
+    }
+    
+    // ----------------------------------------
     // event topology (my-vertex....)
     // ----------------------------------------
     ConstructVertices();
@@ -586,6 +609,28 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     PrintInformation( (debug>0) ? true : false );
     fTree -> Fill();
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool ub::ErezCCQEAnalyzerNewTruthMatching::ParticleAlreadyMatchedInThisHit(std::vector<int> AlreadyMatched_TrackIDs
+                                         ,int cTrackID ){
+    // to avoid from matching the same particle more than once
+    // we introduce a vector of matched TrackId-s for each hit
+    // and require that the matched particle has not been mathced already for this hit
+    if (debug>5) {
+        cout << "ub::ErezCCQEAnalyzerNewTruthMatching::ParticleAlreadyMatchedInThisHit()" << endl;
+        cout << "looking if track " <<  cTrackID << " has already matched in the list: " << endl;
+        for (auto trk_id:AlreadyMatched_TrackIDs) {
+            cout << trk_id << ",";
+        }
+        cout << endl;
+    }
+    for (auto trk_id:AlreadyMatched_TrackIDs) {
+        if (trk_id == cTrackID) return true;
+    }
+    return false;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -851,6 +896,80 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
         }
     }
 }
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
+    
+    tracks_ctr = 0;
+    
+    tracks_file
+    << "run"        << "," << "subrun" << "," << "event" << ","
+    << "track_id"   << ",";
+    
+    // reconstructed features
+    tracks_file
+    << "start_x"<< "," << "start_y" << "," << "start_z" << ","
+    << "end_x"  << "," << "end_y"   << "," << "end_z"   << ","
+    << "theta"  << "," << "phi"     << ","
+    << "PIDa"   << "," << "length"  << ",";
+    
+    // truth information
+    tracks_file
+    << "pdg" << ","
+    << "origin" << ",";
+    
+    // completeness of the track MC-truth matching
+    tracks_file
+    << "max_dQinTruthMatchedHits" << ","
+    << "dQinAllHits" << ","
+    << "Ratio_max_dQinTruthMatchedHits_dQinAllHits";
+    
+    // finish header
+    tracks_file << endl;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
+    
+    // whatever you add here - must add also in header
+    // i.e. in
+    // ub::ErezSimpleTracksAnalyzer::HeaderTracksInCSV()
+    for (auto t:tracks){
+        
+        tracks_ctr++;
+        
+        tracks_file
+        << t.GetRun()       << "," << t.GetSubrun() << "," << t.GetEvent() << ","
+        << t.GetTrackID()   << ",";
+        
+        // reconstructed features
+        tracks_file
+        << t.GetStartPos().x()  << "," << t.GetStartPos().y()   << "," << t.GetStartPos().z() << ","
+        << t.GetEndPos().x()    << "," << t.GetEndPos().y()     << "," << t.GetEndPos().z() << ","
+        << t.GetTheta()         << "," << t.GetPhi()            << ","
+        << t.GetPIDa()          << "," << t.GetLength()         << ",";
+        
+        // truth information
+        tracks_file
+        << t.GetMCpdgCode() << ","
+        << t.GetOrigin() << ",";
+        
+        
+        
+        // completeness of the track MC-truth matching
+        tracks_file
+        << t.GetMaxdQinTruthMatchedHits() << ","
+        << t.GetdQinAllHits() << ","
+        << t.GetRatiodQinTruthMatchedHits() ;
+
+        // finish track features
+        tracks_file << endl;
+    }
+}
+
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
@@ -1176,7 +1295,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     fPOTTree->Branch("run",&run,"run/I");
     fPOTTree->Branch("subrun",&subrun,"subrun/I");
     
-    // output csv file
+    // output csv files
+    Debug( 2, Form( "DoWriteTracksInformation: %d",DoWriteTracksInformation) );
+    if (DoWriteTracksInformation) {
+        tracks_file.open(fDataSampleLabel+"_tracks.csv");
+        cout << "opened vertices file: "+fDataSampleLabel+"_tracks.csv" << endl;
+        HeaderTracksInCSV();
+    }
     //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
     vertices_file.open(fDataSampleLabel+"_vertices.csv");
     cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
@@ -1247,7 +1372,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     debug = p.get< int >("VerbosityLevel");
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
-
+    DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
 }
 
 

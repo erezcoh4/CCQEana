@@ -674,7 +674,8 @@ void ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV(){
     vertices_file
     << "truth_Pv_x" << ","
     << "truth_Pv_y" << ","
-    << "truth_Pv_z" << ",";
+    << "truth_Pv_z" << ","
+    << "truth_Pv_theta" << ",";
 
 
 
@@ -737,7 +738,8 @@ void ub::ErezCCQEGENIENewTruthMatching::StreamVerticesToCSV(){
         vertices_file
         << g.GetPv().Px() << ","
         << g.GetPv().Py() << ","
-        << g.GetPv().Pz() << ",";
+        << g.GetPv().Pz() << ","
+        << g.GetPv().Theta() << ",";
         
         
         // only for 1mu-1p vertices

@@ -1,0 +1,125 @@
+#
+# Add any personal extra databases here:
+#
+#UPS_EXTRA_DIR=$HOME/p/upsdb; export UPS_EXTRA_DIR
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# get ups environment, and then setup the login product
+#
+
+pa=/grid/fermiapp/products/common/etc 
+if [  -r "$pa/setups.sh" ]
+then
+  . "$pa/setups.sh"
+  if ups exist login
+  then
+      setup login
+  fi
+fi
+
+#
+# make sure our .shrc gets run...
+#
+ENV=$HOME/.shrc
+export ENV 
+if [ "`basename $SHELL`" != ksh -a -r $ENV ]
+then
+    . $ENV
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# The default umask setting is 022, disabling writes except by
+# owner.  Uncomment the following line to allow group writes.
+# umask 002
+
+# set prompt
+PS1="<`hostname`> "; export PS1
+
+# set default printer, etc.
+# FLPQUE=fcc2w_ps;	export FLPQUE;
+# FLPHOST=fnprt;		export FLPHOST;
+
+# set timezone, esp if you don't want central time
+# export TZ;		TZ=CST6CDT
+
+
+# Erez
+# ---------------------------------------------------
+echo 'now adding my own personal settings...'
+alias ll='ls -lh --color=auto'
+
+export data_uboone=/uboone/data/users/ecohen
+alias GoDataUboone='cd $data_uboone'
+export example_art_files=/uboone/data/users/ecohen/example_art_files
+export app_uboone=/uboone/app/users/ecohen
+alias GoAppUboone='cd $app_uboone'
+#export my_fcl_files=$app_uboone/Larsoft_v05_09_01/fclfiles
+alias GoAnaTreesAnalysis='cd $app_uboone/larlite/UserDev/AnalysisTreesInformation/AnaTreesPackage; pwd'
+alias enw='emacs -nw'
+alias GitAdd='git add .'
+alias GitCommit='git commit -m '
+alias GitPush='git push'
+export GBDTprotonsAnalysis=$app_uboone/larlite/UserDev/LarLite/MyPackage
+export AnalysisTreesAna=$app_uboone/larlite/UserDev/AnalysisTreesInformation/AnaTreesPackage
+export myJobs=$data_uboone/jobs
+alias GoJobs='cd $myJobs'
+
+# -------- Mike Mooney shell
+#source forErez.sh
+#echo "set mike-mooney script"
+
+# -------- My shell for LArLite
+#GoDataUboone
+#source /grid/fermiapp/products/uboone/setup_uboone.sh
+#source $app_uboone/Larsoft_v05_09_01/localProducts_larsoft_v05_09_01_e9_prof/setup
+#mrbsetenv
+#echo "set environmetals"
+#source $app_uboone/larlite/config/setup.sh
+#echo "larlite setup as well..."
+
+# -------- LArSoft shell 
+#source /grid/fermiapp/products/uboone/setup_uboone.sh
+#setup larsoft v06_42_00 -q e14:prof
+#setup uboonecode v06_42_00 -q e14:prof
+#cd /uboone/app/users/$USER/ErezCCQE
+#source localProducts_larsoft_v06_42_00_e14_prof/setup
+#mrbslp
+#echo "set my LArSoft preferences (v06_42_00 e14:prof)"
+
+source /grid/fermiapp/products/uboone/setup_uboone.sh
+setup uboonecode v06_26_01_09 -q e10:prof
+cd /uboone/app/users/$USER/LArSoft
+source /uboone/app/users/yuntse/lar_v06_26_01_08/localProducts_larsoft_v06_26_01_08_e10_prof/setup
+mrbslp
+source localProducts_larsoft_v06_26_01_08_e10_prof/setup
+mrbslp
+echo "set production  LArSoft preferences (v06_26_01_09 e10:prof)"
+
+
+
+alias GoErezCCQE='cd /uboone/app/users/$USER/ErezCCQE'
+alias GoMakeErezCCQE='cd /uboone/app/users/$USER/LArSoft/build_slf6.x86_64/uboonecode/uboone/ErezCCQEana; echo mrbsetenv; make install -j4'
+alias GoFeaturesFiles='cd /uboone/app/users/ecohen/AnalysisTreesAna/FeaturesFiles/; ll; pwd;'
+alias GoEventsAnaFiles='cd /uboone/app/users/ecohen/AnalysisTreesAna/TracksAnaFiles/; ll; pwd;'
+
+export fcl_files=/uboone/app/users/ecohen/ErezCCQE/fcl_files
+export xml_files=/uboone/app/users/ecohen/ErezCCQE/xml_files
+echo "setup Erez personal preferences"
+
+# -------- Adi LArSoft
+#source /grid/fermiapp/products/uboone/setup_uboone.sh
+#setup uboonecode v06_26_01_08 -q e10:prof
+#setup gallery v1_03_08 -qe10:nu:prof
+#source /uboone/app/users/yuntse/ub_v06_26_01_08/localProducts_larsoft_v06_26_01_07_e10_prof/setup
+#mrbslp
+#echo "setup Adi preferences (v_06_26_01_08 e10:prof)"
+
+# macros
+export macGBDTprotons=/uboone/app/users/ecohen/larlite/UserDev/AnaTreesGBDTprotons/GBDTprotonsPackage/mac
+export ArtFilesMCC8=/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8
+export CCQEjobsOutput=/uboone/data/users/ecohen/CCQEanalysis/jobs_output/
+export CCQEcandidates=/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/
+#GoAppUboone
+#echo "at $(pwd)"
+#echo "start working..."
+
+

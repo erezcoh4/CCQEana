@@ -112,6 +112,9 @@ public:
                                Int_t end_wire, Int_t end_time );
     void      SetClosestFlash (flash _flash)                {ClosestFlash = _flash;};
     
+    // completeness of the track MC-truth matching
+    void    SetMaxdQinTruthMatchedHits (float fmax)         {max_dQinTruthMatchedHits=fmax;};
+    void        SetdQinAllHits (float fdQ)                  {dQinAllHits = fdQ;};
     
     
     // GETters
@@ -151,7 +154,16 @@ public:
     Float_t                 GetPIDa () const {return PIDa; };
     Float_t            GetDis2Flash (flash) const;
     Float_t     GetDis2ClosestFlash () const ;
-    
+    Float_t GetMaxdQinTruthMatchedHits () const {return max_dQinTruthMatchedHits;};
+    Float_t          GetdQinAllHits () const {return dQinAllHits;};
+    Float_t GetRatiodQinTruthMatchedHits () const
+    {
+        if (fabs(dQinAllHits)>0.01) {
+        return (max_dQinTruthMatchedHits/dQinAllHits);
+        } else {
+            return -9999.;
+        }
+    }
     
     
     TVector3            GetStartPos () const {return start_pos;};
@@ -167,7 +179,7 @@ public:
     flash           GetClosestFlash () const {return ClosestFlash;};
     
     
-    
+
     
     
     
@@ -244,10 +256,12 @@ private:
     Float_t     CaloKEPerPlane[3]={0,0,0};
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa=-1;
+    
+    // completeness of the track MC-truth matching
+    Float_t     max_dQinTruthMatchedHits=-1, dQinAllHits=-1;
 
     // truth information - only valid for MC data
     Float_t     truth_length=-9999;
-    
     
     // TVector3
     TVector3    start_pos=TVector3(), end_pos=TVector3(), rec_dir=TVector3();

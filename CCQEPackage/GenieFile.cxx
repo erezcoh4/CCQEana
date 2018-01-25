@@ -105,9 +105,10 @@ bool GenieFile::HeaderCSV (){
     
     csv_file
     << "neu" << ","
-    << "v_Px" << ","
-    << "v_Py" << ","
-    << "v_Pz" << ","
+    << "Pv_x" << ","
+    << "Pv_y" << ","
+    << "Pv_z" << ","
+    << "Pv_theta" << ","
     << "Ev" << ","
     ;
     
@@ -154,6 +155,7 @@ bool GenieFile::StreamToCSV (){
     << nu.Px()  << ","
     << nu.Py()  << ","
     << nu.Pz()  << ","
+    << nu.Theta()  << ","
     << nu.E()   << ",";
     
     // my variables for CC1p0pi
@@ -178,9 +180,9 @@ bool GenieFile::StreamToCSV (){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::SetTopology (){
+    nu.SetXYZM( pxv, pyv, pzv, 0 );
     if ((cc==true) && (qel==true) && (nf == 1) && pdgf[0]==2212 ){
         CC1p0pi = true;
-        nu.SetXYZM( pxv, pyv, pzv, 0 );
         muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
         q = nu - muon;
         proton.SetXYZM( pxf[0], pyf[0], pzf[0], 0.9382720813 );

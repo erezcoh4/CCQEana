@@ -12,12 +12,11 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
 
-
-process_name: RunErezCCQEana
+process_name: RunErezCCQEana 
 
 services:
 {
-  TFileService: { fileName: "ccqe_ana_MCBNBCosmicDATA.root" closeFileFast: false}
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/CCQEgenieMCBNBCosmicDataOverlay_newTruthMatching_genie.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -43,16 +42,15 @@ physics:
   {
     EventsAnalyzer: 
     {
-      module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"Adi_overlay_18Jan2018"
+      module_type:          "ErezCCQEGENIENewTruthMatching"
+      DataSampleLabel:		"Adi_new_overlay_small"
       VerbosityLevel:		2
-      DoWriteTracksInfo:    true
       TrackModuleLabel: 	"pandoraNu"
-      HitsModuleLabel:      "pandoraCosmicHitRemoval"
+      HitsModuleLabel:          "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"
-      CalorimetryModuleLabel:"pandoraNucalo"
-      POTModuleLabel:       "generator"
+      CalorimetryModuleLabel:	"pandoraNucalo"
+      POTModuleLabel:     "generator"
       FlashModuleLabel:     "simpleFlashBeam"
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
     }
