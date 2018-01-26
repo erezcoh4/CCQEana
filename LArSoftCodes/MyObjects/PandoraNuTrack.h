@@ -115,7 +115,11 @@ public:
     // completeness of the track MC-truth matching
     void    SetMaxdQinTruthMatchedHits (float fmax)         {max_dQinTruthMatchedHits=fmax;};
     void        SetdQinAllHits (float fdQ)                  {dQinAllHits = fdQ;};
-    
+    // dE/dx
+    void               SetdEdx (int plane, std::vector<float> fdEdx)    {dEdx[plane]=fdEdx;};
+    void           FilldEdxHit (int plane, float fdEdx_hit)             {dEdx[plane].push_back(fdEdx_hit);};
+    void           SetResRange (int plane, std::vector<float> fResRange){ResRange[plane]=fResRange;};
+    void          FillResRange (int plane, float fResRange_hit)         {ResRange[plane].push_back(fResRange_hit);};
     
     // GETters
 
@@ -178,6 +182,9 @@ public:
     
     flash           GetClosestFlash () const {return ClosestFlash;};
     
+    // dE/dx
+    std::vector<float>      GetdEdx (int plane) const {return dEdx[plane];};
+    std::vector<float>  GetResRange (int plane) const {return ResRange[plane];};
     
 
     
@@ -262,6 +269,12 @@ private:
 
     // truth information - only valid for MC data
     Float_t     truth_length=-9999;
+
+    // dE/dx in three planes
+    std::vector<Float_t> ResRange[3];
+    std::vector<Float_t> dEdx[3];
+
+    
     
     // TVector3
     TVector3    start_pos=TVector3(), end_pos=TVector3(), rec_dir=TVector3();

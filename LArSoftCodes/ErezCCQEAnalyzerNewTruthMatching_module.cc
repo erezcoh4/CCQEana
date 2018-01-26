@@ -122,6 +122,8 @@ public:
     void       StreamVerticesToCSV ();
     void         HeaderTracksInCSV ();
     void         StreamTracksToCSV ();
+    void          HeaderGENIEInCSV ();
+    void          StreamGENIEToCSV ();
 
     bool ParticleAlreadyMatchedInThisHit ( std::vector<int> ,int );
     
@@ -152,12 +154,14 @@ private:
     
     bool    MCmode;
     bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
+    bool    DoAddTracksEdep=false; // add tracks dE/dx information
+    bool    DoWriteGENIEInformation=false; // save also all the genie information to a csv file
 
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
     int     Nvertices;
-    int     vertices_ctr, tracks_ctr;
+    int     vertices_ctr, tracks_ctr, genie_interactions_ctr;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
     double  pot, pot_total;
@@ -189,7 +193,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
     // output csv file of vertices
-    ofstream vertices_file, summary_file, tracks_file;
+    ofstream vertices_file, summary_file, tracks_file, genie_file;
 
 };
 
@@ -378,9 +382,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                             pida += calo->dEdx()[ip]*pow( calo->ResidualRange()[ip],0.42);
                             ++used_trkres;
                         }
+                        // record the track dE/dx vs. residual range
+                        track.FillResRange( plane , calo->ResidualRange()[ip] );
+                        track.FilldEdxHit( plane , calo->dEdx()[ip] );
                     }
                     if (used_trkres) pida /= used_trkres;
-                    track.SetPIDaPerPlane( plane , pida );
                 }
             }
             track.SetPIDa();
@@ -599,6 +605,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // ----------------------------------------
     if (DoWriteTracksInformation){
         StreamTracksToCSV();
+    }
+    
+    // ----------------------------------------
+    // tracks information
+    // ----------------------------------------
+    if (DoWriteGENIEInformation){
+        StreamGENIEToCSV();
     }
     
     // ----------------------------------------
@@ -899,6 +912,127 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
+    
+    genie_interactions_ctr = 0;
+    
+    genie_file
+    << "run" << "," << "subrun" << "," << "event" << "," ;
+    
+    // truth topology
+    genie_file
+    << "IsCC_Np_200MeVc" << ","
+    << "IsCC_1p_200MeVc" << ","
+    << "IsCC_1p_200MeVc_0pi" << ","
+    << "IsCCQE" << ",";
+    
+    // reconstructed topology
+    genie_file
+    << "IsVertexContained" << ","
+    << "IsInActiveVolume" << ","
+    << "Is1mu1p" << ","
+    << "Is_mu_TrackReconstructed" << ","
+    << "Is_mu_TrackInFV" << ","
+    << "Is_p_TrackReconstructed" << ","
+    << "Is_p_TrackInFV" << ","
+    << "IsVertexReconstructed" << ","
+    << "IsVertexInFV" << ",";
+    
+    // general for CC events
+    genie_file
+    << "truth_Pmu" << ","
+    << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
+    << "truth_Pmu_theta" << ","
+    << "truth_Pp" << ","
+    << "truth_Pp_theta" << ","
+    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ",";
+    
+    // relevant truth-information
+    genie_file
+    << "truth_Ev" << ","
+    << "truth_Q2" << ",";
+    
+    genie_file
+    << "truth_Pv_x" << ","
+    << "truth_Pv_y" << ","
+    << "truth_Pv_z" << ","
+    << "truth_Pv_theta" << ",";
+    
+    
+    
+    // only for 1mu-1p vertices
+    genie_file
+    << "reconstructed mu-p distance" ;
+    
+    
+    // finish
+    genie_file << endl;
+    
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::StreamGENIEToCSV(){
+    // Jan-26, 2018
+    // whatever you add here - must add also in header - ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV()
+    for (auto g:genie_interactions){
+        
+        genie_interactions_ctr++;
+        
+        genie_file
+        << g.GetRun() << "," << g.GetSubrun() << "," << g.GetEvent() << "," ;
+        
+        
+        // truth topology
+        genie_file
+        << g.GetIsCC_Np_200MeVc() << ","
+        << g.GetIsCC_1p_200MeVc() << ","
+        << g.GetIsCC_1p_200MeVc_0pi() << ","
+        << g.GetIsCCQE() << ",";
+        
+        // reconstructed topology
+        genie_file
+        << g.GetVertexContained() << ","
+        << g.GetIsInActiveVolume() << ","
+        << g.GetIs1mu1p() << ","
+        << g.GetIs_mu_TrackReconstructed() << ","
+        << g.GetIs_mu_TrackInFV() << ","
+        << g.GetIs_p_TrackReconstructed() << ","
+        << g.GetIs_p_TrackInFV() << ","
+        << g.GetIsVertexReconstructed() << ","
+        << g.GetIsVertexInFV() << ",";
+        
+        
+        // general for CC events
+        genie_file
+        << g.GetPmu().P() << ","
+        << g.GetPmu().Theta() << ","
+        << g.GetPmu().Px() << "," << g.GetPmu().Py() << "," << g.GetPmu().Pz() << ","
+        << g.GetPp().P() << ","
+        << g.GetPp().Theta() << ","
+        << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ",";
+        
+        // relevant truth-information
+        genie_file
+        << g.GetEv() << ","
+        << g.GetQ2() << ",";
+        
+        genie_file
+        << g.GetPv().Px() << ","
+        << g.GetPv().Py() << ","
+        << g.GetPv().Pz() << ","
+        << g.GetPv().Theta() << ",";
+        
+        
+        // only for 1mu-1p vertices
+        genie_file << g.GetReco_mu_p_distance();
+        
+        
+        // finish
+        genie_file << endl;
+    }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     
     tracks_ctr = 0;
@@ -923,7 +1057,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     tracks_file
     << "max_dQinTruthMatchedHits" << ","
     << "dQinAllHits" << ","
-    << "Ratio_max_dQinTruthMatchedHits_dQinAllHits";
+    << "Ratio_max_dQinTruthMatchedHits_dQinAllHits" << ",";
+    
+    
+    // dE/dx
+    if (DoAddTracksEdep) {
+        tracks_file
+        << "ResRange_Y" << ","
+        << "dEdx_Y" << ",";
+    }
     
     // finish header
     tracks_file << endl;
@@ -956,20 +1098,33 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
         << t.GetMCpdgCode() << ","
         << t.GetOrigin() << ",";
         
-        
-        
         // completeness of the track MC-truth matching
         tracks_file
         << t.GetMaxdQinTruthMatchedHits() << ","
         << t.GetdQinAllHits() << ","
-        << t.GetRatiodQinTruthMatchedHits() ;
+        << t.GetRatiodQinTruthMatchedHits() << ",";
 
+        // dE/dx
+        if (DoAddTracksEdep) {
+            std::vector<float> ResRange_Y = t.GetResRange( 2 ); // collection plane (Y) = 2
+            tracks_file << "\"[";
+            for (auto ResRange_Y_hit:ResRange_Y) {
+                tracks_file << ResRange_Y_hit << ",";
+            }
+            tracks_file << "]\"" << ",";
+            
+            std::vector<float> dEdx_Y = t.GetdEdx( 2 ); // collection plane (Y) = 2
+            tracks_file << "\"[";
+            for (auto dEdx_Y_hit:dEdx_Y) {
+                tracks_file << dEdx_Y_hit << ",";
+            }
+            tracks_file << "]\"";
+        }
+        
         // finish track features
         tracks_file << endl;
     }
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
@@ -1295,11 +1450,19 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     fPOTTree->Branch("run",&run,"run/I");
     fPOTTree->Branch("subrun",&subrun,"subrun/I");
     
+    SHOW(debug);
     // output csv files
+    Debug( 2, Form( "DoWriteGNEIEInformation: %d",DoWriteGENIEInformation) );
+    if (DoWriteGENIEInformation) {
+        genie_file.open(fDataSampleLabel+"_genie.csv");
+        cout << "opened genie file: "+fDataSampleLabel+"_genie.csv" << endl;
+        HeaderGENIEInCSV();
+    }
+    
     Debug( 2, Form( "DoWriteTracksInformation: %d",DoWriteTracksInformation) );
     if (DoWriteTracksInformation) {
         tracks_file.open(fDataSampleLabel+"_tracks.csv");
-        cout << "opened vertices file: "+fDataSampleLabel+"_tracks.csv" << endl;
+        cout << "opened tracks file: "+fDataSampleLabel+"_tracks.csv" << endl;
         HeaderTracksInCSV();
     }
     //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
@@ -1319,6 +1482,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     summary_file << "time" << ","
     << "POT" << ","
     << "Nevents" << ","
+    << "Ntracks" << ","
+    << "Ngenie_interactions" << ","
     << "Nvertices"
     << endl;
     
@@ -1326,7 +1491,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     
     summary_file << sTimeS.substr(0,sTimeS.length()-1) << ","
     << pot_total << ","
-    << fTree->GetEntries() <<","
+    << tracks_ctr << ","
+    << fTree->GetEntries() << ","
+    << genie_interactions_ctr << ","
     << vertices_ctr
     << endl;
     
@@ -1373,6 +1540,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
     DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
+    DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
+    DoWriteGENIEInformation = p.get< bool >("DoWriteGENIEInfo",true);
 }
 
 

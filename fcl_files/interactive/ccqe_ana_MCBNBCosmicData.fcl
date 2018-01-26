@@ -46,6 +46,8 @@ physics:
       DataSampleLabel:		"Adi_new_overlay_small"
       VerbosityLevel:		2
       DoWriteTracksInfo:    true
+      DoAddTracksEdep:      true
+      DoWriteGENIEInfo:     true
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:          "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
