@@ -56,6 +56,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <cstdarg>
 
 // my pandoraNu track...
 #include "uboone/ErezCCQEana/MyObjects/PandoraNuTrack.h"
@@ -131,9 +132,51 @@ public:
     // debug
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     Int_t debug=0;
-    void Debug (Int_t verobosity_level, std::string text){
-        if ( debug > verobosity_level ) cout << text << endl;
+//    void Debug (Int_t verobosity_level, std::string text){
+//        if ( debug > verobosity_level ) cout << text << endl;
+//    }
+    void Debug(Int_t verobosity_level, const char* format) // base function
+    {
+        if ( debug < verobosity_level ) return;
+        std::cout << format << std::endl;
     }
+    template<typename T, typename... Targs>
+    void Debug(Int_t verobosity_level, const char* format, T value, Targs... Fargs) // recursive variadic function
+    {
+        if ( debug < verobosity_level ) return;
+        for ( ; *format != '\0'; format++ ) {
+            if ( *format == '%' ) {
+                std::cout << value << " ";
+                Debug(verobosity_level, format+1, Fargs...); // recursive call
+                return;
+            }
+            std::cout << *format;
+        }
+        std::cout << endl;
+    }
+//    void Debug(Int_t verobosity_level, const char* fmt...)
+//    {
+//        SHOW2(debug,verobosity_level);
+//        if ( debug < verobosity_level ) return;
+//        va_list args;
+//        va_start(args, fmt);
+//        while (*fmt != '\0') {
+//            if (*fmt == 'd') {
+//                int i = va_arg(args, int);
+//                std::cout << i << '\n';
+//            } else if (*fmt == 'c') {
+//                // note automatic conversion to integral type
+//                int c = va_arg(args, int);
+//                std::cout << static_cast<char>(c) << '\n';
+//            } else if (*fmt == 'f') {
+//                double d = va_arg(args, double);
+//                std::cout << d << '\n';
+//            }
+//            ++fmt;
+//        }
+//        
+//        va_end(args);
+//    }
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     
 
@@ -194,7 +237,35 @@ private:
     
     // output csv file of vertices
     ofstream vertices_file, summary_file, tracks_file, genie_file;
+    
+    
+    //flux information
+    Int_t    ptype_flux;        //Parent GEANT code particle ID
+    
+    Float_t  pdpx_flux;        //Parent X momentum at decay point (GeV)
+    Float_t  pdpy_flux;        //Parent Y momentum at decay point (GeV)
+    Float_t  pdpz_flux;        //Parent Z momentum at decay point (GeV)
 
+    Float_t  ppvx_flux;        //Parent production vertex X (cm)
+    Float_t  ppvy_flux;        //Parent production vertex Y (cm)
+    Float_t  ppvz_flux;        //Parent production vertex Z (cm)
+    Float_t  pppz_flux;        //Parent Z momentum at production (GeV)
+
+    Int_t    pntype_flux;      //oscillated neutrino type
+    Float_t  vx_flux;          //X position of hadron/muon decay (cm)
+    Float_t  vy_flux;          //Y position of hadron/muon decay (cm)
+    Float_t  vz_flux;          //Z position of hadron/muon decay (cm)
+    
+    Float_t  muparpx_flux;     //Muon neutrino parent production vertex X (cm)
+    Float_t  muparpy_flux;     //Muon neutrino parent production vertex Y (cm)
+    Float_t  muparpz_flux;     //Muon neutrino parent production vertex Z (cm)
+    Float_t  mupare_flux;      //Muon neutrino parent energy (GeV)
+    
+    Float_t  tprivx_flux;      //Primary particle interaction vertex X (cm)
+    Float_t  tprivy_flux;      //Primary particle interaction vertex Y (cm)
+    Float_t  tprivz_flux;      //Primary particle interaction vertex Z (cm)
+    
+    Int_t    tptype_flux;     //Type of parent particle leaving BNB/NuMI target
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -284,7 +355,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // flash information
     // ----------------------------------------
     Nflashes = flashlist.size();
-    if (debug>3) SHOW(Nflashes);
+    Debug(3,"Nflashes: %",Nflashes);
     for ( int f = 0; f < std::min(Nflashes,kMaxHits); f++ ) {
         
         if (debug>3){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
@@ -410,7 +481,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         Debug(4,"before if (isMC && DoNewMCtruthMatching)");
         if (isMC && DoNewMCtruthMatching){
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
-            Debug(4,Form( "\tThere are %d associated hits to track %d." ,(int)trk_hits_ptrs.size(), track.GetTrackID()));
+            Debug(4,"\tThere are % associated hits to track %." ,(int)trk_hits_ptrs.size(), track.GetTrackID());
             
             std::unordered_map<int,double> trkide;
             double maxe=-1, tote=0;
@@ -428,12 +499,12 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 Debug(4,"--------------------------------");
                 float dQinHit = trk_hits_ptrs[i_h]->Integral();
                 dQinAllHits += dQinHit;
-                Debug(4,Form("in track %d, hit %d, dQinAllHits: %f",track.GetTrackID(),(int)i_h,dQinAllHits));
+                Debug(4,"in track %, hit %, dQinAllHits: %",track.GetTrackID(),(int)i_h,dQinAllHits);
                 // for each hit, ask how many particles match this hit
                 particle_vec.clear(); match_vec.clear();
                 particles_per_hit.get(trk_hits_ptrs[i_h].key(),particle_vec,match_vec);
                 //the .key() gives us the index in the original collection
-                Debug(4,Form("in track %d, There are %d particles matched to hit %d" ,track.GetTrackID(), (int)particle_vec.size() ,(int)i_h ));
+                Debug(4,"in track %, There are % particles matched to hit %" ,track.GetTrackID(), (int)particle_vec.size() ,(int)i_h );
                 
                 // to avoid from matching the same particle more than once
                 // we introduce a vector of matched TrackId-s
@@ -442,10 +513,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 if (particle_vec.size()>0){
                     //loop over particles that match this hit and ask which one deposited the most energy
                     for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
-                        Debug(5,Form("i_p: %d, particle_vec[i_p]->TrackId(): %d...",(int)i_p,(int)particle_vec[i_p]->TrackId()));
+                        Debug(5,"i_p: %, particle_vec[i_p]->TrackId(): %...",(int)i_p,(int)particle_vec[i_p]->TrackId());
                         float Edep_particle = match_vec[i_p]->energy;  // energy deposited by ionization by this track ID [MeV]
                         float Edep_particle_frac = match_vec[i_p]->ideFraction; // fraction of energy in hit from this particle
-                        Debug(5, Form("Edep_particle:%f, Edep_particle_frac:%f",Edep_particle,Edep_particle_frac));
+                        Debug(5, "Edep_particle:%, Edep_particle_frac:%",Edep_particle,Edep_particle_frac);
                         
                         trkide[ particle_vec[i_p]->TrackId() ] += Edep_particle; //store energy [MeV] deposited by track id
 
@@ -453,21 +524,21 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                         if( trkide[ particle_vec[i_p]->TrackId() ] > maxe ){ //keep track of maximum
                             maxe = trkide[ particle_vec[i_p]->TrackId() ];
                             maxp_me = particle_vec[i_p];
-                            Debug(5,Form("changing maxp_me to particle_vec[%d], pdg:%d, deposited maxe:%f",(int)i_p,maxp_me->PdgCode(),maxe));
+                            Debug(5,"changing maxp_me to particle_vec[%], pdg:%, deposited maxe:%f",(int)i_p,maxp_me->PdgCode(),maxe);
                             
                             if (!ParticleAlreadyMatchedInThisHit( ParticlesMatchedInThisHit , (int)particle_vec[i_p]->TrackId()) ) {
                                 ParticlesMatchedInThisHit.push_back( (int)particle_vec[i_p]->TrackId() );
                                 trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ] += dQinHit; // store the integral on the hit by the track id
-                                Debug(5, Form("dQinHit:%f, trackid_dQinTruthMatchedHits[%d]:%f",dQinHit,particle_vec[i_p]->TrackId(),trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ]));
+                                Debug(5, "dQinHit:%, trackid_dQinTruthMatchedHits[%]:%",dQinHit,particle_vec[i_p]->TrackId(),trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ]);
                                 max_dQinTruthMatchedHits = trackid_dQinTruthMatchedHits[ particle_vec[i_p]->TrackId() ];
-                                Debug(5,Form("max_dQinTruthMatchedHits:%.2f, dQinAllHits:%.2f",max_dQinTruthMatchedHits,dQinAllHits));
+                                Debug(5,"max_dQinTruthMatchedHits:%, dQinAllHits:%",max_dQinTruthMatchedHits,dQinAllHits);
                             } else {
-                                Debug(5,Form("particle of TrackID %d was already matched in this hit",(int)particle_vec[i_p]->TrackId()));
+                                Debug(5,"particle of TrackID % was already matched in this hit",(int)particle_vec[i_p]->TrackId());
                             }
                         }
                     }//end loop over particles per hit
                 }
-                Debug(5,Form("after if (particle_vec.size()>0); maxe=%lf",maxe));
+                Debug(5,"after if (particle_vec.size()>0); maxe=%",maxe);
             }
             
             const art::Ptr< simb::MCParticle > particle = maxp_me;
@@ -506,7 +577,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }else {
                 Debug(2,"particle.isNull() = true!...");
                 if (!maxp_me.isNull()) {
-                    Debug(5, Form( "Un-Matching particle %d since it deposited too few of hit-charge in track (max_dQinTruthMatchedHits/dQinAllHits = %.2f)" , maxp_me->PdgCode() , max_dQinTruthMatchedHits / dQinAllHits) );
+                    Debug(5,  "Un-Matching particle % since it deposited too few of hit-charge in track (max_dQinTruthMatchedHits/dQinAllHits = %)" , maxp_me->PdgCode() , max_dQinTruthMatchedHits / dQinAllHits );
                 }
             }
             
@@ -516,6 +587,48 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     }
     
     
+    
+    // ----------------------------------------
+    // MC flux information
+    // ----------------------------------------
+    fluxlist.size();
+    Debug(5,"fluxlist size: %",(int)fluxlist.size());
+    if (fluxlist.size()){
+        ptype_flux  = fluxlist[0]->fptype;
+        pdpx_flux   = fluxlist[0]->fpdpx;
+        pdpy_flux   = fluxlist[0]->fpdpy;
+        pdpz_flux   = fluxlist[0]->fpdpz;
+        pntype_flux = fluxlist[0]->fntype;
+        //  position of neutrino interaction point in the beamline
+        vx_flux     = fluxlist[0]->fvx;
+        vy_flux     = fluxlist[0]->fvy;
+        vz_flux     = fluxlist[0]->fvz;
+        
+//        ppvx_flux  = fluxlist[0]->ppvx_flux;        //Parent production vertex X (cm)
+//        ppvy_flux  = fluxlist[0]->ppvy_flux;        //Parent production vertex Y (cm)
+//        ppvz_flux  = fluxlist[0]->ppvz_flux;        //Parent production vertex Z (cm)
+//        pppz_flux  = fluxlist[0]->pppz_flux;        //Parent Z momentum at production (GeV)
+//        
+//        
+//        muparpx_flux  = fluxlist[0]->muparpx_flux;     //Muon neutrino parent production vertex X (cm)
+//        muparpy_flux  = fluxlist[0]->muparpy_flux;     //Muon neutrino parent production vertex Y (cm)
+//        muparpz_flux  = fluxlist[0]->muparpz_flux;     //Muon neutrino parent production vertex Z (cm)
+//        mupare_flux  = fluxlist[0]->mupare_flux;      //Muon neutrino parent energy (GeV)
+//        
+//        
+//        tprivx_flux  = fluxlist[0]->tprivx_flux;      //Primary particle interaction vertex X (cm)
+//        tprivy_flux  = fluxlist[0]->tprivy_flux;      //Primary particle interaction vertex Y (cm)
+//        tprivz_flux  = fluxlist[0]->tprivz_flux;      //Primary particle interaction vertex Z (cm)
+//        tptype_flux  = fluxlist[0]->tptype_flux;     //Type of parent particle leaving BNB/NuMI target
+        
+        if (debug>5) {
+            SHOW4(ptype_flux,pdpx_flux,pdpy_flux,pdpz_flux);
+            SHOW4(pntype_flux,vx_flux,vy_flux,vz_flux);
+        }
+    }
+    
+    
+
     
     // ----------------------------------------
     // MC truth information
@@ -584,7 +697,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                     // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
                                     genie_interaction.AddTrack ( track );
                                     track.SetMCeventID( mc_evend_id );
-                                    Debug(6,Form("adding track %d to genie interaction %d as a particle %d",track.GetTrackID(),mc_evend_id,part.PdgCode()));
+                                    Debug(6,"adding track % to genie interaction % as a particle %",track.GetTrackID(),mc_evend_id,part.PdgCode());
                                 }
                             } // for (auto & track : tracks)
                         } // end if (part.StatusCode()==1)
@@ -594,32 +707,39 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 genie_interaction.ComputePmissPrec();
                 genie_interaction.SetTruthTopology();
                 genie_interaction.SetReconstructedTopology();
+                
+                // Jan-28, 2018: adding the neutrino origin in the beam coordinates and interaction point the detector system (from Zarko)
+                if ((int)fluxlist.size() >= (int)mc_evend_id) {
+                    //  position of neutrino interaction point in the beamline
+                    genie_interaction.SetNuIntInBeam(TVector3(fluxlist[mc_evend_id]->fvx                                                    
+                                                              ,fluxlist[mc_evend_id]->fvy
+                                                              ,fluxlist[mc_evend_id]->fvz));
+                    
+                    
+                }
+                
                 genie_interactions.push_back( genie_interaction );
             }//mctruth->Origin()
         } //  for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth))
     }//is neutrino
     
+
+    
     
     // ----------------------------------------
-    // tracks information
+    // write information to CSV files
     // ----------------------------------------
     if (DoWriteTracksInformation){
         StreamTracksToCSV();
     }
-    
-    // ----------------------------------------
-    // tracks information
-    // ----------------------------------------
     if (DoWriteGENIEInformation){
         StreamGENIEToCSV();
     }
-    
-    // ----------------------------------------
-    // event topology (my-vertex....)
-    // ----------------------------------------
     ConstructVertices();
     
-    
+    // ----------------------------------------
+    // print and finish
+    // ----------------------------------------
     PrintInformation( (debug>0) ? true : false );
     fTree -> Fill();
 }
@@ -962,8 +1082,19 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
     
     // only for 1mu-1p vertices
     genie_file
-    << "reconstructed mu-p distance" ;
+    << "reconstructed mu-p distance" << "," ;
     
+    // v-interaction point in detector system
+    genie_file
+    << "truth_x" << ","
+    << "truth_y" << ","
+    << "truth_z" << ",";
+
+    // v-interaction point in beam coordinates system
+    genie_file
+    << "truth_x_beamCoordinates" << ","
+    << "truth_y_beamCoordinates" << ","
+    << "truth_z_beamCoordinates";
     
     // finish
     genie_file << endl;
@@ -1024,8 +1155,21 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamGENIEToCSV(){
         
         
         // only for 1mu-1p vertices
-        genie_file << g.GetReco_mu_p_distance();
+        genie_file << g.GetReco_mu_p_distance() << ",";
         
+        // v-interaction point in detector system
+        genie_file
+        << g.GetVertexPosition().x() << ","
+        << g.GetVertexPosition().y() << ","
+        << g.GetVertexPosition().z() << ",";
+        
+        // v-interaction point in beam coordinates system
+        genie_file
+        << g.GetNuIntInBeam().x() << ","
+        << g.GetNuIntInBeam().y() << ","
+        << g.GetNuIntInBeam().z();
+        
+
         
         // finish
         genie_file << endl;
@@ -1523,7 +1667,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
         Printf("end subrun %d",subrun);
         SHOW2( pot , pot_total );
     }
-    Debug(2,Form( "POT from this subrun: %16.0lf" ,pot ));
+    Debug(4,"POT from this subrun: %" ,pot );
 }
 
 

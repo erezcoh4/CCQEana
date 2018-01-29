@@ -25,6 +25,7 @@ print 'copying ',name,'files to',outdirname
 list_dir = os.listdir(indirname)
 print "list of directories to copy from:",list_dir
 
+
 ctr = 0
 for dir_name in list_dir:#{
     if os.path.isdir(indirname+'/'+dir_name): #{
@@ -35,9 +36,12 @@ for dir_name in list_dir:#{
             if "vertices.csv" in file or "summary.csv" in file:#{
                 source_to_cp = indirname+'/'+dir_name+'/'+file
                 destination = outdirname+file+'_%d'%ctr+'.csv'
-                print 'copying ',source_to_cp,'to',destination
-                shutil.copyfile(source_to_cp, destination)
-                ctr = ctr + 1
+                try:
+                    print 'copying ',source_to_cp,'to',destination
+                    shutil.copyfile(source_to_cp, destination)
+                    ctr = ctr + 1
+                except IOError:
+                    pass # ignore the IOError and keep going
             #}
         #}
     #}

@@ -13,15 +13,15 @@ from matplotlib import pyplot as plt
 from my_tools import *
 from calc_tools import *
 flags = input_flags.get_args()
-
+print flags
 
 
 infilename = flags.DataType
 
 gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/genie_files/" # path
-               ,infilename #RootFileName
-               ,"gst" #RootFileName
-               )
+               ,infilename # RootFileName
+               ,"gst" # RootFileName
+               ,flags.verbose )
 
 gf.HeaderCSV()
 

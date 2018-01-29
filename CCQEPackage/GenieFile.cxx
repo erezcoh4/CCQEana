@@ -6,11 +6,13 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 GenieFile::GenieFile( TString fPath
                      ,TString fRootFileName     // without the .root suffix (!)
-                     ,TString fRootTreeName  ):
+                     ,TString fRootTreeName
+                     ,int fdebug  ):
 Path( fPath ),
 RootFileName( fRootFileName + ".root"),
 RootTreeName( fRootTreeName ),
-OutputCSVname( fRootFileName + ".csv")
+OutputCSVname( fRootFileName + ".csv"),
+debug(fdebug)
 {
     SetInTree();
 }
@@ -125,7 +127,7 @@ bool GenieFile::HeaderCSV (){
     << "alpha_q"    << ","
     << "alpha_miss"
     << "Pp_before_FSI"         << "," << "Pp_before_FSI_theta"    << ","
-    << "Pp_before_FSI_x"       << "," << "Pp_before_FSI_y"        << "," << "Pp_before_FSI_z"    << ","
+    << "Pp_before_FSI_x"       << "," << "Pp_before_FSI_y"        << "," << "Pp_before_FSI_z"
     << endl;
     
     return true;
@@ -171,7 +173,7 @@ bool GenieFile::StreamToCSV (){
     << LightConeAlpha( q )      << ","
     << LightConeAlpha( proton ) - LightConeAlpha( q )   
     << proton_before_FSI.P()   << "," << proton_before_FSI.Theta()    << ","
-    << proton_before_FSI.Px()  << "," << proton_before_FSI.Py()       << "," << proton_before_FSI.Pz()   << ","
+    << proton_before_FSI.Px()  << "," << proton_before_FSI.Py()       << "," << proton_before_FSI.Pz()
     << endl;
     
 
@@ -181,19 +183,30 @@ bool GenieFile::StreamToCSV (){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::SetTopology (){
     nu.SetXYZM( pxv, pyv, pzv, 0 );
-    if ((cc==true) && (qel==true) && (nf == 1) && pdgf[0]==2212 ){
+    if (debug>2) {
+        SHOW4(cc,qel,nf,pdgf[0]);
+        for (int i=0; i<nf; i++) {
+            SHOW(pdgf[i]);
+        }
+    }
+    // CCQE with FSI (the A-1 system can not exit the nucleus)
+    if ((cc==true) && (qel==true) && ((nf == 1) && (pdgf[0]==2212) ) ){
         CC1p0pi = true;
         muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
         q = nu - muon;
         proton.SetXYZM( pxf[0], pyf[0], pzf[0], 0.9382720813 );
         Pmiss = proton - q;
         proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 );
-        
-        //        SHOW(ni);
-        //        SHOW(pdgi[0]);
-        //        SHOW3(pxi[0],pyi[0],pzi[0])
-        //        SHOW(pdgf[0]);
-        //        SHOW3(pxf[0],pyf[0],pzf[0])
+    }
+     // CCQE with no FSI
+    else if ((cc==true) && (qel==true)
+             && (nf == 2) && (pdgf[0]==1000180390) && (pdgf[1]==2212) ){
+        CC1p0pi = true;
+        muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
+        q = nu - muon;
+        proton.SetXYZM( pxf[1], pyf[1], pzf[1], 0.9382720813 );
+        Pmiss = proton - q;
+        proton_before_FSI.SetXYZM( pxi[1],pyi[1],pzi[1], 0.9382720813 );
     }
     
     return true;

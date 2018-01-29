@@ -36,7 +36,8 @@ public:
     GenieFile() = default;
     GenieFile( TString fPath
               ,TString fRootFileName
-              ,TString fRootTreeName  );
+              ,TString fRootTreeName
+              ,int fdebug );
     
 
     
@@ -72,6 +73,7 @@ private:
     
     int     i_event=0;
     int     counter=0;
+    int     debug=0;
     
     // GENIE variables
     int     neu; //Neutrino PDG code.

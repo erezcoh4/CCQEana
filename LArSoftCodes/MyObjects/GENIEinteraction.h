@@ -97,7 +97,7 @@ public:
     void               SetIs1mu1p (bool fIs1mu1p=false)                 {Is1mu1p = fIs1mu1p;};
     
     void    SetReco_mu_p_distance ();
-    
+    void           SetNuIntInBeam (TVector3 fpos)                       {posNuIntInBeam = fpos;};
     
     
     
@@ -156,6 +156,8 @@ public:
     PandoraNuTrack                     Get_p_track () const {return protonTrack;};
     std::vector<PandoraNuTrack>          GetTracks () const {return tracks;}; // when taking this, check if the vector is not empty...
     
+    TVector3                        GetNuIntInBeam () const {return posNuIntInBeam;};
+
     
     
     
@@ -200,6 +202,7 @@ private:
     
     // TVector3
     TVector3                vertex_position=TVector3();
+    TVector3                posNuIntInBeam=TVector3();
     
     // TLorentzVector
     TLorentzVector          momentum=TLorentzVector(), Plead=TLorentzVector() ;

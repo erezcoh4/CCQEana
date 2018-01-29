@@ -7,9 +7,9 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "1000">
+<!ENTITY number_of_jobs "100">
 <!ENTITY name "&defname;_cosmic_pairs_rejection_pandoraCosmic">
-<!ENTITY LArSoft_release "v06_42_00">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
+<!ENTITY LArSoft_release "06_26_01_09">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
 <!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
 ]>
 
@@ -18,7 +18,7 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>10000</numevents>
+        <numevents>100</numevents>
         <!--        <maxfilesperjob>1</maxfilesperjob>--> <!--        to solve the infamous "inconsistent process history" issue-->
 
         <!-- Operating System -->

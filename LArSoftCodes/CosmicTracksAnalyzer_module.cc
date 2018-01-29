@@ -72,7 +72,8 @@ constexpr int kMaxTrack      = 1000;  //maximum number of tracks
 constexpr int kMaxHits       = 40000; //maximum number of hits;
 constexpr int kMaxTruth      = 100;
 constexpr int kMaxNgenie     = 100;
-constexpr float kMaxInterTrackDistance = 11; // 11 cm between tracks - maximal distance for clustering
+// 11 cm between tracks - maximal distance for clustering, here we take 30 cm to open the possible clustering window
+constexpr float kMaxInterTrackDistance = 30;
 constexpr float EPSILON      = 0.1;   // tollerance for equations
 
 // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
@@ -104,6 +105,7 @@ public:
     
     // Selected optional functions.
     void                  beginJob () override;
+    void                    endJob () override;
     void               reconfigure (fhicl::ParameterSet const& p) override;
     
     void                 endSubRun (const art::SubRun& sr);
@@ -185,7 +187,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
     // output csv file of vertices
-    ofstream vertices_file;
+    ofstream vertices_file, summary_file;
 
 };
 
@@ -859,6 +861,34 @@ void ub::CosmicTracksAnalyzer::beginJob(){
     pot_total = 0;
 }
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::endJob(){
+    Debug(3,"ub::CosmicTracksAnalyzer::endJob()");
+    
+    std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    summary_file.open(fDataSampleLabel+"_summary.csv");
+    summary_file << "time" << ","
+    << "Nevents" << ","
+    << "NPandoraNuTracks" << ","
+    << "NPandoraCosmicTracks" << ","
+    << "Nvertices"
+    << endl;
+    
+    std::string sTimeS = std::ctime(&now_time);
+    
+    summary_file << sTimeS.substr(0,sTimeS.length()-1) << ","
+    << fTree->GetEntries() << ","
+    << Ntracks_total << ","
+    << NCosmicTracks_total << ","
+    << vertices_counter
+    << endl;
+    
+    summary_file.close();
+    
+    cout << "Ended job. Wrote summary into file: "+fDataSampleLabel+"_summary.csv" << endl;
+    
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::CosmicTracksAnalyzer::endSubRun(const art::SubRun& sr){

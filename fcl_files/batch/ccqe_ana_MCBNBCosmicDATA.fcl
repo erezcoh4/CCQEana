@@ -46,7 +46,9 @@ physics:
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
       DataSampleLabel:		"Adi_overlay_18Jan2018"
       VerbosityLevel:		2
-      DoWriteTracksInfo:    true
+      DoWriteTracksInfo:    false
+      DoAddTracksEdep:      false
+      DoWriteGENIEInfo:     true
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:      "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
