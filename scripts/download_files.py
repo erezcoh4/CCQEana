@@ -2,8 +2,8 @@
     usage:
     -----
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA
-    python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_751 --ctr=2151
-    '''
+    python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
+'''
 
 import sys, os, time, argparse
 time_name = "%4d_%02d_%02d" % time.localtime()[0:3]
