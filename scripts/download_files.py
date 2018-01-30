@@ -2,7 +2,7 @@
     usage:
     -----
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA
-    python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_563 --ctr=1534
+    python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_751 --ctr=2151
     '''
 
 import sys, os, time, argparse
