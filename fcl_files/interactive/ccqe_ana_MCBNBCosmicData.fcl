@@ -16,7 +16,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/CCQEanaMCBNBCosmicDataOverlay_newTruthMatching.root" closeFileFast: false}
+  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -43,7 +43,7 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"Adi_new_overlay_small"
+      DataSampleLabel:		"adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
       VerbosityLevel:		2
       DoWriteTracksInfo:    true
       DoAddTracksEdep:      true

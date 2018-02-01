@@ -53,23 +53,27 @@ if do_step_1:#{
 #}
 
 # step 2: grab this list
-print 'step 2: grab this list'
-files_to_download_name = "files_to_download"
-if option=="makeup": files_to_download_name = files_to_download_name + "_since_" + continue_makeup
-with open(indirname+'/'+files_to_download_name+".list") as f:
-    files = f.read().splitlines()
+do_step_2 = raw_input("# step 2: grab this list?:...<False>") or False
+if do_step_2:#{
+    files_to_download_name = "files_to_download"
+    if option=="makeup": files_to_download_name = files_to_download_name + "_since_" + continue_makeup
+    with open(indirname+'/'+files_to_download_name+".list") as f:
+        files = f.read().splitlines()
+#}
 
 # step 3: iterate over the list and download the files
-print '# step 3: iterate over the list and download the files'
-for file in files:#{
-    try:
-        print 'downloading',file
-        destination = file.rsplit('/', 1)[1] + '_%d.csv'%ctr
-        print 'into destination',destination
-        os.system('scp '+uboone+':'+file+' '+indirname+'/'+destination)
-        ctr = ctr + 1
-    except IOError:
-        pass
+do_step_3 = raw_input("# step 3: iterate over the list and download the files?:...<False>") or False
+if do_step_3:
+    for file in files:#{
+        try:
+            print 'downloading',file
+            destination = file.rsplit('/', 1)[1] + '_%d.csv'%ctr
+            print 'into destination',destination
+            os.system('scp '+uboone+':'+file+' '+indirname+'/'+destination)
+            ctr = ctr + 1
+        except IOError:
+            pass
+    #}
 #}
 
 
@@ -83,22 +87,26 @@ print "list of files to combine from:",list_files
 summary_df_array,vertices_df_array,tracks_df_array ,genie_df_array = [],[],[],[]
 list_files = os.listdir(indirname)
 for file in list_files:#{
-    if "vertices.csv" in file:#{
-        print 'adding ',indirname+'/'+file
-        vertices_df_array.append(pd.read_csv( ( indirname+'/'+file )))
-    #}
-    if "summary.csv" in file:#{
-        print 'adding ',indirname+'/'+file
-        summary_df_array.append(pd.read_csv( ( indirname+'/'+file )))
-    #}
-    if "tracks.csv" in file:#{
-        print 'adding ',indirname+'/'+file
-        tracks_df_array.append(pd.read_csv( ( indirname+'/'+file )))
-    #}
-    if "genie.csv" in file:#{
-        print 'adding ',indirname+'/'+file
-        genie_df_array.append(pd.read_csv( ( indirname+'/'+file )))
-    #}
+    if os.stat(indirname+'/'+file).st_size == 0: continue
+    try:
+        if "vertices.csv" in file:#{
+            print 'adding ',indirname+'/'+file
+            vertices_df_array.append(pd.read_csv( ( indirname+'/'+file )))
+        #}
+        if "summary.csv" in file:#{
+            print 'adding ',indirname+'/'+file
+            summary_df_array.append(pd.read_csv( ( indirname+'/'+file )))
+        #}
+        if "tracks.csv" in file:#{
+            print 'adding ',indirname+'/'+file
+            tracks_df_array.append(pd.read_csv( ( indirname+'/'+file )))
+        #}
+        if "genie.csv" in file:#{
+            print 'adding ',indirname+'/'+file
+            genie_df_array.append(pd.read_csv( ( indirname+'/'+file )))
+        #}
+    except IOError:
+        pass
 #}
 vertices_all = pd.concat(vertices_df_array)
 print len(vertices_all),'total pair-vertices'
@@ -114,7 +122,7 @@ print 'concatenated %d'%len(summary_all),'summary files to\n',outfilename,'\ndon
 
 if (len(tracks_df_array)>0):#{
     tracks_all = pd.concat(tracks_df_array)
-    print len(vertices_all),'total tracks'
+    print len(tracks_all),'total tracks'
     outfilename = outdirname+'/'+name+'_'+time_name+'_tracks.csv'
     tracks_all.to_csv(outfilename)
     print 'concatenated %d'%len(tracks_all),'tracks to\n',outfilename,'\ndone.'
