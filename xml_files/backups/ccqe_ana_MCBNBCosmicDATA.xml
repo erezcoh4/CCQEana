@@ -3,12 +3,13 @@
 <!ENTITY user_id "ecohen">
 
 <!ENTITY defname "adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2">
+<!--<!ENTITY listname "AdiReco27List_18Jan2018">-->
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "2">
-<!ENTITY name "&defname;_CCQE">
+<!ENTITY number_of_jobs "1000">
+<!ENTITY name "ccqe_ana_MCBNBCosmicDATA">
 <!ENTITY LArSoft_release "06_26_01_09">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
 <!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
 ]>
@@ -18,7 +19,8 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>10</numevents>
+        <numevents>1000000</numevents>
+        <!--        <maxfilesperjob>1</maxfilesperjob> <!--        to solve the infamous "inconsistent process history" issue-->-->
 
         <!-- Operating System -->
         <os>SL6</os>
@@ -49,6 +51,7 @@
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_MCBNBCosmicDATA.fcl</fcl>
             <inputdef>&defname;</inputdef>
+            <!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/&listname;.list</inputlist>-->
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
             <workdir>/pnfs/uboone/scratch/users/&user_id;/work/&tag;/&LArSoft_release;/ccqe_ana/&name;</workdir>
@@ -59,5 +62,7 @@
             <jobsub> --expected-lifetime=16h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
             <memory>2000</memory>
         </stage>
+        
     </project>
+    
 </job>
