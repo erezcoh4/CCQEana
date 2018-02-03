@@ -553,7 +553,10 @@ def load_MCbnbDATAcosmicSamples():
         samples: dict() of pairs broken into pair_types
         '''
     global MCbnbDATAcosmicSamples
-    pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
+    # old overlay: prodgenie_bnb_nu_uboone_overlay_mcc8_reco2
+    # pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
+    # new overlay: ccqe_ana_MCBNBCosmicDATA_2018_01_30
+    pairs = pd.read_csv(vertices_files_path+'ccqe_ana_MCBNBCosmicDATA_2018_01_30_vertices.csv')
     MCbnbDATAcosmicPairsFV = sample_in_FV(pairs)
     print len(pairs),'pairs from MC-BNB + cosmic DATA overlay'
     print len(MCbnbDATAcosmicPairsFV),'pairs in FV'
