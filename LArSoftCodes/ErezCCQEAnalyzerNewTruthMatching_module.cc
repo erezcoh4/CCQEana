@@ -563,6 +563,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 track.SetTruthMomentum( particle -> Momentum() );
                 track.SetTruthMother( particle -> Mother() );
                 track.SetTruthProcess( particle -> Process() );
+                track.SetTruthPurity( (fabs(tote)>0) ? maxp_me/tote : 0);
                 // * MC-truth information related to the associated particle
                 int particle_key = (int)particle.key();
                 if( fo.isValid() ){
@@ -603,24 +604,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         vx_flux     = fluxlist[0]->fvx;
         vy_flux     = fluxlist[0]->fvy;
         vz_flux     = fluxlist[0]->fvz;
-        
-//        ppvx_flux  = fluxlist[0]->ppvx_flux;        //Parent production vertex X (cm)
-//        ppvy_flux  = fluxlist[0]->ppvy_flux;        //Parent production vertex Y (cm)
-//        ppvz_flux  = fluxlist[0]->ppvz_flux;        //Parent production vertex Z (cm)
-//        pppz_flux  = fluxlist[0]->pppz_flux;        //Parent Z momentum at production (GeV)
-//        
-//        
-//        muparpx_flux  = fluxlist[0]->muparpx_flux;     //Muon neutrino parent production vertex X (cm)
-//        muparpy_flux  = fluxlist[0]->muparpy_flux;     //Muon neutrino parent production vertex Y (cm)
-//        muparpz_flux  = fluxlist[0]->muparpz_flux;     //Muon neutrino parent production vertex Z (cm)
-//        mupare_flux  = fluxlist[0]->mupare_flux;      //Muon neutrino parent energy (GeV)
-//        
-//        
-//        tprivx_flux  = fluxlist[0]->tprivx_flux;      //Primary particle interaction vertex X (cm)
-//        tprivy_flux  = fluxlist[0]->tprivy_flux;      //Primary particle interaction vertex Y (cm)
-//        tprivz_flux  = fluxlist[0]->tprivz_flux;      //Primary particle interaction vertex Z (cm)
-//        tptype_flux  = fluxlist[0]->tptype_flux;     //Type of parent particle leaving BNB/NuMI target
-        
         if (debug>5) {
             SHOW4(ptype_flux,pdpx_flux,pdpy_flux,pdpz_flux);
             SHOW4(pntype_flux,vx_flux,vy_flux,vz_flux);
@@ -1323,6 +1306,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     
     // truth MC information
     << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
+    << "truth_purity_assigned_muon"<< "," << "truth_purity_assigned_proton" << ","
     
     << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << "," << "truth_Pmu_theta" << ","<< "truth_Pmu_phi" << ","
     << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << "," << "truth_Pp_theta" << ","<< "truth_Pp_phi" << ","
@@ -1455,6 +1439,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         
         // truth MC information
         vertices_file << v.GetAssignedMuonTrack().GetTruthLength() << "," << v.GetAssignedProtonTrack().GetTruthLength() << ",";
+        vertices_file << v.GetAssignedMuonTrack().GetTruthPurity() << "," << v.GetAssignedProtonTrack().GetTruthPurity() << ",";
         
         vertices_file
         << v.GetAssignedMuonTrack().GetTruthMomentum().P() << ","

@@ -7,7 +7,7 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "2">
+<!ENTITY number_of_jobs "2000">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
 <!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
@@ -18,7 +18,7 @@
     <project name="&name;_analysis">
         
         <!-- Project size -->
-        <numevents>10</numevents>
+        <numevents>1000000</numevents>
 
         <!-- Operating System -->
         <os>SL6</os>

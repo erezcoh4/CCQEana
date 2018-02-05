@@ -97,6 +97,7 @@ public:
     
     void            SetLength (Float_t l)                   {length = l;};
     void       SetTruthLength ()                            {truth_length = (truth_start_pos-truth_end_pos).Mag();};
+    void       SetTruthPurity (Float_t fpur)                {truth_purity = fpur;};
 
     void          SetStartPos (TVector3 pos)                {start_pos = pos;};
     void            SetEndPos (TVector3 pos)                {end_pos = pos;};
@@ -152,7 +153,8 @@ public:
     Float_t          GetTruthLength () const {return truth_length;};
     Float_t           GetTruthTheta () const {return truth_dir.Theta();};
     Float_t             GetTruthPhi () const {return truth_dir.Phi();};
-    
+    Float_t          GetTruthPurity () const {return truth_purity;};
+
     Float_t       GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
     Float_t         GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
     Float_t                 GetPIDa () const {return PIDa; };
@@ -268,7 +270,8 @@ private:
     Float_t     max_dQinTruthMatchedHits=-1, dQinAllHits=-1;
 
     // truth information - only valid for MC data
-    Float_t     truth_length=-9999;
+    Float_t     truth_length = -9999;
+    Float_t     truth_purity = -9999;// maxe/tote
 
     // dE/dx in three planes
     std::vector<Float_t> ResRange[3];
