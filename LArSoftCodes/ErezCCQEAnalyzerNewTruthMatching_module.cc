@@ -484,7 +484,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             Debug(4,"\tThere are % associated hits to track %." ,(int)trk_hits_ptrs.size(), track.GetTrackID());
             
             std::unordered_map<int,double> trkide;
-            double maxe=-1, tote=0;
+            double maxe=-1, tote=0, purity=0;
             art::Ptr< simb::MCParticle > maxp_me; //pointer for the particle match we will calculate
             
             art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);
@@ -539,6 +539,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                     }//end loop over particles per hit
                 }
                 Debug(5,"after if (particle_vec.size()>0); maxe=%",maxe);
+                purity = (fabs(tote)>0) ? maxp_me/tote : 0.0;
             }
             
             const art::Ptr< simb::MCParticle > particle = maxp_me;
@@ -563,7 +564,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 track.SetTruthMomentum( particle -> Momentum() );
                 track.SetTruthMother( particle -> Mother() );
                 track.SetTruthProcess( particle -> Process() );
-                track.SetTruthPurity( (fabs(tote)>0) ? maxp_me/tote : 0);
+                track.SetTruthPurity( purity );
                 // * MC-truth information related to the associated particle
                 int particle_key = (int)particle.key();
                 if( fo.isValid() ){
