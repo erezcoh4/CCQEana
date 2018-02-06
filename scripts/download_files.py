@@ -1,7 +1,7 @@
 '''
     usage:
     -----
-    python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA
+    python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
 '''
 
@@ -28,6 +28,12 @@ if name=="ccqe_ana_MCBNBCosmicDATA":
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name
     default_outdirname = csv_path+"ccqe_candidates/"
 
+# new overlay using SAM definition
+if name=="adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2":
+    default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
+    default_outdirname = csv_path+"ccqe_candidates/"
+
+
 # pandora pairs
 elif name=="prodcosmics_corsika_cmc_uboone_mcc8.4":
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/v06_42_00/cosmic_pairs_rejection_pandoraCosmic/prodcosmics_corsika_cmc_uboone_mcc8.4_reco2_cosmic_pairs_rejection_pandoraCosmic/"
@@ -38,8 +44,11 @@ default_indirname = csv_path+"from_grid/"+name+"/"
 
 
 pnfsjob = raw_input("enter pnfs:...<"+default_pnfsjob+">") or default_pnfsjob
+print 'pnfsjob: ',pnfsjob
 indirname = raw_input("enter indir:...<"+default_indirname+">") or default_indirname
+print 'indirname: ',indirname
 outdirname = raw_input("enter outdir:...<"+default_outdirname+">") or default_outdirname
+print 'outdirname: ',outdirname
 
 
 

@@ -539,7 +539,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                     }//end loop over particles per hit
                 }
                 Debug(5,"after if (particle_vec.size()>0); maxe=%",maxe);
-                purity = (fabs(tote)>0) ? maxp_me/tote : 0.0;
+                purity = (fabs(tote)>0) ? maxe/tote : 0.0;
             }
             
             const art::Ptr< simb::MCParticle > particle = maxp_me;
