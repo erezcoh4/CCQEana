@@ -154,29 +154,6 @@ public:
         }
         std::cout << endl;
     }
-//    void Debug(Int_t verobosity_level, const char* fmt...)
-//    {
-//        SHOW2(debug,verobosity_level);
-//        if ( debug < verobosity_level ) return;
-//        va_list args;
-//        va_start(args, fmt);
-//        while (*fmt != '\0') {
-//            if (*fmt == 'd') {
-//                int i = va_arg(args, int);
-//                std::cout << i << '\n';
-//            } else if (*fmt == 'c') {
-//                // note automatic conversion to integral type
-//                int c = va_arg(args, int);
-//                std::cout << static_cast<char>(c) << '\n';
-//            } else if (*fmt == 'f') {
-//                double d = va_arg(args, double);
-//                std::cout << d << '\n';
-//            }
-//            ++fmt;
-//        }
-//        
-//        va_end(args);
-//    }
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     
 
@@ -440,6 +417,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                     
                     // select the best plane as the one with the maximal number of charge deposition points
                     if (calo->dEdx().size() > maxnumhits){
+                        if (debug>3) SHOW3(track.GetTrackID(),plane,calo->dEdx().size());
+                        
                         maxnumhits = calo->dEdx().size();
                         track.SetBestPlane ( plane );
                         track.SetMaxNHits ( maxnumhits );
@@ -452,15 +431,19 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                         if (calo->ResidualRange()[ip]<30){
                             pida += calo->dEdx()[ip]*pow( calo->ResidualRange()[ip],0.42);
                             ++used_trkres;
+                            Debug(3 , "pida: %",pida);
                         }
                         // record the track dE/dx vs. residual range
                         track.FillResRange( plane , calo->ResidualRange()[ip] );
                         track.FilldEdxHit( plane , calo->dEdx()[ip] );
                     }
                     if (used_trkres) pida /= used_trkres;
+                    track.SetPIDaPerPlane( plane , pida );
                 }
             }
             track.SetPIDa();
+            Debug(2 , "track.GetPIDa(): %",track.GetPIDa());
+
         }
         
         // flash - matching: find the closest flash to the track
@@ -1179,7 +1162,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     // truth information
     tracks_file
     << "pdg" << ","
-    << "origin" << ",";
+    << "origin" << ","
+    << "purity" << ",";
     
     // completeness of the track MC-truth matching
     tracks_file
@@ -1224,7 +1208,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
         // truth information
         tracks_file
         << t.GetMCpdgCode() << ","
-        << t.GetOrigin() << ",";
+        << t.GetOrigin() << ","
+        << t.GetTruthPurity() << ",";
         
         // completeness of the track MC-truth matching
         tracks_file

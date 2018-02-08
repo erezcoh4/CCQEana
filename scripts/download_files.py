@@ -1,6 +1,7 @@
 '''
     usage:
     -----
+    python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
 '''
@@ -29,7 +30,7 @@ if name=="ccqe_ana_MCBNBCosmicDATA":
     default_outdirname = csv_path+"ccqe_candidates/"
 
 # new overlay using SAM definition
-if name=="adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2":
+if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name:
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_outdirname = csv_path+"ccqe_candidates/"
 
@@ -49,9 +50,12 @@ indirname = raw_input("enter indir:...<"+default_indirname+">") or default_indir
 print 'indirname: ',indirname
 outdirname = raw_input("enter outdir:...<"+default_outdirname+">") or default_outdirname
 print 'outdirname: ',outdirname
+print
 
-
-
+# step 0: create the indirname directory
+os.system("mkdir "+indirname)
+print 'step 0: created the indirname directory'
+print
 
 # step 1: create a list of files to download
 do_step_1 = raw_input("# step 1: create a list of files to download?:...<False>") or False
@@ -60,7 +64,7 @@ if do_step_1:#{
     print 'into '+indirname+'/files_to_download.list'
     os.system("ssh "+uboone+" ls "+pnfsjob+"/*/*.csv > "+indirname+"/files_to_download.list")
 #}
-
+print
 # step 2: grab this list
 do_step_2 = raw_input("# step 2: grab this list?:...<False>") or False
 if do_step_2:#{
@@ -69,7 +73,7 @@ if do_step_2:#{
     with open(indirname+'/'+files_to_download_name+".list") as f:
         files = f.read().splitlines()
 #}
-
+print
 # step 3: iterate over the list and download the files
 do_step_3 = raw_input("# step 3: iterate over the list and download the files?:...<False>") or False
 if do_step_3:
@@ -84,7 +88,7 @@ if do_step_3:
             pass
     #}
 #}
-
+print
 
 # step 4: merge the csv files into a large dataframe
 print '# step 4: merge the csv files into a large dataframe'
@@ -92,7 +96,7 @@ print 'creating ',name+'_vertices.csv file'
 import os, pandas as pd
 list_files = os.listdir(indirname)
 print "list of files to combine from:",list_files
-
+print
 summary_df_array,vertices_df_array,tracks_df_array ,genie_df_array = [],[],[],[]
 list_files = os.listdir(indirname)
 for file in list_files:#{
@@ -122,13 +126,13 @@ print len(vertices_all),'total pair-vertices'
 outfilename = outdirname+'/'+name+'_'+time_name+'_vertices.csv'
 vertices_all.to_csv(outfilename)
 print 'concatenated %d'%len(vertices_all),'vertices to\n',outfilename,'\ndone.'
-
+print
 summary_all = pd.concat(summary_df_array)
 print len(summary_all),'is the length summary of all events'
 outfilename = outdirname+'/'+name+'_'+time_name+'_summary.csv'
 summary_all.to_csv(outfilename)
 print 'concatenated %d'%len(summary_all),'summary files to\n',outfilename,'\ndone.'
-
+print
 if (len(tracks_df_array)>0):#{
     tracks_all = pd.concat(tracks_df_array)
     print len(tracks_all),'total tracks'
@@ -136,7 +140,7 @@ if (len(tracks_df_array)>0):#{
     tracks_all.to_csv(outfilename)
     print 'concatenated %d'%len(tracks_all),'tracks to\n',outfilename,'\ndone.'
 #}
-
+print
 if (len(genie_df_array)>0):#{
     genie_all = pd.concat(genie_df_array)
     print len(vertices_all),'total genie'
@@ -144,4 +148,4 @@ if (len(genie_df_array)>0):#{
     genie_all.to_csv(outfilename)
     print 'concatenated %d'%len(genie_all),'genie to\n',outfilename,'\ndone.'
 #}
-
+print

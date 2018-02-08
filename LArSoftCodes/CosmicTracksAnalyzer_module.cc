@@ -128,9 +128,26 @@ public:
     // debug
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     Int_t debug=0;
-    void Debug (Int_t verobosity_level, std::string text){
-        if ( debug > verobosity_level ) cout << text << endl;
+    void Debug(Int_t verobosity_level, const char* format) // base function
+    {
+        if ( debug < verobosity_level ) return;
+        std::cout << format << std::endl;
     }
+    template<typename T, typename... Targs>
+    void Debug(Int_t verobosity_level, const char* format, T value, Targs... Fargs) // recursive variadic function
+    {
+        if ( debug < verobosity_level ) return;
+        for ( ; *format != '\0'; format++ ) {
+            if ( *format == '%' ) {
+                std::cout << value << " ";
+                Debug(verobosity_level, format+1, Fargs...); // recursive call
+                return;
+            }
+            std::cout << *format;
+        }
+        std::cout << endl;
+    }
+
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     
 
@@ -200,46 +217,52 @@ ub::CosmicTracksAnalyzer::CosmicTracksAnalyzer(fhicl::ParameterSet const & p):ED
 void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     
     ResetVars();
+    run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
+    if (debug>0) SHOW3(run , subrun , event);
     
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
     
     // * run data
     isdata = evt.isRealData();
-    run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
-    if (debug>0) SHOW3(run , subrun , event);
     
     // * hits
+    Debug(2,"// * hits");
     art::Handle< std::vector<recob::Hit> > hitListHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
     if (evt.getByLabel(fHitsModuleLabel,hitListHandle))
     art::fill_ptr_vector(hitlist, hitListHandle);
-
+    
     // * flashes
+    Debug(2,"// * flashes");
     art::Handle< std::vector<recob::OpFlash> > flashListHandle;
     std::vector<art::Ptr<recob::OpFlash> > flashlist;
     if (evt.getByLabel(fFlashModuleLabel, flashListHandle))
     art::fill_ptr_vector(flashlist, flashListHandle);
 
     // * MCtracks
+    Debug(2,"// * MCtracks");
     art::Handle< std::vector<sim::MCTrack> > MCtrackListHandle;
     std::vector<art::Ptr<sim::MCTrack> > MCtracklist;
     if (evt.getByLabel(fMCTrackModuleLabel,MCtrackListHandle))
         art::fill_ptr_vector(MCtracklist, MCtrackListHandle);
     
     // * tracks
+    Debug(2,"// * tracks");
     art::Handle< std::vector<recob::Track> > trackListHandle;
     std::vector<art::Ptr<recob::Track> > tracklist;
     if (evt.getByLabel(fTrackModuleLabel,trackListHandle))
     art::fill_ptr_vector(tracklist, trackListHandle);
 
     // * cosmic-tracks
+    Debug(2,"// * cosmic-tracks");
     art::Handle< std::vector<recob::Track> > CosmicTrackListHandle;
     std::vector<art::Ptr<recob::Track> > CosmicTracklist;
     if (evt.getByLabel(fCosmicTrackModuleLabel,CosmicTrackListHandle))
         art::fill_ptr_vector(CosmicTracklist, CosmicTrackListHandle);
 
     // * associations
+    Debug(2,"// * associations");
     art::FindManyP<recob::Hit> fmth(trackListHandle, evt, fTrackModuleLabel);
     art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
 
@@ -251,12 +274,11 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     
     // * MCTruth information
     // get the particles from the event
+    Debug(2,"// * MCTruth information");
     art::Handle<std::vector<simb::MCParticle>> pHandle;
     evt.getByLabel(fG4ModuleLabel, pHandle);
     art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
     
-    
-    // * MC truth information
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
     if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))

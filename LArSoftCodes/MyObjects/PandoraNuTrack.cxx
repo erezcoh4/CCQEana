@@ -50,6 +50,7 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
         SHOW(truth_mother);
         SHOW(truth_process);
         SHOW(truth_origin);
+        SHOW(truth_purity);
         Printf("truth theta=%.1f, phi=%.1f deg.", r2d*truth_dir.Theta(), r2d*truth_dir.Phi() );
         if ( r2d*fabs(truth_dir.Theta()-rec_dir.Theta()) > 90 ) {
             Printf("theta - truth-theta = %.1f(!)",r2d*fabs(truth_dir.Theta()-rec_dir.Theta()));
