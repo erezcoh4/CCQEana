@@ -35,7 +35,7 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
                                , Pt_max=0.35        # GeV/c
                                , Pmiss_max=0.3      # GeV/c
                                , opt_box=(50,100) # [Nwires x Nticks]
-                               , r_max_RdQ_CC1p0pi = 0.32 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                               , r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                                , minPEcut = 100
                                , maxdYZcut = 200                              
 
@@ -100,7 +100,6 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     # -- -- -- -- -- ---- - ---- 
     # Optical filtering
     # -- -- -- -- -- ---- - ---- 
-    # cut 2: require that the longer track is the one with larger PIDa
     cut_name , cut_label = 'flash', 'optical filter'
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
@@ -117,8 +116,8 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
     cut_name , cut_label = 'length', r'$l_{\mu}>l_{p}$'
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
-        sam = reduced_MCbnbDATAcosmicSamples['PIDa'][pair_type]
-        #sam = reduced_MCbnbDATAcosmicSamples['flash'][pair_type]
+        #sam = reduced_MCbnbDATAcosmicSamples['PIDa'][pair_type]
+        sam = reduced_MCbnbDATAcosmicSamples['flash'][pair_type]
         reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
     #}
     get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
@@ -574,9 +573,9 @@ def load_MCbnbDATAcosmicSamples():
         '''
     global MCbnbDATAcosmicSamples
     # old overlay: prodgenie_bnb_nu_uboone_overlay_mcc8_reco2
-    pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
+    #pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
     # new overlay: ccqe_ana_MCBNBCosmicDATA_2018_01_30
-    # pairs = pd.read_csv(vertices_files_path+'adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_06_vertices.csv')
+    pairs = pd.read_csv(vertices_files_path+'ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_10_vertices.csv')
     MCbnbDATAcosmicPairsFV = sample_in_FV(pairs)
     print len(pairs),'pairs from MC-BNB + cosmic DATA overlay'
     print len(MCbnbDATAcosmicPairsFV),'pairs in FV'

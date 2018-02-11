@@ -156,7 +156,6 @@ public:
     }
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     
-
     
     
 private:
@@ -205,7 +204,6 @@ private:
     std::string fHitParticleAssnsModuleLabel;
     std::string fG4ModuleLabel;
 
-    
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
     
@@ -291,19 +289,21 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     // * MCTruth information
     // get the particles from the event
-    art::Handle<std::vector<simb::MCParticle>> pHandle;
-    evt.getByLabel(fG4ModuleLabel, pHandle);
-    art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
-
-    // * MC truth information
+    art::Handle< std::vector<simb::MCParticle> >    pHandle;
+    art::Handle< std::vector<simb::MCTruth> >       mctruthListHandle;
+    art::Handle< std::vector<simb::MCFlux> >        mcfluxListHandle;
+    std::vector< art::Ptr<simb::MCTruth> >          mclist;
+    std::vector< art::Ptr<simb::MCFlux> >           fluxlist;
+    
+//    if (MCmode) {
+//        evt.getByLabel(fG4ModuleLabel, pHandle);
+//        art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+//    }
+    
     // check if this makes data runs crash. If so, change to: fMCmodeLabel != "MC"
-    art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
-    std::vector<art::Ptr<simb::MCTruth> > mclist;
     if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
         art::fill_ptr_vector(mclist, mctruthListHandle);
     
-    art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
-    std::vector<art::Ptr<simb::MCFlux> > fluxlist;
     if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
         art::fill_ptr_vector(fluxlist, mcfluxListHandle);
     
@@ -460,9 +460,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         
         // MC-truth mathching for the tracks
         bool DoNewMCtruthMatching = true;
-        bool isMC = true;
+        bool isMC = MCmode;
         Debug(4,"before if (isMC && DoNewMCtruthMatching)");
         if (isMC && DoNewMCtruthMatching){
+            
+            evt.getByLabel(fG4ModuleLabel, pHandle);
+            art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+
+            
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
             Debug(4,"\tThere are % associated hits to track %." ,(int)trk_hits_ptrs.size(), track.GetTrackID());
             
@@ -1606,8 +1611,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     
     summary_file << sTimeS.substr(0,sTimeS.length()-1) << ","
     << pot_total << ","
-    << tracks_ctr << ","
     << fTree->GetEntries() << ","
+    << tracks_ctr << ","
     << genie_interactions_ctr << ","
     << vertices_ctr
     << endl;
@@ -1651,12 +1656,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
     fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
-    debug = p.get< int >("VerbosityLevel");
+    debug                   = p.get< int >("VerbosityLevel");
+    MCmode                  = p.get< bool >("MCmodeLabel",false);
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
     DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
     DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
     DoWriteGENIEInformation = p.get< bool >("DoWriteGENIEInfo",true);
+    
 }
 
 

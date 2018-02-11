@@ -1,8 +1,8 @@
 # combine *vertices.csv files from a grid job
-default_name = "prod_reco2_extbnb_v8_mcc8"
+default_name = "ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
 name = raw_input("enter list name:...<"+default_name+">") or default_name
 
-defauld_indirname = "/uboone/data/users/ecohen/book/mcc8/v06_42_00/ccqe_ana/"+name+"_CCQE/"
+defauld_indirname = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE/"
 indirname = raw_input("enter indir:...<"+defauld_indirname+">") or defauld_indirname
 
 print 'counting events from',name

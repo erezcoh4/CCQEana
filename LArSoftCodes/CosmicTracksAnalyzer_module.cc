@@ -295,6 +295,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // ----------------------------------------
     Nhits = hitlist.size();
     Nhits_stored = std::min(Nhits, kMaxHits);
+    Debug(2,"Nhits: %, Nhits_stored: %",Nhits,Nhits_stored);
     for (int i = 0; i < Nhits_stored ; ++i){//loop over hits
         
         hit fhit(
@@ -314,7 +315,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // flash information
     // ----------------------------------------
     Nflashes = flashlist.size();
-    if (debug>5) SHOW(Nflashes);
+    Debug(4,"Nflashes: %",Nflashes);
     for ( int f = 0; f < std::min(Nflashes,kMaxHits); f++ ) {
         
         if (debug>5){ SHOW2(flashlist[f]->Time() , flashlist[f]->TotalPE() ) };
@@ -342,6 +343,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // ----------------------------------------
     NCosmicTracks = CosmicTracklist.size();
     NCosmicTracks_total += NCosmicTracks;
+    Debug(2,"NCosmicTracks: %, NCosmicTracks_total: %",NCosmicTracks,NCosmicTracks_total);
     for(int i=0; i < std::min(int(CosmicTracklist.size()),kMaxTrack); ++i ){
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = CosmicTracklist[i]->Extent();
@@ -366,11 +368,16 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // ----------------------------------------
     Ntracks = tracklist.size();
     Ntracks_total += Ntracks;
+    Debug(2,"Ntracks: %, Ntracks_total: %",Ntracks,Ntracks_total);
+    Debug(2,"std::min(int(tracklist.size()),kMaxTrack):%",std::min(int(tracklist.size()),kMaxTrack));
     for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i ){
+        Debug(2, "analyzing track %",i);
+        SHOW(tracklist[i]->ID());
+        //        Debug(3 , "analyzing track tracklist[%]->ID()=%",i,tracklist[i]->ID() );
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = tracklist[i]->Extent();
         
-        Debug(5 , Form("analyzing track %d in this event",tracklist[i]->ID()) );
+        Debug(2,"PandoraNuTrack track");
         PandoraNuTrack track(
                              run , subrun, event        // r/s/e
                              ,tracklist[i]->ID()        // track id
@@ -382,6 +389,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
         double StartLoc[3] = {start_pos.X(), start_pos.Y(), start_pos.Z()};
         
         // U / V / Y coordinates
+        Debug(2,"// U / V / Y coordinates");
         for (int plane = 0; plane < 3; plane++){
             
             Debug(5,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
@@ -404,17 +412,22 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
             track.SetStartEndPlane( plane , start_wire , start_time , end_wire , end_time );
         }
         
-        // Hits-Tracks association
-        if (fmth.isValid()){
-            std::vector< art::Ptr<recob::Hit> > vhit = fmth.at(i);
-            for (size_t h = 0; h < vhit.size(); ++h){
-                if (vhit[h].key()<kMaxHits){
-                    hits.at( vhit[h].key() ).SetTrackKey( tracklist[i].key() );
-                }
-            }
-        }
+//        // Hits-Tracks association
+//        Debug(2,"// Hits-Tracks association");
+//        if (fmth.isValid()){
+//            Debug(3,"// fmth.at(%)",i);
+//            std::vector< art::Ptr<recob::Hit> > vhit = fmth.at(i);
+//            Debug(3,"// vhit.size()");
+//            for (size_t h = 0; h < vhit.size(); ++h){
+//                if (vhit[h].key()<kMaxHits){
+//                    if (debug>3){SHOW(vhit[h].key());}
+//                    hits.at( vhit[h].key() ).SetTrackKey( tracklist[i].key() );
+//                }
+//            }
+//        }
         
         // PIDa and calorimetric KE
+        Debug(2,"// PIDa and calorimetric KE");
         if (fmcal.isValid()){
             unsigned maxnumhits = 0;
             std::vector<const anab::Calorimetry*> calos = fmcal.at(i);
@@ -450,6 +463,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
         
         // flash - matching
         // find the closest flash to the track
+        Debug(2,"// flash - matching");
         if (flashes.size()){
             float YZdistance = 1000, ClosestFlashYZdistance = 1000;
             for (auto f : flashes){
@@ -462,6 +476,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
         }
         
         // MC information
+        Debug(2,"// MC information");
         bool DoNewMCtruthMatching = false;
         if (mclist.size() && DoNewMCtruthMatching){
 
@@ -537,6 +552,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
         }//MC
 
         tracks.push_back( track );
+        Debug(3 , "done analyzing track tracklist[%]->ID()=%",i,tracklist[i]->ID() );
     }// for loop on tracks: for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i )
     FindTwoTracksVertices( tracks , vertices );
     AnalyzeVertices( vertices );
@@ -544,11 +560,13 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
 
     // check if the pandoraCosmic vertices match the pandoraNu vertices
     MatchPairVertices();
+    Debug(2,"passed MatchPairVertices()");
     // this is seemingly irrelevant since the pandoraNu tracks != pandoraCosmic tracks
     
     
     StreamVerticesToCSV();
-    
+    Debug(2,"StreamVerticesToCSV()");
+
     // print out
     if(!tracks.empty() && !cosmic_tracks.empty()){
         PrintInformation((debug>2)?true:false   // print pandoraCosmic tracks
@@ -560,10 +578,13 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     fTree -> Fill();
 }
 
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::CosmicTracksAnalyzer::FindTwoTracksVertices(std::vector<PandoraNuTrack> & tracks_vector // tracks to be clustered
                                                      ,std::vector<pairVertex> & vertices_vector  // vertices vector to hold the pairs
-                                                     ){
+){
+    Debug(2,"ub::CosmicTracksAnalyzer::FindTwoTracksVertices()");
     
     // Jan-14, 2018
     // cluster pairs of tracks at close proximity to two-tracks vertices

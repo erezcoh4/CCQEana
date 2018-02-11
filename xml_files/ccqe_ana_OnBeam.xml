@@ -2,7 +2,7 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2">
+<!ENTITY defname "prod_reco_optfilter_bnb_v11_unblind_mcc8">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
@@ -19,7 +19,7 @@
         
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>10</maxfilesperjob>
+        <maxfilesperjob>30</maxfilesperjob>
 
         <!-- Operating System -->
         <os>SL6</os>

@@ -2,6 +2,7 @@
     usage:
     -----
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
+    python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=4636
     python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
 '''
@@ -62,6 +63,7 @@ do_step_1 = raw_input("# step 1: create a list of files to download?:...<False>"
 if do_step_1:#{
     print 'creating a list of files to download from',pnfsjob
     print 'into '+indirname+'/files_to_download.list'
+    print "ssh "+uboone+" ls "+pnfsjob+"/*/*.csv > "+indirname+"/files_to_download.list"
     os.system("ssh "+uboone+" ls "+pnfsjob+"/*/*.csv > "+indirname+"/files_to_download.list")
 #}
 print
