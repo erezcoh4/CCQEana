@@ -2,12 +2,12 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco_optfilter_bnb_v11_unblind_mcc8">
+<!ENTITY defname "ecohen_physical_files_prod_reco_optfilter_bnb_v11_mcc8">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "500">
+<!ENTITY number_of_jobs "2"> <!--410-->
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
 <!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
@@ -19,7 +19,7 @@
         
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>30</maxfilesperjob>
+        <maxfilesperjob>10</maxfilesperjob>
 
         <!-- Operating System -->
         <os>SL6</os>
