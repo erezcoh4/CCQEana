@@ -2,6 +2,7 @@
     usage:
     ------
     python mac/genie_to_csv.py --DataType=argon40_numu_mA_0_99 -evf=0.01
+    make && python mac/genie_to_csv.py --DataType=uboone_argon40_numu_mA_0_99 -evf=0.01
 '''
 
 import ROOT , time , os, sys , math

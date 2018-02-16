@@ -289,30 +289,6 @@ void pairVertex::FixTracksDirections(){
     // -- - --- -- -- --- - - -- -- -- - -- - -- -- -- - -- -- - - -- - - -- - -- - -- - - - -- - - -- - - -
 }
 
-//
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//void pairVertex::SetEDepAroundVertex(){
-//    
-//    dqdx_around_vertex_non_tracks_associated = dqdx_around_vertex_tracks_associated = dqdx_around_vertex = -10000;
-//    
-//    dqdx_around_vertex = AssignedMuonTrack.dqdx_around_start_total + AssignedProtonTrack.dqdx_around_start_total;
-//    
-//    dqdx_around_vertex_tracks_associated = AssignedMuonTrack.dqdx_around_start_track_associated_total + AssignedProtonTrack.dqdx_around_start_track_associated_total;
-//    
-//    if(dqdx_around_vertex_tracks_associated!=0 && dqdx_around_vertex!=0
-//       && dqdx_around_vertex_tracks_associated!=-10000 && dqdx_around_vertex!=-10000){
-//        dqdx_around_vertex_non_tracks_associated = dqdx_around_vertex - dqdx_around_vertex_tracks_associated;
-//    }
-//    else {
-//        dqdx_around_vertex_non_tracks_associated = -10000;
-//    }
-//}
-//
-//
-//
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetReconstructedMomenta( float PmuFromRange, float PpFromRange ){
@@ -564,7 +540,7 @@ void pairVertex::Print(bool DoPrintTracks,bool DoPrintFull,bool DoPrintGENIE) co
 
     // GENIE interaction features
     PrintLine();
-    cout << "MC information: " << endl;
+    cout << "vertex MC information: " << endl;
     cout << "truth topology: " << TruthTopologyString << endl;
     if (Is1mu1p){
         if ( genie_interaction.GetMCeventID() == -9999 ) Printf("vertex does not have a matching GENIE interaction");

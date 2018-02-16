@@ -113,6 +113,14 @@ public:
                                Int_t end_wire, Int_t end_time );
     void      SetClosestFlash (flash _flash)                {ClosestFlash = _flash;};
     
+    // calibrated PIDa
+    void      SetMaxNHitsCali (Int_t maxnhits)              {MaxNHitsCali = maxnhits;};
+    void     SetBestPlaneCali (Int_t best)                  {BestPlaneCali = best;};
+    void  SetPIDaCaliPerPlane (Int_t plane , Float_t pida ) {PIDaCaliPerPlane[plane] = pida;};
+    void          SetPIDaCali ()                            {PIDaCali = PIDaCaliPerPlane[BestPlaneCali]; }; // calibrated PIDa
+
+    
+    
     // completeness of the track MC-truth matching
     void    SetMaxdQinTruthMatchedHits (float fmax)         {max_dQinTruthMatchedHits=fmax;};
     void        SetdQinAllHits (float fdQ)                  {dQinAllHits = fdQ;};
@@ -158,6 +166,8 @@ public:
     Float_t       GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
     Float_t         GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
     Float_t                 GetPIDa () const {return PIDa; };
+    Float_t     GetPIDaCaliPerPlane ( Int_t plane ) const { return PIDaCaliPerPlane[plane];};
+    Float_t             GetPIDaCali () const {return PIDaCali; };
     Float_t            GetDis2Flash (flash) const;
     Float_t     GetDis2ClosestFlash () const ;
     Float_t GetMaxdQinTruthMatchedHits () const {return max_dQinTruthMatchedHits;};
@@ -253,10 +263,10 @@ private:
     Int_t       MCpdgCode=-9999;
     Int_t       start_wire_u=0, start_wire_v=0, start_wire_y=0;
     Int_t       start_time_u=0, start_time_v=0, start_time_y=0;
-    Int_t       end_wire_u=0, end_wire_v=0, end_wire_y=0;
-    Int_t       end_time_u=0, end_time_v=0, end_time_y=0;
-    Int_t       BestPlane=2;
-    Int_t       MaxNHits=0;
+    Int_t       end_wire_u=0,   end_wire_v=0,   end_wire_y=0;
+    Int_t       end_time_u=0,   end_time_v=0,   end_time_y=0;
+    Int_t       BestPlane=2,    BestPlaneCali=2;
+    Int_t       MaxNHits=0,     MaxNHitsCali=0;
     Int_t       mcevent_id=-1;
     Int_t       truth_mother=-1;
     
@@ -265,6 +275,8 @@ private:
     Float_t     CaloKEPerPlane[3]={0,0,0};
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa=-1;
+    Float_t     PIDaCaliPerPlane[3]={0,0,0};
+    Float_t     PIDaCali=-1;
     
     // completeness of the track MC-truth matching
     Float_t     max_dQinTruthMatchedHits=-1, dQinAllHits=-1;

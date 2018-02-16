@@ -40,7 +40,7 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
         
     }
     if (MCpdgCode!=-9999){
-        cout << "........................" << endl << "MC information " << endl ;
+        cout << "........................" << endl << "track MC information " << endl ;
         SHOW(MCpdgCode);
         SHOW(mcevent_id);
         SHOWTVector3(truth_start_pos);

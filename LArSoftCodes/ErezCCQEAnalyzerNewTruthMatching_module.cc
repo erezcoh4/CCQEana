@@ -171,7 +171,7 @@ private:
     
     short   isdata;
     
-    bool    MCmode;
+    bool    MCmode=false;
     bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
     bool    DoAddTracksEdep=false; // add tracks dE/dx information
     bool    DoWriteGENIEInformation=false; // save also all the genie information to a csv file
@@ -181,6 +181,7 @@ private:
     int     Nflashes;
     int     Nvertices;
     int     vertices_ctr, tracks_ctr, genie_interactions_ctr;
+    int     CC1p0piVertices_ctr=0 , CosmicVertices_ctr=0;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
     double  pot, pot_total;
@@ -198,6 +199,7 @@ private:
     std::string fTrackModuleLabel;
     std::string fFlashModuleLabel;
     std::string fCalorimetryModuleLabel;
+    std::string fCalibCaloModuleLabel;
     std::string fGenieGenModuleLabel;
     std::string fDataSampleLabel;
     std::string fPOTModuleLabel;
@@ -280,7 +282,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     // * associations
     art::FindManyP<recob::Hit> fmth(trackListHandle, evt, fTrackModuleLabel);
-    art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
+    art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);     // uncalibrated calorimetry
+    art::FindMany<anab::Calorimetry>  fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);   // calibrated calorimetry
     
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
@@ -295,10 +298,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     std::vector< art::Ptr<simb::MCTruth> >          mclist;
     std::vector< art::Ptr<simb::MCFlux> >           fluxlist;
     
-//    if (MCmode) {
-//        evt.getByLabel(fG4ModuleLabel, pHandle);
-//        art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
-//    }
+    if (MCmode) {
+        evt.getByLabel(fG4ModuleLabel, pHandle);
+        art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+    }
     
     // check if this makes data runs crash. If so, change to: fMCmodeLabel != "MC"
     if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
@@ -345,8 +348,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                      flashlist[f]->YWidth(),       // flash y-width
                      flashlist[f]->TotalPE()       // flash total PE
         );
-        // keep only in-time flashes for the event
-        // following Katherine conditions
+        // Katherine:
+        // I chose a flash time between 0 and 10 as a very wide beam window that would definitely include anything beam related.
+        // I use a much smaller window now similar to what the cc-inclusive analysis uses.
+        // The thing to be careful about is that the different MC and data files have the beam window at different times.
+        // See Ariana's slide 2 in the MCC8 validation slides. These are up to date.
+        // The reason for a 6.5 P.E. cut is because that is the threshold for the online data trigger.
+        // So, I didn't want to include MC with smaller flashes if they are thrown out in data.
+        // I also wanted as low as possible of a flash threshold because single protons give a small amount of scintillation light.
+        // I know that the cc-inclusive use much higher to get a higher purity. I would guess that you probably also want a higher P.E. cut.
         if (debug>3){ SHOW2(fflash.GetTime() , fflash.GetTotalPE()) };
         if( (0.0 < fflash.GetTime()) && (fflash.GetTime() < 10.0) && (6.5 < fflash.GetTotalPE()) ){
             flashes.push_back( fflash );
@@ -443,8 +453,44 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }
             track.SetPIDa();
             Debug(2 , "track.GetPIDa(): %",track.GetPIDa());
-
         }
+        
+        
+        // PIDa and calorimetric KE from calibrated calorimetery
+        Debug(0,"before fmcalical.isValid(): %",fmcalical.isValid());
+        if (fmcalical.isValid()){
+            unsigned maxnumhits = 0;
+            std::vector<const anab::Calorimetry*> calicalos = fmcalical.at(i);
+            for (auto const& calicalo : calicalos){
+                if (calicalo->PlaneID().isValid){
+                    int plane = calicalo->PlaneID().Plane;
+                    
+                    // get the calorimetric kinetic energy of the track
+                    track.SetCaloKEPerPlane( plane , calicalo->KineticEnergy() );
+                    
+                    // select the best plane as the one with the maximal number of charge deposition points
+                    if (calicalo->dEdx().size() > maxnumhits){
+                        maxnumhits = calicalo->dEdx().size();
+                        track.SetBestPlaneCali ( plane );
+                        track.SetMaxNHitsCali ( maxnumhits );
+                    }
+                    // build the PIDa as a fit the reduced Bethe Bloch
+                    // dE/dx = A * R^{0.42}
+                    double pidacali = 0;
+                    int used_trkres = 0;
+                    for (size_t ip = 0; ip < calicalo->dEdx().size(); ++ip){
+                        if (calicalo->ResidualRange()[ip]<30){
+                            pidacali += calicalo->dEdx()[ip]*pow( calicalo->ResidualRange()[ip],0.42);
+                            ++used_trkres;
+                        }
+                    }
+                    if (used_trkres) pidacali /= used_trkres;
+                    track.SetPIDaCaliPerPlane( plane , pidacali );
+                }
+            }
+            track.SetPIDaCali();
+        }
+
         
         // flash - matching: find the closest flash to the track
         if (flashes.size()){
@@ -459,11 +505,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         }
         
         // MC-truth mathching for the tracks
-        bool DoNewMCtruthMatching = true;
-        bool isMC = MCmode;
-        Debug(4,"before if (isMC && DoNewMCtruthMatching)");
-        if (isMC && DoNewMCtruthMatching){
+        Debug(4,"before if (MCmode=%)",MCmode);
+        if (MCmode){
             
+            Debug(2,"inside (MCmode)");
+
             evt.getByLabel(fG4ModuleLabel, pHandle);
             art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
 
@@ -1033,8 +1079,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
     // general for CC events
     genie_file
     << "truth_Pmu" << ","
-    << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
     << "truth_Pmu_theta" << ","
+    << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
     << "truth_Pp" << ","
     << "truth_Pp_theta" << ","
     << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ",";
@@ -1162,7 +1208,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     << "start_x"<< "," << "start_y" << "," << "start_z" << ","
     << "end_x"  << "," << "end_y"   << "," << "end_z"   << ","
     << "theta"  << "," << "phi"     << ","
-    << "PIDa"   << "," << "length"  << ",";
+    << "PIDa"   << "," << "length"  << "," << "PIDaCali"   << "," ;
     
     // truth information
     tracks_file
@@ -1205,10 +1251,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
         
         // reconstructed features
         tracks_file
-        << t.GetStartPos().x()  << "," << t.GetStartPos().y()   << "," << t.GetStartPos().z() << ","
-        << t.GetEndPos().x()    << "," << t.GetEndPos().y()     << "," << t.GetEndPos().z() << ","
+        << t.GetStartPos().x()  << "," << t.GetStartPos().y()   << "," << t.GetStartPos().z()   << ","
+        << t.GetEndPos().x()    << "," << t.GetEndPos().y()     << "," << t.GetEndPos().z()     << ","
         << t.GetTheta()         << "," << t.GetPhi()            << ","
-        << t.GetPIDa()          << "," << t.GetLength()         << ",";
+        << t.GetPIDa()          << "," << t.GetLength()         << "," << t.GetPIDaCali()       << ",";
         
         // truth information
         tracks_file
@@ -1256,12 +1302,16 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     // tracks sorted by long / short
     << "PIDa_long"<< "," << "PIDa_short" << ","
     << "l_long"<< "," << "l_short" << ","
+    << "PIDaCali_long"<< "," << "PIDaCali_short" << ","
     // tracks sorted by small / large PIDa
     << "PIDa_small_PIDa"<< "," << "PIDa_large_PIDa" << ","
     << "l_small_PIDa"<< "," << "l_large_PIDa" << ","
+    << "PIDaCali_small_PIDa"<< "," << "PIDaCali_large_PIDa" << ","
     // µ/p assigned tracks
     << "PIDa_assigned_muon"<< "," << "PIDa_assigned_proton" << ","
     << "l_assigned_muon"<< "," << "l_assigned_proton" << ","
+    << "PIDaCali_assigned_muon"<< "," << "PIDaCali_assigned_proton" << ","
+    
     // flash matching of tracks
     << "ClosestFlash_YZdistance_assigned_muon"<< "," << "ClosestFlash_YZdistance_assigned_proton" << ","
     << "ClosestFlash_TotalPE_assigned_muon"<< "," << "ClosestFlash_TotalPE_assigned_proton" << ","
@@ -1329,7 +1379,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     }
     
     // flash matching of vertex
-    vertices_file << "ClosestFlash_YZdistance" << "," << "ClosestFlash_TotalPE" << ",";
+    vertices_file
+    << "ClosestFlash_YZdistance" << ","
+    << "ClosestFlash_TotalPE" << ","
+    << "ClosestFlash_Time" << ","
+    << "Nflashes" << ",";
     
     // vertex truth-topology in MC
     vertices_file
@@ -1345,9 +1399,12 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
     // whatever you add here - must add also in header - ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV()
     for (auto v:vertices){
         
-        
-        
         vertices_ctr++;
+        if (v.GetIsGENIECC_1p_200MeVc_0pi()) {
+            CC1p0piVertices_ctr++;
+        } else if (v.GetIsCosmic()){
+            CosmicVertices_ctr++;
+        }
         
         vertices_file
         << v.GetRun() << "," << v.GetSubrun() << "," << v.GetEvent() << "," << v.GetVertexID() << ","
@@ -1363,18 +1420,22 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         // tracks sorted by long / short
         vertices_file
         << v.GetLongestTrack().GetPIDa() << "," << v.GetShortestTrack().GetPIDa() << ","
-        << v.GetLongestTrack().GetLength() << "," << v.GetShortestTrack().GetLength() << "," ;
+        << v.GetLongestTrack().GetLength() << "," << v.GetShortestTrack().GetLength() << ","
+        << v.GetLongestTrack().GetPIDaCali() << "," << v.GetShortestTrack().GetPIDaCali() << ",";
         
         
         // tracks sorted by small / large PIDa
         vertices_file
         << v.GetSmallPIDaTrack().GetPIDa() << "," << v.GetLargePIDaTrack().GetPIDa() << ","
-        << v.GetSmallPIDaTrack().GetLength() << "," << v.GetLargePIDaTrack().GetLength() << "," ;
-        
+        << v.GetSmallPIDaTrack().GetLength() << "," << v.GetLargePIDaTrack().GetLength() << ","
+        << v.GetSmallPIDaTrack().GetPIDaCali() << "," << v.GetLargePIDaTrack().GetPIDaCali() << ",";
+
         // µ/p assigned tracks
         vertices_file
         << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
-        << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << "," ;
+        << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << ","
+        << v.GetAssignedMuonTrack().GetPIDaCali() << "," << v.GetAssignedProtonTrack().GetPIDaCali() << ",";
+        
         // flash matching of tracks
         vertices_file
         << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
@@ -1469,8 +1530,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
                 vertices_file << v.GetRdQaroundVertex( plane, NwiresBox[i_box_size] , NticksBox[i_box_size] , hits ) << "," ;
             }
         }
+        
         // flash matching of vertex
-        vertices_file << v.GetDis2ClosestFlash() << "," << v.GetClosestFlash().GetTotalPE() << ",";
+        vertices_file
+        << v.GetDis2ClosestFlash() << ","
+        << v.GetClosestFlash().GetTotalPE() << ","
+        << v.GetClosestFlash().GetTime() << ","
+        << flashes.size() << "," ;
         
         
         // vertex truth-topology in MC
@@ -1604,7 +1670,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     << "Nevents" << ","
     << "Ntracks" << ","
     << "Ngenie_interactions" << ","
-    << "Nvertices"
+    << "Nvertices" << ","
+    << "NCosmicVertices" << ","
+    << "NCC1p0piVertices"
     << endl;
     
     std::string sTimeS = std::ctime(&now_time);
@@ -1614,7 +1682,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     << fTree->GetEntries() << ","
     << tracks_ctr << ","
     << genie_interactions_ctr << ","
-    << vertices_ctr
+    << vertices_ctr << ","
+    << CosmicVertices_ctr << ","
+    << CC1p0piVertices_ctr
     << endl;
     
     summary_file.close();
@@ -1653,6 +1723,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     fHitsModuleLabel        = p.get< std::string >("HitsModuleLabel");
     fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
     fCalorimetryModuleLabel = p.get< std::string >("CalorimetryModuleLabel");
+    fCalibCaloModuleLabel   = p.get< std::string >("CalibratedCalorimetryModuleLabel");
+    
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
     fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
@@ -1670,7 +1742,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::ResetVars(){
     
-    MCmode = false;
     run = subrun = event = -9999;
     Ntracks = Nhits = Nhits_stored = Nvertices = 0 ;
     pot = 0;

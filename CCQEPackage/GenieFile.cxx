@@ -32,6 +32,7 @@ bool GenieFile::SetInTree(){
     GenieTree -> SetBranchAddress("res"            , &res);
     GenieTree -> SetBranchAddress("dis"            , &dis);
     GenieTree -> SetBranchAddress("coh"            , &coh);
+    GenieTree -> SetBranchAddress("mec"            , &mec);
     
     GenieTree -> SetBranchAddress("Q2"             , &Q2);
     GenieTree -> SetBranchAddress("W"              , &W);
@@ -74,6 +75,8 @@ bool GenieFile::Initialize(){
     }
     CC1p0pi = false;
     Pmiss = muon  = proton = q = nu = proton_before_FSI = TLorentzVector();
+    protons.clear();
+    neutrons.clear();
     return true;
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -93,11 +96,12 @@ bool GenieFile::HeaderCSV (){
     
     csv_file
     << "cc"  << "," << "qel" <<  "," << "res" <<  "," << "dis" <<  "," << "coh" <<  ","
-    << "Q2"  <<  "," << "W" <<  "," << "x" <<  ","
-    << "pxn" <<  "," << "pyn" <<  "," << "pzn" <<  "," // Initial state hit nucleon
-    << "pxv" <<  "," << "pyv" <<  "," << "pzv" <<  ","
-    << "pxl" <<  "," << "pyl" <<  "," << "pzl" << ","
-    << "nf"  <<  ",";
+    << "mec" << ","
+    << "Q2"  << "," << "W" <<  "," << "x" <<  ","
+    << "pxn" << "," << "pyn" <<  "," << "pzn" <<  "," // Initial state hit nucleon
+    << "pxv" << "," << "pyv" <<  "," << "pzv" <<  ","
+    << "pxl" << "," << "pyl" <<  "," << "pzl" << ","
+    << "nf"  << ",";
     
     for (int i=0; i<NMAX ; i++ ){
         csv_file
@@ -140,11 +144,12 @@ bool GenieFile::StreamToCSV (){
     
     csv_file
     << cc  << "," << qel <<  "," << res <<  "," << dis <<  "," << coh <<  ","
-    << Q2  <<  "," << W <<  "," << x <<  ","
-    << pxn <<  "," << pyn <<  "," << pzn <<  "," // Initial state hit nucleon
-    << pxv <<  "," << pyv <<  "," << pzv <<  ","
-    << pxl <<  "," << pyl <<  "," << pzl << ","
-    << nf  <<  ",";
+    << mec << ","
+    << Q2  << "," << W <<  "," << x <<  ","
+    << pxn << "," << pyn <<  "," << pzn <<  "," // Initial state hit nucleon
+    << pxv << "," << pyv <<  "," << pzv <<  ","
+    << pxl << "," << pyl <<  "," << pzl << ","
+    << nf  << ",";
     
     for (int i=0; i<NMAX ; i++ ){
         csv_file
@@ -189,17 +194,75 @@ bool GenieFile::SetTopology (){
             SHOW(pdgf[i]);
         }
     }
+    
+    
+    
+    int Nmu=0, Npi=0, Nel=0, Ngamma=0;
+    int Np_200MeVc=0, Nn_200MeVc=0;
+    
+    muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
+
+    for( int i_f=0; i_f < nf ; i_f++ ){
+        Debug(3,"pdgf[i_f]:%",pdgf[i_f]);
+        switch (pdgf[i_f]) {
+            case 2212:
+                pmomentum.SetXYZM(pxf[i_f], pyf[i_f], pzf[i_f], 0.9383);
+                protons.push_back( pmomentum );
+                if (pmomentum.P() >= 0.2){
+                    Np_200MeVc++;
+                }
+                if (protons.back().P() > proton.P()) {
+                    proton = protons.back();
+                }
+                break;
+                
+            case 2112:
+                pmomentum.SetXYZM(pxf[i_f], pyf[i_f], pzf[i_f], 0.9395);
+                neutrons.push_back( pmomentum );
+                if (pmomentum.P() >= 0.2){
+                    Nn_200MeVc++;
+                }
+                break;
+                
+            case 211:
+            case -211:
+            case 111:
+                Npi++;
+                break;
+
+            case 22:
+                Ngamma++;
+                break;
+                
+            case 11:
+            case -11:
+                Nel++;
+                break;
+                
+            default:
+                break;
+        }
+    }
+        
+    
     // CCQE with FSI (the A-1 system can not exit the nucleus)
-    if ((cc==true) && (qel==true) && ((nf == 1) && (pdgf[0]==2212) ) ){
+    Debug(2,"cc:% , qel:%, Nmu:%, Np_200MeVc:%, Npi:%, Nn_200MeVc:%, Nel:%, Ngamma:%"
+          ,cc,qel,Nmu,Np_200MeVc,Npi,Nn_200MeVc,Nel,Ngamma);
+    if ((cc==true)
+        && ( Np_200MeVc==1 )
+        //        && ( Nmu>=1 ) // if cc==0 then we have a muon!
+        && ( Npi==0 && Nel==0 && Ngamma==0 )
+        // && Nn_200MeVc==0
+        //        && ((nf == 1) && (pdgf[0]==2212) )
+        )
+    {
         CC1p0pi = true;
-        muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
         q = nu - muon;
-        proton.SetXYZM( pxf[0], pyf[0], pzf[0], 0.9382720813 );
         Pmiss = proton - q;
-        proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 );
+        proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 ); // correct this!
     }
      // CCQE with no FSI
-    else if ((cc==true) && (qel==true)
+    else if ((cc==true)
              && (nf == 2) && (pdgf[0]==1000180390) && (pdgf[1]==2212) ){
         CC1p0pi = true;
         muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );

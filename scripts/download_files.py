@@ -1,10 +1,19 @@
 '''
     usage:
     -----
+    for MC-BNB/DATA-cosmic:
+    
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=4636
     python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
+    
+    for On beam:
+    
+    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v05
+    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v04
+    
+
 '''
 
 import sys, os, time, argparse
@@ -31,7 +40,7 @@ if name=="ccqe_ana_MCBNBCosmicDATA":
     default_outdirname = csv_path+"ccqe_candidates/"
 
 # new overlay using SAM definition
-if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name:
+if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" in name:
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_outdirname = csv_path+"ccqe_candidates/"
 
@@ -131,22 +140,22 @@ print 'concatenated %d'%len(vertices_all),'vertices to\n',outfilename,'\ndone.'
 print
 summary_all = pd.concat(summary_df_array)
 print len(summary_all),'is the length summary of all events'
-outfilename = outdirname+'/'+name+'_'+time_name+'_summary.csv'
+outfilename = csv_path+'summary/'+name+'_'+time_name+'_summary.csv'
 summary_all.to_csv(outfilename)
 print 'concatenated %d'%len(summary_all),'summary files to\n',outfilename,'\ndone.'
 print
 if (len(tracks_df_array)>0):#{
     tracks_all = pd.concat(tracks_df_array)
     print len(tracks_all),'total tracks'
-    outfilename = outdirname+'/'+name+'_'+time_name+'_tracks.csv'
+    outfilename = csv_path+'tracks/'+name+'_'+time_name+'_tracks.csv'
     tracks_all.to_csv(outfilename)
     print 'concatenated %d'%len(tracks_all),'tracks to\n',outfilename,'\ndone.'
 #}
 print
 if (len(genie_df_array)>0):#{
     genie_all = pd.concat(genie_df_array)
-    print len(vertices_all),'total genie'
-    outfilename = outdirname+'/'+name+'_'+time_name+'_genie.csv'
+    print len(genie_all),'total genie'
+    outfilename = csv_path+'genie/'+name+'_'+time_name+'_genie.csv'
     genie_all.to_csv(outfilename)
     print 'concatenated %d'%len(genie_all),'genie to\n',outfilename,'\ndone.'
 #}

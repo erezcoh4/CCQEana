@@ -60,6 +60,29 @@ public:
     
     float     LightConeAlpha ( TLorentzVector v ){ return (v.E() - v.Pz())/(mAr40/40.); };
     
+    int     debug=0;
+    void Debug(Int_t verobosity_level, const char* format) // base function
+    {
+        if ( debug < verobosity_level ) return;
+        std::cout << format << std::endl;
+    }
+    template<typename T, typename... Targs>
+    void Debug(Int_t verobosity_level, const char* format, T value, Targs... Fargs) // recursive variadic function
+    {
+        if ( debug < verobosity_level ) return;
+        for ( ; *format != '\0'; format++ ) {
+            if ( *format == '%' ) {
+                std::cout << value << " ";
+                Debug(verobosity_level, format+1, Fargs...); // recursive call
+                return;
+            }
+            std::cout << *format;
+        }
+        std::cout << endl;
+    }
+    // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
+    
+
     
 private:
     
@@ -73,11 +96,11 @@ private:
     
     int     i_event=0;
     int     counter=0;
-    int     debug=0;
     
     // GENIE variables
     int     neu; //Neutrino PDG code.
     bool    cc, qel, res, dis, coh; // Is it a CC /  quasi-elastic / Resonance / DIS / Coherent scattering?
+    bool    mec;
     double  Q2, W, x;
     double  pxn, pyn, pzn; // Initial state hit nucleon px (in GeV).
     double  pxv, pyv, pzv; // Incoming neutrino px/y/z (in GeV).
@@ -94,8 +117,10 @@ private:
     
     // my variables for CC 1p 0pi
     bool            CC1p0pi=false;
+    TLorentzVector  pmomentum; //tmp...
     TLorentzVector  proton, muon, nu, q, Pmiss;
     TLorentzVector  proton_before_FSI;   // before FSI
+    std::vector<TLorentzVector> protons, neutrons;
 };
 
 #endif

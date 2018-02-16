@@ -43,21 +43,22 @@ physics:
   {
     EventsAnalyzer: 
     {
-      module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
-      VerbosityLevel:		2
-      MCmodeLabel:          true
-      DoWriteTracksInfo:    false
-      DoAddTracksEdep:      false
-      DoWriteGENIEInfo:     true
-      TrackModuleLabel: 	"pandoraNu"
-      HitsModuleLabel:      "pandoraCosmicHitRemoval"
-      MCTruthModuleLabel:	"generator"
-      GenieGenModuleLabel:	"generator"
-      CalorimetryModuleLabel:"pandoraNucalo"
-      POTModuleLabel:       "generator"
-      FlashModuleLabel:     "simpleFlashBeam"
-      HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
+      module_type:                      "ErezCCQEAnalyzerNewTruthMatching"
+      DataSampleLabel:                  "adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
+      VerbosityLevel:                   2
+      MCmodeLabel:                      true
+      DoWriteTracksInfo:                false
+      DoAddTracksEdep:                  false
+      DoWriteGENIEInfo:                 true
+      TrackModuleLabel:                 "pandoraNu"
+      HitsModuleLabel:                  "pandoraCosmicHitRemoval"
+      MCTruthModuleLabel:               "generator"
+      GenieGenModuleLabel:              "generator"
+      CalorimetryModuleLabel:           "pandoraNucalo"
+      POTModuleLabel:                   "generator"
+      FlashModuleLabel:                 "simpleFlashBeam"
+      HitParticleAssnsModuleLabel:      "crHitRemovalTruthMatch"
+      CalibratedCalorimetryModuleLabel: "pandoraNucali"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms
