@@ -132,9 +132,6 @@ public:
     // debug
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     Int_t debug=0;
-//    void Debug (Int_t verobosity_level, std::string text){
-//        if ( debug > verobosity_level ) cout << text << endl;
-//    }
     void Debug(Int_t verobosity_level, const char* format) // base function
     {
         if ( debug < verobosity_level ) return;
@@ -1356,11 +1353,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "genie_distance" << ","
     << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
     << "truth_Pt" << "," << "truth_theta_pq" << ","
+    << "genie_mode" << ","
+
     
     // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
     << "closest_genie_distance" << ","
     << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
     << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
+    << "closest_genie_mode" << ","
     
     // truth delta-phi
     << "truth_delta_phi" << ","
@@ -1506,6 +1506,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << v.GetDistanceToGENIE() << ",";
         vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
         vertices_file << v.GetGENIEinfo().GetPt() << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
+        vertices_file << v.GetGENIEinfo().GetMode() << ",";
         
         
         
@@ -1513,6 +1514,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << v.GetDistanceToClosestGENIE() << ",";
         vertices_file << v.GetClosestGENIE().GetEv() << "," << v.GetClosestGENIE().GetQ2() << "," << v.GetClosestGENIE().GetXb() << "," << v.GetClosestGENIE().GetY() << "," << v.GetClosestGENIE().GetW2() << ",";
         vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
+        vertices_file << v.GetClosestGENIE().GetMode() << ",";
         
         
         // truth delta-phi

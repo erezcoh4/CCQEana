@@ -252,7 +252,7 @@ bool GenieFile::SetTopology (){
         && ( Np_200MeVc==1 )
         //        && ( Nmu>=1 ) // if cc==0 then we have a muon!
         && ( Npi==0 && Nel==0 && Ngamma==0 )
-        // && Nn_200MeVc==0
+        && Nn_200MeVc==0
         //        && ((nf == 1) && (pdgf[0]==2212) )
         )
     {

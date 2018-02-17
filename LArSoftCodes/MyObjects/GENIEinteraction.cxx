@@ -282,7 +282,7 @@ void GENIEinteraction::SetTruthTopology(){
             // 0 pions
             // 0 electrons
             // 0 photons
-            if ( Npi==0 && Nn_200MeVc==0 && Nel==0 && Ngamma==0 ){
+            if ( Npi==0 && Nel==0 && Ngamma==0 ){ // Nn_200MeVc==0 && (in the previous version)
                 IsCC_1p_200MeVc_0pi = true;
                 
                 // if this genie is a CC 1p 0pi, all the tracks in this interactions should be flagged accordingly
