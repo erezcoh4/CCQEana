@@ -444,6 +444,44 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
 
 
 
+////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//float pairVertex::GetChargeInSphere (int plane, std::vector<hit> hits, float r) const{
+//    // Feb-18,2018
+//    // get the charge deposition from a set of hits (std::vector<hit>) in a sphere around the vertex
+//    // of radius r [cm]
+//    float Q = 0.0;
+//    for (auto hit:hits){
+//        if (hit.InPlane(plane)
+//            && hit.InSphere( vertex_wire[plane] , vertex_time[plane] , r )){
+//            Q += hit.GetCharge();
+//        }
+//    }
+//    return Q;
+//    
+//}
+////
+//
+////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//float pairVertex::GetRdQSphereAroundVertex (int plane, float r, std::vector<hit> hits ) const {
+//    // Feb-18,2018
+//    // get the ratio of tracks-charge deposited to total-charge deposited
+//    // in a sphere of radius r [cm] around the vertex in plane i=0,1,2
+//    // a mal-function will return -1 (if plane is not 0,1,2) or -9999 (if Qtotal=0)
+//    // input:
+//    // plane, r [cm] for the sphere, hits in event
+//    if (plane<0 || plane>2) return -1;
+//    
+//    float Qtotal    = GetChargeInSphere( plane, hits, r );
+//    float Qmuon     = GetChargeInSphere( plane, hits_muon[plane], r );
+//    float Qproton   = GetChargeInSphere( plane, hits_proton[plane], r );
+//    if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
+//    
+//    else return -9999;
+//}
+//
+
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t pairVertex::GetDis2Flash (flash Flash) const {
     float vZ = position.z();

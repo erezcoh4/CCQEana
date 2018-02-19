@@ -259,7 +259,7 @@ bool GenieFile::SetTopology (){
         CC1p0pi = true;
         q = nu - muon;
         Pmiss = proton - q;
-        proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 ); // correct this!
+        // proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 ); // correct this!
     }
      // CCQE with no FSI
     else if ((cc==true)

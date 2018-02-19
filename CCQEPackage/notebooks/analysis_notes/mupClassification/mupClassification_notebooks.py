@@ -16,7 +16,7 @@ pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
 
 # ------------------------------------------------
 # last edit: Feb-12,2018
-def load_MCbnbDATAcosmicSamples(filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_14_vertices'):
+def load_MCbnbDATAcosmicSamples(filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
     '''
         return:
         MCbnbDATAcosmicSamples:  pandas.DataFrame() of prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices in FV
@@ -55,9 +55,9 @@ def get_pair_hpars(index):
 # ------------------------------------------------
 # last edit:
 # Feb. 12, 2018
-def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
-                               , delta_theta_12=60  # deg.
-                               , delta_Delta_phi=40 # deg.
+def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
+                               , delta_theta_12=55  # deg.
+                               , delta_Delta_phi=35 # deg.
                                , theta_pq_max=25    # deg.
                                , Pt_max=0.35        # GeV/c
                                , Pmiss_max=0.3      # GeV/c
@@ -70,8 +70,8 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=12
                                # cuts sensitivity
                                , PIDa_p_min_minus = 11
                                , PIDa_p_min_plus = 13
-                               , delta_theta_12_minus = 55 
-                               , delta_theta_12_plus = 65 
+                               , delta_theta_12_minus = 50 
+                               , delta_theta_12_plus = 60
                                , r_max_RdQ_CC1p0pi_minus = 0.25
                                , r_max_RdQ_CC1p0pi_plus = 0.4                               
                                , delta_Delta_phi_minus = 35

@@ -130,6 +130,11 @@ public:
     float               GetRdQaroundVertex (int plane, int Nwires, int Nticks, std::vector<hit> hits) const ;
     float                   GetChargeInBox (int plane, std::vector<hit> hits, box VertexBox) const;
     
+    // get the ratio of tracks-charge deposited to total-charge deposited
+    // in a Sphere of r [cm] around the vertex in plane i=0,1,2
+    // input: plane, radius in [cm]
+    float         GetRdQSphereAroundVertex (int plane, float r, std::vector<hit> hits ) const ;
+    float                GetChargeInSphere (int plane, std::vector<hit> hits, float r) const;
     
     
     Float_t                   GetDis2Flash (flash) const;

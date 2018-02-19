@@ -30,6 +30,8 @@
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardata/ArtDataHelper/TrackUtils.h" // lar::util::TrackPitchInView()
+#include "lardata/Utilities/PxUtils.h"
+#include "lardata/Utilities/GeometryUtilities.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
@@ -83,6 +85,9 @@ constexpr int dNwiresBox     = 5;
 constexpr int MinNticksBox   = 10;
 constexpr int dNticksBox     = 10;
 
+constexpr int N_r_around_vertex = 10;
+constexpr int Min_r_around_vertex = 1;
+constexpr int dr_around_vertex  = 1;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 namespace ub { class ErezCCQEAnalyzerNewTruthMatching; }
@@ -127,6 +132,7 @@ public:
     void          StreamGENIEToCSV ();
 
     bool ParticleAlreadyMatchedInThisHit ( std::vector<int> ,int );
+    double    GetRdQInSphereAroundVertex ( pairVertex v, int plane, float r);
     
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     // debug
@@ -180,6 +186,7 @@ private:
     int     vertices_ctr, tracks_ctr, genie_interactions_ctr;
     int     CC1p0piVertices_ctr=0 , CosmicVertices_ctr=0;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
+    float   r_around_vertex[N_r_around_vertex];
     
     double  pot, pot_total;
 
@@ -1046,6 +1053,57 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
 }
 
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVertex v, int plane, float r){
+    // Feb-18,2018
+    // get the ratio of tracks-charge deposited to total-charge deposited
+    // in a sphere of radius r [cm] around the vertex in plane i=0,1,2
+    // a mal-function will return -1 (if plane is not 0,1,2) or -9999 (if Qtotal=0)
+    // input:
+    // plane, r [cm] for the sphere, hits in event
+    //
+    // This method is implemented here (and not in pairVertex.cxx)
+    // since we need lar::util::PxPoint,
+    // which can not be easily implemented outside a LArSoft module
+    auto const& geom = ::util::GeometryUtilities::GetME();
+
+    float Qtotal=0.0, Qmuon=0.0, Qproton=0.0;
+    // vertex PxPoint in this plane
+    util::PxPoint *vPxPoint = new util::PxPoint( plane , v.GetVertexWire(plane), v.GetVertexTime(plane) );
+    // PxPoint of all hits in this plane
+    for (auto hit: hits) {
+        if (hit.GetPlane()) {
+            util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
+            double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+            // check if the hit & the vertex are close enough
+            if (distance_hit_vertex < r) {
+                // if yes, aggregate the charge
+                Qtotal += hit.GetCharge();
+            }
+        }
+    }
+    // PxPoint of the vertex-muon hits in this plane
+    for (auto hit: v.GetMuonHits(plane)) {
+        util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
+        double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+        if (distance_hit_vertex < r) {
+            Qmuon += hit.GetCharge();
+        }
+    }
+    // PxPoint of the vertex-proton hits in this plane
+    for (auto hit: v.GetProtonHits(plane)) {
+        util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
+        double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+        if (distance_hit_vertex < r) {
+            Qproton += hit.GetCharge();
+        }
+    }
+    if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
+    else return -1;
+}
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
     
@@ -1377,6 +1435,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
                                   , plane , NwiresBox[i_box_size] , NticksBox[i_box_size] ) << "," ;
         }
     }
+    // charge deposition around the vertex in a sphere of r [cm]
+    for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
+        for (int plane=0; plane<3; plane++) {
+            vertices_file
+            << Form( "RdQaroundVertex[plane %d][r=%.1fcm]"
+                    , plane , r_around_vertex[i_r_around_vertex] ) << ",";
+        }
+    }
+
     
     // flash matching of vertex
     vertices_file
@@ -1533,6 +1600,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
             }
         }
         
+        // charge deposition around the vertex in a sphere of r [cm]
+        for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
+            for (int plane=0; plane<3; plane++) {
+                vertices_file
+                << GetRdQInSphereAroundVertex( v, plane, r_around_vertex[i_r_around_vertex] ) << ",";
+            }
+        }
+        
+        
         // flash matching of vertex
         vertices_file
         << v.GetDis2ClosestFlash() << ","
@@ -1614,6 +1690,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
         NwiresBox[i_box_size] = MinNwiresBox + i_box_size * dNwiresBox;
         NticksBox[i_box_size] = MinNticksBox + i_box_size * dNticksBox;
+    }
+    // charge deposition around the vertex in a sphere of radius r [cm]
+    for (int i_r_around_vertex=0 ; i_r_around_vertex < N_r_around_vertex ; i_r_around_vertex++){
+        r_around_vertex[i_r_around_vertex] = Min_r_around_vertex + i_r_around_vertex * dr_around_vertex;
     }
     
     

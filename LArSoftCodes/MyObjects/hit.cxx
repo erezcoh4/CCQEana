@@ -17,6 +17,7 @@ hit_charge(fcharge)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool hit::InBox(box fbox) const {
+    // check if hit is inside a box
     if (
         ( fbox.GetStartWire() <= hit_wire && hit_wire <= fbox.GetEndWire() )
         &&
@@ -27,6 +28,22 @@ bool hit::InBox(box fbox) const {
     }
     return false;
 }
+
+
+
+//
+////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//bool hit::InSphere(float cwire, float ctime, float r , float f_timeticks2cm, float f_wire2cm ) const {
+//    // check if hit is inside a sphere of radius r [cm]
+//    // localized around (cwire,ctime)
+//    d2_hit_center = (hit_wire - cwire)*(hit_wire - cwire)*f_wire2cm + (hit_time - ctime)*(hit_time - ctime)*f_timeticks2cm;
+//    r2 = r*r;
+//    // no nead to use the expensive sqrt method here, we can use the squared distance for this check
+//    if ( d2_hit_center < r2 )        return true;
+//    return false;
+//}
+//
+
 
 
 
