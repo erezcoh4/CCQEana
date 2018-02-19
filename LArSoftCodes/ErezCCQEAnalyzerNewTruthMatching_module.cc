@@ -456,12 +456,12 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 }
             }
             track.SetPIDa();
-            Debug(2 , "track.GetPIDa(): %",track.GetPIDa());
+            Debug(3 , "track.GetPIDa(): %",track.GetPIDa());
         }
         
         
         // PIDa and calorimetric KE from calibrated calorimetery
-        Debug(0,"before fmcalical.isValid(): %",fmcalical.isValid());
+        Debug(3,"before fmcalical.isValid(): %",fmcalical.isValid());
         if (fmcalical.isValid()){
             unsigned maxnumhits = 0;
             std::vector<const anab::Calorimetry*> calicalos = fmcalical.at(i);
@@ -512,7 +512,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         Debug(4,"before if (MCmode=%)",MCmode);
         if (MCmode){
             
-            Debug(2,"inside (MCmode)");
+            Debug(3,"inside (MCmode)");
 
             evt.getByLabel(fG4ModuleLabel, pHandle);
             art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
@@ -615,7 +615,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                        : "unkwon origin")  );
                 }// end if fo.isValid()
             }else {
-                Debug(2,"particle.isNull() = true!...");
+                Debug(3,"particle.isNull() = true!...");
                 if (!maxp_me.isNull()) {
                     Debug(5,  "Un-Matching particle % since it deposited too few of hit-charge in track (max_dQinTruthMatchedHits/dQinAllHits = %)" , maxp_me->PdgCode() , max_dQinTruthMatchedHits / dQinAllHits );
                 }
@@ -1056,6 +1056,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVertex v, int plane, float r){
+    Debug(3,"ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(vertex %, plane %, radius % cm)",v.GetVertexID(),plane,r);
     // Feb-18,2018
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a sphere of radius r [cm] around the vertex in plane i=0,1,2
@@ -1085,19 +1086,29 @@ double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVert
     }
     // PxPoint of the vertex-muon hits in this plane
     for (auto hit: v.GetMuonHits(plane)) {
+        if (hit.GetPlane()) {
+
         util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
         double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
         if (distance_hit_vertex < r) {
             Qmuon += hit.GetCharge();
         }
+        }
     }
     // PxPoint of the vertex-proton hits in this plane
     for (auto hit: v.GetProtonHits(plane)) {
+        if (hit.GetPlane()) {
+
         util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
         double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
         if (distance_hit_vertex < r) {
             Qproton += hit.GetCharge();
         }
+        }
+    }
+    Debug(3,"completed ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(), Qtotal: %, Qmuon: %, Qproton: %",Qtotal,Qmuon,Qproton);
+    if (Qmuon>Qtotal || Qproton>Qtotal) {
+        Debug(0,"Qtotal=% < Qmuon=% or Qproton=% !? ",Qtotal,Qmuon,Qproton);
     }
     if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
     else return -1;
