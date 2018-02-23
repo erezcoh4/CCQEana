@@ -43,9 +43,9 @@ physics:
     EventsAnalyzer: 
     {
       module_type:            "CosmicTracksAnalyzer"
-      DataSampleLabel:		"erez_corsika_open_cmc"
+      DataSampleLabel:		"prodcosmics_corsika_cmc_uboone_mcc8.7_reco"
       TrackModuleLabel: 	"pandoraNu"
-      VerbosityLevel:		5
+      VerbosityLevel:		2
       HitsModuleLabel:        "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"

@@ -255,16 +255,11 @@ bool GENIEinteraction::IncludesTrack(Int_t ftrackID) const{
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GENIEinteraction::SetTruthTopology(){
     
-    // determine the value of truth-definition flags
-    
-    Int_t Np_200MeVc = 0 , Nn_200MeVc = 0;
+    // determine the truth topology
+    Int_t Np_200MeVc = 0 ;
     for (auto Pp : p3vect){
         if (Pp.Mag()>=0.2) Np_200MeVc++;
     }
-    for (auto Pn : n3vect){
-        if (Pn.Mag()>=0.2) Nn_200MeVc++;
-    }
-
     
     // IsCC_Np_200MeVc
     if ( ccnc==0 && Nmu>=1 && Np_200MeVc>=1 ){
@@ -278,11 +273,11 @@ void GENIEinteraction::SetTruthTopology(){
             // IsCC_1p_200MeVc_0pi
             // which means that the final state includes
             // 1 protons with momentum >= 200 MeV/c
-            // 0 neutrons with momentum >= 200 MeV/c
+            // any number of neutrons
             // 0 pions
             // 0 electrons
             // 0 photons
-            if ( Npi==0 && Nel==0 && Ngamma==0 ){ // Nn_200MeVc==0 && (in the previous version)
+            if ( Npi==0 && Nel==0 && Ngamma==0 ){
                 IsCC_1p_200MeVc_0pi = true;
                 
                 // if this genie is a CC 1p 0pi, all the tracks in this interactions should be flagged accordingly

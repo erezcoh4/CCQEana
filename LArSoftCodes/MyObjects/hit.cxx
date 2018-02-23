@@ -49,9 +49,8 @@ bool hit::InBox(box fbox) const {
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void hit::Print() const{
-    std::cout << "hit " << hit_id << ", " << hit_plane << "/" << hit_wire << "/" << hit_peakT << std::endl;
-    std::cout << "\t trkKey: " << hit_trkKey << std::endl;
-
+    std::cout << "hit " << hit_id << ", plane " << hit_plane << "/ wire " << hit_wire << "/ peakT " << hit_peakT
+    << ", " << "\t trkKey: " << hit_trkKey << std::endl;
 }
 
 

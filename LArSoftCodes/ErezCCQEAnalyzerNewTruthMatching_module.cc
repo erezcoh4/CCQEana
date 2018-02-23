@@ -85,9 +85,9 @@ constexpr int dNwiresBox     = 5;
 constexpr int MinNticksBox   = 10;
 constexpr int dNticksBox     = 10;
 
-constexpr int N_r_around_vertex = 10;
-constexpr int Min_r_around_vertex = 1;
-constexpr int dr_around_vertex  = 1;
+constexpr int N_r_around_vertex = 30;
+constexpr float Min_r_around_vertex = 0;
+constexpr float dr_around_vertex  = 0.5;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 namespace ub { class ErezCCQEAnalyzerNewTruthMatching; }
@@ -800,6 +800,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::ConstructVertices(){
     // if its a MC event, tag the vertex by their MC information
     if (MCmode) TagVertices();
     // output to csv file
+    // debug = (vertices.size()>0) ? 2 : 0; // ToDo: Remove this!
     StreamVerticesToCSV();
 }
 
@@ -1068,47 +1069,60 @@ double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVert
     // since we need lar::util::PxPoint,
     // which can not be easily implemented outside a LArSoft module
     auto const& geom = ::util::GeometryUtilities::GetME();
-
+    
     float Qtotal=0.0, Qmuon=0.0, Qproton=0.0;
     // vertex PxPoint in this plane
-    util::PxPoint *vPxPoint = new util::PxPoint( plane , v.GetVertexWire(plane), v.GetVertexTime(plane) );
+    //    util::PxPoint *vPxPoint = new util::PxPoint( plane , v.GetVertexWire(plane), v.GetVertexTime(plane) );
+    Debug(3,"vertex wire: %, time: % \n ------ --- -- -- -- --- -- -- -- ----- -",v.GetVertexWire(plane), v.GetVertexTime(plane));
+    
     // PxPoint of all hits in this plane
     for (auto hit: hits) {
-        if (hit.GetPlane()) {
-            util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
-            double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+        if (hit.GetPlane()==plane) {
+            //            util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
+            //            double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+            double distance_hit_vertex = geom->Get2DDistance( v.GetVertexWire(plane), v.GetVertexTime(plane) , hit.GetWire(), hit.GetPeakT() );
             // check if the hit & the vertex are close enough
             if (distance_hit_vertex < r) {
                 // if yes, aggregate the charge
                 Qtotal += hit.GetCharge();
             }
+            if (debug>3) {
+                hit.Print();
+                cout << "distance to vertex: " << distance_hit_vertex << " cm" << endl;
+                if (distance_hit_vertex < r) {
+                    Debug(0, "added hit charget to Qtotal: %",Qtotal);
+                }
+            }
         }
     }
     // PxPoint of the vertex-muon hits in this plane
     for (auto hit: v.GetMuonHits(plane)) {
-        if (hit.GetPlane()) {
-
-        util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
-        double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
-        if (distance_hit_vertex < r) {
-            Qmuon += hit.GetCharge();
-        }
+        if (hit.GetPlane()==plane) {
+            
+            //            util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
+            //            double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+            double distance_hit_vertex = geom->Get2DDistance( v.GetVertexWire(plane), v.GetVertexTime(plane) , hit.GetWire(), hit.GetPeakT() );
+            if (distance_hit_vertex < r) {
+                Qmuon += hit.GetCharge();
+            }
         }
     }
     // PxPoint of the vertex-proton hits in this plane
     for (auto hit: v.GetProtonHits(plane)) {
-        if (hit.GetPlane()) {
-
-        util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
-        double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
-        if (distance_hit_vertex < r) {
-            Qproton += hit.GetCharge();
-        }
+        if (hit.GetPlane()==plane) {
+            
+            //            util::PxPoint *hitPxPoint = new util::PxPoint( hit.GetPlane(), hit.GetWire(), hit.GetPeakT() );
+            //            double distance_hit_vertex = geom->Get2DDistance( hitPxPoint , vPxPoint );
+            double distance_hit_vertex = geom->Get2DDistance( v.GetVertexWire(plane), v.GetVertexTime(plane) , hit.GetWire(), hit.GetPeakT() );
+            
+            if (distance_hit_vertex < r) {
+                Qproton += hit.GetCharge();
+            }
         }
     }
     Debug(3,"completed ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(), Qtotal: %, Qmuon: %, Qproton: %",Qtotal,Qmuon,Qproton);
     if (Qmuon>Qtotal || Qproton>Qtotal) {
-        Debug(0,"Qtotal=% < Qmuon=% or Qproton=% !? ",Qtotal,Qmuon,Qproton);
+        Debug(1,"Qtotal=% < Qmuon=% or Qproton=% !? ",Qtotal,Qmuon,Qproton);
     }
     if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
     else return -1;
@@ -1705,6 +1719,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     // charge deposition around the vertex in a sphere of radius r [cm]
     for (int i_r_around_vertex=0 ; i_r_around_vertex < N_r_around_vertex ; i_r_around_vertex++){
         r_around_vertex[i_r_around_vertex] = Min_r_around_vertex + i_r_around_vertex * dr_around_vertex;
+        Debug(0,"r_around_vertex[%]:%",i_r_around_vertex,r_around_vertex[i_r_around_vertex]);
     }
     
     
@@ -1802,7 +1817,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
     if (fPOTTree) fPOTTree->Fill();
     pot_total += pot;
     
-    if (debug>1){
+    if (debug>3){
         Printf("end subrun %d",subrun);
         SHOW2( pot , pot_total );
     }

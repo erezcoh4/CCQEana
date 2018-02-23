@@ -58,11 +58,11 @@ public:
 private:
     
     // Int_t features
-    Int_t       hit_plane=0,    hit_wire=0, hit_id=0,  hit_trkKey=-1;
+    Int_t       hit_plane=-1,   hit_wire=-1, hit_id=-1,  hit_trkKey=-1;
     
     
     // Float_t features
-    float       hit_peakT=0,    hit_charge=0;
+    float       hit_peakT=-1,    hit_charge=-1;
     
 };
 #endif
