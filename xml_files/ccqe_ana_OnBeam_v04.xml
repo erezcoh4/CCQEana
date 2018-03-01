@@ -46,11 +46,10 @@
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=short --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
+            <jobsub> --expected-lifetime=short --site=FermiGrid</jobsub> <!-- limiting to only the FermiGrid to avoid firewall streaming issues -->
             <memory>600</memory> <!--The max. memory I used in a test job is 469.4 MiB -->
         </stage>
     </project>
 </job>
 
-
-
+<!--site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid-->
