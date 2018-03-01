@@ -1,5 +1,5 @@
 '''
-    1. do jobsub_q --user=ecohen
+    1. do > jobsub_q --user=ecohen
     2. copy to jobs.txt
     3. run > python mac/pealoff_jobid_for_jobsub_rm.py
     4. copy and excecute result in gpvm

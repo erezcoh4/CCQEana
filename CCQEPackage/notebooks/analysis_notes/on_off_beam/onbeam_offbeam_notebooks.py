@@ -6,35 +6,70 @@ import matplotlib.patches as patches
 
 debug = 0
 Nevents=dict()
-Nevents['OffBeam sof.trig. efficiency'] = 0.04462
-Nevents['OnBeam sof.trig. efficiency'] = 0.05135
+# following docdb 5640 [https://microboone-docdb.fnal.gov/cgi-bin/private/RetrieveFile?docid=5640&filename=MCC8_Data_factors.pdf&version=5]
+# we take the normalization factors
+#Nevents['OffBeam sof.trig. efficiency'] = 0.04462
+#Nevents['OnBeam sof.trig. efficiency'] = 0.05135
+#Nevents['v04 after sof.trig.'] = 378787 # from python scripts/count_events.py on <prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v04>
+#Nevents['v05 after sof.trig.'] = 1815 # from python scripts/count_events.py on <prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v05>
+#Nevents['OffBeam after sof.trig.'] = Nevents['v04 after sof.trig.'] + Nevents['v05 after sof.trig.']
+#Nevents['OffBeam before sof.trig.'] = Nevents['OffBeam after sof.trig.']/Nevents['OffBeam sof.trig. efficiency']
+#Nevents['OnBeam after sof.trig.'] = 544114 # from python scripts/count_events.py on <prod_reco2_bnb_v8_mcc8>
+#Nevents['OnBeam before sof.trig.'] = Nevents['OnBeam after sof.trig.']/Nevents['OnBeam sof.trig. efficiency']
+#OffBeam_scaling = Nevents['OnBeam before sof.trig.']/Nevents['OffBeam before sof.trig.']
+# MC-BNB/Cosmic-MC overlay
+#Nevents['MC-BNB/Cosmic-MC overlay'] = 358800 # from python scripts/count_events.py on <prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2>
+#Nevents['MC-BNB/Cosmic-MC overlay POT'] = 3.61901e20
+#MC_scaling_MCcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-MC overlay POT']
+#print "MC_scaling_MCcosmic:",MC_scaling_MCcosmic,"= N(POT on beam)/N(POT MC)"
 
+'''
+    Off Beam scaling factor (Ariana, Feb 2018)
+    -- ---- - ---- - -- -- --
+    
+    ** do not source localProducts
+    ** > setup sam_web_client v2_1
+    
+    0) Grab getDataInfo.py from here:
+    /uboone/app/users/zarko
+    
+    More info on the tool as of last fall can be found here:
+    [https://microboone-docdb.fnal.gov/cgi-bin/private/RetrieveFile?docid=11078&filename=pot_and_beamq.pdf&version=1]
+    
+    1) Feed the script a file-list to calculate the trigger content of each sample we run over.  There are some other options other than file-list that you can feed the script if you don't have this info; take a look at the options in the script to understand which is best for the info you have.
+    
+    2) Trigger counts for various triggers is returned by the script in the following form :
+    EXT	Gate2	E1DCNT	tor860	tor875	E1DCNT_wcut	tor860_wcut	tor875_wcut
+    
+    To calculate the scaling factor of off-to-on beam, take the ratio of E1DCNT_wcut (from OnBeam sample) / EXT (from OffBeam sample).
+    
+    for example: MCC8.5 reprocessing
+    -- ---- - ---- -
+    python scripts/getDataInfo.py --defname="prod_reco_optfilter_bnb_v11_unblind_mcc8"
+    
+    Definition prod_reco_optfilter_bnb_v11_unblind_mcc8 contains 4110 files
+    EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
+    5888530      11578672      11583581     4.963e+19     4.957e+19      11066504     4.962e+19     4.956e+19
 
-Nevents['v04 after sof.trig.'] = 378787 # from python scripts/count_events.py on <prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v04>
-Nevents['v05 after sof.trig.'] = 1815 # from python scripts/count_events.py on <prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v05>
-Nevents['OffBeam after sof.trig.'] = Nevents['v04 after sof.trig.'] + Nevents['v05 after sof.trig.']
-Nevents['OffBeam before sof.trig.'] = Nevents['OffBeam after sof.trig.']/Nevents['OffBeam sof.trig. efficiency']
+    python scripts/getDataInfo.py --defname="prod_reco_optfilter_extbnb_v11_mcc8_dev"
+    Definition prod_reco_optfilter_extbnb_v11_mcc8_dev contains 5789 files
+    EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
+    15499028      22044264      22056782     9.146e+19     9.135e+19      17759405     7.999e+19     7.989e+19
+    Warning!! BNB data for some of the requested runs/subruns is not in the database.
+    Runs missing BNB data (number of subruns missing the data): 5762 (1),
 
-
-Nevents['OnBeam after sof.trig.'] = 544114 # from python scripts/count_events.py on <prod_reco2_bnb_v8_mcc8>
-Nevents['OnBeam before sof.trig.'] = Nevents['OnBeam after sof.trig.']/Nevents['OnBeam sof.trig. efficiency']
-Nevents['OnBeam POT'] = 4.93e19
-
-OffBeam_scaling = Nevents['OnBeam before sof.trig.']/Nevents['OffBeam before sof.trig.']
+    '''
+OffBeam_scaling = float(11066504)/17759405
+Nevents['OnBeam POT'] = 4.957e+19
 print "OffBeam_scaling:",OffBeam_scaling,"= N(on beam)/N(off beam) before sof. trig."
 
 # MC-BNB/Cosmic-DATA overlay
-summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/ccqe_candidates/ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_10_summary.csv')
-Nevents['MC-BNB/Cosmic-DATA overlay'] = 93402 # np.sum(summary.Nevents) # 96350 
-Nevents['MC-BNB/Cosmic-DATA overlay POT'] = np.sum(summary.POT) # 9.773e19
+summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_23_summary.csv')
+Nevents['MC-BNB/Cosmic-DATA overlay'] = np.sum(summary.Nevents)
+Nevents['MC-BNB/Cosmic-DATA overlay POT'] = np.sum(summary.POT)
 MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
 print "MC_scaling_DATAcosmic:",MC_scaling_DATAcosmic,"= N(POT on beam)/N(POT MC)"
 
-# MC-BNB/Cosmic-MC overlay
-Nevents['MC-BNB/Cosmic-MC overlay'] = 358800 # from python scripts/count_events.py on <prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2>
-Nevents['MC-BNB/Cosmic-MC overlay POT'] = 3.61901e20
-MC_scaling_MCcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-MC overlay POT']
-print "MC_scaling_MCcosmic:",MC_scaling_MCcosmic,"= N(POT on beam)/N(POT MC)"
 
 OnBeamColor = 'teal'
 OffBeamColor = 'purple'

@@ -16,7 +16,7 @@ process_name: CosmicTracksAnalysis
 
 services:
 {
-  TFileService: { fileName: "prodcosmics_corsika_cmc_uboone_mcc8.4_reco2.root" closeFileFast: false}
+  TFileService: { fileName: "prodcosmics_corsika_cmc_uboone_mcc8.7_reco.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info

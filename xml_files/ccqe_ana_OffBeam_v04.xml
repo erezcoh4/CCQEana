@@ -2,42 +2,53 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco_optfilter_bnb_v11_unblind_mcc8_v04">
+<!ENTITY defname "prod_reco_optfilter_extbnb_v11_mcc8_dev_v04">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "400"> <!-- There are 3852 files in this sample and I want 10 files per job -->
+<!ENTITY number_of_jobs "400">
 <!ENTITY name "&defname;_CCQE">
-<!ENTITY LArSoft_release "06_26_01_09">
-<!ENTITY prod_mode "test">
+<!ENTITY LArSoft_release "06_26_01_09">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
+<!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
 ]>
 
 <job>
+    
     <project name="&name;_analysis">
+        
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>10</maxfilesperjob>
+        <maxfilesperjob>15</maxfilesperjob>
 
-        <!-- Operating System and Larsoft information -->
+        <!-- Operating System -->
         <os>SL6</os>
+        
+        <!-- Project Version -->
         <version>&prod_mode;_&LArSoft_release;</version>
+        
+        <!-- Batch resources -->
         <resource>OPPORTUNISTIC,OFFSITE</resource>
+        
+        <!-- Larsoft information -->
         <larsoft>
             <tag>&LArSoft_release;</tag>
             <qual>e10:prof</qual>
-            <local>/pnfs/uboone/resilient/users/ecohen/test.tar</local>
+            <local>/uboone/app/users/ecohen/ErezCCQE/test.tar</local>
         </larsoft>
         
         <check>0</check>
         <copy>0</copy>
+        
+        <!-- file type -->
         <filetype>&file_type;</filetype>
+        
+        <!-- run type -->
         <runtype>&run_type;</runtype>
         
         <!-- Project stages -->
         <stage name="ccqe_ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_OnBeam_v04.fcl</fcl>
-            <schema>root</schema>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_OffBeam_v04.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
@@ -46,8 +57,8 @@
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=short --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
-            <memory>600</memory> <!--The max. memory I used in a test job is 469.4 MiB -->
+            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
+            <memory>2000</memory>
         </stage>
     </project>
 </job>

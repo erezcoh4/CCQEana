@@ -57,6 +57,7 @@ physics:
       POTModuleLabel:       "generator"
       FlashModuleLabel:     "simpleFlashBeam"
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
+      CalibratedCalorimetryModuleLabel: "pandoraNucali"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

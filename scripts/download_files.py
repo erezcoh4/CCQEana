@@ -1,19 +1,27 @@
 '''
     usage:
     -----
-    for MC-BNB/DATA-cosmic:
+    * for MC-BNB/DATA-cosmic:
     
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=4636
     python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
     
-    for On beam:
+    * for On Beam:
     
     python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v05
     python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v04
     
-
+    * for Off Beam:
+    
+    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v11_mcc8_dev_v05
+    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v11_mcc8_dev_v04
+    
+    * for cosmic-pairs analysis:
+    
+    python scripts/download_files.py --name=prodcosmics_corsika_cmc_uboone_mcc8.7_reco2 --tag=withPandoraCosmic_pass
+    
 '''
 
 import sys, os, time, argparse
@@ -25,11 +33,12 @@ parser.add_argument('-n','--name', default='ccqe_ana_MCBNBCosmicDATA', type=str 
 parser.add_argument('-o','--option', default='download', type=str )
 parser.add_argument('--continue_makeup', default='3215875_563', type=str )
 parser.add_argument('--ctr', default=0, type=int )
+parser.add_argument('--tag', default='withPandoraCosmic_pass', type=str )
 name = parser.parse_args().name
 option = parser.parse_args().option
 continue_makeup = parser.parse_args().continue_makeup
 ctr = parser.parse_args().ctr
-
+tag = parser.parse_args().tag
 
 uboone = 'ecohen@uboonegpvm04.fnal.gov'
 csv_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/'
@@ -46,8 +55,8 @@ if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" in name:
 
 
 # pandora pairs
-elif name=="prodcosmics_corsika_cmc_uboone_mcc8.4":
-    default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/v06_42_00/cosmic_pairs_rejection_pandoraCosmic/prodcosmics_corsika_cmc_uboone_mcc8.4_reco2_cosmic_pairs_rejection_pandoraCosmic/"
+elif "prodcosmics_corsika" in name:
+    default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/cosmic_pairs/" + name + "_" + tag + "/"
     default_outdirname = csv_path+"pandora_pairs/"
 
 default_indirname = csv_path+"from_grid/"+name+"/"
@@ -61,6 +70,24 @@ print 'indirname: ',indirname
 outdirname = raw_input("enter outdir:...<"+default_outdirname+">") or default_outdirname
 print 'outdirname: ',outdirname
 print
+
+
+# for the new overlay: AdiReco27List_18Jan2018
+if name=="ccqe_ana_MCBNBCosmicDATA":
+    outfilename = outdirname+'/'+name+'_'+time_name+'_vertices.csv'
+    summaryfilename = csv_path+'summary/'+name+'_'+time_name+'_summary.csv'
+
+# new overlay using SAM definition
+if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" in name:
+    outfilename = outdirname+'/'+name+'_'+time_name+'_vertices.csv'
+    summaryfilename = csv_path+'summary/'+name+'_'+time_name+'_summary.csv'
+
+
+# pandora pairs
+elif "prodcosmics_corsika" in name:
+    outfilename = outdirname+'/'+name+ "_" + tag +'_'+time_name+'_vertices.csv'
+    summaryfilename = csv_path+'summary/'+name+ "_" + tag + '_'+time_name+'_summary.csv'
+
 
 # step 0: create the indirname directory
 os.system("mkdir "+indirname)
@@ -134,15 +161,13 @@ for file in list_files:#{
 #}
 vertices_all = pd.concat(vertices_df_array)
 print len(vertices_all),'total pair-vertices'
-outfilename = outdirname+'/'+name+'_'+time_name+'_vertices.csv'
 vertices_all.to_csv(outfilename)
 print 'concatenated %d'%len(vertices_all),'vertices to\n',outfilename,'\ndone.'
 print
 summary_all = pd.concat(summary_df_array)
 print len(summary_all),'is the length summary of all events'
-outfilename = csv_path+'summary/'+name+'_'+time_name+'_summary.csv'
-summary_all.to_csv(outfilename)
-print 'concatenated %d'%len(summary_all),'summary files to\n',outfilename,'\ndone.'
+summary_all.to_csv(summaryfilename)
+print 'concatenated %d'%len(summary_all),'summary files to\n',summaryfilename,'\ndone.'
 print
 if (len(tracks_df_array)>0):#{
     tracks_all = pd.concat(tracks_df_array)

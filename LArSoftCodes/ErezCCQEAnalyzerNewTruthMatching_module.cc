@@ -85,7 +85,7 @@ constexpr int dNwiresBox     = 5;
 constexpr int MinNticksBox   = 10;
 constexpr int dNticksBox     = 10;
 
-constexpr int N_r_around_vertex = 30;
+constexpr int N_r_around_vertex = 40;
 constexpr float Min_r_around_vertex = 0;
 constexpr float dr_around_vertex  = 0.5;
 
