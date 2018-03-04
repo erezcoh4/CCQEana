@@ -89,13 +89,15 @@ elif "prodcosmics_corsika" in name:
     summaryfilename = csv_path+'summary/'+name+ "_" + tag + '_'+time_name+'_summary.csv'
 
 
-# step 0: create the indirname directory
-os.system("mkdir "+indirname)
-print 'step 0: created the indirname directory'
+# step 0: create the <indirname> directory (if exists already, remove the existing one)
+print 'step 0: created the <indirname> directory (if exists already, remove the existing one):'
+print indirname
 print
+os.system("rm -fr "+indirname)
+os.system("mkdir "+indirname)
 
 # step 1: create a list of files to download
-do_step_1 = raw_input("# step 1: create a list of files to download?:...<False>") or False
+do_step_1 = raw_input("# step 1: create a list of files to download?:...<True>") or True
 if do_step_1:#{
     print 'creating a list of files to download from',pnfsjob
     print 'into '+indirname+'/files_to_download.list'
@@ -104,7 +106,7 @@ if do_step_1:#{
 #}
 print
 # step 2: grab this list
-do_step_2 = raw_input("# step 2: grab this list?:...<False>") or False
+do_step_2 = raw_input("# step 2: grab this list?:...<True>") or True
 if do_step_2:#{
     files_to_download_name = "files_to_download"
     if option=="makeup": files_to_download_name = files_to_download_name + "_since_" + continue_makeup
@@ -113,7 +115,7 @@ if do_step_2:#{
 #}
 print
 # step 3: iterate over the list and download the files
-do_step_3 = raw_input("# step 3: iterate over the list and download the files?:...<False>") or False
+do_step_3 = raw_input("# step 3: iterate over the list and download the files?:...<True>") or True
 if do_step_3:
     for file in files:#{
         try:

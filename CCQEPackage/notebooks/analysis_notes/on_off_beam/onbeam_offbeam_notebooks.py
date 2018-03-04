@@ -41,25 +41,33 @@ Nevents=dict()
     2) Trigger counts for various triggers is returned by the script in the following form :
     EXT	Gate2	E1DCNT	tor860	tor875	E1DCNT_wcut	tor860_wcut	tor875_wcut
     
-    To calculate the scaling factor of off-to-on beam, take the ratio of E1DCNT_wcut (from OnBeam sample) / EXT (from OffBeam sample).
-    
+    To calculate the scaling factor of off-to-on beam,
+    take the ratio of E1DCNT_wcut (from OnBeam sample) / EXT (from OffBeam sample).
+    (
+    Zarko:
+    for MCC8 you need to add -v2 option.
+    Or for any sample that includes runs after ~6300
+    those samples have to be processed with new beam data quality cuts v2 otherwise they'll all fail beam cuts
+    )
     for example: MCC8.5 reprocessing
     -- ---- - ---- -
-    python scripts/getDataInfo.py --defname="prod_reco_optfilter_bnb_v11_unblind_mcc8"
+    
+    > python scripts/getDataInfo.py --defname="prod_reco_optfilter_bnb_v11_unblind_mcc8" -v2
     
     Definition prod_reco_optfilter_bnb_v11_unblind_mcc8 contains 4110 files
-    EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
-    5888530      11578672      11583581     4.963e+19     4.957e+19      11066504     4.962e+19     4.956e+19
+           EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
+       5888530      11578672      11583581     4.963e+19     4.957e+19      10948876     4.909e+19     4.903e+19
 
-    python scripts/getDataInfo.py --defname="prod_reco_optfilter_extbnb_v11_mcc8_dev"
+    > python scripts/getDataInfo.py --defname="prod_reco_optfilter_extbnb_v11_mcc8_dev" -v2
+    
     Definition prod_reco_optfilter_extbnb_v11_mcc8_dev contains 5789 files
-    EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
-    15499028      22044264      22056782     9.146e+19     9.135e+19      17759405     7.999e+19     7.989e+19
+           EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
+      15499028      22044264      22056782     9.146e+19     9.135e+19      20128930     9.057e+19     9.045e+19
     Warning!! BNB data for some of the requested runs/subruns is not in the database.
     Runs missing BNB data (number of subruns missing the data): 5762 (1),
-
+    (Zarko, Mar-02, 2018: You can ignore the warning)
     '''
-OffBeam_scaling = float(11066504)/17759405
+OffBeam_scaling = float(10948876)/20128930
 Nevents['OnBeam POT'] = 4.957e+19
 print "OffBeam_scaling:",OffBeam_scaling,"= N(on beam)/N(off beam) before sof. trig."
 
@@ -69,7 +77,6 @@ Nevents['MC-BNB/Cosmic-DATA overlay'] = np.sum(summary.Nevents)
 Nevents['MC-BNB/Cosmic-DATA overlay POT'] = np.sum(summary.POT)
 MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
 print "MC_scaling_DATAcosmic:",MC_scaling_DATAcosmic,"= N(POT on beam)/N(POT MC)"
-
 
 OnBeamColor = 'teal'
 OffBeamColor = 'purple'
@@ -261,8 +268,9 @@ def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=Non
 
 
 
+
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# written Nov-9,2017  (last edit Dec-6)
+# written Nov-9,2017  (last edit Mar-4, 2018)
 def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
                             , var='PIDa_assigned_proton' , x_label='$PID_a^p$' 
                             , bins=np.linspace(0,30,31) 
@@ -286,17 +294,13 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     Integral_Original = len(OriginalOnBeamSample) - OffBeam_scaling*len(OriginalOffBeamSample)
 
     
-    plt.errorbar( x = bins[:-1], xerr=bin_width/2., markersize=12
+    plt.errorbar( x=0.5*(edges[1:]+edges[:-1])-bin_width, xerr=bin_width/2., markersize=12
                  , y=h_OnBeam_minus_OffBeam , yerr=h_OnBeam_minus_OffBeam_err
-                 , fmt='o', color=color , ecolor='black', label=r'(On-Off) Beam ($\int=$%.1f=%.1f'%(Integral,100*Integral/Integral_Original)+'%)'
+                 , fmt='o', color=color , ecolor='black'
+                 , label=r'(On-Off) Beam ($\int=$%.1f=%.1f'%(Integral,100*Integral/Integral_Original)+'%)'
                 )
     if debug>1: print "OnBeam-OffBeam (bins[:-1]):\n",bins[:-1]
     plt.plot([np.min(ax.get_xlim()),np.min(ax.get_xlim())],[0,0],'--',color='black',linewidth=2)
-    set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
-             ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
-             ,ylim=(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])               
-                    ,np.max(h_OnBeam_minus_OffBeam+1.1*h_OnBeam_minus_OffBeam_err))
-            )
     
     if do_add_MCoverlay:        
         h_MC, bins_MC = plot_stacked_MCsamples( ax=ax, debug=debug
@@ -318,10 +322,14 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
             leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
         else:
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
+    set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
+             ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
+            #              ,ylim=(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])               
+            #                     ,np.max(h_OnBeam_minus_OffBeam+1.1*h_OnBeam_minus_OffBeam_err))
+            )
     plt.tight_layout()
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -

@@ -35,21 +35,20 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
-//#include "larsim/MCCheater/BackTracker.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "larreco/RecoAlg/PMAlg/Utilities.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
+
+//#include "larana/TruncatedMean/TruncMean.h"
+
 // for the new MC truth matching (by Wes)
 #include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
 #include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
-
-
 // ROOT includes
 #include "TTree.h"
-
 // C/C++ libraries
 #include <memory>
 #include <utility>
@@ -67,6 +66,7 @@
 #include "uboone/ErezCCQEana/MyObjects/flash.h"
 #include "uboone/ErezCCQEana/MyObjects/GENIEinteraction.h"
 #include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
+#include "uboone/ErezCCQEana/MyObjects/TruncMean.h"
 
 // constants
 constexpr int debug          = 1;
@@ -495,6 +495,17 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             track.SetPIDaCali();
         }
 
+        // Truncated Mean dE/dx
+        if (fmcal.isValid()){
+            TruncMean truncmean;
+            for (int plane=0; plane<3; plane++){
+                std::vector<float> trkdedx = track.GetdEdx(plane);
+                std::vector<float> trkresrg = track.GetResRange(plane);
+                std::vector<float> trkdedx_truncated;
+                truncmean.CalcTruncMean( trkresrg , trkdedx , trkdedx_truncated );
+            }
+        }
+        
         
         // flash - matching: find the closest flash to the track
         if (flashes.size()){
