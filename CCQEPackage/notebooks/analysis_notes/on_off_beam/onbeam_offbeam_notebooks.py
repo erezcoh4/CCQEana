@@ -67,7 +67,7 @@ Nevents=dict()
     Runs missing BNB data (number of subruns missing the data): 5762 (1),
     (Zarko, Mar-02, 2018: You can ignore the warning)
     '''
-OffBeam_scaling = float(10948876)/20128930
+OffBeam_scaling = float(10948876)/15499028
 Nevents['OnBeam POT'] = 4.957e+19
 print "OffBeam_scaling:",OffBeam_scaling,"= N(on beam)/N(off beam) before sof. trig."
 
@@ -79,7 +79,167 @@ MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overla
 print "MC_scaling_DATAcosmic:",MC_scaling_DATAcosmic,"= N(POT on beam)/N(POT MC)"
 
 OnBeamColor = 'teal'
-OffBeamColor = 'purple'
+OffBeamColor = 'orange'
+
+
+# ------------------------------------------------
+# March-6, 2018
+def get_Nreduced(reduced = dict()):
+    Noriginal , Nreduced , freduced = dict() , dict() , dict()
+    for pair_type in pair_types:
+        sam = MCbnbDATAcosmicSamples[pair_type]
+        Noriginal[pair_type] = len(MCbnbDATAcosmicSamples[pair_type])
+        Nreduced[pair_type] = float(len(reduced[pair_type]))
+        freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
+    return Nreduced , freduced
+# ------------------------------------------------
+
+# ------------------------------------------------
+# March 5, 2018
+def get_pureff_cut(reduced=None,pureff=None, cut_name = 'PIDa'):
+    eff,pur = dict(),dict()
+    Nreduced , freduced = get_Nreduced(reduced=reduced)
+    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
+    eff['1mu-1p'] = freduced['1mu-1p']
+    pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
+    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
+    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    pureff_cut = pd.DataFrame({'label':cut_name
+                              ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
+                              ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
+                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
+                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
+                              , index=[cut_name]
+                              )
+
+    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
+    pureff = pureff.append(pureff_cut)
+    return pureff
+# ------------------------------------------------
+
+
+# ------------------------------------------------
+# March-6, 2018
+def apply_cuts_to_overlay(PIDa_p_min=13
+                          ,minPEcut = 100
+                          ,maxdYZcut = 200
+                          ,delta_theta_12=55  # deg.
+                          ,opt_box=(50,100) # [Nwires x Nticks]
+                          ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                          ,delta_Delta_phi=35 # deg.
+                          ,Pt_max=0.35        # GeV/c
+                          ,cuts_order=['no cut','PIDa','flash','length','non-collinearity','vertex activity','delta phi','soft Pt']
+                          ):
+    reducedSamples = dict()
+    pureffOverlay = pd.DataFrame()
+    
+    reducedSamples['no cut'] = dict()
+    for pair_type in pair_types: reducedSamples['no cut'][pair_type] = MCbnbDATAcosmicSamples[pair_type]
+    pureffOverlay = get_pureff_cut(pureff=pureffOverlay,cut_name='no cut',reduced=reducedSamples['no cut'])
+    
+    for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
+        reduced = dict()
+        print 'grabbing reduced samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
+        samples_previous_cut = reducedSamples[cuts_order[i_cut-1]]
+        for pair_type in pair_types:#{
+            sam = samples_previous_cut[pair_type]
+            if cut == 'PIDa':
+                reduced[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
+            
+            elif cut == 'flash':
+                reduced[pair_type] = sam[(sam['Nflashes']>0)
+                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
+                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            
+            elif cut == 'length':
+                reduced[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
+    
+            elif cut == 'non-collinearity':
+                reduced[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
+            
+            elif cut == 'vertex activity':
+                R_str = 'RdQaroundVertex'
+                box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
+                Ru,Rv,Ry = R_str+'[plane 0]'+box_str,R_str+'[plane 1]'+box_str,R_str+'[plane 2]'+box_str
+                reduced[pair_type] = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
+                                         |
+                                         (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
+                                          <= r_max_RdQ_CC1p0pi) ]
+            elif cut == 'delta phi':
+                reduced[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
+
+            elif cut == 'soft Pt':
+                reduced[pair_type] = sam[sam['reco_Pt']<Pt_max]
+        #}
+        reducedSamples[cut] = reduced
+        pureffOverlay = get_pureff_cut(pureff=pureffOverlay,cut_name=cut,reduced=reduced)
+    #}
+    return reducedSamples,pureffOverlay
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+# ------------------------------------------------
+# March-6, 2018
+def apply_cuts_to_data(PIDa_p_min=13
+                       ,minPEcut = 100
+                       ,maxdYZcut = 200
+                       ,delta_theta_12=55  # deg.
+                       ,opt_box=(50,100) # [Nwires x Nticks]
+                       ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                       ,delta_Delta_phi=35 # deg.
+                       ,Pt_max=0.35        # GeV/c
+                       ,OnBeamFV=None,OffBeamFV=None
+                       ,cuts_order=['no cut','PIDa','flash','length','non-collinearity','vertex activity','delta phi','soft Pt']
+                       ):
+    reducedOnBeam, reducedOffBeam = dict(), dict()
+    
+    reducedOnBeam['no cut'] = OnBeamFV
+    reducedOffBeam['no cut'] = OffBeamFV
+    
+    for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
+        print 'grabbing reduced data samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
+        OnBeam_previous_cut = reducedOnBeam[cuts_order[i_cut-1]]
+        OffBeam_previous_cut = reducedOffBeam[cuts_order[i_cut-1]]
+        
+        for sam,sam_name in zip([OnBeam_previous_cut,OffBeam_previous_cut]
+                                ,['OnBeam','OffBeam']):#{
+            print 'len('+sam_name+'):',len(sam)
+            if cut == 'PIDa':
+                sam = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
+            
+            elif cut == 'flash':
+                sam = sam[(sam['Nflashes']>0)
+                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
+                          &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            
+            elif cut == 'length':
+                sam = sam[sam['PIDa_long'] < sam['PIDa_short']]
+    
+            elif cut == 'non-collinearity':
+                sam = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
+                    
+            elif cut == 'vertex activity':
+                R_str = 'RdQaroundVertex'
+                box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
+                Ru,Rv,Ry = R_str+'[plane 0]'+box_str,R_str+'[plane 1]'+box_str,R_str+'[plane 2]'+box_str
+                sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
+                          |
+                          (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
+                           <= r_max_RdQ_CC1p0pi) ]
+            elif cut == 'delta phi':
+                sam = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
+                                      
+            elif cut == 'soft Pt':
+                sam = sam[sam['reco_Pt']<Pt_max]
+                                              
+            if sam_name=='OnBeam': reducedOnBeam[cut] = sam
+            if sam_name=='OffBeam': reducedOffBeam[cut] = sam
+        #}
+
+    #}
+    return reducedOnBeam,reducedOffBeam
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
@@ -122,7 +282,7 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
                 , bins=np.linspace(0,30,31)                 
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OffBeamColor
-                , do_add_legend=True , legend_loc='best'
+                , do_add_legend=True , legend_loc='best',y_label='counts'
                  , do_OffBeam_scaling=True):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
@@ -139,7 +299,7 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
                 )
     plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
     
-    set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
             )
     if do_add_legend: 
@@ -148,6 +308,7 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
         else:
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
     plt.tight_layout()
+    if do_add_legend is False: return ax
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
@@ -272,14 +433,14 @@ def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=Non
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # written Nov-9,2017  (last edit Mar-4, 2018)
 def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
-                            , var='PIDa_assigned_proton' , x_label='$PID_a^p$' 
+                            , var='PIDa_assigned_proton' , x_label='$PID_a^p$' , y_label='counts'
                             , bins=np.linspace(0,30,31) 
                             , ax=None, figsize=(14,6),fontsize=25
-                            , color='tomato'
+                            , color=OnBeamColor
                             , do_add_MCoverlay=True , MCsamples=None, MCbnbDATAcosmicSamples=None
                             , MC_scaling=MC_scaling_DATAcosmic
                             , do_add_legend=True , legend_loc='best', MCalpha=0.7
-                            , do_add_chi2_MC_data=False , chi2_xrange=None, chi2_xy=(0,0)
+                            , do_add_chi2_MC_data=False , chi2_xrange=None, chi2_xy=(0,0), doOffBeam_scaling=True
                             , OriginalOnBeamSample=None , OriginalOffBeamSample=None):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
@@ -288,12 +449,20 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     h_OffBeam,edges = np.histogram( OffBeamSample[var] , bins=bins )
     h_OffBeam_err = np.sqrt(h_OffBeam)
     
-    h_OnBeam_minus_OffBeam = h_OnBeam - OffBeam_scaling*h_OffBeam
-    h_OnBeam_minus_OffBeam_err = np.sqrt( np.abs(h_OnBeam + OffBeam_scaling*OffBeam_scaling*h_OffBeam) )
-    Integral = len(OnBeamSample) - OffBeam_scaling*len(OffBeamSample)
-    Integral_Original = len(OriginalOnBeamSample) - OffBeam_scaling*len(OriginalOffBeamSample)
+    if doOffBeam_scaling==True:#{
+        h_OnBeam_minus_OffBeam = h_OnBeam - OffBeam_scaling*h_OffBeam
+        h_OnBeam_minus_OffBeam_err = np.sqrt( np.abs(h_OnBeam + OffBeam_scaling*OffBeam_scaling*h_OffBeam) )
+        Integral = len(OnBeamSample) - OffBeam_scaling*len(OffBeamSample)
+        Integral_Original = len(OriginalOnBeamSample) - OffBeam_scaling*len(OriginalOffBeamSample)
+    #}
+    else:#{
+        h_OnBeam_minus_OffBeam = h_OnBeam - h_OffBeam
+        h_OnBeam_minus_OffBeam_err = np.sqrt( np.abs(h_OnBeam + h_OffBeam) )
+        Integral = len(OnBeamSample) - len(OffBeamSample)
+        Integral_Original = len(OriginalOnBeamSample) - len(OriginalOffBeamSample)
+    #}
 
-    
+
     plt.errorbar( x=0.5*(edges[1:]+edges[:-1])-bin_width, xerr=bin_width/2., markersize=12
                  , y=h_OnBeam_minus_OffBeam , yerr=h_OnBeam_minus_OffBeam_err
                  , fmt='o', color=color , ecolor='black'
@@ -316,18 +485,17 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
         if chi2_xrange is not None:
             plt.plot([chi2_xrange[0]-0.5*bin_width,chi2_xrange[0]-0.5*bin_width],ax.get_ylim(),'-',alpha=0.3)
             plt.plot([chi2_xrange[1]-0.5*bin_width,chi2_xrange[1]-0.5*bin_width],ax.get_ylim(),'-',alpha=0.3)
-
     if do_add_legend: 
         if legend_loc=='bbox':
             leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
         else:
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
-    set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
-            #              ,ylim=(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])               
-            #                     ,np.max(h_OnBeam_minus_OffBeam+1.1*h_OnBeam_minus_OffBeam_err))
+            #              ,ylim=(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])#                     ,np.max(h_OnBeam_minus_OffBeam+1.1*h_OnBeam_minus_OffBeam_err))
             )
     plt.tight_layout()
+    if do_add_legend==False: return ax
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
@@ -338,7 +506,7 @@ def plot_stacked_MCsamples( ax=None, debug=0
                            , MCsamples=None
                            , MC_scaling=MC_scaling_DATAcosmic
                            , MCbnbDATAcosmicSamples=None
-                           , var=None, bins=None , alpha=0.8):
+                           , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25):
     '''
     return: h, bins
             stacked histogram values and bins,
@@ -369,6 +537,10 @@ def plot_stacked_MCsamples( ax=None, debug=0
                      ,color=colors['cosmic'],alpha=alpha, label=labels['cosmic'])
     h_stack = h['cosmic']+h['other pairs']+h['1mu-1p']
     if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
+                 ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
+                 )
+    
     return h_stack , bins
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
