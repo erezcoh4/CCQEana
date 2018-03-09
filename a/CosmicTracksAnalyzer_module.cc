@@ -389,7 +389,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
         double StartLoc[3] = {start_pos.X(), start_pos.Y(), start_pos.Z()};
         
         // U / V / Y coordinates
-        Debug(3,"// U / V / Y coordinates");
+        Debug(2,"// U / V / Y coordinates");
         for (int plane = 0; plane < 3; plane++){
             
             Debug(5,"geo::TPCID tpcID = fGeom->FindTPCAtPosition( StartLoc );");
@@ -412,19 +412,19 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
             track.SetStartEndPlane( plane , start_wire , start_time , end_wire , end_time );
         }
         
-        //        // Hits-Tracks association
-        //        Debug(2,"// Hits-Tracks association");
-        //        if (fmth.isValid()){
-        //            Debug(3,"// fmth.at(%)",i);
-        //            std::vector< art::Ptr<recob::Hit> > vhit = fmth.at(i);
-        //            Debug(3,"// vhit.size()");
-        //            for (size_t h = 0; h < vhit.size(); ++h){
-        //                if (vhit[h].key()<kMaxHits){
-        //                    if (debug>3){SHOW(vhit[h].key());}
-        //                    hits.at( vhit[h].key() ).SetTrackKey( tracklist[i].key() );
-        //                }
-        //            }
-        //        }
+//        // Hits-Tracks association
+//        Debug(2,"// Hits-Tracks association");
+//        if (fmth.isValid()){
+//            Debug(3,"// fmth.at(%)",i);
+//            std::vector< art::Ptr<recob::Hit> > vhit = fmth.at(i);
+//            Debug(3,"// vhit.size()");
+//            for (size_t h = 0; h < vhit.size(); ++h){
+//                if (vhit[h].key()<kMaxHits){
+//                    if (debug>3){SHOW(vhit[h].key());}
+//                    hits.at( vhit[h].key() ).SetTrackKey( tracklist[i].key() );
+//                }
+//            }
+//        }
         
         // PIDa and calorimetric KE
         Debug(2,"// PIDa and calorimetric KE");
@@ -567,40 +567,6 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     StreamVerticesToCSV();
     Debug(2,"StreamVerticesToCSV()");
 
-    Debug(0,"before if (mclist.size()=%)",mclist.size());
-    if (mclist.size()){
-        MCmode = true;
-        for( int mc_evend_id = 0; (mc_evend_id < (int)mclist.size()) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
-            art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
-            auto Nparticles = mclist[mc_evend_id]->NParticles();
-            Debug(0,"in mclist[%];, mctruth->Origin(): %, Nparticles: %",mc_evend_id,mctruth->Origin(),Nparticles);
-
-            
-            // record all start- and end-points of the truth-particles with path-length longer than the 3-wires requirement (1 cm)
-            std::vector<TVector3> particles_start;
-            std::vector<TVector3> particles_end;
-            for (int i_particle=0; i_particle < Nparticles; i_particle++) {
-                simb::MCParticle particle = mclist[mc_evend_id]->GetParticle(i_particle);
-                Debug( 0 , "particle %: pdg %" , i_particle , particle.PdgCode() );
-                if (debug>0) {
-                    SHOW3(particle.Vx() , particle.Vy() , particle.Vz());
-                    SHOW3(particle.Endx() , particle.Endy() , particle.Endz());
-                }
-                TVector3 particle_start(particle.Vx() , particle.Vy() , particle.Vz());
-                TVector3 particle_end(particle.Endx() , particle.Endy() , particle.Endz());
-                Debug(0,"path length: %",(particle_start-particle_end).Mag());
-                if ( (particle_start-particle_end).Mag() > 1.0) {
-                    particles_start.push_back(TVector3(particle.Vx() , particle.Vy() , particle.Vz()));
-                    particles_end.push_back(TVector3(particle.Endx() , particle.Endy() , particle.Endz()));
-                }
-            }
-            // loop over all start- and end-points of the truth-particles
-            // to find pairs at close proximity in the truth-level
-//            FindTrueCosmicPairs( particles_start , particles_end );
-        }
-        
-    }
-    
     // print out
     if(!tracks.empty() && !cosmic_tracks.empty()){
         PrintInformation((debug>2)?true:false   // print pandoraCosmic tracks

@@ -16,7 +16,7 @@ process_name: CosmicTracksAnalysis
 
 services:
 {
-  TFileService: { fileName: "prodcosmics_corsika_cmc_uboone_mcc8.7_reco.root" closeFileFast: false}
+  TFileService: { fileName: "prodcosmics_reco_withPandoraCosmicRemovalPass_joel.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -43,7 +43,7 @@ physics:
     EventsAnalyzer: 
     {
       module_type:            "CosmicTracksAnalyzer"
-      DataSampleLabel:		"prodcosmics_corsika_cmc_uboone_mcc8.7_reco"
+      DataSampleLabel:		"prodcosmics_reco_withPandoraCosmicRemovalPass_joel"
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:        "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"

@@ -499,17 +499,19 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         // Truncated Mean dE/dx
         if (fmcal.isValid()){
             TruncMean truncmean( debug , TruncMeanRad );
-            Debug(1, "TruncMean (radius=%)",TruncMeanRad);
             for (int plane=0; plane<3; plane++){
                 std::vector<float> trkdedx = track.GetdEdx(plane);
                 std::vector<float> trkresrg = track.GetResRange(plane);
                 std::vector<float> trkdedx_truncated;
                 
-                Debug(3, "TruncMean (dE/dx) for track % plane % (radius=%), track.GetdEdx(%).size(): % \n -----------------"
+                Debug(0, "TruncMean (dE/dx) for track % plane % (radius=%), track.GetdEdx(%).size(): % \n -----------------"
                       , track.GetTrackID(), plane, TruncMeanRad ,plane,track.GetdEdx(plane).size());
                 
                 truncmean.CalcTruncMean( trkresrg , trkdedx , trkdedx_truncated );
                 track.SetdEdxTrunc( plane , trkdedx_truncated );
+                
+                Debug(0 , "track.GetdEdx(%).size(): %, track.GetdEdxTrunc(%).size(): %"
+                      ,plane,track.GetdEdx(plane).size(),plane,track.GetdEdxTrunc(plane).size());
                 
                 if (debug>0) {
                     SHOWstdVector( track.GetdEdx(plane) );
@@ -1331,8 +1333,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     if (DoAddTracksEdep) {
         tracks_file
         << "ResRange_Y" << ","
-        << "dEdx_Y" << ","
-        << "Truncated_dEdx_Y";
+        << "dEdx_Y" << ",";
     }
     
     // finish header
@@ -1389,7 +1390,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
             for (auto dEdx_Y_hit:dEdx_Y) {
                 tracks_file << dEdx_Y_hit << ",";
             }
-            tracks_file << "]\"" << ",";
+            tracks_file << "]\"";
             
             // trunctated dE/dx
             std::vector<float> dEdxTrunc_Y = t.GetdEdxTrunc( 2 ); // collection plane (Y) = 2

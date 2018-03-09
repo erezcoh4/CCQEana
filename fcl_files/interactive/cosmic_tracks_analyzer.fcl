@@ -45,7 +45,7 @@ physics:
       module_type:            "CosmicTracksAnalyzer"
       DataSampleLabel:		"prodcosmics_corsika_cmc_uboone_mcc8.7_reco"
       TrackModuleLabel: 	"pandoraNu"
-      VerbosityLevel:		2
+      VerbosityLevel:		1
       HitsModuleLabel:        "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"

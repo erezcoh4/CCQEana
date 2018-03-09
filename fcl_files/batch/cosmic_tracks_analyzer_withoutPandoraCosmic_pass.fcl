@@ -12,11 +12,11 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
 
-process_name: RunErezCCQEana 
+process_name: CosmicTracksAnalysis 
 
 services:
 {
-  TFileService: { fileName: "/uboone/data/users/ecohen/CCQEanalysis/EventsFiles/adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2.root" closeFileFast: false}
+  TFileService: { fileName: "prodcosmics_reco_withoutPandoraCosmicRemovalPass_joel.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -42,23 +42,19 @@ physics:
   {
     EventsAnalyzer: 
     {
-      module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
-      VerbosityLevel:		2
-      MCmodeLabel:          true
-      DoWriteTracksInfo:    true
-      DoAddTracksEdep:      true
-      DoWriteGENIEInfo:     true
+      module_type:            "CosmicTracksAnalyzer"
+      DataSampleLabel:		"prodcosmics_reco_withoutPandoraCosmicRemovalPass_joel"
       TrackModuleLabel: 	"pandoraNu"
-      HitsModuleLabel:          "pandoraCosmicHitRemoval"
+      HitsModuleLabel:        "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
       GenieGenModuleLabel:	"generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
-      POTModuleLabel:       "generator"
-      FlashModuleLabel:     "simpleFlashBeam"
-      HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
-      CalibratedCalorimetryModuleLabel: "pandoraNucali"
-      TruncMeanRadLabel:     0.0
+      VerbosityLevel:		2
+      POTModuleLabel:         "generator"
+      FlashModuleLabel:       "simpleFlashBeam"
+      HitParticleAssnsModuleLabel: "pandoraCosmicTruthMatch"
+      MCTrackModuleLabel:	"mcreco"
+      CosmicTrackModuleLabel: 	"pandoraCosmic"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

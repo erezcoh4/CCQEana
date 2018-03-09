@@ -78,7 +78,7 @@ void TruncMean::CalcTruncMeanProfile(const std::vector< float > & rr_v,
 void TruncMean::CalcTruncMean(const std::vector<float>& resrange,
                               const std::vector<float>& dQ,
                               std::vector<float>& dQtruncated) {
-    int debug_level = 0;
+    int debug_level = 2;
     Debug( debug_level , "TruncMean::CalcTruncMean()");
     
     // how many neighboring points to sample for the truncation

@@ -2,12 +2,12 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prodcosmics_reco_withPandoraCosmicRemovalPass_joelam">
+<!ENTITY defname "prodcosmics_reco_withoutPandoraCosmicRemovalPass_joelam">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "100">
+<!ENTITY number_of_jobs "1"> <!-- ~ 2300 files-->
 <!ENTITY name "&defname;">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -19,7 +19,7 @@
         
         <!-- Project size -->
         <numevents>100000</numevents>
-        <maxfilesperjob>20</maxfilesperjob>
+        <maxfilesperjob>1</maxfilesperjob>
         
         <!-- Operating System -->
         <os>SL6</os>
@@ -44,7 +44,7 @@
         
         <!-- Project stages -->
         <stage name="ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/cosmic_tracks_analyzer_withPandoraCosmic_pass.fcl</fcl>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/cosmic_tracks_analyzer_withoutPandoraCosmic_pass.fcl</fcl>
             <!--            <inputdef>&defname;</inputdef>-->
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/cosmic_pairs/&name;</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/cosmic_pairs/&name;</logdir>
@@ -56,7 +56,7 @@
             <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/&defname;.list</inputlist>
             <schema>root</schema>
             <jobsub> --expected-lifetime=8h --site=FermiGrid</jobsub> <!-- limiting to only the FermiGrid to avoid firewall streaming issues -->
-            <memory>1000</memory>
+            <memory>2000</memory>
         </stage>
         
     </project>
