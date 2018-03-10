@@ -282,8 +282,11 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
-    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+//    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+//        art::fill_ptr_vector(mclist, mctruthListHandle);    
+    if (evt.getByLabel("largeant",mctruthListHandle))
         art::fill_ptr_vector(mclist, mctruthListHandle);
+    
     
     art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
     std::vector<art::Ptr<simb::MCFlux> > fluxlist;
