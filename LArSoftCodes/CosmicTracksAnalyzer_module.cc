@@ -169,6 +169,7 @@ private:
     bool    MCmode;
     
     int     NCosmicTracks_total=0, Ntracks_total=0;
+    long    Nhits_tot=0;
     int     NCosmicTracks, Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
@@ -294,6 +295,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     // hits information
     // ----------------------------------------
     Nhits = hitlist.size();
+    Nhits_tot += Nhits;
     Nhits_stored = std::min(Nhits, kMaxHits);
     Debug(2,"Nhits: %, Nhits_stored: %",Nhits,Nhits_stored);
     for (int i = 0; i < Nhits_stored ; ++i){//loop over hits
@@ -372,7 +374,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     Debug(2,"std::min(int(tracklist.size()),kMaxTrack):%",std::min(int(tracklist.size()),kMaxTrack));
     for(int i=0; i < std::min(int(tracklist.size()),kMaxTrack); ++i ){
         Debug(2, "analyzing track %",i);
-        SHOW(tracklist[i]->ID());
+        if (debug>2) SHOW(tracklist[i]->ID());
         //        Debug(3 , "analyzing track tracklist[%]->ID()=%",i,tracklist[i]->ID() );
         recob::Track::Point_t start_pos, end_pos;
         std::tie( start_pos, end_pos ) = tracklist[i]->Extent();
@@ -582,17 +584,17 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
             for (int i_particle=0; i_particle < Nparticles; i_particle++) {
                 simb::MCParticle particle = mclist[mc_evend_id]->GetParticle(i_particle);
                 Debug( 0 , "particle %: pdg %" , i_particle , particle.PdgCode() );
-                if (debug>0) {
-                    SHOW3(particle.Vx() , particle.Vy() , particle.Vz());
-                    SHOW3(particle.Endx() , particle.Endy() , particle.Endz());
-                }
-                TVector3 particle_start(particle.Vx() , particle.Vy() , particle.Vz());
-                TVector3 particle_end(particle.Endx() , particle.Endy() , particle.Endz());
-                Debug(0,"path length: %",(particle_start-particle_end).Mag());
-                if ( (particle_start-particle_end).Mag() > 1.0) {
-                    particles_start.push_back(TVector3(particle.Vx() , particle.Vy() , particle.Vz()));
-                    particles_end.push_back(TVector3(particle.Endx() , particle.Endy() , particle.Endz()));
-                }
+//                if (debug>0) {
+//                    SHOW3(particle.Vx() , particle.Vy() , particle.Vz());
+//                    SHOW3(particle.EndX() , particle.EndY() , particle.EndZ());
+//                }
+//                TVector3 particle_start(particle.Vx() , particle.Vy() , particle.Vz());
+//                TVector3 particle_end(particle.Endx() , particle.Endy() , particle.Endz());
+//                Debug(0,"path length: %",(particle_start-particle_end).Mag());
+//                if ( (particle_start-particle_end).Mag() > 1.0) {
+//                    particles_start.push_back(TVector3(particle.Vx() , particle.Vy() , particle.Vz()));
+//                    particles_end.push_back(TVector3(particle.Endx() , particle.Endy() , particle.Endz()));
+//                }
             }
             // loop over all start- and end-points of the truth-particles
             // to find pairs at close proximity in the truth-level
@@ -602,12 +604,14 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     }
     
     // print out
-    if(!tracks.empty() && !cosmic_tracks.empty()){
-        PrintInformation((debug>2)?true:false   // print pandoraCosmic tracks
-                         ,(debug>2)?true:false  // print pandoraNu tracks
-                         );
-    }    else {
-        cout << "tracks and cosmic_tracks are empty in this event" << endl;
+    if (debug>0) {
+        if(!tracks.empty() && !cosmic_tracks.empty()){
+            PrintInformation((debug>2)?true:false   // print pandoraCosmic tracks
+                             ,(debug>2)?true:false  // print pandoraNu tracks
+                             );
+        }    else {
+            cout << "tracks and cosmic_tracks are empty in this event" << endl;
+        }
     }
     fTree -> Fill();
 }
@@ -949,7 +953,8 @@ void ub::CosmicTracksAnalyzer::endJob(){
     << "Nevents" << ","
     << "NPandoraNuTracks" << ","
     << "NPandoraCosmicTracks" << ","
-    << "Nvertices"
+    << "Nvertices" << ","
+    << "Nhits"
     << endl;
     
     std::string sTimeS = std::ctime(&now_time);
@@ -958,7 +963,8 @@ void ub::CosmicTracksAnalyzer::endJob(){
     << fTree->GetEntries() << ","
     << Ntracks_total << ","
     << NCosmicTracks_total << ","
-    << vertices_counter
+    << vertices_counter << ","
+    << Nhits_tot
     << endl;
     
     summary_file.close();
