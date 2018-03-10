@@ -583,18 +583,20 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
             std::vector<TVector3> particles_end;
             for (int i_particle=0; i_particle < Nparticles; i_particle++) {
                 simb::MCParticle particle = mclist[mc_evend_id]->GetParticle(i_particle);
-                Debug( 0 , "particle %: pdg %" , i_particle , particle.PdgCode() );
-//                if (debug>0) {
-//                    SHOW3(particle.Vx() , particle.Vy() , particle.Vz());
-//                    SHOW3(particle.EndX() , particle.EndY() , particle.EndZ());
-//                }
-//                TVector3 particle_start(particle.Vx() , particle.Vy() , particle.Vz());
-//                TVector3 particle_end(particle.Endx() , particle.Endy() , particle.Endz());
-//                Debug(0,"path length: %",(particle_start-particle_end).Mag());
-//                if ( (particle_start-particle_end).Mag() > 1.0) {
-//                    particles_start.push_back(TVector3(particle.Vx() , particle.Vy() , particle.Vz()));
-//                    particles_end.push_back(TVector3(particle.Endx() , particle.Endy() , particle.Endz()));
-//                }
+                Debug( 0 , "particle %: pdg %: status-code: %" , i_particle , particle.PdgCode() , particle.StatusCode() );
+                Debug( 0 , "number of trajectory points: %",particle.NumberTrajectoryPoints());
+                Debug( 0 , "particle.Vx(0): % , particle.Vy(0): % , particle.Vz(0): %, particle.EndX(): % , particle.EndY(): % , particle.EndZ(): %"
+                      ,particle.Vx(0) , particle.Vy(0) , particle.Vz(0), particle.EndX() , particle.EndY() , particle.EndZ());
+                Debug( 0 , "particle.Px(): % , particle.Py(): % , particle.Pz(): %" ,particle.Px() , particle.Py() , particle.Pz());
+                Debug( 0 , "particle.EndPx(): % , particle.EndPy(): % , particle.EndPz(): %" ,particle.EndPx() , particle.EndPy() , particle.EndPz());
+                
+                TVector3 particle_start(particle.Vx() , particle.Vy() , particle.Vz());
+                TVector3 particle_end(particle.EndX() , particle.EndY() , particle.EndZ());
+                Debug(0,"path length: %",(particle_start-particle_end).Mag());
+                if ( (particle_start-particle_end).Mag() > 1.0) {
+                    particles_start.push_back( particle_start );
+                    particles_end.push_back( particle_end );
+                }
             }
             // loop over all start- and end-points of the truth-particles
             // to find pairs at close proximity in the truth-level
