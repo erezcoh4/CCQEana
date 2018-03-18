@@ -44,7 +44,11 @@
 #include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
 // for MCtrack
 #include "lardataobj/MCBase/MCTrack.h"
-
+// lar core algorithm
+#include "uboone/LLBasicTool/GeoAlgo/GeoAlgo.h"
+#include "uboone/LLBasicTool/GeoAlgo/GeoTrajectory.h"
+#include "uboone/LLBasicTool/GeoAlgo/GeoLineSegment.h"
+#include "uboone/LLBasicTool/GeoAlgo/GeoLine.h"
 
 // ROOT includes
 #include "TTree.h"
@@ -70,7 +74,7 @@
 constexpr int debug          = 1;
 constexpr int kMaxTrack      = 1000;  //maximum number of tracks
 constexpr int kMaxHits       = 40000; //maximum number of hits;
-constexpr int kMaxTruth      = 100;
+constexpr int kMaxTruth      = 100000;
 constexpr int kMaxNgenie     = 100;
 // 11 cm between tracks - maximal distance for clustering, here we take 30 cm to open the possible clustering window
 constexpr float kMaxInterTrackDistance = 30;
@@ -115,15 +119,26 @@ public:
     void     FindTwoTracksVertices (std::vector<PandoraNuTrack> & tracks_vector // tracks to be clustered
                                      ,std::vector<pairVertex> & vertices_vector  // vertices vector to hold the pairs
                                     );
+    void             FindTrajPairs (std::vector<PandoraNuTrack> & tracks_vector // tracks to be clustered
+    );
     void           AnalyzeVertices (std::vector<pairVertex> & vertices_vector  // vertices vector to hold the pairs
                                     );
-    void    FilterGoodPairVertices (std::vector<pairVertex> & vertices_vector
-                                    );
-    void          PrintInformation (bool Do_cosmic_tracks=false, bool Do_tracks=false);
+    void    FilterGoodPairVertices (std::vector<pairVertex> & vertices_vector );
+    void        FilterGoodTrajPair ();
+
+    void          PrintInformation ();
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
+    void HeaderTrajectoryPairsInCSV();
+    void StreamTrajectoryPairsToCSV();
     void         MatchPairVertices ();
-    
+    void      CheckIfReconstructed ( std::vector<pairVertex> & truth_pairs_vector );
+    void    CheckIfReconstructable ( std::vector<pairVertex> & truth_pairs_vector );
+    bool IsTrajecPairReconstructed ( PandoraNuTrack truth_trajectory );
+    bool HasMatchingRecoPairVertex ( pairVertex truth_pair );
+    pairVertex  FormPairFrom2Trajs (PandoraNuTrack ti,PandoraNuTrack tj, TVector3 position);
+    void     SearchOtherCloseTrajs (pairVertex & pair , int i , int j);
+
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     // debug
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
@@ -167,21 +182,30 @@ private:
     short   isdata;
     
     bool    MCmode;
-    
+    bool    DoPrintTruthTrajectories = true;
+    bool    DoPrintCosmicTracks = false;
+    bool    DoPrintPandoraNuTracks = false;
     int     NCosmicTracks_total=0, Ntracks_total=0;
-    long    Nhits_tot=0;
+    int     truth_pairs_ctr=0, truth_pairs_ctr_reconstructable=0;
+    int     truth_pairs_ctr_reconstructed=0, truth_pairs_ctr_contained=0;
     int     NCosmicTracks, Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
     int     vertices_counter;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     
+
+    long    Nhits_tot=0;
+    long    NMCParticles_total=0;
+
     double  pot, pot_total;
 
     // my objects
     std::vector<PandoraNuTrack>     tracks, cosmic_tracks;
+    std::vector<PandoraNuTrack>     truth_trajectories; // trajectories of truth particles
     std::vector<hit>                hits;
     std::vector<pairVertex>         vertices, cosmic_vertices;
+    std::vector<pairVertex>         truth_pairs;    // pairs of trajectories of truth particles
     std::vector<flash>              flashes;
     
     
@@ -205,7 +229,9 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
     // output csv file of vertices
-    ofstream vertices_file, summary_file;
+    ofstream vertices_file, summary_file, truth_pairs_file;
+    geoalgo::GeoAlgo mygeoalgo;
+
 
 };
 
@@ -280,14 +306,23 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     evt.getByLabel(fG4ModuleLabel, pHandle);
     art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
     
+    Debug(2,"// * MCTruth information");
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
-//    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
-//        art::fill_ptr_vector(mclist, mctruthListHandle);    
-    if (evt.getByLabel("largeant",mctruthListHandle))
+    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
         art::fill_ptr_vector(mclist, mctruthListHandle);
     
-    
+    // MCParticle from largeant
+    Debug(2,"// * MCParticle information");
+    art::Handle< std::vector<simb::MCParticle> > MCParticleListHandle;
+    std::vector<art::Ptr<simb::MCParticle> > mcparticlelist;
+    if (evt.getByLabel("largeant",MCParticleListHandle))
+        art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
+    auto Nparticles = (int)mcparticlelist.size();
+    Debug(1,"Nparticles: %",Nparticles);
+
+    // MCFlux
+    Debug(2,"// * MCFlux information");
     art::Handle< std::vector<simb::MCFlux> > mcfluxListHandle;
     std::vector<art::Ptr<simb::MCFlux> > fluxlist;
     if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
@@ -417,20 +452,6 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
             track.SetStartEndPlane( plane , start_wire , start_time , end_wire , end_time );
         }
         
-        //        // Hits-Tracks association
-        //        Debug(2,"// Hits-Tracks association");
-        //        if (fmth.isValid()){
-        //            Debug(3,"// fmth.at(%)",i);
-        //            std::vector< art::Ptr<recob::Hit> > vhit = fmth.at(i);
-        //            Debug(3,"// vhit.size()");
-        //            for (size_t h = 0; h < vhit.size(); ++h){
-        //                if (vhit[h].key()<kMaxHits){
-        //                    if (debug>3){SHOW(vhit[h].key());}
-        //                    hits.at( vhit[h].key() ).SetTrackKey( tracklist[i].key() );
-        //                }
-        //            }
-        //        }
-        
         // PIDa and calorimetric KE
         Debug(2,"// PIDa and calorimetric KE");
         if (fmcal.isValid()){
@@ -482,7 +503,7 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
         
         // MC information
         Debug(2,"// MC information");
-        bool DoNewMCtruthMatching = false;
+        bool DoNewMCtruthMatching = true;
         if (mclist.size() && DoNewMCtruthMatching){
 
             std::vector< art::Ptr<recob::Hit> > trk_hits_ptrs = hits_per_track.at(i);
@@ -490,7 +511,6 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
             double maxe=-1, tote=0;
             art::Ptr< simb::MCParticle > maxp_me; //pointer for the particle match we will calculate
             
-            SHOW(fHitParticleAssnsModuleLabel);
             art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);
             Debug(2,"art::FindManyP<simb::MCParticle,anab::BackTrackerHitMatchingData> particles_per_hit(hit_handle , evt , fHitParticleAssnsModuleLabel);");
             std::vector<art::Ptr<simb::MCParticle>> particle_vec;
@@ -538,6 +558,14 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
                 track.SetTruthMomentum( particle -> Momentum() );
                 track.SetTruthMother( particle -> Mother() );
                 track.SetTruthProcess( particle -> Process() );
+                
+                // from which particle did it come in the largeant list
+                for( int i_mcparticle = 0; (i_mcparticle < std::min(Nparticles,kMaxTruth)) ; i_mcparticle++ ){
+                    art::Ptr<simb::MCParticle> mcparticle = mcparticlelist.at(i_mcparticle);
+                    if (mcparticle == particle) {
+                        track.SetTruthMCParticle( i_mcparticle );
+                    }
+                }
                 // art::Ptr< simb::MCParticle >  track_truth_particle = particle;
                 
                 // * MC-truth information of this particle
@@ -572,53 +600,364 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
     StreamVerticesToCSV();
     Debug(2,"StreamVerticesToCSV()");
 
-    Debug(0,"before if (mclist.size()=%)",mclist.size());
-    if (mclist.size()){
+    
+    
+    Debug(2,"before if (mclist.size()=%)",mcparticlelist.size());
+    // record all start- and end-points of the truth-particles with path-length longer than the 3-wires requirement (1 cm)
+    int Nparticles_passed_cut=0;
+    if (Nparticles){
         MCmode = true;
-        for( int mc_evend_id = 0; (mc_evend_id < (int)mclist.size()) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
-            art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
-            auto Nparticles = mclist[mc_evend_id]->NParticles();
-            Debug(0,"in mclist[%];, mctruth->Origin(): %, Nparticles: %",mc_evend_id,mctruth->Origin(),Nparticles);
+        for( int i_mcparticle = 0; (i_mcparticle < std::min(Nparticles,kMaxTruth)) ; i_mcparticle++ ){
+            art::Ptr<simb::MCParticle> particle = mcparticlelist.at(i_mcparticle);
 
-            
-            // record all start- and end-points of the truth-particles with path-length longer than the 3-wires requirement (1 cm)
-            std::vector<TVector3> particles_start;
-            std::vector<TVector3> particles_end;
-            for (int i_particle=0; i_particle < Nparticles; i_particle++) {
-                simb::MCParticle particle = mclist[mc_evend_id]->GetParticle(i_particle);
-                Debug( 0 , "particle %: pdg %: status-code: %" , i_particle , particle.PdgCode() , particle.StatusCode() );
-                Debug( 0 , "number of trajectory points: %",particle.NumberTrajectoryPoints());
-                Debug( 0 , "particle.Vx(0): % , particle.Vy(0): % , particle.Vz(0): %, particle.EndX(): % , particle.EndY(): % , particle.EndZ(): %"
-                      ,particle.Vx(0) , particle.Vy(0) , particle.Vz(0), particle.EndX() , particle.EndY() , particle.EndZ());
-                Debug( 0 , "particle.Px(): % , particle.Py(): % , particle.Pz(): %" ,particle.Px() , particle.Py() , particle.Pz());
-                Debug( 0 , "particle.EndPx(): % , particle.EndPy(): % , particle.EndPz(): %" ,particle.EndPx() , particle.EndPy() , particle.EndPz());
+            if (particle->StatusCode()!=1) continue;
+            TVector3 particle_start(particle->Vx() , particle->Vy() , particle->Vz());
+            TVector3 particle_end(particle->EndX() , particle->EndY() , particle->EndZ());
+            PandoraNuTrack truth_trajectory(
+                                            run , subrun, event                    // r/s/e
+                                            ,i_mcparticle                          // id
+                                            ,(particle_start-particle_end).Mag()   // length
+                                            ,particle_start                        // start position
+                                            ,particle_end                          // end position
+                                            );
+
+            Debug(4,"particle %: pdg %: status-code: %, path length: %, process: %"
+                  ,i_mcparticle , particle->PdgCode(), particle->StatusCode(), truth_trajectory.GetLength(), particle->Process());
+            truth_trajectory.SetTruthProcess( particle->Process() );
+            truth_trajectory.SetMCpdgCode( particle->PdgCode() );
+            truth_trajectory.SetTruthMomentum( particle -> Momentum() );
+
+
+            // we would like to keep only the following trajectories
+            if (
+                // we found that typically,
+                // pandoraCosmic and pandoraNu reconstruct trajectories originating from
+                // primary particles or Compton scattering or Decay
+                (truth_trajectory.GetTruthProcess() == "primary"
+                  ||
+                 truth_trajectory.GetTruthProcess() == "compt"
+                 ||
+                 truth_trajectory.GetTruthProcess() == "Decay"
+                 ||
+                 truth_trajectory.GetTruthProcess() == "muMinusCaptureAtRest")
+                &&
+                // kinetic energy greater than 1 MeV
+                (truth_trajectory.GetTruthMomentum().E() - truth_trajectory.GetTruthMomentum().M()) > 0.001
+                &&
+                // longer than 3 wires-pitch, i.e. 1 cm
+                truth_trajectory.GetLength() > 1.0
+                &&
+                // not a neutron or a neutrino
+                truth_trajectory.GetMCpdgCode() != 2112
+                &&
+                fabs(truth_trajectory.GetMCpdgCode()) != 12
+                &&
+                fabs(truth_trajectory.GetMCpdgCode()) != 14
+                &&
+                fabs(truth_trajectory.GetMCpdgCode()) != 16
+                ) {
                 
-                TVector3 particle_start(particle.Vx() , particle.Vy() , particle.Vz());
-                TVector3 particle_end(particle.EndX() , particle.EndY() , particle.EndZ());
-                Debug(0,"path length: %",(particle_start-particle_end).Mag());
-                if ( (particle_start-particle_end).Mag() > 1.0) {
-                    particles_start.push_back( particle_start );
-                    particles_end.push_back( particle_end );
-                }
+                Nparticles_passed_cut++;
+
+                Debug(2,"adding particle % to the truth-traectories list, truth_trajectory.IsTrackContainedSoft(): %",i_mcparticle,truth_trajectory.IsTrackContainedSoft());
+                
+                
+                truth_trajectory.SetTruthMCParticle( i_mcparticle );
+                truth_trajectory.SetTruthStartPos( TVector3(particle->Vx() , particle->Vy() , particle->Vz()) );
+                truth_trajectory.SetTruthEndPos( TVector3(particle->EndX() , particle->EndY() , particle->EndZ()) );
+                truth_trajectory.SetTruthLength();
+                truth_trajectory.SetTruthMother( particle -> Mother() );
+                
+                truth_trajectories.push_back(truth_trajectory);
             }
+            
             // loop over all start- and end-points of the truth-particles
             // to find pairs at close proximity in the truth-level
-//            FindTrueCosmicPairs( particles_start , particles_end );
+            //            FindTrueCosmicPairs( particles_start , particles_end );
         }
+        Debug(1,"Nparticles_passed_cut: %",Nparticles_passed_cut);
+        NMCParticles_total += Nparticles_passed_cut;
         
+        FindTrajPairs( truth_trajectories );
+        // AnalyzeVertices( truth_pairs );
+        FilterGoodTrajPair();
+        // check if this truth-trajectory pair was reconstructable
+        CheckIfReconstructable( truth_pairs );
+        // now check if this truth-trajectory pair was reconstructed
+        CheckIfReconstructed( truth_pairs );
     }
-    
+    StreamTrajectoryPairsToCSV();
+    Debug(2,"StreamTrajectoryPairsToCSV()");
+
     // print out
     if (debug>0) {
         if(!tracks.empty() && !cosmic_tracks.empty()){
-            PrintInformation((debug>2)?true:false   // print pandoraCosmic tracks
-                             ,(debug>2)?true:false  // print pandoraNu tracks
-                             );
+            PrintInformation();
         }    else {
             cout << "tracks and cosmic_tracks are empty in this event" << endl;
         }
     }
     fTree -> Fill();
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::CheckIfReconstructed(std::vector<pairVertex> & truth_pairs_vector){
+    // check if a pair of truth-trajectories at close proximity
+    // (1) has been reconstructed
+    // (2) if reconsutrcted - also if the two tracks are contained
+    
+    for (auto & truth_pair:truth_pairs_vector) {
+        // to check if the truth-trajectories pair was reconstructed,
+        // loop over the two truth-trajectories,
+        // and check for each trajectory was reconsutrcted
+        bool IsPairReconstructed = true;
+        for (auto truth_trajectory: truth_pair.GetTracks()) {
+            Debug(2,"lets check if truth_trajectory % is reconstructed",truth_trajectory.GetTrackID());
+            bool IsTrajReconstructed = IsTrajecPairReconstructed( truth_trajectory );
+            IsPairReconstructed = IsPairReconstructed && IsTrajReconstructed;
+        }
+        if (IsPairReconstructed) {
+
+            // apart from asking if each of the particles was reconstructed,
+            // we want in addition to ask if it was reconsutructed
+            // as a pandoraNu pair-vertex
+            IsPairReconstructed = IsPairReconstructed && HasMatchingRecoPairVertex(truth_pair);
+            truth_pair.SetIsVertexReconstructed( IsPairReconstructed );
+            
+            if(IsPairReconstructed){
+                bool IsPairContained = (truth_pair.GetTracks().at(0).IsTrackContainedSoft()
+                                        &&
+                                        truth_pair.GetTracks().at(1).IsTrackContainedSoft());
+                truth_pair.SetIsVertexContained( IsPairContained );
+            }
+        }
+    }
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::CheckIfReconstructable(std::vector<pairVertex> & truth_pairs_vector){
+    // check if a pair of truth-trajectories at close proximity can be reconsutrcted
+    // by asking if the "reconstructed" vertex position of the pair is inside the TPC.
+    // We use the "reconstructed" vertex position,
+    // since it is corrected at the pairVertex::FixTracksDirections() stage
+    // while the truth-vertex position is unmodified
+    for (auto & truth_pair:truth_pairs_vector) {
+        Debug(3,"CheckIfReconstructable(truth_pair %) at position %,%,%"
+              ,truth_pair.GetVertexID()
+              ,truth_pair.GetPosition().X(),truth_pair.GetPosition().y(),truth_pair.GetPosition().Z());
+
+        truth_pair.CheckIsVertexInTPC();
+        truth_pair.SetIsVertexReconstructable( truth_pair.GetIsRecoVertexInTPC() );
+    }
+}
+
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool ub::CosmicTracksAnalyzer::HasMatchingRecoPairVertex( pairVertex truth_pair ){
+    // March-14, 2018
+    // check if the truth-trajectories pair has a matching
+    // pandoraNu-tracks pair that was reconstructed at close proximity
+    for (auto PandoraNuTrackPair: vertices) {
+        Int_t tA_particle = PandoraNuTrackPair.GetTracks().at(0).GetTruthMCParticle();
+        Int_t tB_particle = PandoraNuTrackPair.GetTracks().at(1).GetTruthMCParticle();
+        Int_t particleA = truth_pair.GetTracks().at(0).GetTruthMCParticle();
+        Int_t particleB = truth_pair.GetTracks().at(1).GetTruthMCParticle();
+        
+        // determine that the pair matches
+        // if the particles assigned with the tracks are the same particle in the truth-trajectory pair
+        if (
+            (tA_particle == particleA && tB_particle == particleB)
+            ||
+            (tA_particle == particleB && tB_particle == particleA)
+            ) {
+                return true;
+        }
+    }
+    return false;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool ub::CosmicTracksAnalyzer::IsTrajecPairReconstructed(PandoraNuTrack truth_trajectory){
+    int fdebug=3;
+    // loop over all reconstructed tracks,
+    // and check for each track if it matches one of the trajectories
+    Debug(fdebug,"ub::CosmicTracksAnalyzer::IsTrajecPairReconstructed(truth_trajectory %)",truth_trajectory.GetTrackID());
+
+    Debug(fdebug,"start: %,%,%",truth_trajectory.GetTruthStartPos().X(),truth_trajectory.GetTruthStartPos().Y(),truth_trajectory.GetTruthStartPos().Z());
+    Debug(fdebug,"truth_trajectory.GetMCpdgCode(): %",truth_trajectory.GetMCpdgCode());
+    
+    for (auto & track : tracks){
+        Debug(fdebug,"comparing to see if this can match track %",track.GetTrackID());
+
+        Debug(fdebug,"track.GetMCpdgCode(): %, track.GetTruthMCParticle(): %",track.GetMCpdgCode(),track.GetTruthMCParticle());
+        
+        if ( track.GetTruthMCParticle() == truth_trajectory.GetTruthMCParticle()
+            ) {
+            Debug(fdebug,"matched truth_trajectory % with reco. track % ! \n -- - -- - -- - -- -- -- -- -- -- -- --"
+                  ,truth_trajectory.GetTrackID(),track.GetTrackID());
+            return true;
+        }
+        Debug(fdebug,"-- - -- - -- - -- -- -- -- -- -- -- -- ");
+    }
+    return false;
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::FindTrajPairs(std::vector<PandoraNuTrack> & traj_vector // tracks to be clustered
+){
+    Debug(2,"ub::CosmicTracksAnalyzer::FindTrajPairs()");
+    // Mar-14, 2018
+    // cluster pairs of truth-trajectories at close proximity to pair-vertices
+    // since these are truth-trajectories,
+    // we want to ask what is the closest distance between their trajectories,
+    // and not between their start or end points
+    float   closest_SqDist_ij;
+    TVector3 QuasiIntersectionPoint;
+    geoalgo::Point_t Pt_i, Pt_j;
+
+    // loop over all tracks - to look for partners at close proximity
+    for ( size_t i=0; i < traj_vector.size(); i++){
+        geoalgo::Line_t line_i(traj_vector[i].GetStartPos().y()
+                               ,traj_vector[i].GetStartPos().y()
+                               ,traj_vector[i].GetStartPos().z()
+                               ,traj_vector[i].GetEndPos().x()
+                               ,traj_vector[i].GetEndPos().y()
+                               ,traj_vector[i].GetEndPos().z());
+        for ( size_t j=i+1 ; j < traj_vector.size() ; j++ ){
+            geoalgo::Line_t line_j(traj_vector[j].GetStartPos().x()
+                                   ,traj_vector[j].GetStartPos().y()
+                                   ,traj_vector[j].GetStartPos().z()
+                                   ,traj_vector[j].GetEndPos().x()
+                                   ,traj_vector[j].GetEndPos().y()
+                                   ,traj_vector[j].GetEndPos().z());
+            
+            closest_SqDist_ij = mygeoalgo.SqDist(line_i , line_j , Pt_i , Pt_j );
+            
+            Debug(3,"closest SqDist of i=% & j=%: %",i,j,closest_SqDist_ij);
+            if ( closest_SqDist_ij < kMaxInterTrackDistance*kMaxInterTrackDistance ){
+                
+                TVector3 TVec3_i = Pt_i.ToTLorentzVector().Vect();
+                TVector3 TVec3_j = Pt_j.ToTLorentzVector().Vect();
+                
+                QuasiIntersectionPoint = 0.5*( TVec3_i + TVec3_j );
+                
+                pairVertex pair = FormPairFrom2Trajs( traj_vector[i] , traj_vector[j]
+                                     , QuasiIntersectionPoint );
+                pair.SetClosestDistance( (TVec3_i - TVec3_j).Mag() );
+                
+                Debug(3,"formed pair % from i=% & j=% at %,%,%"
+                      ,pair.GetVertexID()
+                      ,i,j
+                      ,pair.GetPosition().X()
+                      ,pair.GetPosition().Y()
+                      ,pair.GetPosition().Z());
+                
+                SearchOtherCloseTrajs( pair , i , j );
+                if (pair.GetNtracks() == 2) truth_pairs.push_back( pair );
+            }
+        }
+    }
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+pairVertex ub::CosmicTracksAnalyzer::FormPairFrom2Trajs(PandoraNuTrack ti,PandoraNuTrack tj, TVector3 pos){
+    pairVertex pair( run, subrun, event , truth_pairs.size() );
+    pair.AddTrack( ti );
+    pair.AddTrack( tj );
+    pair.SetPosition( pos );
+    return pair;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::SearchOtherCloseTrajs( pairVertex & pair , int i , int j ){
+    Debug(2 , "SearchOtherCloseTrajs( pairVertex % , i=% , j=% )",pair.GetVertexID(),i,j);
+    for ( size_t k=0 ; k < truth_trajectories.size() ; k++ ){
+        if ((int)k!=i && (int)k!=j){
+            geoalgo::Point_t VtxPos( pair.GetPosition() );
+            geoalgo::Line_t line_k(truth_trajectories[k].GetStartPos().x()
+                                   ,truth_trajectories[k].GetStartPos().y()
+                                   ,truth_trajectories[k].GetStartPos().z()
+                                   ,truth_trajectories[k].GetEndPos().x()
+                                   ,truth_trajectories[k].GetEndPos().y()
+                                   ,truth_trajectories[k].GetEndPos().z());
+
+            if(debug>3){
+                geoalgo::Point_t Pt_k = mygeoalgo.ClosestPt( line_k , VtxPos );
+                TVector3 Pt_k_vect = Pt_k.ToTLorentzVector().Vect();
+                TVector3 Pcm_tracks = (1./(Ntracks-1))*pair.GetPosition() + (1./Ntracks)*Pt_k_vect;
+
+                Debug(0,"distance of line k=% from the vertex at %,%,% is % at %,%,%"
+                  ,k,pair.GetPosition().X(),pair.GetPosition().Y(),pair.GetPosition().Z()
+                  ,mygeoalgo.SqDist( line_k, VtxPos)
+                      ,Pt_k_vect.x(),Pt_k_vect.y(),Pt_k_vect.z());
+            }
+            if( mygeoalgo.SqDist( line_k, VtxPos) < kMaxInterTrackDistance*kMaxInterTrackDistance ){
+                geoalgo::Point_t Pt_k = mygeoalgo.ClosestPt( line_k , VtxPos );
+                pair.AddTrack( truth_trajectories[k] );
+                int Ntracks = (int)pair.GetTracks().size();
+                TVector3 Pt_k_vect = Pt_k.ToTLorentzVector().Vect();
+                TVector3 Pcm_tracks = (1./(Ntracks-1))*pair.GetPosition() + (1./Ntracks)*Pt_k_vect;
+                pair.SetPosition( Pcm_tracks );
+                Debug(3,"Adding traj k=% to traj j=% and i=%, that now has % trajectories and is located at %,%,%..."
+                      ,k,j,i,pair.GetTracks().size()
+                      ,pair.GetPosition().X(),pair.GetPosition().Y(),pair.GetPosition().Z());
+            }
+        }
+    }
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::FilterGoodTrajPair(){
+    
+    std::vector<pairVertex> tmp_pairs = truth_pairs;
+    truth_pairs.clear();
+    
+    Debug(2 , "ub::CosmicTracksAnalyzer::FilterGoodTrajPair()");
+    for (auto & pair:tmp_pairs) {
+        
+        if (debug>2) {
+            pair.Print(false, false);
+            cout << "filtering Trajectories-pair "
+            << pair.GetVertexID()
+            << " with " << pair.GetNtracks() << " trajectories: ";
+            
+            for (auto t: pair.GetTracks()) {
+                cout
+                << t.GetTrackID()
+                <<"(pdg "<< t.GetMCpdgCode()
+                <<", MCParticle " << t.GetTruthMCParticle() <<"),  ";
+            }
+            cout << endl;
+        }
+
+        
+        // vertices with only two tracks at close proximity and nothing else
+        if (pair.GetNtracks() == 2){
+            // we have to 'assign' a muon and a proton track,
+            // so lets do it arbitrarily
+            pair.AssignMuonTrack (pair.GetTracks().at(0));
+            pair.AssignProtonTrack (pair.GetTracks().at(1));
+
+            pair.FixTracksDirections ();
+            Debug(2,"Kept Trajectories-pair % at position %,%,% as a good pair!"
+                  ,pair.GetVertexID(),pair.GetPosition().X(),pair.GetPosition().y(),pair.GetPosition().Z());
+            
+            truth_pairs.push_back( pair );
+        } else {
+            Debug(2,"Filtered out Trajectories-pair % at position %,%,%, being not a good pair..."
+                  ,pair.GetVertexID(),pair.GetPosition().X(),pair.GetPosition().y(),pair.GetPosition().Z());
+        }
+    }
+    Debug(2 , "-- -- - -- - -- -- - --- - -- -- -- -- - -- -- - -- -- - - ----");
 }
 
 
@@ -678,18 +1017,16 @@ void ub::CosmicTracksAnalyzer::AnalyzeVertices( std::vector<pairVertex> & vertic
             // after fixing the vertext position, remove far tracks
             Debug( 4 , "v.RemoveFarTracks( kMaxInterTrackDistance );");
             if (v.GetTracks().size()<2) continue;
-            
             v.RemoveFarTracks( kMaxInterTrackDistance );
             
             // and the relations between the tracks
             // inter-track distances, delta-theta, delta-phi...
             Debug( 4 , "SetTracksRelations;" );
             v.SetTracksRelations ();
-            
+
             // flash - matching
             // find the closest flash to the vertex
             Debug( 4 , "vertices flash matching" );
-            
             if (flashes.size()){
                 float YZdistance = 1000, ClosestFlashYZdistance = 1000;
                 for (auto f : flashes){
@@ -700,6 +1037,9 @@ void ub::CosmicTracksAnalyzer::AnalyzeVertices( std::vector<pairVertex> & vertic
                     }
                 }
             }
+            
+            Debug(4,"analyzed vertex % at position %,%,%"
+                  ,v.GetVertexID(),v.GetPosition().X(),v.GetPosition().y(),v.GetPosition().Z());
         }
     }
 }
@@ -715,16 +1055,33 @@ void ub::CosmicTracksAnalyzer::FilterGoodPairVertices(std::vector<pairVertex> & 
     vertices_vector.clear();
     trkf::TrackMomentumCalculator trkm;
 
-    Debug(3 , "ub::CosmicTracksAnalyzer::FilterGoodPairVertices()");
+    
+    Debug(2 , "ub::CosmicTracksAnalyzer::FilterGoodPairVertices()");
+
     for (auto & v:tmp_vertices) {
+        if (debug>2) {
+            cout << "filtering vertex "<< v.GetVertexID() << " with tracks: ";
+            for (auto t: v.GetTracks()) {
+                cout
+                << t.GetTrackID()
+                <<"(pdg "<< t.GetMCpdgCode()
+                <<", MCParticle " << t.GetTruthMCParticle() <<"),  ";
+            }
+            cout << endl;
+        }
         // vertices with only two tracks at close proximity and nothing else
         if (
             // we are looking for clusters of only two tracks that are fully contained
             v.GetNtracks() == 2
             // if there is a semi-contained track, with start/end point too close to the vertex, we don't want the vertex...
-            &&  v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size() == 0
+            &&
+            v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size() == 0
             ){
+            v.AssignMuonTrack (v.GetTracks().at(0));
+            v.AssignProtonTrack (v.GetTracks().at(1));
+
             v.FixTracksDirections ();
+            
             // version for v06_26_01
             double const v_position[3] = {v.GetPosition().X(),v.GetPosition().Y(),v.GetPosition().Z()};
             geo::TPCID tpcID = geom->FindTPCAtPosition( v_position );
@@ -738,9 +1095,12 @@ void ub::CosmicTracksAnalyzer::FilterGoodPairVertices(std::vector<pairVertex> & 
                     v.SetPlaneProjection( plane , wire , time );
                 }
             }
+            Debug(2,"Filtered vertex % at position %,%,% as a good pair-vertex!"
+                  ,v.GetVertexID(),v.GetPosition().X(),v.GetPosition().y(),v.GetPosition().Z());
             vertices_vector.push_back( v );
         }
     }
+    Debug(2 , "-- -- - -- - -- -- - --- - -- -- -- -- - -- -- - -- -- - - ----");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -799,12 +1159,18 @@ void ub::CosmicTracksAnalyzer::HeaderVerticesInCSV(){
     vertices_file
     << "run" << "," << "subrun" << "," << "event" << ","
     << "vertex_id" << ","
-    << "Ntracks" << ",";
+    << "Ntracks" << ","
+    << "pdg_1" << ","
+    << "pdg_2" << ","
+    << "MCParticle_1" << ","
+    << "MCParticle_2" << ","
+    ;
     
     // which tracks are populating this vertex topology
     vertices_file
     << "isPandoraCosmic" << ","
-    << "isPandoraNu" << ",";
+    << "isPandoraNu" << ","
+    << "isBrokenTrajectory" << ",";
     
 
     // reconstructed distance between the tracks
@@ -827,19 +1193,24 @@ void ub::CosmicTracksAnalyzer::StreamVerticesToCSV(){
         bool isPandoraCosmic = (i_vertices_vector==0) ? true : false;
         
         for (auto v : vertices_vector) {
-            vertices_counter ++;
+            if (!isPandoraCosmic) {vertices_counter++;}
             
             vertices_file
             << v.GetRun() << "," << v.GetSubrun() << "," << v.GetEvent() << ","
             << v.GetVertexID() << ","
-            << v.GetTracks().size() << ",";
+            << v.GetTracks().size() << ","
+            << v.GetTracks().at(0).GetMCpdgCode() << ","
+            << v.GetTracks().at(1).GetMCpdgCode() << ","
+            << v.GetTracks().at(0).GetTruthMCParticle() << ","
+            << v.GetTracks().at(1).GetTruthMCParticle() << ","
+            ;
             
             // which tracks are populating this vertex topology
             vertices_file
             << isPandoraCosmic << ","
-            << (!isPandoraCosmic) << ",";
-            
-            
+            << (!isPandoraCosmic) << ","
+            << v.GetIsBrokenTrajectory() << ",";
+
             // reconstructed distance between the tracks
             for ( auto d : v.Get_distances_ij()){
                 vertices_file << d ; //  for more than 2 tracks add << ";" ;
@@ -852,33 +1223,134 @@ void ub::CosmicTracksAnalyzer::StreamVerticesToCSV(){
     }
 }
 
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::CosmicTracksAnalyzer::PrintInformation(bool Do_cosmic_tracks,bool Do_tracks){
+void ub::CosmicTracksAnalyzer::HeaderTrajectoryPairsInCSV(){
+    // Mar-13, 2018
+    truth_pairs_ctr = 0;
+    truth_pairs_ctr_reconstructed = 0;
+    
+    truth_pairs_file
+    << "run" << "," << "subrun" << "," << "event" << ","
+    << "vertex_id" << ","
+    << "pdg_1" << ","
+    << "pdg_2" << ","
+    << "MCParticle_1" << ","
+    << "MCParticle_2" << ","
+    << "MCParticle_1_length" << ","
+    << "MCParticle_2_length" << ","
+    << "MCParticle_1_mother" << ","
+    << "MCParticle_2_mother" << ","
+    << "MCParticle_1_process" << ","
+    << "MCParticle_2_process" << ",";
+    
+    // position
+    truth_pairs_file
+    << "position_x" << "," << "position_y" << "," << "position_z" << ","
+    << "MCParticle_1_startx" << "," << "MCParticle_1_starty" << "," << "MCParticle_1_startz" << ","
+    << "MCParticle_1_endx" << "," << "MCParticle_1_endy" << "," << "MCParticle_1_endz" << ","
+    << "MCParticle_2_startx" << "," << "MCParticle_2_starty" << "," << "MCParticle_2_startz" << ","
+    << "MCParticle_2_endx" << "," << "MCParticle_2_endy" << "," << "MCParticle_2_endz" << ",";
+    
+    // reconstruction
+    truth_pairs_file
+    << "IsVertexReconstructable" << ","
+    << "IsVertexReconstructed" << ","
+    << "IsVertexContained" << ","
+    << "distance" ;
+    
+    // finish
+    truth_pairs_file << endl;
+    
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::StreamTrajectoryPairsToCSV(){
+    // Mar-13, 2018
+    for (auto pair : truth_pairs) {
+        truth_pairs_ctr ++;
+        if (pair.GetIsVertexReconstructable())  truth_pairs_ctr_reconstructable++;
+        if (pair.GetIsVertexReconstructed())    truth_pairs_ctr_reconstructed++;
+        if (pair.GetIsVertexContained())        truth_pairs_ctr_contained++;
+        
+        truth_pairs_file
+        << pair.GetRun() << "," << pair.GetSubrun() << "," << pair.GetEvent() << ","
+        << pair.GetVertexID() << ","
+        << pair.GetTracks().at(0).GetMCpdgCode() << ","
+        << pair.GetTracks().at(1).GetMCpdgCode() << ","
+        << pair.GetTracks().at(0).GetTruthMCParticle() << ","
+        << pair.GetTracks().at(1).GetTruthMCParticle() << ","
+        << pair.GetTracks().at(0).GetTruthLength() << ","
+        << pair.GetTracks().at(1).GetTruthLength() << ","
+        << pair.GetTracks().at(0).GetTruthMother() << ","
+        << pair.GetTracks().at(1).GetTruthMother() << ","
+        << pair.GetTracks().at(0).GetTruthProcess() << ","
+        << pair.GetTracks().at(1).GetTruthProcess() << ","
+        ;
+        
+        // position
+        truth_pairs_file
+        << pair.GetPosition().X() << ","
+        << pair.GetPosition().Y() << ","
+        << pair.GetPosition().Z() << ","
+        << pair.GetTracks().at(0).GetStartPos().X() << ","
+        << pair.GetTracks().at(0).GetStartPos().Y() << ","
+        << pair.GetTracks().at(0).GetStartPos().Z() << ","
+        << pair.GetTracks().at(0).GetEndPos().X() << ","
+        << pair.GetTracks().at(0).GetEndPos().Y() << ","
+        << pair.GetTracks().at(0).GetEndPos().Z() << ","
+        << pair.GetTracks().at(1).GetStartPos().X() << ","
+        << pair.GetTracks().at(1).GetStartPos().Y() << ","
+        << pair.GetTracks().at(1).GetStartPos().Z() << ","
+        << pair.GetTracks().at(1).GetEndPos().X() << ","
+        << pair.GetTracks().at(1).GetEndPos().Y() << ","
+        << pair.GetTracks().at(1).GetEndPos().Z() << ","
+        ;
+
+        // reconstruction
+        truth_pairs_file
+        << pair.GetIsVertexReconstructable() << ","
+        << pair.GetIsVertexReconstructed() << ","
+        << pair.GetIsVertexContained() << ","
+        << pair.GetClosestDistance() ;
+        
+        // finish
+        truth_pairs_file << endl;
+    }
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::CosmicTracksAnalyzer::PrintInformation(){
     
     PrintXLine();
     Printf( "processed so far %d events", (int)(fTree->GetEntries()) );
     SHOW3( run , subrun , event );
     
-    if(!cosmic_tracks.empty()){
-        PrintHeader(Form("%d pandoraCosmic-tracks",(int)cosmic_tracks.size()));
-        for (auto t: cosmic_tracks) {
-            if (Do_cosmic_tracks) t.Print( true );
+    
+    if(!truth_trajectories.empty()){
+        PrintHeader(Form("%d truth-trajectories",(int)truth_trajectories.size()));
+        for (auto t: truth_trajectories) {
+            if (DoPrintTruthTrajectories) t.Print( true );
             else cout << t.GetTrackID() << "\t";
         }
         cout << endl;
-    } else { PrintHeader("no pandoraCosmic-tracks");    }
-
-    if(!cosmic_vertices.empty()){
-        PrintHeader(Form("%d pandoraCosmic pair-vertices",(int)cosmic_vertices.size()));
-        for (auto v: cosmic_vertices) {
-            v.Print(false, false);
-        }
-    } else { PrintHeader("no pandoraCosmic pair-vertices");}
+    } else { PrintHeader("no truth-trajectories");    }
     
+    if(!truth_pairs.empty()){
+        PrintHeader(Form("%d truth-trajectorirs pair-vertices",(int)truth_pairs.size()));
+        for (auto pair: truth_pairs) {
+            pair.Print(false, false);
+            SHOW2(pair.GetIsVertexReconstructable(),pair.GetIsVertexReconstructed());
+        }
+    } else { PrintHeader("no truth-trajectorirs pair-vertices");}
+
     if(!tracks.empty()){
         PrintHeader(Form("%d pandoraNu-tracks",(int)tracks.size()));
         for (auto t: tracks) {
-            if (Do_tracks) t.Print( true );
+            if (DoPrintPandoraNuTracks) t.Print( true );
             else cout << t.GetTrackID() << "\t";
         }
         cout << endl;
@@ -887,10 +1359,30 @@ void ub::CosmicTracksAnalyzer::PrintInformation(bool Do_cosmic_tracks,bool Do_tr
     if(!vertices.empty()){
         PrintHeader(Form("%d pandoraNu pair-vertices",(int)vertices.size()));
         for (auto v: vertices) {
-            v.Print(false, false);
+            v.Print(true, true);
+            SHOW(v.GetIsBrokenTrajectory());
         }
     } else { PrintHeader("no pandoraNu pair-vertices"); }
-  
+
+    
+    //    if(!cosmic_tracks.empty()){
+    //        PrintHeader(Form("%d pandoraCosmic-tracks",(int)cosmic_tracks.size()));
+    //        for (auto t: cosmic_tracks) {
+    //            if (DoPrintCosmicTracks) t.Print( true );
+    //            else cout << t.GetTrackID() << "\t";
+    //        }
+    //        cout << endl;
+    //    } else { PrintHeader("no pandoraCosmic-tracks");    }
+    //    if(!cosmic_vertices.empty()){
+    //        PrintHeader(Form("%d pandoraCosmic pair-vertices",(int)cosmic_vertices.size()));
+    //        for (auto v: cosmic_vertices) {
+    //            v.Print(false, false);
+    //        }
+    //    } else { PrintHeader("no pandoraCosmic pair-vertices");}
+    
+
+    
+    
     // time stamp
     PrintLine();
     end_ana_time = std::chrono::system_clock::now();
@@ -931,6 +1423,7 @@ void ub::CosmicTracksAnalyzer::beginJob(){
     fTree->Branch("tracks"              ,&tracks);
     fTree->Branch("vertices"            ,&vertices);
     fTree->Branch("hits"                ,&hits);
+    fTree->Branch("truth_trajectories"  ,&truth_trajectories);
 
     
     fPOTTree = tfs->make<TTree>("pottree","pot tree");
@@ -943,6 +1436,11 @@ void ub::CosmicTracksAnalyzer::beginJob(){
     vertices_file.open(fDataSampleLabel+"_pandora_vertices.csv");
     cout << "opened vertices file: "+fDataSampleLabel+"_pandora_vertices.csv" << endl;
     HeaderVerticesInCSV();
+    
+    truth_pairs_file.open(fDataSampleLabel+"_truth_trajectories_pairs.csv");
+    cout << "opened vertices file: "+fDataSampleLabel+"_truth_trajectories_pairs.csv" << endl;
+    HeaderTrajectoryPairsInCSV();
+    
     
     pot_total = 0;
 }
@@ -959,7 +1457,12 @@ void ub::CosmicTracksAnalyzer::endJob(){
     << "NPandoraNuTracks" << ","
     << "NPandoraCosmicTracks" << ","
     << "Nvertices" << ","
-    << "Nhits"
+    << "Nhits" << ","
+    << "NMCParticles" << ","
+    << "Ntruth_pairs" << ","
+    << "Ntruth_pairs_reconstructable" << ","
+    << "Ntruth_pairs_reconstructed" << ","
+    << "Ntruth_pairs_contained"
     << endl;
     
     std::string sTimeS = std::ctime(&now_time);
@@ -969,7 +1472,12 @@ void ub::CosmicTracksAnalyzer::endJob(){
     << Ntracks_total << ","
     << NCosmicTracks_total << ","
     << vertices_counter << ","
-    << Nhits_tot
+    << Nhits_tot << ","
+    << NMCParticles_total << ","
+    << truth_pairs_ctr << ","
+    << truth_pairs_ctr_reconstructable << ","
+    << truth_pairs_ctr_reconstructed << ","
+    << truth_pairs_ctr_contained
     << endl;
     
     summary_file.close();
@@ -1011,11 +1519,14 @@ void ub::CosmicTracksAnalyzer::reconfigure(fhicl::ParameterSet const & p){
     fDataSampleLabel        = p.get< std::string >("DataSampleLabel");
     fPOTModuleLabel         = p.get< std::string >("POTModuleLabel");
     fFlashModuleLabel       = p.get< std::string >("FlashModuleLabel");
-    debug = p.get< int >("VerbosityLevel");
+    debug                   = p.get< int >("VerbosityLevel");
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
     fMCTrackModuleLabel     = p.get< std::string >("MCTrackModuleLabel","mcreco");
     fCosmicTrackModuleLabel = p.get< std::string >("CosmicTrackModuleLabel");
+    DoPrintTruthTrajectories= p.get< bool >("DoPrintTruthTrajectories");
+    DoPrintCosmicTracks     = p.get< bool >("DoPrintCosmicTracks");
+    DoPrintPandoraNuTracks  = p.get< bool >("DoPrintPandoraNuTracks");
 }
 
 
@@ -1032,7 +1543,8 @@ void ub::CosmicTracksAnalyzer::ResetVars(){
     cosmic_vertices.clear();
     hits.clear();
     flashes.clear();
-    
+    truth_trajectories.clear();
+    truth_pairs.clear();
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
 }

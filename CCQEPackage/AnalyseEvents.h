@@ -15,9 +15,6 @@
 #define ANALYSEEVENTS_H
 
 #include <iostream>
-//#include "../../mySoftware/MySoftwarePackage/myIncludes.h"
-//#include "../../AnalysisTreesInformation/AnaTreesPackage/PandoraNuTrack.h"
-//#include "../../AnalysisTreesInformation/AnaTreesPackage/hit.h"
 #include "TTree.h"
 #include "Rtypes.h"
 #include "PandoraNuTrack.h"
@@ -25,6 +22,8 @@
 #include "box.h"
 #include "GENIEinteraction.h"
 #include "pairVertex.h"
+#include "tripleVertex.h"
+
 
 /**
  \class AnalyseEvents
@@ -46,9 +45,11 @@ public:
     
     // GETters
     void                                   GetEntry ( int );
+    void                         GetEntryOnlyTracks ( int );
     std::vector<hit>                        GetHits ()  const {return hits;};
     std::vector<PandoraNuTrack>           GetTracks ()  const {return tracks;};
     std::vector<PandoraNuTrack>     GetCosmicTracks ()  const {return cosmic_tracks;};
+    std::vector<PandoraNuTrack>      GetMCParticles ()  const {return mcparticles;};
     std::vector<pairVertex>             GetVertices ()  const {return vertices;};
     std::vector<pairVertex>       GetCosmicVertices ()  const {return cosmic_vertices;};
     
@@ -67,11 +68,12 @@ private:
     
     TTree   * InTree;
     
-    std::vector<PandoraNuTrack> tracks, cosmic_tracks;
+    std::vector<PandoraNuTrack> tracks, cosmic_tracks, mcparticles;
     
     std::vector<hit>            hits;
 
     std::vector<pairVertex>     vertices, cosmic_vertices;
+    std::vector<tripleVertex>   tripleVertices;
 
 };
 

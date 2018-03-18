@@ -67,6 +67,22 @@ public:
     void                          AssociateHitsToTracks (std::vector<hit> hits);
     void                        BuildVertexIDFromTracks ();
     
+    // @brief check if the recostructed vertex is inside the TPC
+    bool                                  IsVertexInTPC (float max_FV_y = 116.5,
+                                                         float min_FV_z = 0, float max_FV_z = 1037,
+                                                         float min_FV_x = 0, float max_FV_x = 257)  const{
+        if( ( position.x() < min_FV_x )    | ( position.x() > max_FV_x ) )    return false;
+        if( ( position.y() < -max_FV_y )   | ( position.y() > max_FV_y ) )    return false;
+        if( ( position.z() < min_FV_z )    | ( position.z() > max_FV_z ) )    return false;
+        return true;
+    };
+    void                             CheckIsVertexInTPC () { IsRecoVertexInTPC = IsVertexInTPC(); };
+    
+    
+    
+    
+    
+    
     // SETters
     void                SetVertexID (Int_t fvertex_id)                              {vertex_id = fvertex_id;};
     void                     SetRSE (Int_t r, Int_t s, Int_t e)                     {run=r; subrun=s; event=e;};
@@ -88,7 +104,15 @@ public:
     void   SetReconstructedFeatures (float PmuFromRange = 0, float PpFromRange = 0 );
     void         SetPlaneProjection (int plane , float _wire , float _time )        {vertex_wire[plane]=_wire; vertex_time[plane]=_time;};
     void            SetClosestFlash (flash _flash)                                  {ClosestFlash = _flash;};
+    void SetIsVertexReconstructable (bool fIsRec)                                   {IsVertexReconstructable = fIsRec;};
+    void   SetIsVertexReconstructed (bool fIsRec)                                   {IsVertexReconstructed = fIsRec;};
+    void       SetIsVertexContained (bool fIsCon)                                   {IsVertexContained = fIsCon;};
+    void      SetIsBrokenTrajectory (bool fIsBroken)                                {IsBrokenTrajectory = fIsBroken;};
+    void         SetClosestDistance (float fdistances_ij)                           {reco_mu_p_distance=fdistances_ij;};
 
+    
+    
+    
     // GETters
     TString         GetTruthTopologyString () const {return TruthTopologyString;}
     
@@ -100,7 +124,9 @@ public:
     bool       GetIs_mu_TrackReconstructed () const {return Is_mu_TrackReconstructed;};
     bool        GetIs_p_TrackReconstructed () const {return Is_p_TrackReconstructed;};
     bool          GetIsVertexReconstructed () const {return IsVertexReconstructed;};
-
+    bool        GetIsVertexReconstructable () const {return IsVertexReconstructable;};
+    bool             GetIsBrokenTrajectory () const {return IsBrokenTrajectory;};
+    bool              GetIsRecoVertexInTPC () const {return IsRecoVertexInTPC;};
     
     Int_t                           GetRun () const {return run;};
     Int_t                        GetSubrun () const {return subrun;};
@@ -112,6 +138,7 @@ public:
     Int_t                    GetVertexTime (int plane) const {return vertex_time[plane];};
     
     float           GetAngleBetween2tracks () const; // return the angle between the muon and proton candidates, in degrees (!)
+    float               GetClosestDistance () const {return reco_mu_p_distance;};
     float                        GetRecoEv () const {return reco_Pnu.E();};
     float                        GetRecoQ2 () const {return reco_Q2;};
     float                        GetRecoXb () const {return reco_Xb;};
@@ -197,7 +224,9 @@ private:
     TString             TruthTopologyString="unknown truth topology";
     
     bool                Is1mu1p=false,    IsGENIECC_1p_200MeVc_0pi=false,   IsNon1mu1p=false,   IsCosmic=false;
-    bool                IsVertexContained=false, Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false, IsVertexReconstructed=false;
+    bool                IsVertexContained=false, Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false;
+    bool                IsVertexReconstructed=false, IsVertexReconstructable=false;
+    bool                IsBrokenTrajectory=false, IsRecoVertexInTPC=false;
 
     Int_t               run=-1 , subrun=-1 , event=-1, vertex_id=-1;
     Int_t               Ntracks=-1;

@@ -42,19 +42,22 @@ physics:
   {
     EventsAnalyzer: 
     {
-      module_type:            "CosmicTracksAnalyzer"
-      DataSampleLabel:		"prodcosmics_corsika_cmc_uboone_mcc8.7_reco"
-      TrackModuleLabel: 	"pandoraNu"
-      VerbosityLevel:		1
-      HitsModuleLabel:        "pandoraCosmicHitRemoval"
-      MCTruthModuleLabel:	"generator"
-      GenieGenModuleLabel:	"generator"
+      module_type:              "CosmicTracksAnalyzer"
+      DataSampleLabel:          "prodcosmics_corsika_cmc_uboone_mcc8.7_reco"
+      TrackModuleLabel:         "pandoraNu"
+      VerbosityLevel:           0
+      HitsModuleLabel:          "pandoraCosmicHitRemoval"
+      MCTruthModuleLabel:       "generator"
+      GenieGenModuleLabel:      "generator"
       CalorimetryModuleLabel:	"pandoraNucalo"
-      POTModuleLabel:         "generator"
-      FlashModuleLabel:       "simpleFlashBeam"
-      HitParticleAssnsModuleLabel: "pandoraCosmicTruthMatch"
-      MCTrackModuleLabel:	"mcreco"
+      POTModuleLabel:           "generator"
+      FlashModuleLabel:         "simpleFlashBeam"
+      HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
+      MCTrackModuleLabel:       "mcreco"
       CosmicTrackModuleLabel: 	"pandoraCosmic"
+      DoPrintTruthTrajectories: false
+      DoPrintCosmicTracks:      false
+      DoPrintPandoraNuTracks:   false
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

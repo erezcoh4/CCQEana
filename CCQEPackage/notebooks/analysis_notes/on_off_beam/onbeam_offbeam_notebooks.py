@@ -1,6 +1,7 @@
 
 import sys; sys.path.insert(0, '../../'); sys.path.insert(0,'../mupClassification/')
 from ccqe_notebook_tools import *
+from numpy import sqrt,square
 import matplotlib.patches as patches
 
 
@@ -84,7 +85,7 @@ OffBeamColor = 'orange'
 
 # ------------------------------------------------
 # March-6, 2018
-def get_Nreduced(reduced = dict()):
+def get_Nreduced(MCbnbDATAcosmicSamples=None,reduced = dict()):
     Noriginal , Nreduced , freduced = dict() , dict() , dict()
     for pair_type in pair_types:
         sam = MCbnbDATAcosmicSamples[pair_type]
@@ -96,9 +97,9 @@ def get_Nreduced(reduced = dict()):
 
 # ------------------------------------------------
 # March 5, 2018
-def get_pureff_cut(reduced=None,pureff=None, cut_name = 'PIDa'):
+def get_pureff_cut(MCbnbDATAcosmicSamples=None,reduced=None,pureff=None, cut_name = 'PIDa'):
     eff,pur = dict(),dict()
-    Nreduced , freduced = get_Nreduced(reduced=reduced)
+    Nreduced , freduced = get_Nreduced(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples,reduced=reduced)
     Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
     eff['1mu-1p'] = freduced['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
@@ -120,7 +121,8 @@ def get_pureff_cut(reduced=None,pureff=None, cut_name = 'PIDa'):
 
 # ------------------------------------------------
 # March-6, 2018
-def apply_cuts_to_overlay(PIDa_p_min=13
+def apply_cuts_to_overlay(MCbnbDATAcosmicSamples=None
+                          ,PIDa_p_min=13
                           ,minPEcut = 100
                           ,maxdYZcut = 200
                           ,delta_theta_12=55  # deg.
@@ -135,7 +137,8 @@ def apply_cuts_to_overlay(PIDa_p_min=13
     
     reducedSamples['no cut'] = dict()
     for pair_type in pair_types: reducedSamples['no cut'][pair_type] = MCbnbDATAcosmicSamples[pair_type]
-    pureffOverlay = get_pureff_cut(pureff=pureffOverlay,cut_name='no cut',reduced=reducedSamples['no cut'])
+    pureffOverlay = get_pureff_cut(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
+                                   ,pureff=pureffOverlay,cut_name='no cut',reduced=reducedSamples['no cut'])
     
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
         reduced = dict()
@@ -172,7 +175,8 @@ def apply_cuts_to_overlay(PIDa_p_min=13
                 reduced[pair_type] = sam[sam['reco_Pt']<Pt_max]
         #}
         reducedSamples[cut] = reduced
-        pureffOverlay = get_pureff_cut(pureff=pureffOverlay,cut_name=cut,reduced=reduced)
+        pureffOverlay = get_pureff_cut(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
+                                       ,pureff=pureffOverlay,cut_name=cut,reduced=reduced)
     #}
     return reducedSamples,pureffOverlay
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
