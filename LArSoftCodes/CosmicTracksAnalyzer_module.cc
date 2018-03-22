@@ -633,16 +633,20 @@ void ub::CosmicTracksAnalyzer::analyze(art::Event const & evt){
                 // we found that typically,
                 // pandoraCosmic and pandoraNu reconstruct trajectories originating from
                 // primary particles or Compton scattering or Decay
-                (truth_trajectory.GetTruthProcess() == "primary"
-                  ||
-                 truth_trajectory.GetTruthProcess() == "compt"
+                (
+                 truth_trajectory.GetTruthProcess() == "primary"
+//                  ||
+//                 truth_trajectory.GetTruthProcess() == "compt"
                  ||
                  truth_trajectory.GetTruthProcess() == "Decay"
                  ||
-                 truth_trajectory.GetTruthProcess() == "muMinusCaptureAtRest")
+                 truth_trajectory.GetTruthProcess() == "muMinusCaptureAtRest"
+                 ||
+                 truth_trajectory.GetTruthProcess() == "muPlusCaptureAtRest"
+                 )
                 &&
-                // kinetic energy greater than 1 MeV
-                (truth_trajectory.GetTruthMomentum().E() - truth_trajectory.GetTruthMomentum().M()) > 0.001
+                // kinetic energy greater than 10 MeV, follwing D. Caratelli paper [https://arxiv.org/pdf/1704.02927.pdf]
+                (truth_trajectory.GetTruthMomentum().E() - truth_trajectory.GetTruthMomentum().M()) > 0.01
                 &&
                 // longer than 3 wires-pitch, i.e. 1 cm
                 truth_trajectory.GetLength() > 1.0
@@ -1166,12 +1170,28 @@ void ub::CosmicTracksAnalyzer::HeaderVerticesInCSV(){
     << "MCParticle_2" << ","
     ;
     
+    
     // which tracks are populating this vertex topology
     vertices_file
     << "isPandoraCosmic" << ","
     << "isPandoraNu" << ","
     << "isBrokenTrajectory" << ",";
     
+    // start/end points, for FV cuts
+    vertices_file
+    << "startx_assigned_muon" << ","
+    << "starty_assigned_muon" << ","
+    << "startz_assigned_muon" << ","
+    << "startx_assigned_proton" << ","
+    << "starty_assigned_proton" << ","
+    << "startz_assigned_proton" << ","
+    << "endx_assigned_muon" << ","
+    << "endy_assigned_muon" << ","
+    << "endz_assigned_muon" << ","
+    << "endx_assigned_proton" << ","
+    << "endy_assigned_proton" << ","
+    << "endz_assigned_proton" << ",";
+
 
     // reconstructed distance between the tracks
     vertices_file
@@ -1211,6 +1231,23 @@ void ub::CosmicTracksAnalyzer::StreamVerticesToCSV(){
             << (!isPandoraCosmic) << ","
             << v.GetIsBrokenTrajectory() << ",";
 
+            
+            // start/end points, for FV cuts
+            vertices_file
+            << v.GetAssignedMuonTrack().GetStartPos().x() << ","
+            << v.GetAssignedMuonTrack().GetStartPos().y() << ","
+            << v.GetAssignedMuonTrack().GetStartPos().z() << ","
+            << v.GetAssignedProtonTrack().GetStartPos().x() << ","
+            << v.GetAssignedProtonTrack().GetStartPos().y() << ","
+            << v.GetAssignedProtonTrack().GetStartPos().z() << ","
+            << v.GetAssignedMuonTrack().GetEndPos().x() << ","
+            << v.GetAssignedMuonTrack().GetEndPos().y() << ","
+            << v.GetAssignedMuonTrack().GetEndPos().z() << ","
+            << v.GetAssignedProtonTrack().GetEndPos().x() << ","
+            << v.GetAssignedProtonTrack().GetEndPos().y() << ","
+            << v.GetAssignedProtonTrack().GetEndPos().z() << ",";
+
+            
             // reconstructed distance between the tracks
             for ( auto d : v.Get_distances_ij()){
                 vertices_file << d ; //  for more than 2 tracks add << ";" ;

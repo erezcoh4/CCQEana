@@ -27,6 +27,7 @@ void AnalyseEvents::InitEvent(){
     tracks.clear();
     hits.clear();
     vertices.clear();
+    tripleVertices.clear();
     mcparticles.clear();
     
 }
@@ -79,20 +80,28 @@ void AnalyseEvents::GetEntry (int entry){
 void AnalyseEvents::GetEntryOnlyTracks (int entry){
     
     InitEvent();
-    
+    cout << "InitEvent()" << endl;
     std::vector <PandoraNuTrack> * ftracks = 0;
     InTree -> SetBranchAddress("tracks" , &ftracks);
+    cout << "SetBranchAddress(tracks , &ftracks)" << endl;
     
     std::vector <tripleVertex> * ftripleVertices = 0;
     InTree -> SetBranchAddress("vertices" , &ftripleVertices);
+    cout << "SetBranchAddress(vertices , &ftripleVertices)" << endl;
     
     InTree -> GetEntry(entry);
+    cout << "Got Entry("<<entry<<")" << endl;
     
     tracks = *ftracks;
-    tripleVertices = *ftripleVertices;
+    cout << "tracks = *ftracks;" << endl;
     
+    tripleVertices = *ftripleVertices;
+    cout << "tripleVertices = *ftripleVertices;" << endl;
+
     delete ftracks;
+    cout << "delete ftracks;" << endl;
     delete ftripleVertices;
+    cout << "delete ftripleVertices;" << endl;
 }
 
 #endif

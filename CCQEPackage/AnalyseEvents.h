@@ -51,6 +51,7 @@ public:
     std::vector<PandoraNuTrack>     GetCosmicTracks ()  const {return cosmic_tracks;};
     std::vector<PandoraNuTrack>      GetMCParticles ()  const {return mcparticles;};
     std::vector<pairVertex>             GetVertices ()  const {return vertices;};
+    std::vector<tripleVertex>     GetTripleVertices ()  const {return tripleVertices;};
     std::vector<pairVertex>       GetCosmicVertices ()  const {return cosmic_vertices;};
     
     

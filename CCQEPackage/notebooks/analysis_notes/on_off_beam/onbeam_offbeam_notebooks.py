@@ -199,7 +199,7 @@ def apply_cuts_to_data(PIDa_p_min=13
     
     reducedOnBeam['no cut'] = OnBeamFV
     reducedOffBeam['no cut'] = OffBeamFV
-    
+    eff = pd.DataFrame()
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
         print 'grabbing reduced data samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
         OnBeam_previous_cut = reducedOnBeam[cuts_order[i_cut-1]]

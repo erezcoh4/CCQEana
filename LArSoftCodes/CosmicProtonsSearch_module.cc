@@ -157,6 +157,7 @@ private:
     
 
     // my objects
+    tripleVertex                    cvertex=tripleVertex();
     std::vector<PandoraNuTrack>     tracks;
     std::vector<tripleVertex>       vertices;
     
@@ -198,10 +199,6 @@ void ub::CosmicProtonsSearch::analyze(art::Event const & evt){
     
     isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
-    if (run!=1 || subrun!=307 || event!=30678) {
-        Debug(0,"dismissing r-%/s-%/e-%",run,subrun,event);
-        return;
-    }
     
     // * tracks
     art::Handle< std::vector<recob::Track> > trackListHandle;
@@ -558,7 +555,7 @@ void ub::CosmicProtonsSearch::FilterWantedVertices(){
     std::vector<tripleVertex> tmp_vertices = vertices;
     vertices.clear();
     
-    Debug(3 , "ub::CosmicProtonsSearch::FilterGoodPairVertices()");
+    Debug(3 , "ub::CosmicProtonsSearch::FilterWantedVertices()");
     for (auto & v:tmp_vertices) {
         if (
             // we are looking for clusters of only three tracks,

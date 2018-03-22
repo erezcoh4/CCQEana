@@ -11,6 +11,6 @@
   <class name="std::vector<pairVertex>"/>
   <class name="flash"/>
   <class name="std::vector<flash>"/>
-  <class name="tripleVertex>"/>
+  <class name="tripleVertex"/>
   <class name="std::vector<tripleVertex>"/>
 </lcgdict>

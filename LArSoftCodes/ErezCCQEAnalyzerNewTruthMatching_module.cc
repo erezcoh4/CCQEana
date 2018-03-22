@@ -42,7 +42,8 @@
 #include "larcoreobj/SummaryData/POTSummary.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
 
-//#include "larana/TruncatedMean/TruncMean.h"
+// for SwT emulation
+#include "uboone/RawData/utils/ubdaqSoftwareTriggerData.h"
 
 // for the new MC truth matching (by Wes)
 #include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
@@ -124,6 +125,8 @@ public:
     void               TagVertices ();
     void          PrintInformation (bool DoPrintTracksFull=false);
     bool    TrackAlreadyInVertices (int ftrack_id);
+    void         HeaderEventsInCSV ();
+    void         StreamEventsToCSV ();
     void       HeaderVerticesInCSV ();
     void       StreamVerticesToCSV ();
     void         HeaderTracksInCSV ();
@@ -178,12 +181,14 @@ private:
     bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
     bool    DoAddTracksEdep=false; // add tracks dE/dx information
     bool    DoWriteGENIEInformation=false; // save also all the genie information to a csv file
+    bool    DoWriteEventsInformation=false; // save also all the genie information to a csv file
+    bool    EventPassedSwTrigger=false;
 
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
     int     Nvertices;
-    int     vertices_ctr, tracks_ctr, genie_interactions_ctr;
+    int     vertices_ctr, tracks_ctr, genie_interactions_ctr,events_ctr;
     int     CC1p0piVertices_ctr=0 , CosmicVertices_ctr=0;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     float   r_around_vertex[N_r_around_vertex];
@@ -218,7 +223,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_ana_time, end_ana_time;
     
     // output csv file of vertices
-    ofstream vertices_file, summary_file, tracks_file, genie_file;
+    ofstream vertices_file, summary_file, tracks_file, genie_file, events_file;
     
     
     //flux information
@@ -258,6 +263,8 @@ ub::ErezCCQEAnalyzerNewTruthMatching::ErezCCQEAnalyzerNewTruthMatching(fhicl::Pa
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
+    return; // for just counting POTs in prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
+    
     ResetVars();
     
     art::ServiceHandle<geo::Geometry> geom;
@@ -265,6 +272,24 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
+    
+    // * SwT
+    art::Handle<raw::ubdaqSoftwareTriggerData> softwareTriggerHandle;
+    evt.getByLabel("swtrigger", softwareTriggerHandle);
+    if (!softwareTriggerHandle.isValid()){ Debug(0,"SwT Handle doesn't exist!"); }
+    if (softwareTriggerHandle.isValid()) {
+        Debug(3,"Got SwT Handle!, number of algorithms: %",softwareTriggerHandle->getNumberOfAlgorithms());
+        std::vector<std::string> algoNames = softwareTriggerHandle->getListOfAlgorithms();
+        
+        for (int i = 0; i < int(algoNames.size()); i++) {
+            Debug(3,"algoNames[%] = %",i,algoNames[i]);
+            // This is the algorithm that we need
+            if (algoNames[i] == "BNB_FEMBeamTriggerAlgo") {
+                EventPassedSwTrigger = softwareTriggerHandle->passedAlgo(algoNames[0]) ? true : false;
+            }
+        }
+    }
+    
     
     // * hits
     art::Handle< std::vector<recob::Hit> > hitListHandle;
@@ -302,6 +327,18 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     art::Handle< std::vector<simb::MCFlux> >        mcfluxListHandle;
     std::vector< art::Ptr<simb::MCTruth> >          mclist;
     std::vector< art::Ptr<simb::MCFlux> >           fluxlist;
+    
+    
+    
+    // MCParticle from largeant
+    Debug(2,"// * MCParticle information");
+    art::Handle< std::vector<simb::MCParticle> > MCParticleListHandle;
+    std::vector<art::Ptr<simb::MCParticle> > mcparticlelist;
+    if (evt.getByLabel("largeant",MCParticleListHandle))
+        art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
+    auto Nparticles = (int)mcparticlelist.size();
+    Debug(1,"Nparticles: %",Nparticles);
+
     
     if (MCmode) {
         evt.getByLabel(fG4ModuleLabel, pHandle);
@@ -499,7 +536,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         // Truncated Mean dE/dx
         if (fmcal.isValid()){
             TruncMean truncmean( debug , TruncMeanRad );
-            Debug(1, "TruncMean (radius=%)",TruncMeanRad);
+            Debug(3, "TruncMean (radius=%)",TruncMeanRad);
             for (int plane=0; plane<3; plane++){
                 std::vector<float> trkdedx = track.GetdEdx(plane);
                 std::vector<float> trkresrg = track.GetResRange(plane);
@@ -511,7 +548,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 truncmean.CalcTruncMean( trkresrg , trkdedx , trkdedx_truncated );
                 track.SetdEdxTrunc( plane , trkdedx_truncated );
                 
-                if (debug>0) {
+                if (debug>5) {
                     SHOWstdVector( track.GetdEdx(plane) );
                     SHOWstdVector( track.GetdEdxTrunc(plane) );
                 }
@@ -638,6 +675,16 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                        ? "cosmic ray"
                                        : "unkwon origin")  );
                 }// end if fo.isValid()
+                
+                
+                // from which particle did it come in the largeant list
+                for( int i_mcparticle = 0; (i_mcparticle < std::min(Nparticles,kMaxTruth)) ; i_mcparticle++ ){
+                    art::Ptr<simb::MCParticle> mcparticle = mcparticlelist.at(i_mcparticle);
+                    if (mcparticle == particle) {
+                        track.SetTruthMCParticle( i_mcparticle );
+                    }
+                }
+                
             }else {
                 Debug(3,"particle.isNull() = true!...");
                 if (!maxp_me.isNull()) {
@@ -775,6 +822,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // ----------------------------------------
     // write information to CSV files
     // ----------------------------------------
+    if (DoWriteEventsInformation) {
+        StreamEventsToCSV();
+    }
     if (DoWriteTracksInformation){
         StreamTracksToCSV();
     }
@@ -786,8 +836,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // ----------------------------------------
     // print and finish
     // ----------------------------------------
-    PrintInformation( (debug>0) ? true : false );
     fTree -> Fill();
+    PrintInformation( (debug>0) ? true : false );
 }
 
 
@@ -1154,6 +1204,66 @@ double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVert
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderEventsInCSV(){
+    
+    events_ctr = 0;
+    
+    events_file
+    << "run"        << "," << "subrun" << "," << "event" << ",";
+    
+    // SwT
+    events_file
+    << "passed_SwT" << ",";
+    
+    // neutrino interactions
+    events_file
+    << "N(v-interactions)" << ",";
+    
+    // first neutrino interaction
+    events_file
+    << "E(v-interaction)" << ","
+    << "x(v-interaction)" << ","
+    << "y(v-interaction)" << ","
+    << "z(v-interaction)" ;
+    
+    
+    // finish header
+    events_file << endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAnalyzerNewTruthMatching::StreamEventsToCSV(){
+    
+    // whatever you add here - must add also in header
+    // i.e. in
+    // ub::ErezSimpleTracksAnalyzer::HeaderEventsInCSV()
+    
+    events_ctr++;
+    
+    events_file
+    << run        << "," << subrun << "," << event << ",";
+    
+    // SwT
+    events_file
+    << EventPassedSwTrigger << ",";
+    
+    // neutrino interactions
+    events_file
+    << genie_interactions.size() << ",";
+    
+    // first neutrino interaction
+    events_file
+    << genie_interactions.at(0).GetEv() << ","
+    << genie_interactions.at(0).GetVertexPosition().x() << ","
+    << genie_interactions.at(0).GetVertexPosition().y() << ","
+    << genie_interactions.at(0).GetVertexPosition().z() ;
+    
+    
+    // finish header
+    events_file << endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
     
     genie_interactions_ctr = 0;
@@ -1339,7 +1449,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     tracks_file << endl;
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
     
@@ -1512,6 +1621,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "ClosestFlash_Time" << ","
     << "Nflashes" << ",";
     
+    
+    // broken trajectories
+    vertices_file
+    << "isBrokenTrajectory" << ",";
+
     // vertex truth-topology in MC
     vertices_file
     << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
@@ -1676,6 +1790,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         << v.GetClosestFlash().GetTime() << ","
         << flashes.size() << "," ;
         
+        // broken trajectories
+        vertices_file
+        << v.GetIsBrokenTrajectory() << ",";
+
         
         // vertex truth-topology in MC
         vertices_file << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
@@ -1684,8 +1802,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << endl;
     }
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(bool DoPrintTracksFull){
@@ -1781,6 +1897,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
     
     SHOW(debug);
     // output csv files
+    Debug( 2, Form( "DoWriteEventsInformation: %d",DoWriteEventsInformation) );
+    if (DoWriteEventsInformation) {
+        events_file.open(fDataSampleLabel+"_events.csv");
+        cout << "opened events file: "+fDataSampleLabel+"_events.csv" << endl;
+        HeaderEventsInCSV();
+    }
+
+    
     Debug( 2, Form( "DoWriteGNEIEInformation: %d",DoWriteGENIEInformation) );
     if (DoWriteGENIEInformation) {
         genie_file.open(fDataSampleLabel+"_genie.csv");
@@ -1852,6 +1976,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
     if (fPOTTree) fPOTTree->Fill();
     pot_total += pot;
     
+    
     if (debug>3){
         Printf("end subrun %d",subrun);
         SHOW2( pot , pot_total );
@@ -1878,6 +2003,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
     DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
     DoWriteGENIEInformation = p.get< bool >("DoWriteGENIEInfo",true);
+    DoWriteEventsInformation= p.get< bool >("DoWriteEventsInfo",true);
     TruncMeanRad            = p.get< float >("TruncMeanRadLabel",10.0);
     
 }
@@ -1894,7 +2020,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::ResetVars(){
     flashes.clear();
     genie_interactions.clear();
     vertices.clear();
-    
+    EventPassedSwTrigger=false;
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
 }
