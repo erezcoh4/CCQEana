@@ -263,7 +263,7 @@ ub::ErezCCQEAnalyzerNewTruthMatching::ErezCCQEAnalyzerNewTruthMatching(fhicl::Pa
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
-    return; // for just counting POTs in prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
+    // return; // for just counting POTs in prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
     
     ResetVars();
     
@@ -1982,6 +1982,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
         SHOW2( pot , pot_total );
     }
     Debug(4,"POT from this subrun: %" ,pot );
+    
+    // Marco:
+    if(sr.getByLabel("generator", potListHandle)) {
+        marco_pot = potsum_h->totpot;
+    }
+    else {
+        marco_pot = 0.;
+    }
 }
 
 
