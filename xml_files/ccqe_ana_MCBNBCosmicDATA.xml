@@ -33,7 +33,7 @@
         <larsoft>
             <tag>&LArSoft_release;</tag>
             <qual>e10:prof</qual>
-            <local>/uboone/app/users/ecohen/ErezCCQE/test.tar</local>
+            <local>/pnfs/uboone/resilient/users/ecohen/test.tar</local>
         </larsoft>
         
         <check>0</check>
