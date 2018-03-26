@@ -4,10 +4,15 @@
     * for MC-BNB/DATA-cosmic:
     
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
-    python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=4636
+    python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=765
     python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
-    
+
+    * for MC-BNB/MC-cosmic:
+
+    python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
+
+
     * for On Beam:
     
     python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v05
@@ -25,6 +30,7 @@
 '''
 
 import sys, os, time, argparse
+from prompter import yesno
 time_name = "%4d_%02d_%02d" % time.localtime()[0:3]
 
 
@@ -48,8 +54,8 @@ if name=="ccqe_ana_MCBNBCosmicDATA":
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name
     default_outdirname = csv_path+"ccqe_candidates/"
 
-# new overlay using SAM definition
-if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" in name:
+# new overlay using SAM definition / MCC8.7 MC-BNB + MC-Cosmic
+if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" or "prodgenie" in name:
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_outdirname = csv_path+"ccqe_candidates/"
 
@@ -78,7 +84,7 @@ if name=="ccqe_ana_MCBNBCosmicDATA":
     summaryfilename = csv_path+'summary/'+name+'_'+time_name+'_summary.csv'
 
 # new overlay using SAM definition
-if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" in name:
+if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" in name or "prodgenie" in name:
     outfilename = outdirname+'/'+name+'_'+time_name+'_vertices.csv'
     summaryfilename = csv_path+'summary/'+name+'_'+time_name+'_summary.csv'
 
@@ -89,16 +95,13 @@ elif "prodcosmics_corsika" in name:
     summaryfilename = csv_path+'summary/'+name+ "_" + tag + '_'+time_name+'_summary.csv'
 
 
-# step 0: create the <indirname> directory (if exists already, remove the existing one)
-print 'step 0: created the <indirname> directory (if exists already, remove the existing one):'
-print indirname
-print
-os.system("rm -fr "+indirname)
-os.system("mkdir "+indirname)
-
 # step 1: create a list of files to download
-do_step_1 = raw_input("# step 1: create a list of files to download?:...<True>") or True
-if do_step_1:#{
+if yesno('# step 1: create a list of files to download?'):#{
+    print 'created the <indirname> directory (if exists already, remove the existing one):'
+    print indirname
+    print
+    os.system("rm -fr "+indirname)
+    os.system("mkdir "+indirname)
     print 'creating a list of files to download from',pnfsjob
     print 'into '+indirname+'/files_to_download.list'
     print "ssh "+uboone+" ls "+pnfsjob+"/*/*.csv > "+indirname+"/files_to_download.list"
@@ -106,17 +109,16 @@ if do_step_1:#{
 #}
 print
 # step 2: grab this list
-do_step_2 = raw_input("# step 2: grab this list?:...<True>") or True
-if do_step_2:#{
+if yesno('# step 2: grab this list?'):#{
     files_to_download_name = "files_to_download"
     if option=="makeup": files_to_download_name = files_to_download_name + "_since_" + continue_makeup
     with open(indirname+'/'+files_to_download_name+".list") as f:
         files = f.read().splitlines()
 #}
 print
+
 # step 3: iterate over the list and download the files
-do_step_3 = raw_input("# step 3: iterate over the list and download the files?:...<True>") or True
-if do_step_3:
+if yesno('# step 3: iterate over the list and download the files?'):#{
     for file in files:#{
         try:
             print 'downloading',file
@@ -137,7 +139,7 @@ import os, pandas as pd
 list_files = os.listdir(indirname)
 print "list of files to combine from:",list_files
 print
-summary_df_array,vertices_df_array,tracks_df_array ,genie_df_array = [],[],[],[]
+summary_df_array,vertices_df_array,tracks_df_array ,genie_df_array,events_df_array = [],[],[],[],[]
 list_files = os.listdir(indirname)
 for file in list_files:#{
     if os.stat(indirname+'/'+file).st_size == 0: continue
@@ -157,6 +159,10 @@ for file in list_files:#{
         if "genie.csv" in file:#{
             print 'adding ',indirname+'/'+file
             genie_df_array.append(pd.read_csv( ( indirname+'/'+file )))
+        #}
+        if "events.csv" in file:#{
+            print 'adding ',indirname+'/'+file
+            events_df_array.append(pd.read_csv( ( indirname+'/'+file )))
         #}
     except IOError:
         pass
@@ -185,5 +191,13 @@ if (len(genie_df_array)>0):#{
     outfilename = csv_path+'genie/'+name+'_'+time_name+'_genie.csv'
     genie_all.to_csv(outfilename)
     print 'concatenated %d'%len(genie_all),'genie to\n',outfilename,'\ndone.'
+#}
+print
+if (len(events_df_array)>0):#{
+    events_all = pd.concat(events_df_array)
+    print len(events_all),'total tracks'
+    outfilename = csv_path+'events/'+name+'_'+time_name+'_events.csv'
+    events_all.to_csv(outfilename)
+    print 'concatenated %d'%len(events_all),'events to\n',outfilename,'\ndone.'
 #}
 print

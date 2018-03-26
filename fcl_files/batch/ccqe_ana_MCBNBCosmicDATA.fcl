@@ -45,11 +45,12 @@ physics:
     {
       module_type:                      "ErezCCQEAnalyzerNewTruthMatching"
       DataSampleLabel:                  "adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
-      VerbosityLevel:                   2
+      VerbosityLevel:                   1
       MCmodeLabel:                      true
-      DoWriteTracksInfo:                false
+      DoWriteTracksInfo:                true
       DoAddTracksEdep:                  false
       DoWriteGENIEInfo:                 true
+      DoWriteEventsInfo:                true
       TrackModuleLabel:                 "pandoraNu"
       HitsModuleLabel:                  "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:               "generator"
@@ -59,6 +60,7 @@ physics:
       FlashModuleLabel:                 "simpleFlashBeam"
       HitParticleAssnsModuleLabel:      "crHitRemovalTruthMatch"
       CalibratedCalorimetryModuleLabel: "pandoraNucali"
+      TruncMeanRadLabel:     3.0
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms
