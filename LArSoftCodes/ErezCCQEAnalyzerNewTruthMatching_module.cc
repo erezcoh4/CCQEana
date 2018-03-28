@@ -183,6 +183,7 @@ private:
     bool    DoWriteGENIEInformation=false; // save also all the genie information to a csv file
     bool    DoWriteEventsInformation=false; // save also all the genie information to a csv file
     bool    EventPassedSwTrigger=false;
+    bool    DoOnlySwT=false;
 
     int     Ntracks;                // number of reconstructed tracks
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
@@ -215,6 +216,7 @@ private:
     std::string fPOTModuleLabel;
     std::string fHitParticleAssnsModuleLabel;
     std::string fG4ModuleLabel;
+    std::string fSwTModuleLabel;
 
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -275,7 +277,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     // * SwT
     art::Handle<raw::ubdaqSoftwareTriggerData> softwareTriggerHandle;
-    evt.getByLabel("swtrigger", softwareTriggerHandle);
+    evt.getByLabel(fSwTModuleLabel, softwareTriggerHandle);
     if (!softwareTriggerHandle.isValid()){ Debug(0,"SwT Handle doesn't exist!"); }
     if (softwareTriggerHandle.isValid()) {
         Debug(3,"Got SwT Handle!, number of algorithms: %",softwareTriggerHandle->getNumberOfAlgorithms());
@@ -288,6 +290,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 EventPassedSwTrigger = softwareTriggerHandle->passedAlgo(algoNames[0]) ? true : false;
             }
         }
+    }
+    if (DoOnlySwT && MCmode==false) {
+        StreamEventsToCSV();
+        return;
     }
     
     
@@ -343,14 +349,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     if (MCmode) {
         evt.getByLabel(fG4ModuleLabel, pHandle);
         art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+        
+        if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+            art::fill_ptr_vector(mclist, mctruthListHandle);
+        
+        if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
+            art::fill_ptr_vector(fluxlist, mcfluxListHandle);
     }
     
-    // check if this makes data runs crash. If so, change to: fMCmodeLabel != "MC"
-    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
-        art::fill_ptr_vector(mclist, mctruthListHandle);
-    
-    if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
-        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
     
     
     // ----------------------------------------
@@ -570,7 +576,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         }
         
         // MC-truth mathching for the tracks
-        Debug(4,"before if (MCmode=%)",MCmode);
+        Debug(4,"before if (MCmode=%) on track %",MCmode,track.GetTrackID());
         if (MCmode){
             
             Debug(3,"inside (MCmode)");
@@ -699,122 +705,123 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     
     
-    // ----------------------------------------
-    // MC flux information
-    // ----------------------------------------
-    fluxlist.size();
-    Debug(5,"fluxlist size: %",(int)fluxlist.size());
-    if (fluxlist.size()){
-        ptype_flux  = fluxlist[0]->fptype;
-        pdpx_flux   = fluxlist[0]->fpdpx;
-        pdpy_flux   = fluxlist[0]->fpdpy;
-        pdpz_flux   = fluxlist[0]->fpdpz;
-        pntype_flux = fluxlist[0]->fntype;
-        //  position of neutrino interaction point in the beamline
-        vx_flux     = fluxlist[0]->fvx;
-        vy_flux     = fluxlist[0]->fvy;
-        vz_flux     = fluxlist[0]->fvz;
-        if (debug>5) {
-            SHOW4(ptype_flux,pdpx_flux,pdpy_flux,pdpz_flux);
-            SHOW4(pntype_flux,vx_flux,vy_flux,vz_flux);
-        }
-    }
-    
-    
 
-    
-    // ----------------------------------------
-    // MC truth information
-    // ----------------------------------------
-    mcevts_truth = mclist.size();
-    Debug(4,"before if (mcevts_truth)");
-    if (mcevts_truth){
-        MCmode = true;
-        Debug(4,"MCmode = true;");
+    Debug(4,"before if (MCmode=%)",MCmode);
+    if (MCmode) {
         
-        for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
-            art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
-            Debug(5,"art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];");
-            if (mctruth->Origin() == simb::kBeamNeutrino){
-                Debug(5,"mctruth->Origin() == simb::kBeamNeutrino");
-                
-                GENIEinteraction genie_interaction( run , subrun , event , mc_evend_id );
-                genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
-                genie_interaction.SetKinematics(
-                                                mctruth->GetNeutrino().QSqr() // Q2
-                                                ,mctruth->GetNeutrino().W()     // W
-                                                ,mctruth->GetNeutrino().X()     // Bjorken x
-                                                ,mctruth->GetNeutrino().Y()     // y
-                                                ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
-                                                ,mctruth->GetNeutrino().Mode()  // QE=0
-                                                );
-                genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
-                                                              ,mctruth->GetNeutrino().Nu().Vy()
-                                                              ,mctruth->GetNeutrino().Nu().Vz()));
-                
-                genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
-                genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
-                genie_interaction.SetMomentumTransfer();
-                
-                // all other particles in the interaction
-                Int_t NgenieParticles = (Int_t)mctruth->NParticles();
-                if ( NgenieParticles ){
-                    Debug(5,"inside if ( NgenieParticles )");
-                    for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
-                        const simb::MCParticle& part( mctruth->GetParticle(iPart) );
-                        // add a primary to genie-interaction
-                        genie_interaction.AddPrimary( part.PdgCode()    // pdg code
-                                                     ,part.Momentum()   // 4-momentum
-                                                     ,part.StatusCode() // status code
-                                                     ,part.Mother()     // mother
-                                                     ,part.Process()    // process
-                                                     ) ;
-                        if (part.StatusCode()==1) {
-                            // try to match the primary particle with a track
-                            for (auto & track : tracks){
-                                if (debug>6){
-                                    cout << "in for (auto & track : tracks) of iPart " << iPart << ", which is a particle with PDG code " << part.PdgCode() << endl;
-                                    SHOW2(track.GetTrackID(),track.GetMCpdgCode());
-                                    SHOW2(part.Momentum().P(),track.GetTruthMomentum().P());
-                                    SHOW2(part.Momentum().M(),track.GetTruthMomentum().M());
-                                }
-                                if (
-                                    ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
-                                    &&
-                                    ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
-                                    &&
-                                    ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
-                                    &&
-                                    ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
-                                    ) {
-                                    // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
-                                    genie_interaction.AddTrack ( track );
-                                    track.SetMCeventID( mc_evend_id );
-                                    Debug(6,"adding track % to genie interaction % as a particle %",track.GetTrackID(),mc_evend_id,part.PdgCode());
-                                }
-                            } // for (auto & track : tracks)
-                        } // end if (part.StatusCode()==1)
-                    } // for particle
-                }
-                genie_interaction.SortNucleons();
-                genie_interaction.ComputePmissPrec();
-                genie_interaction.SetTruthTopology();
-                genie_interaction.SetReconstructedTopology();
-                
-                // Jan-28, 2018: adding the neutrino origin in the beam coordinates and interaction point the detector system (from Zarko)
-                if ((int)fluxlist.size() >= (int)mc_evend_id) {
-                    //  position of neutrino interaction point in the beamline
-                    genie_interaction.SetNuIntInBeam(TVector3(fluxlist[mc_evend_id]->fvx                                                    
-                                                              ,fluxlist[mc_evend_id]->fvy
-                                                              ,fluxlist[mc_evend_id]->fvz));
+        // ----------------------------------------
+        // MC flux information
+        // ----------------------------------------
+        Debug(5,"fluxlist size: %",(int)fluxlist.size());
+        if (fluxlist.size()){
+            ptype_flux  = fluxlist[0]->fptype;
+            pdpx_flux   = fluxlist[0]->fpdpx;
+            pdpy_flux   = fluxlist[0]->fpdpy;
+            pdpz_flux   = fluxlist[0]->fpdpz;
+            pntype_flux = fluxlist[0]->fntype;
+            //  position of neutrino interaction point in the beamline
+            vx_flux     = fluxlist[0]->fvx;
+            vy_flux     = fluxlist[0]->fvy;
+            vz_flux     = fluxlist[0]->fvz;
+            if (debug>5) {
+                SHOW4(ptype_flux,pdpx_flux,pdpy_flux,pdpz_flux);
+                SHOW4(pntype_flux,vx_flux,vy_flux,vz_flux);
+            }
+        }
+        
+        // ----------------------------------------
+        // MC truth information
+        // ----------------------------------------
+        mcevts_truth = mclist.size();
+        Debug(4,"before if (mcevts_truth)");
+        if (mcevts_truth){
+            MCmode = true;
+            Debug(4,"MCmode = true;");
+            
+            for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
+                art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
+                Debug(5,"art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];");
+                if (mctruth->Origin() == simb::kBeamNeutrino){
+                    Debug(5,"mctruth->Origin() == simb::kBeamNeutrino");
                     
+                    GENIEinteraction genie_interaction( run , subrun , event , mc_evend_id );
+                    genie_interaction.SetNuPDG( mctruth->GetNeutrino().Nu().PdgCode() );
+                    genie_interaction.SetKinematics(
+                                                    mctruth->GetNeutrino().QSqr() // Q2
+                                                    ,mctruth->GetNeutrino().W()     // W
+                                                    ,mctruth->GetNeutrino().X()     // Bjorken x
+                                                    ,mctruth->GetNeutrino().Y()     // y
+                                                    ,mctruth->GetNeutrino().CCNC()  // CC=0/NC=1
+                                                    ,mctruth->GetNeutrino().Mode()  // QE=0
+                                                    );
+                    genie_interaction.SetVertexPosition( TVector3(mctruth->GetNeutrino().Nu().Vx()
+                                                                  ,mctruth->GetNeutrino().Nu().Vy()
+                                                                  ,mctruth->GetNeutrino().Nu().Vz()));
                     
-                }
-                
-                genie_interactions.push_back( genie_interaction );
-            }//mctruth->Origin()
-        } //  for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth))
-    }//is neutrino
+                    genie_interaction.SetNuMomentum( mctruth->GetNeutrino().Nu().Momentum() );
+                    genie_interaction.SetLeptonMomentum( mctruth->GetNeutrino().Lepton().Momentum() );
+                    genie_interaction.SetMomentumTransfer();
+                    
+                    // all other particles in the interaction
+                    Int_t NgenieParticles = (Int_t)mctruth->NParticles();
+                    if ( NgenieParticles ){
+                        Debug(5,"inside if ( NgenieParticles )");
+                        for( int iPart = 0; iPart < std::min( NgenieParticles , kMaxNgenie ); iPart++ ){
+                            const simb::MCParticle& part( mctruth->GetParticle(iPart) );
+                            // add a primary to genie-interaction
+                            genie_interaction.AddPrimary( part.PdgCode()    // pdg code
+                                                         ,part.Momentum()   // 4-momentum
+                                                         ,part.StatusCode() // status code
+                                                         ,part.Mother()     // mother
+                                                         ,part.Process()    // process
+                                                         ) ;
+                            if (part.StatusCode()==1) {
+                                // try to match the primary particle with a track
+                                for (auto & track : tracks){
+                                    if (debug>6){
+                                        cout << "in for (auto & track : tracks) of iPart " << iPart << ", which is a particle with PDG code " << part.PdgCode() << endl;
+                                        SHOW2(track.GetTrackID(),track.GetMCpdgCode());
+                                        SHOW2(part.Momentum().P(),track.GetTruthMomentum().P());
+                                        SHOW2(part.Momentum().M(),track.GetTruthMomentum().M());
+                                    }
+                                    if (
+                                        ( part.PdgCode() == track.GetMCpdgCode() ) // the same particle type (pdg code)
+                                        &&
+                                        ( (part.Momentum() - track.GetTruthMomentum()).Mag() < EPSILON ) // the same truth momentum
+                                        &&
+                                        ( (genie_interaction.GetVertexPosition() - track.GetTruthStartPos()).Mag() < EPSILON ) // the same start position
+                                        &&
+                                        ( genie_interaction.IncludesTrack( track.GetTrackID() ) == false ) // does not already include this track
+                                        ) {
+                                        // Printf("found a primary-track match! plugging mc_evend_id=%d into track %d",mc_evend_id,track.GetTrackID());
+                                        genie_interaction.AddTrack ( track );
+                                        track.SetMCeventID( mc_evend_id );
+                                        Debug(6,"adding track % to genie interaction % as a particle %",track.GetTrackID(),mc_evend_id,part.PdgCode());
+                                    }
+                                } // for (auto & track : tracks)
+                            } // end if (part.StatusCode()==1)
+                        } // for particle
+                    }
+                    genie_interaction.SortNucleons();
+                    genie_interaction.ComputePmissPrec();
+                    genie_interaction.SetTruthTopology();
+                    genie_interaction.SetReconstructedTopology();
+                    
+                    // Jan-28, 2018: adding the neutrino origin in the beam coordinates and interaction point the detector system (from Zarko)
+                    if ((int)fluxlist.size() >= (int)mc_evend_id) {
+                        //  position of neutrino interaction point in the beamline
+                        genie_interaction.SetNuIntInBeam(TVector3(fluxlist[mc_evend_id]->fvx
+                                                                  ,fluxlist[mc_evend_id]->fvy
+                                                                  ,fluxlist[mc_evend_id]->fvz));
+                        
+                        
+                    }
+                    
+                    genie_interactions.push_back( genie_interaction );
+                }//mctruth->Origin()
+            } //  for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth))
+        }//is neutrino
+    }
     
 
     
@@ -822,16 +829,21 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // ----------------------------------------
     // write information to CSV files
     // ----------------------------------------
+    Debug(4,"write information to CSV files");
     if (DoWriteEventsInformation) {
         StreamEventsToCSV();
+        Debug(5,"StreamEventsToCSV()");
     }
     if (DoWriteTracksInformation){
         StreamTracksToCSV();
+        Debug(5,"StreamTracksToCSV()");
     }
     if (DoWriteGENIEInformation){
         StreamGENIEToCSV();
+        Debug(5,"StreamGENIEToCSV()");
     }
     ConstructVertices();
+    Debug(5,"ConstructVertices()");
     
     // ----------------------------------------
     // print and finish
@@ -1248,15 +1260,29 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamEventsToCSV(){
     << EventPassedSwTrigger << ",";
     
     // neutrino interactions
-    events_file
-    << genie_interactions.size() << ",";
-    
-    // first neutrino interaction
-    events_file
-    << genie_interactions.at(0).GetEv() << ","
-    << genie_interactions.at(0).GetVertexPosition().x() << ","
-    << genie_interactions.at(0).GetVertexPosition().y() << ","
-    << genie_interactions.at(0).GetVertexPosition().z() ;
+    if (!genie_interactions.empty()){
+        events_file
+        << genie_interactions.size() << ",";
+        
+        // first neutrino interaction
+        events_file
+        << genie_interactions.at(0).GetEv() << ","
+        << genie_interactions.at(0).GetVertexPosition().x() << ","
+        << genie_interactions.at(0).GetVertexPosition().y() << ","
+        << genie_interactions.at(0).GetVertexPosition().z() ;
+        
+    } else {
+        
+        events_file
+        << 0 << ",";
+        
+        // first neutrino interaction
+        events_file
+        << -999 << ","
+        << -999 << ","
+        << -999 << ","
+        << -999 ;
+    }
     
     
     // finish header
@@ -1983,13 +2009,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
     }
     Debug(4,"POT from this subrun: %" ,pot );
     
-    // Marco:
-    if(sr.getByLabel("generator", potListHandle)) {
-        marco_pot = potsum_h->totpot;
-    }
-    else {
-        marco_pot = 0.;
-    }
+//    // Marco:
+//    if(sr.getByLabel("generator", potListHandle)) {
+//        marco_pot = potsum_h->totpot;
+//    }
+//    else {
+//        marco_pot = 0.;
+//    }
 }
 
 
@@ -2012,6 +2038,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
     DoWriteGENIEInformation = p.get< bool >("DoWriteGENIEInfo",true);
     DoWriteEventsInformation= p.get< bool >("DoWriteEventsInfo",true);
+    DoOnlySwT               = p.get< bool >("DoOnlySwT",false);
+    fSwTModuleLabel         = p.get< std::string >("SwTModuleLabel");
     TruncMeanRad            = p.get< float >("TruncMeanRadLabel",10.0);
     
 }

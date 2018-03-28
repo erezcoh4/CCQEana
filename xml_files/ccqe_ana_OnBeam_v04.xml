@@ -7,7 +7,8 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "400"> <!-- There are 3852 files in this sample and I want 10 files per job -->
+<!-- 3852 files; 200k events -->
+<!ENTITY number_of_jobs "200">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -17,7 +18,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>10</maxfilesperjob>
+        <maxfilesperjob>25</maxfilesperjob>
 
         <!-- Operating System and Larsoft information -->
         <os>SL6</os>
@@ -46,8 +47,8 @@
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=short --site=FermiGrid</jobsub> <!-- limiting to only the FermiGrid to avoid firewall streaming issues -->
-            <memory>600</memory> <!--The max. memory I used in a test job is 469.4 MiB -->
+            <jobsub> --expected-lifetime=short --site=FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>800</memory> <!--The max. memory I used in a test job is 469.4 MiB -->
         </stage>
     </project>
 </job>

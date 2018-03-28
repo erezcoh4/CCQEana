@@ -45,10 +45,14 @@ physics:
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
       DataSampleLabel:		"prod_reco_optfilter_bnb_v11_unblind_mcc8_v04"
-      VerbosityLevel:		2
-      DoWriteTracksInfo:    false
+      VerbosityLevel:		1
+      MCmodeLabel:          false
+      DoWriteTracksInfo:    true
       DoAddTracksEdep:      false
-      DoWriteGENIEInfo:     true
+      DoWriteGENIEInfo:     false
+      DoWriteEventsInfo:    true
+      DoOnlySwT:            true
+      SwTModuleLabel:       "swtrigger"
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:      "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
@@ -58,6 +62,7 @@ physics:
       FlashModuleLabel:     "simpleFlashBeam"
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
       CalibratedCalorimetryModuleLabel: "pandoraNucali"
+      TruncMeanRadLabel:     3.0
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

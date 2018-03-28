@@ -56,6 +56,7 @@ if name=="ccqe_ana_MCBNBCosmicDATA":
 
 # new overlay using SAM definition / MCC8.7 MC-BNB + MC-Cosmic
 if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" or "prodgenie" in name:
+    default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_outdirname = csv_path+"ccqe_candidates/"
 
@@ -68,9 +69,10 @@ elif "prodcosmics_corsika" in name:
 default_indirname = csv_path+"from_grid/"+name+"/"
 
 
-
-pnfsjob = raw_input("enter pnfs:...<"+default_pnfsjob+">") or default_pnfsjob
-print 'pnfsjob: ',pnfsjob
+book = raw_input("enter book:...<"+default_book+">") or default_book
+print 'book: ',book
+#pnfsjob = raw_input("enter pnfs:...<"+default_pnfsjob+">") or default_pnfsjob
+#print 'pnfsjob: ',pnfsjob
 indirname = raw_input("enter indir:...<"+default_indirname+">") or default_indirname
 print 'indirname: ',indirname
 outdirname = raw_input("enter outdir:...<"+default_outdirname+">") or default_outdirname
@@ -102,10 +104,11 @@ if yesno('# step 1: create a list of files to download?'):#{
     print
     os.system("rm -fr "+indirname)
     os.system("mkdir "+indirname)
-    print 'creating a list of files to download from',pnfsjob
+    print 'creating a list of files to download from',book
     print 'into '+indirname+'/files_to_download.list'
-    print "ssh "+uboone+" ls "+pnfsjob+"/*/*.csv > "+indirname+"/files_to_download.list"
-    os.system("ssh "+uboone+" ls "+pnfsjob+"/*/*.csv > "+indirname+"/files_to_download.list")
+    print "ssh "+uboone+" ls "+book+"/*/*.csv > "+indirname+"/files_to_download.list"
+    print 'loading...'
+    os.system("ssh "+uboone+" ls "+book+"/*/*.csv > "+indirname+"/files_to_download.list")
 #}
 print
 # step 2: grab this list
@@ -195,7 +198,7 @@ if (len(genie_df_array)>0):#{
 print
 if (len(events_df_array)>0):#{
     events_all = pd.concat(events_df_array)
-    print len(events_all),'total tracks'
+    print len(events_all),'events in total'
     outfilename = csv_path+'events/'+name+'_'+time_name+'_events.csv'
     events_all.to_csv(outfilename)
     print 'concatenated %d'%len(events_all),'events to\n',outfilename,'\ndone.'

@@ -7,10 +7,11 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "400">
+<!-- 5323 files; 200k events, so 200 jobs of 30 files-->
+<!ENTITY number_of_jobs "200">
 <!ENTITY name "&defname;_CCQE">
-<!ENTITY LArSoft_release "06_26_01_09">  <!-- change this at your own risk v06_26_01 is the official reconstruction MCC8 uboonecode tag as of Mar 7, 2017 -->
-<!ENTITY prod_mode "test"> <!-- these are just test files since they are not produced by production group, please leave as test -->
+<!ENTITY LArSoft_release "06_26_01_09">
+<!ENTITY prod_mode "test">
 ]>
 
 <job>
@@ -19,7 +20,7 @@
         
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>15</maxfilesperjob>
+        <maxfilesperjob>30</maxfilesperjob>
 
         <!-- Operating System -->
         <os>SL6</os>
@@ -34,7 +35,7 @@
         <larsoft>
             <tag>&LArSoft_release;</tag>
             <qual>e10:prof</qual>
-            <local>/uboone/app/users/ecohen/ErezCCQE/test.tar</local>
+            <local>/pnfs/uboone/resilient/users/ecohen/test.tar</local>
         </larsoft>
         
         <check>0</check>
@@ -50,15 +51,16 @@
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_OffBeam_v04.fcl</fcl>
             <inputdef>&defname;</inputdef>
-            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
-            <workdir>/pnfs/uboone/scratch/users/&user_id;/work/&tag;/&LArSoft_release;/ccqe_ana/&name;</workdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/ccqe_ana/&name;</bookdir>
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid</jobsub>
-            <memory>2000</memory>
+            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>1000</memory>
         </stage>
     </project>
 </job>
