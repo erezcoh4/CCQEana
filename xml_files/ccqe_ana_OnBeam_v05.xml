@@ -11,7 +11,8 @@
 <!ENTITY number_of_jobs "20">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
-<!ENTITY prod_mode "test"> ]>
+<!ENTITY prod_mode "test">
+]>
 
 <job>
     

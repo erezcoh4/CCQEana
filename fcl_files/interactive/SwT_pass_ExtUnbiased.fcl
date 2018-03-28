@@ -52,6 +52,7 @@ physics:
       DoWriteEventsInfo:    true
       DoOnlySwT:            true
       SwTModuleLabel:       "daq"
+      SwTAlgoModuleLabel:   "EXT_BNBwin_FEMBeamTriggerAlgo"
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:      "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"

@@ -217,7 +217,8 @@ private:
     std::string fHitParticleAssnsModuleLabel;
     std::string fG4ModuleLabel;
     std::string fSwTModuleLabel;
-
+    std::string fSwTAlgoModuleLabel;
+    
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
     
@@ -286,7 +287,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         for (int i = 0; i < int(algoNames.size()); i++) {
             Debug(3,"algoNames[%] = %",i,algoNames[i]);
             // This is the algorithm that we need
-            if (algoNames[i] == "BNB_FEMBeamTriggerAlgo") {
+            if (algoNames[i] == fSwTAlgoModuleLabel) {
                 EventPassedSwTrigger = softwareTriggerHandle->passedAlgo(algoNames[0]) ? true : false;
             }
         }
@@ -2040,6 +2041,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     DoWriteEventsInformation= p.get< bool >("DoWriteEventsInfo",true);
     DoOnlySwT               = p.get< bool >("DoOnlySwT",false);
     fSwTModuleLabel         = p.get< std::string >("SwTModuleLabel");
+    fSwTAlgoModuleLabel     = p.get< std::string >("SwTAlgoModuleLabel");    
     TruncMeanRad            = p.get< float >("TruncMeanRadLabel",10.0);
     
 }

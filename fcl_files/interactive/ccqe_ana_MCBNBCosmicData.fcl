@@ -43,13 +43,16 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
+    DataSampleLabel:		"adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2"
       VerbosityLevel:		1
       MCmodeLabel:          true
       DoWriteTracksInfo:    true
       DoAddTracksEdep:      true
       DoWriteGENIEInfo:     true
       DoWriteEventsInfo:    true
+      DoOnlySwT:            false
+      SwTModuleLabel:       "swtrigger"
+      SwTAlgoModuleLabel:   "BNB_FEMBeamTriggerAlgo"
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:      "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"

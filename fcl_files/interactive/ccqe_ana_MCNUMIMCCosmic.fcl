@@ -16,7 +16,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "SwT_pass_OpenCosmic.root" closeFileFast: false}
+  TFileService: { fileName: "prodgenie_numi_nu_cosmic_uboone_mcc8_reco2.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -43,14 +43,14 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"SwT_pass_OpenCosmic"
+    DataSampleLabel:		"prodgenie_numi_nu_cosmic_uboone_mcc8_reco2"
       VerbosityLevel:		1
-      MCmodeLabel:          false
-      DoWriteTracksInfo:    false
-      DoAddTracksEdep:      false
-      DoWriteGENIEInfo:     false
+      MCmodeLabel:          true
+      DoWriteTracksInfo:    true
+      DoAddTracksEdep:      true
+      DoWriteGENIEInfo:     true
       DoWriteEventsInfo:    true
-      DoOnlySwT:            true
+      DoOnlySwT:            false
       SwTModuleLabel:       "swtrigger"
       SwTAlgoModuleLabel:   "BNB_FEMBeamTriggerAlgo"
       TrackModuleLabel: 	"pandoraNu"
@@ -62,7 +62,7 @@ physics:
       FlashModuleLabel:     "simpleFlashBeam"
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
       CalibratedCalorimetryModuleLabel: "pandoraNucali"
-      TruncMeanRadLabel:     3.0
+      TruncMeanRadLabel:     1.0
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms
