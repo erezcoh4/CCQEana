@@ -43,7 +43,7 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-    DataSampleLabel:		"prodgenie_bnb_nu_uboone_ovrelay_v4"
+      DataSampleLabel:		"prodgenie_bnb_nu_uboone_ovrelay_v4"
       VerbosityLevel:		1
       MCmodeLabel:          true
       DoWriteTracksInfo:    true

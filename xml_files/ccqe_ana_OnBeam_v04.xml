@@ -7,8 +7,8 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 3852 files; 191k events -->
-<!ENTITY number_of_jobs "200">
+<!-- 3852 files; 191k events, so 200 jobs x 25 files -->
+<!ENTITY number_of_jobs "1">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -18,7 +18,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>25</maxfilesperjob>
+        <maxfilesperjob>2</maxfilesperjob>
 
         <!-- Operating System and Larsoft information -->
         <os>SL6</os>
@@ -38,11 +38,11 @@
         <!-- Project stages -->
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_OnBeam_v04.fcl</fcl>
-            <schema>root</schema>
             <inputdef>&defname;</inputdef>
-            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
-            <workdir>/pnfs/uboone/scratch/users/&user_id;/work/&tag;/&LArSoft_release;/ccqe_ana/&name;</workdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
             <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/ccqe_ana/&name;</bookdir>
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
