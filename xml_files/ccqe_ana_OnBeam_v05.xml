@@ -2,12 +2,12 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco_optfilter_bnb_v11_unblind_mcc8_v05">
+<!ENTITY defname "prod_reco_optfilter_bnb_v12_unblind_mcc8_05">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 250 files, 912 events-->
+<!-- 258 files, 912 events-->
 <!ENTITY number_of_jobs "20">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
@@ -20,7 +20,7 @@
         
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>27</maxfilesperjob>
+        <maxfilesperjob>20</maxfilesperjob>
 
         <!-- Operating System -->
         <os>SL6</os>

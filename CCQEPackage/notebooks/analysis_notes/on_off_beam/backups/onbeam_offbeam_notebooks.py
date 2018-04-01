@@ -7,6 +7,22 @@ import matplotlib.patches as patches
 
 debug = 0
 Nevents=dict()
+# following docdb 5640 [https://microboone-docdb.fnal.gov/cgi-bin/private/RetrieveFile?docid=5640&filename=MCC8_Data_factors.pdf&version=5]
+# we take the normalization factors
+#Nevents['OffBeam sof.trig. efficiency'] = 0.04462
+#Nevents['OnBeam sof.trig. efficiency'] = 0.05135
+#Nevents['v04 after sof.trig.'] = 378787 # from python scripts/count_events.py on <prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v04>
+#Nevents['v05 after sof.trig.'] = 1815 # from python scripts/count_events.py on <prod_reco2_extbnb_v8_mcc8_v04_26_04_05_v05>
+#Nevents['OffBeam after sof.trig.'] = Nevents['v04 after sof.trig.'] + Nevents['v05 after sof.trig.']
+#Nevents['OffBeam before sof.trig.'] = Nevents['OffBeam after sof.trig.']/Nevents['OffBeam sof.trig. efficiency']
+#Nevents['OnBeam after sof.trig.'] = 544114 # from python scripts/count_events.py on <prod_reco2_bnb_v8_mcc8>
+#Nevents['OnBeam before sof.trig.'] = Nevents['OnBeam after sof.trig.']/Nevents['OnBeam sof.trig. efficiency']
+#OffBeam_scaling = Nevents['OnBeam before sof.trig.']/Nevents['OffBeam before sof.trig.']
+# MC-BNB/Cosmic-MC overlay
+#Nevents['MC-BNB/Cosmic-MC overlay'] = 358800 # from python scripts/count_events.py on <prodgenie_bnb_nu_cosmic_uboone_mcc8.2_reco2>
+#Nevents['MC-BNB/Cosmic-MC overlay POT'] = 3.61901e20
+#MC_scaling_MCcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-MC overlay POT']
+#print "MC_scaling_MCcosmic:",MC_scaling_MCcosmic,"= N(POT on beam)/N(POT MC)"
 
 '''
     Off Beam scaling factor (Ariana, Feb 2018)
@@ -63,97 +79,49 @@ Nevents['MC-BNB/Cosmic-DATA overlay POT'] = np.sum(summary.POT)
 MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
 print "MC_scaling_DATAcosmic:",MC_scaling_DATAcosmic,"= N(POT on beam)/N(POT MC)"
 
-
-
 OnBeamColor = 'teal'
 OffBeamColor = 'orange'
 
 
 # ------------------------------------------------
-# March-6, 2018 (last edit March 29)
-def apply_cuts_to_data(PIDa_p_min=13
-                       ,minPEcut = 100
-                       ,maxdYZcut = 200
-                       ,delta_theta_12=55  # deg.
-                       ,opt_box=(50,100) # [Nwires x Nticks]
-                       ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
-                       ,delta_Delta_phi=35 # deg.
-                       ,Pt_max=0.35        # GeV/c
-                       ,OnBeamFV=None,OffBeamFV=None
-                       ,cuts_order=['no cut','PIDa','flash','length','non-collinearity','vertex activity','delta phi','soft Pt']
-                       ):
-    reducedOnBeam, reducedOffBeam = dict(), dict()
-    
-    reducedOnBeam['no cut'] = OnBeamFV
-    reducedOffBeam['no cut'] = OffBeamFV
-    numbers = pd.DataFrame()
+# March-6, 2018
+def get_Nreduced(MCbnbDATAcosmicSamples=None,reduced = dict()):
+    Noriginal , Nreduced , freduced = dict() , dict() , dict()
+    for pair_type in pair_types:
+        sam = MCbnbDATAcosmicSamples[pair_type]
+        Noriginal[pair_type] = len(MCbnbDATAcosmicSamples[pair_type])
+        Nreduced[pair_type] = float(len(reduced[pair_type]))
+        freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
+    return Nreduced , freduced
+# ------------------------------------------------
 
-    numbers = numbers.append(pd.DataFrame({'$N_{On}$':len(OnBeamFV)
-                                           ,r'${\epsilon}_{On}$ [%]':100.                                           
-                                           ,'$N_{Off}$':len(OffBeamFV)
-                                           ,r'${\epsilon}_{Off}$ [%]':100.                                              
-                                           ,'$N_{On-Off}$':(len(OnBeamFV)-OffBeam_scaling*len(OffBeamFV))
-                                           ,r'${\epsilon}_{On-Off}$ [%]':100
-                                           ,'$N_{Off}^{scaled}$':OffBeam_scaling*len(OffBeamFV)
-                                         },index=['preselection']))
+# ------------------------------------------------
+# March 5, 2018
+def get_pureff_cut(MCbnbDATAcosmicSamples=None,reduced=None,pureff=None, cut_name = 'PIDa'):
+    eff,pur = dict(),dict()
+    Nreduced , freduced = get_Nreduced(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples,reduced=reduced)
+    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
+    eff['1mu-1p'] = freduced['1mu-1p']
+    pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
+    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
+    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    pureff_cut = pd.DataFrame({'label':cut_name
+                              ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
+                              ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
+                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
+                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
+                              , index=[cut_name]
+                              )
 
-    for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
-        print 'grabbing reduced data samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
-        OnBeam_previous_cut = reducedOnBeam[cuts_order[i_cut-1]]
-        OffBeam_previous_cut = reducedOffBeam[cuts_order[i_cut-1]]
-        
-        for sam,sam_name in zip([OnBeam_previous_cut,OffBeam_previous_cut]
-                                ,['OnBeam','OffBeam']):#{
-            print 'len('+sam_name+'):',len(sam)
-            if cut == 'PIDa':
-                sam = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
-            
-            elif cut == 'flash':
-                sam = sam[(sam['Nflashes']>0)
-                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
-                          &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
-            
-            elif cut == 'length':
-                sam = sam[sam['PIDa_long'] < sam['PIDa_short']]
-    
-            elif cut == 'non-collinearity':
-                sam = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
-                    
-            elif cut == 'vertex activity':
-                R_str = 'RdQaroundVertex'
-                box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
-                Ru,Rv,Ry = R_str+'[plane 0]'+box_str,R_str+'[plane 1]'+box_str,R_str+'[plane 2]'+box_str
-                sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
-                          |
-                          (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
-                           <= r_max_RdQ_CC1p0pi) ]
-            elif cut == 'delta phi':
-                sam = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
-                                      
-            elif cut == 'soft Pt':
-                sam = sam[sam['reco_Pt']<Pt_max]
-                                              
-            if sam_name=='OnBeam': reducedOnBeam[cut] = sam
-            if sam_name=='OffBeam': reducedOffBeam[cut] = sam
-        #}
-        numbers = numbers.append(pd.DataFrame({'$N_{On}$':len(reducedOnBeam[cut])                                               
-                                               ,r'${\epsilon}_{On}$ [%]':(100.*float(len(reducedOnBeam[cut]))/len(OnBeamFV))                                               
-                                               ,'$N_{Off}$':len(reducedOffBeam[cut])
-                                               ,r'${\epsilon}_{Off}$ [%]':(100.*float(len(reducedOffBeam[cut]))/len(OffBeamFV))
-                                              ,'$N_{On-Off}$':(len(reducedOnBeam[cut])-OffBeam_scaling*len(reducedOffBeam[cut]))
-                                              ,r'${\epsilon}_{On-Off}$ [%]':(100*(len(reducedOnBeam[cut])-OffBeam_scaling*len(reducedOffBeam[cut]))                                                           
-                                                                      /(len(OnBeamFV)-OffBeam_scaling*len(OffBeamFV)))
-                                               ,'$N_{Off}^{scaled}$':OffBeam_scaling*len(reducedOffBeam[cut])
-                                              }
-                                             ,index=[cut]))
-    #}
-    return reducedOnBeam,reducedOffBeam,numbers
-# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
+    pureff = pureff.append(pureff_cut)
+    return pureff
+# ------------------------------------------------
 
 
 # ------------------------------------------------
-# March-6, 2018 (last edit March 29)
-def apply_cuts_to_overlay(MCbnbDATAcosmicSamples=None,OverlayCosmicScaling=1
+# March-6, 2018
+def apply_cuts_to_overlay(MCbnbDATAcosmicSamples=None
                           ,PIDa_p_min=13
                           ,minPEcut = 100
                           ,maxdYZcut = 200
@@ -168,27 +136,9 @@ def apply_cuts_to_overlay(MCbnbDATAcosmicSamples=None,OverlayCosmicScaling=1
     pureffOverlay = pd.DataFrame()
     
     reducedSamples['no cut'] = dict()
-    numbers = pd.DataFrame()
     for pair_type in pair_types: reducedSamples['no cut'][pair_type] = MCbnbDATAcosmicSamples[pair_type]
     pureffOverlay = get_pureff_cut(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
                                    ,pureff=pureffOverlay,cut_name='no cut',reduced=reducedSamples['no cut'])
-    numbers = numbers.append(pd.DataFrame({'$N_{Overlay}$':(len(reducedSamples['no cut']['cosmic'])
-                                                            +len(reducedSamples['no cut']['other pairs'])                                                            
-                                                            +len(reducedSamples['no cut']['1mu-1p']))                                              
-                                           ,r'${\epsilon}_{Overlay}$ [%]':100                                        
-                                           ,'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':((OverlayCosmicScaling*len(reducedSamples['no cut']['cosmic'])
-                                                                                             +len(reducedSamples['no cut']['other pairs'])
-                                                                                             +len(reducedSamples['no cut']['1mu-1p']))*MC_scaling_DATAcosmic)
-                                           ,r'${\epsilon}_{Overlay, cosmic-scaled}^{POT-scaled}$ [%]':100
-
-                                           ,'$N_{cosmic}$':len(reducedSamples['no cut']['cosmic'])                                           
-                                           ,'$N_{cosmic, cosmic-scaled}$':(OverlayCosmicScaling*len(reducedSamples['no cut']['cosmic']))                                           
-                                           ,'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':MC_scaling_DATAcosmic*(OverlayCosmicScaling*len(reducedSamples['no cut']['cosmic']))                                               
-                                           ,'$N_{1mu-1p}^{POT-scaled}$':MC_scaling_DATAcosmic*len(reducedSamples['no cut']['1mu-1p'])                                           
-                                           ,'$N_{other pairs}^{POT-scaled}$':MC_scaling_DATAcosmic*len(reducedSamples['no cut']['other pairs'])
-                                          }                                          
-                                          ,index=['preselection']))
-
     
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
         reduced = dict()
@@ -228,84 +178,71 @@ def apply_cuts_to_overlay(MCbnbDATAcosmicSamples=None,OverlayCosmicScaling=1
         pureffOverlay = get_pureff_cut(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples
                                        ,pureff=pureffOverlay,cut_name=cut,reduced=reduced)
     #}
-        numbers = numbers.append(pd.DataFrame({'$N_{Overlay}$':(len(reducedSamples[cut]['cosmic'])
-                                                                 +len(reducedSamples[cut]['other pairs'])
-                                                                 +len(reducedSamples[cut]['1mu-1p']))
-                                                   
-                                               ,r'${\epsilon}_{Overlay}$ [%]':((100.*float(len(reducedSamples[cut]['cosmic'])                                                                               
-                                                                               +len(reducedSamples[cut]['other pairs'])
-                                                                               +len(reducedSamples[cut]['1mu-1p'])))                                                                 
-                                                                               /(len(reducedSamples['no cut']['cosmic'])
-                                                                                 +len(reducedSamples['no cut']['other pairs'])
-                                                                                 +len(reducedSamples['no cut']['1mu-1p'])))
-
-                                               ,'$N_{cosmic}$':len(reducedSamples[cut]['cosmic'])
-                                               ,'$N_{cosmic, cosmic-scaled}$':(OverlayCosmicScaling*len(reducedSamples[cut]['cosmic']))
-                                               ,'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':MC_scaling_DATAcosmic*(OverlayCosmicScaling*len(reducedSamples[cut]['cosmic']))
-                                               ,'$N_{1mu-1p}^{POT-scaled}$':MC_scaling_DATAcosmic*len(reducedSamples[cut]['1mu-1p'])
-                                               ,'$N_{other pairs}^{POT-scaled}$':MC_scaling_DATAcosmic*len(reducedSamples[cut]['other pairs'])
-
-
-
-
-                                               ,'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':(MC_scaling_DATAcosmic*
-                                                                                             (OverlayCosmicScaling*len(reducedSamples[cut]['cosmic'])
-                                                                                             +len(reducedSamples[cut]['other pairs'])
-                                                                                             +len(reducedSamples[cut]['1mu-1p']))
-                                                                                            )
-                                            
-
-                                               ,r'${\epsilon}_{Overlay, cosmic-scaled}^{POT-scaled}$ [%]':((100.*float(OverlayCosmicScaling*len(reducedSamples[cut]['cosmic'])                                               
-                                                                                                                      +len(reducedSamples[cut]['other pairs'])
-                                                                                                                      +len(reducedSamples[cut]['1mu-1p'])))
-                                                                                                           /(OverlayCosmicScaling*len(reducedSamples['no cut']['cosmic'])
-                                                                                                             +len(reducedSamples['no cut']['other pairs'])
-                                                                                                             +len(reducedSamples['no cut']['1mu-1p'])))
-                                              }
-                                             ,index=[cut]))
-
-    return reducedSamples,pureffOverlay,numbers
+    return reducedSamples,pureffOverlay
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
-
-
-
 
 
 # ------------------------------------------------
 # March-6, 2018
-def get_Nreduced(MCbnbDATAcosmicSamples=None,reduced = dict()):
-    Noriginal , Nreduced , freduced = dict() , dict() , dict()
-    for pair_type in pair_types:
-        sam = MCbnbDATAcosmicSamples[pair_type]
-        Noriginal[pair_type] = len(MCbnbDATAcosmicSamples[pair_type])
-        Nreduced[pair_type] = float(len(reduced[pair_type]))
-        freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
-    return Nreduced , freduced
-# ------------------------------------------------
+def apply_cuts_to_data(PIDa_p_min=13
+                       ,minPEcut = 100
+                       ,maxdYZcut = 200
+                       ,delta_theta_12=55  # deg.
+                       ,opt_box=(50,100) # [Nwires x Nticks]
+                       ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                       ,delta_Delta_phi=35 # deg.
+                       ,Pt_max=0.35        # GeV/c
+                       ,OnBeamFV=None,OffBeamFV=None
+                       ,cuts_order=['no cut','PIDa','flash','length','non-collinearity','vertex activity','delta phi','soft Pt']
+                       ):
+    reducedOnBeam, reducedOffBeam = dict(), dict()
+    
+    reducedOnBeam['no cut'] = OnBeamFV
+    reducedOffBeam['no cut'] = OffBeamFV
+    eff = pd.DataFrame()
+    for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
+        print 'grabbing reduced data samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
+        OnBeam_previous_cut = reducedOnBeam[cuts_order[i_cut-1]]
+        OffBeam_previous_cut = reducedOffBeam[cuts_order[i_cut-1]]
+        
+        for sam,sam_name in zip([OnBeam_previous_cut,OffBeam_previous_cut]
+                                ,['OnBeam','OffBeam']):#{
+            print 'len('+sam_name+'):',len(sam)
+            if cut == 'PIDa':
+                sam = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
+            
+            elif cut == 'flash':
+                sam = sam[(sam['Nflashes']>0)
+                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
+                          &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            
+            elif cut == 'length':
+                sam = sam[sam['PIDa_long'] < sam['PIDa_short']]
+    
+            elif cut == 'non-collinearity':
+                sam = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
+                    
+            elif cut == 'vertex activity':
+                R_str = 'RdQaroundVertex'
+                box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
+                Ru,Rv,Ry = R_str+'[plane 0]'+box_str,R_str+'[plane 1]'+box_str,R_str+'[plane 2]'+box_str
+                sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
+                          |
+                          (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
+                           <= r_max_RdQ_CC1p0pi) ]
+            elif cut == 'delta phi':
+                sam = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
+                                      
+            elif cut == 'soft Pt':
+                sam = sam[sam['reco_Pt']<Pt_max]
+                                              
+            if sam_name=='OnBeam': reducedOnBeam[cut] = sam
+            if sam_name=='OffBeam': reducedOffBeam[cut] = sam
+        #}
 
-# ------------------------------------------------
-# March 5, 2018
-def get_pureff_cut(MCbnbDATAcosmicSamples=None,reduced=None,pureff=None, cut_name = 'PIDa'):
-    eff,pur = dict(),dict()
-    Nreduced , freduced = get_Nreduced(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples,reduced=reduced)
-    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
-    eff['1mu-1p'] = freduced['1mu-1p']
-    pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
-    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
-    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
-    pureff_cut = pd.DataFrame({'label':cut_name
-                              ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
-                              ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
-                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
-                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
-                              , index=[cut_name]
-                              )
-
-    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
-    pureff = pureff.append(pureff_cut)
-    return pureff
-# ------------------------------------------------
+    #}
+    return reducedOnBeam,reducedOffBeam
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 
 
@@ -342,16 +279,15 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
-
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit Mar-20, 2018)
+# Dec-6,2017
 def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
                 , bins=np.linspace(0,30,31)                 
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OffBeamColor
-                , do_add_legend=True , legend_loc='best',y_label='counts'                 
-                , do_OffBeam_scaling=True, remove_ticks_x=False, remove_ticks_y=False):
+                , do_add_legend=True , legend_loc='best',y_label='counts'
+                 , do_OffBeam_scaling=True):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     x = OffBeamSample[var]
@@ -359,12 +295,9 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
     h_OffBeam,edges = np.histogram( x , bins=bins )
     h_OffBeam_err = np.sqrt(h_OffBeam)
     
-    h_OffBeam = OffBeam_scaling*h_OffBeam if do_OffBeam_scaling else h_OffBeam
-    h_OffBeam_err = OffBeam_scaling*h_OffBeam_err if do_OffBeam_scaling else h_OffBeam_err
-    
     plt.errorbar( x = bins[:-1], xerr=bin_width/2., markersize=12
-                 , y=h_OffBeam
-                 , yerr=h_OffBeam_err
+                 , y=OffBeam_scaling*h_OffBeam if do_OffBeam_scaling else h_OffBeam
+                 , yerr=OffBeam_scaling*h_OffBeam_err if do_OffBeam_scaling else h_OffBeam_err
                  , fmt='s', color=color , ecolor=color
                  , label='extBNB (%.1f=%.1f'%(OffBeam_scaling*len(OffBeamSample),100*float(len(OffBeamSample))/len(OffBeamFV))+'%)'
                 )
@@ -372,7 +305,6 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
     
     set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
-             ,remove_ticks_x=remove_ticks_x, remove_ticks_y=remove_ticks_y
             )
     if do_add_legend: 
         if legend_loc=='bbox':
@@ -380,10 +312,9 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
         else:
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
     plt.tight_layout()
-    if do_add_legend is False: return ax,h_OffBeam
-    return ax,leg,h_OffBeam
+    if do_add_legend is False: return ax
+    return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # Dec-4,2017
@@ -503,11 +434,10 @@ def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=Non
 
 
 
-
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# written Nov-9,2017  (last edit Mar-20, 2018)
+# written Nov-9,2017  (last edit Mar-4, 2018)
 def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
-                            , var='PIDa_assigned_proton' , x_label=r'$PID_a^p$' , y_label='counts'
+                            , var='PIDa_assigned_proton' , x_label='$PID_a^p$' , y_label='counts'
                             , bins=np.linspace(0,30,31) 
                             , ax=None, figsize=(14,6),fontsize=25
                             , color=OnBeamColor
@@ -515,8 +445,7 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
                             , MC_scaling=MC_scaling_DATAcosmic
                             , do_add_legend=True , legend_loc='best', MCalpha=0.7
                             , do_add_chi2_MC_data=False , chi2_xrange=None, chi2_xy=(0,0), doOffBeam_scaling=True
-                            , OriginalOnBeamSample=None , OriginalOffBeamSample=None
-                            , remove_ticks_x=False, remove_ticks_y=False):
+                            , OriginalOnBeamSample=None , OriginalOffBeamSample=None):
     bin_width = bins[1]-bins[0]
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     h_OnBeam,edges = np.histogram( OnBeamSample[var] , bins=bins )
@@ -567,7 +496,6 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
     set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
-             ,remove_ticks_x=remove_ticks_x, remove_ticks_y=remove_ticks_y
             #              ,ylim=(np.min([0,np.min(h_OnBeam_minus_OffBeam-1.1*h_OnBeam_minus_OffBeam_err)])#                     ,np.max(h_OnBeam_minus_OffBeam+1.1*h_OnBeam_minus_OffBeam_err))
             )
     plt.tight_layout()
@@ -576,20 +504,13 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 
-
-
-
-
-
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted Marc-20, 2018)
+# Nov-20,2017 (last editted Dec-6)
 def plot_stacked_MCsamples( ax=None, debug=0
                            , MCsamples=None
                            , MC_scaling=MC_scaling_DATAcosmic
                            , MCbnbDATAcosmicSamples=None
-                           , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
-                           , remove_ticks_x=False, remove_ticks_y=False 
-                           , OverlayCosmicScaling = None):
+                           , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25):
     '''
     return: h, bins
             stacked histogram values and bins,
@@ -608,33 +529,24 @@ def plot_stacked_MCsamples( ax=None, debug=0
         histo,edges = np.histogram(x,bins=bins)
         h[pair_type] = MC_scaling*histo 
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
-    if OverlayCosmicScaling is None:
-        OverlayCosmicScaling = 1
-    h['cosmic scaled'] = OverlayCosmicScaling*h['cosmic']
-    if debug>1: 
-        print "stacked_MCsamples (bins[:-1]):\n",bins[:-1]
-        print "np.sum(h['cosmic']):",np.sum(h['cosmic'])
-        print "np.sum(h['cosmic scaled']):",np.sum(h['cosmic scaled'])
-        
-    plt.bar(bins[:-1]-0*bin_width,h['cosmic scaled']+h['other pairs']+h['1mu-1p'] , width=bin_width
+    if debug>1: print "stacked_MCsamples (bins[:-1]):\n",bins[:-1]
+    plt.bar(bins[:-1]-0.5*bin_width,h['cosmic']+h['other pairs']+h['1mu-1p'] , width=bin_width
                      ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
     # CC 1p 0pi
-    plt.bar(bins[:-1]-0*bin_width,h['cosmic scaled']+h['other pairs']+h['CC 1p 0pi'] , width=bin_width
+    plt.bar(bins[:-1]-0.5*bin_width,h['cosmic']+h['other pairs']+h['CC 1p 0pi'] , width=bin_width
                      ,color=colors['CC 1p 0pi'],alpha=alpha, label=labels['CC 1p 0pi'])
-    plt.bar(bins[:-1]-0*bin_width,h['cosmic scaled']+h['other pairs'] , width=bin_width
+    plt.bar(bins[:-1]-0.5*bin_width,h['cosmic']+h['other pairs'] , width=bin_width
                      ,color=colors['other pairs'],alpha=alpha , label=labels['other pairs'])
-    plt.bar(bins[:-1]-0*bin_width, h['cosmic scaled'] , width=bin_width
+    plt.bar(bins[:-1]-0.5*bin_width,h['cosmic'] , width=bin_width
                      ,color=colors['cosmic'],alpha=alpha, label=labels['cosmic'])
-    h_stack = h['cosmic scaled']+h['other pairs']+h['1mu-1p']
+    h_stack = h['cosmic']+h['other pairs']+h['1mu-1p']
     if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
-    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize          
-             ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
-             ,remove_ticks_x=remove_ticks_x             
-             ,remove_ticks_y=remove_ticks_y                 
-            )    
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
+                 ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
+                 )
+    
     return h_stack , bins
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
 
 
 

@@ -17,7 +17,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "prod_reco_optfilter_bnb_v12_unblind_mcc8_05.root" closeFileFast: false}
+  TFileService: { fileName: "prod_reco_optfilter_bnb_v12_unblind_mcc8.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -44,14 +44,14 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"prod_reco_optfilter_bnb_v12_unblind_mcc8_05"
-      VerbosityLevel:		8
+      DataSampleLabel:		"prod_reco_optfilter_bnb_v12_unblind_mcc8"
+      VerbosityLevel:		1
       MCmodeLabel:          false
       DoWriteTracksInfo:    true
       DoAddTracksEdep:      false
       DoWriteGENIEInfo:     false
       DoWriteEventsInfo:    true
-      DoOnlySwT:            true
+      DoOnlySwT:            false
       SwTModuleLabel:       "swtrigger"
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:      "pandoraCosmicHitRemoval"

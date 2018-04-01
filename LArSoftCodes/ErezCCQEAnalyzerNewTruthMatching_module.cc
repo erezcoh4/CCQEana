@@ -189,7 +189,7 @@ private:
     int     Nhits , Nhits_stored;   // number of recorded hits in the event
     int     Nflashes;
     int     Nvertices;
-    int     vertices_ctr, tracks_ctr, genie_interactions_ctr,events_ctr;
+    int     vertices_ctr=0, tracks_ctr=0, genie_interactions_ctr=0,events_ctr=0;
     int     CC1p0piVertices_ctr=0 , CosmicVertices_ctr=0;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     float   r_around_vertex[N_r_around_vertex];
@@ -1973,7 +1973,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
     
     summary_file << sTimeS.substr(0,sTimeS.length()-1) << ","
     << pot_total << ","
-    << fTree->GetEntries() << ","
+    << events_ctr << ","
     << tracks_ctr << ","
     << genie_interactions_ctr << ","
     << vertices_ctr << ","

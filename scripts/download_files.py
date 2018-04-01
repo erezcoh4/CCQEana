@@ -15,8 +15,8 @@
 
     * for On Beam:
     
-    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v05
-    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v11_unblind_mcc8_v04
+    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_05
+    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_04
     
     * for Off Beam:
     

@@ -17,7 +17,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "prod_reco_optfilter_bnb_v11_unblind_mcc8_v04.root" closeFileFast: false}
+  TFileService: { fileName: "prod_reco_optfilter_bnb_v12_unblind_mcc8_04.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -44,7 +44,7 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"prod_reco_optfilter_bnb_v11_unblind_mcc8_v04"
+      DataSampleLabel:		"prod_reco_optfilter_bnb_v12_unblind_mcc8_04"
       VerbosityLevel:		1
       MCmodeLabel:          false
       DoWriteTracksInfo:    true
