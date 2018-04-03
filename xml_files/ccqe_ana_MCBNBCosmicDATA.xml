@@ -15,9 +15,7 @@
 ]>
 
 <job>
-    
     <project name="&name;_analysis">
-        
         <!-- Project size -->
         <numevents>1000000</numevents>
         <maxfilesperjob>30</maxfilesperjob>
@@ -25,11 +23,7 @@
         <!-- Operating System and Project Version -->
         <os>SL6</os>
         <version>&prod_mode;_&LArSoft_release;</version>
-        
-        <!-- Batch resources -->
         <resource>OPPORTUNISTIC,OFFSITE</resource>
-        
-        <!-- Larsoft information -->
         <larsoft>
             <tag>&LArSoft_release;</tag>
             <qual>e10:prof</qual>
