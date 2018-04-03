@@ -209,3 +209,47 @@
 0.000000e+00	8.067144e-01
 0.000000e+00	7.332309e-01
 1.000000e+00	6.650798e-01
+0.000000e+00	6.020308e-01
+0.000000e+00	5.438456e-01
+2.000000e+00	4.902804e-01
+
+
+################
+# Fit function #
+################
+
+gauss(x; mean, sigma, scale) = scale * exp(-(x-mean)^2/(2 * sigma^2))
+
+##############
+# Fit result #
+##############
+
+# value        error   correlations
+# mean
+-7.5055e-03  2.30e-02  
+# sigma
+1.0117e+00  1.69e-02  +0.004  
+# scale
+5.1525e+01  1.42e+00  -0.015  -0.587  
+
+########################
+# Final fit parameters #
+########################
+
+mean = -0.008 +- 0.023
+sigma = 1.012 +- 0.017
+scale = 51.5 +- 1.4
+
+###############
+# Fit details #
+###############
+
+USING    iminuit
+FCN/ndf  105/97 = 1.09
+EdM      3.12646e-10
+UP       1
+STA      Error matrix accurate
+
+chi2prob 0.264
+HYPTEST  accepted (sig. 5%)
+

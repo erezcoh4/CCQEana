@@ -210,4 +210,56 @@
 2.621584e-01	5.120017e-01
 2.728804e-01	5.223692e-01
 3.538636e-01	5.948653e-01
-3.196129e-01	5.653406e-
+3.196129e-01	5.653406e-01
+3.309024e-01	5.752400e-01
+
+
+################
+# Fit function #
+################
+
+gauss(x; mean, sigma, scale) = scale * exp(-(x-mean)^2/(2 * sigma^2))
+
+##############
+# Fit result #
+##############
+
+# value        error   correlations
+# mean
+2.7413e-05  2.45e+00  
+# sigma
+9.9998e-01  2.43e+00  -0.966  
+# scale
+3.9894e-01  2.12e-01  -0.878  +0.756  
+!!! uncertainties from MINOS:
+# mean
+      2.48e+00 + -2.48e+00
+# sigma
+      2.46e+00 + -2.46e+00
+# scale
+      2.13e-01 + -9.87e-02
+
+
+########################
+# Final fit parameters #
+########################
+
+mean = 0 +- 2.5
+sigma = 1 +- 2.4
+scale = 0.4 +- 0.21
+
+###############
+# Fit details #
+###############
+
+Attention: use uncertainties from MINOS
+
+USING    iminuit
+FCN/ndf  1.69e-10/97 = 1.74e-12
+EdM      1.62195e-10
+UP       1
+STA      Error matrix accurate
+
+chi2prob 1.0
+HYPTEST  accepted (sig. 5%)
+

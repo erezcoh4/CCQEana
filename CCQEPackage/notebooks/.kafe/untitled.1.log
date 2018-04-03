@@ -1,0 +1,66 @@
+
+########################################
+# Fit performed on 2018-04-03 10:47:13 #
+########################################
+
+###########
+# Dataset #
+###########
+
+# axis 0: x
+# datapoints
+0.000000e+00
+1.000000e+00
+2.000000e+00
+
+# axis 1: y
+# datapoints	uncor. err.
+1.230000e+00	1.108431e+00
+3.450000e+00	1.858301e+00
+5.620000e+00	2.370266e+00
+
+
+################
+# Fit function #
+################
+
+gauss(x; mean, sigma, scale) = scale * exp(-(x-mean)^2/(2 * sigma^2))
+
+##############
+# Fit result #
+##############
+
+# value        error   correlations
+# mean
+2.3954e+00  3.44e+00  
+# sigma
+1.3556e+00  1.81e+00  +0.971  
+# scale
+5.8629e+00  5.29e+00  +0.897  +0.805  
+!!! uncertainties from MINOS:
+# mean
+      5.05e+01 + -1.04e+00
+# sigma
+      1.81e+00 + -1.81e+00
+# scale
+      5.27e+00 + -5.27e+00
+
+
+########################
+# Final fit parameters #
+########################
+
+mean = 2.4 +- 3.4
+sigma = 1.4 +- 1.8
+scale = 5.9 +- 5.3
+
+###############
+# Fit details #
+###############
+
+# WARNING: Number of degrees of freedom is zero!
+# Please review parameterization...
+
+Attention: use uncertainties from MINOS
+
+USING    iminuit
