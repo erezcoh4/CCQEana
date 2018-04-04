@@ -70,6 +70,41 @@ OffBeamColor = 'orange'
 
 
 # ------------------------------------------------
+# April-4
+def gen_Noverlay(reducedSamples=None,cut_name=''
+                 ,f_POT = MC_scaling_DATAcosmic
+                 ,N_On=1 # number of pairs in BeamOn before event-selection cuts
+                 ,debug=0
+                ):
+    # @return the number of events in each subsample of the overlay, POT-normalized
+    N = dict()
+    N['Cosmic'],N['mup'],N['others'] = float(len(reducedSamples[cut_name]['cosmic'])),float(len(reducedSamples[cut_name]['1mu-1p'])),float(len(reducedSamples[cut_name]['other pairs']))
+    N['MC'] = N['mup'] + N['others']
+    N['Overlay'] = N['Cosmic'] + N['MC']                     
+    N['eff Overlay'] = N['Overlay']/(len(reducedSamples['no cut']['cosmic'])
+                                     +len(reducedSamples['no cut']['1mu-1p'])                                     
+                                     +len(reducedSamples['no cut']['other pairs']))
+    N['Overlay POT Scaled'] = f_POT*(N['Cosmic'] + N['MC'])
+    # scale the cosmic in the MC
+    N['Cosmic original'] = float(len(reducedSamples['no cut']['cosmic']))
+    f_Cosmic = (1./N['Cosmic original'])*(N_On/f_POT - N['MC'])
+    N['Cosmic Scaled'] = f_Cosmic*N['Cosmic']
+    N['Overlay Cosmic Scaled'] = N['MC'] + N['Cosmic Scaled']
+    N['eff Overlay Cosmic Scaled'] = (N['Overlay Cosmic Scaled']
+                                      /(f_Cosmic*len(reducedSamples['no cut']['cosmic'])                                                    
+                                        +len(reducedSamples['no cut']['1mu-1p'])
+                                        +len(reducedSamples['no cut']['other pairs'])))
+    N['Overlay Cosmic & POT Scaled'] = f_POT*N['Overlay Cosmic Scaled']
+    if debug:         
+        print "N['Cosmic original']:",N['Cosmic original']
+        print 'N_On:',N_On,',f_Cosmic:',f_Cosmic
+        print 'Noverlay in',cut_name
+        print N
+    return N,f_Cosmic
+# ------------------------------------------------
+
+
+# ------------------------------------------------
 # March-6, 2018 (last edit March 29)
 def apply_cuts_to_data(PIDa_p_min=13
                        ,minPEcut = 100
@@ -81,6 +116,7 @@ def apply_cuts_to_data(PIDa_p_min=13
                        ,Pt_max=0.35        # GeV/c
                        ,OnBeamFV=None,OffBeamFV=None
                        ,cuts_order=['no cut','PIDa','flash','length','non-collinearity','vertex activity','delta phi','soft Pt']
+                       ,debug=0
                        ):
     reducedOnBeam, reducedOffBeam = dict(), dict()
     
@@ -98,13 +134,13 @@ def apply_cuts_to_data(PIDa_p_min=13
                                          },index=['preselection']))
 
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
-        print 'grabbing reduced data samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
+        if debug: print 'grabbing reduced data samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
         OnBeam_previous_cut = reducedOnBeam[cuts_order[i_cut-1]]
         OffBeam_previous_cut = reducedOffBeam[cuts_order[i_cut-1]]
         
         for sam,sam_name in zip([OnBeam_previous_cut,OffBeam_previous_cut]
                                 ,['OnBeam','OffBeam']):#{
-            print 'len('+sam_name+'):',len(sam)
+            if debug: print 'len('+sam_name+'):',len(sam)
             if cut == 'PIDa':
                 sam = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
             
@@ -308,22 +344,24 @@ def get_pureff_cut(MCbnbDATAcosmicSamples=None,reduced=None,pureff=None, cut_nam
 # ------------------------------------------------
 
 
-
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017
+# Dec-6,2017 (last edit April-4)
 def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
                 , bins=np.linspace(0,30,31)                 
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OnBeamColor
-                , do_add_legend=True , legend_loc='best'):
+                , do_add_legend=True , legend_loc='best',y_label='counts'                 
+                , do_OffBeam_scaling=True, remove_ticks_x=False, remove_ticks_y=False):
     bin_width = bins[1]-bins[0]
+    mid = 0.5*(bins[:-1]+bins[1:])
+
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     x = OnBeamSample[var]
     h_OnBeam,edges = np.histogram( x , bins=bins )
     h_OnBeam_err = np.sqrt(h_OnBeam)
     
-    plt.errorbar( x = bins[:-1], xerr=bin_width/2., markersize=12
+    plt.errorbar( x = mid, xerr=bin_width/2., markersize=12
                  , y=h_OnBeam , yerr=h_OnBeam_err
                  , fmt='o', color=color , ecolor=color
                  , label='BNB (%d=%.1f'%(len(OnBeamSample),100*float(len(OnBeamSample))/len(OnBeamFV))+'%)'
@@ -332,6 +370,7 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
     
     set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
+             ,remove_ticks_x=remove_ticks_x, remove_ticks_y=remove_ticks_y
             )
     if do_add_legend: 
         if legend_loc=='bbox':
@@ -339,8 +378,10 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
         else:
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
     plt.tight_layout()
-    return ax,leg
+    if do_add_legend is False: return ax,h_OnBeam    
+    return ax,leg,h_OnBeam
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
@@ -353,6 +394,8 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
                 , do_add_legend=True , legend_loc='best',y_label='counts'                 
                 , do_OffBeam_scaling=True, remove_ticks_x=False, remove_ticks_y=False):
     bin_width = bins[1]-bins[0]
+    mid = 0.5*(bins[:-1]+bins[1:])
+
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     x = OffBeamSample[var]
     
@@ -362,7 +405,7 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
     h_OffBeam = OffBeam_scaling*h_OffBeam if do_OffBeam_scaling else h_OffBeam
     h_OffBeam_err = OffBeam_scaling*h_OffBeam_err if do_OffBeam_scaling else h_OffBeam_err
     
-    plt.errorbar( x = bins[:-1], xerr=bin_width/2., markersize=12
+    plt.errorbar( x = mid, xerr=bin_width/2., markersize=12
                  , y=h_OffBeam
                  , yerr=h_OffBeam_err
                  , fmt='s', color=color , ecolor=color
@@ -383,6 +426,11 @@ def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
     if do_add_legend is False: return ax,h_OffBeam
     return ax,leg,h_OffBeam
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+
+
+
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
@@ -505,7 +553,7 @@ def plot_cosmic_overlay( ax=None, cosmic_overlay_sample=None, var=None, bins=Non
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# written Nov-9,2017  (last edit Mar-20, 2018)
+# written Nov-9,2017  (last edit April-4, 2018)
 def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
                             , var='PIDa_assigned_proton' , x_label=r'$PID_a^p$' , y_label='counts'
                             , bins=np.linspace(0,30,31) 
@@ -538,7 +586,7 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     #}
 
 
-    plt.errorbar( x=0.5*(edges[1:]+edges[:-1])-bin_width, xerr=bin_width/2., markersize=12
+    plt.errorbar( x=edges[:-1], xerr=bin_width/2., markersize=12
                  , y=h_OnBeam_minus_OffBeam , yerr=h_OnBeam_minus_OffBeam_err
                  , fmt='o', color=color , ecolor='black'
                  , label=r'(On-Off) Beam ($\int=$%.1f=%.1f'%(Integral,100*Integral/Integral_Original)+'%)'
@@ -574,6 +622,9 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     if do_add_legend==False: return ax
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+
 
 
 
