@@ -17,7 +17,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "prod_reco_optfilter_extbnb_v11_mcc8_dev_v05.root" closeFileFast: false}
+  TFileService: { fileName: "prod_reco_optfilter_extbnb_v12_mcc8_dev_05.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -44,15 +44,16 @@ physics:
     EventsAnalyzer: 
     {
       module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:		"prod_reco_optfilter_extbnb_v11_mcc8_dev_v05"
-      MCmodeLabel:          false
+      DataSampleLabel:		"prod_reco_optfilter_extbnb_v12_mcc8_dev_05"
       VerbosityLevel:		1
+      MCmodeLabel:          false
       DoWriteTracksInfo:    true
       DoAddTracksEdep:      false
       DoWriteGENIEInfo:     false
       DoWriteEventsInfo:    true
-      DoOnlySwT:            true
+      DoOnlySwT:            false
       SwTModuleLabel:       "swtrigger"
+      SwTAlgoModuleLabel:   "BNB_FEMBeamTriggerAlgo"
       TrackModuleLabel: 	"pandoraNu"
       HitsModuleLabel:      "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:	"generator"
@@ -62,7 +63,7 @@ physics:
       FlashModuleLabel:     "simpleFlashBeam"
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
       CalibratedCalorimetryModuleLabel: "pandoraNucali"
-      TruncMeanRadLabel:     3.0
+      TruncMeanRadLabel:     1.0
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

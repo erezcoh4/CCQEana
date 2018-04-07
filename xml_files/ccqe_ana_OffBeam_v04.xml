@@ -2,12 +2,12 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prod_reco_optfilter_extbnb_v11_mcc8_dev_v04">
+<!ENTITY defname "prod_reco_optfilter_extbnb_v12_mcc8_dev_04">
 
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 5323 files; 200k events, so 200 jobs of 30 files-->
+<!-- 5323 files; 200429 events, so 200 jobs x 30 files-->
 <!ENTITY number_of_jobs "200">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
@@ -57,8 +57,8 @@
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>1000</memory>
+            <jobsub> --expected-lifetime=2h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>400</memory>
         </stage>
     </project>
 </job>

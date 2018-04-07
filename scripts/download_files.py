@@ -20,8 +20,8 @@
     
     * for Off Beam:
     
-    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v11_mcc8_dev_v05
-    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v11_mcc8_dev_v04
+    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_05
+    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_04
     
     * for cosmic-pairs analysis:
     

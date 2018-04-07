@@ -13,51 +13,25 @@ Nevents=dict()
     -- ---- - ---- - -- -- --
     
     ** do not source localProducts
-    ** > setup sam_web_client v2_1
+    > setup sam_web_client v2_1    
+    > python scripts/getDataInfo.py --defname="prod_reco_optfilter_bnb_v12_unblind_mcc8" -v2
     
-    0) Grab getDataInfo.py from here:
-    /uboone/app/users/zarko
-    
-    More info on the tool as of last fall can be found here:
-    [https://microboone-docdb.fnal.gov/cgi-bin/private/RetrieveFile?docid=11078&filename=pot_and_beamq.pdf&version=1]
-    
-    1) Feed the script a file-list to calculate the trigger content of each sample we run over.  There are some other options other than file-list that you can feed the script if you don't have this info; take a look at the options in the script to understand which is best for the info you have.
-    
-    2) Trigger counts for various triggers is returned by the script in the following form :
-    EXT	Gate2	E1DCNT	tor860	tor875	E1DCNT_wcut	tor860_wcut	tor875_wcut
-    
-    To calculate the scaling factor of off-to-on beam,
-    take the ratio of E1DCNT_wcut (from OnBeam sample) / EXT (from OffBeam sample).
-    (
-    Zarko:
-    for MCC8 you need to add -v2 option.
-    Or for any sample that includes runs after ~6300
-    those samples have to be processed with new beam data quality cuts v2 otherwise they'll all fail beam cuts
-    )
-    for example: MCC8.5 reprocessing
-    -- ---- - ---- -
-    
-    > python scripts/getDataInfo.py --defname="prod_reco_optfilter_bnb_v11_unblind_mcc8" -v2
-    
-    Definition prod_reco_optfilter_bnb_v11_unblind_mcc8 contains 4110 files
+    Definition prod_reco_optfilter_bnb_v12_unblind_mcc8 contains 4110 files
            EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
-       5888530      11578672      11583581     4.963e+19     4.957e+19      10948876     4.909e+19     4.903e+19
+       5888530      11578670      11581690     4.962e+19     4.956e+19      10947004     4.908e+19     4.903e+19
 
-    > python scripts/getDataInfo.py --defname="prod_reco_optfilter_extbnb_v11_mcc8_dev" -v2
+    > python scripts/getDataInfo.py --defname="prod_reco_optfilter_extbnb_v12_mcc8_dev" -v2
     
-    Definition prod_reco_optfilter_extbnb_v11_mcc8_dev contains 5789 files
+    Definition prod_reco_optfilter_extbnb_v12_mcc8_dev contains 5789 files
            EXT         Gate2        E1DCNT        tor860        tor875   E1DCNT_wcut   tor860_wcut   tor875_wcut
-      15499028      22044264      22056782     9.146e+19     9.135e+19      20128930     9.057e+19     9.045e+19
-    Warning!! BNB data for some of the requested runs/subruns is not in the database.
-    Runs missing BNB data (number of subruns missing the data): 5762 (1),
-    (Zarko, Mar-02, 2018: You can ignore the warning)
+      15499027      22044264      22054841     9.145e+19     9.134e+19      20127024     9.056e+19     9.044e+19
     '''
-OffBeam_scaling = float(10948876)/15499028
-Nevents['OnBeam POT'] = 4.957e+19
+OffBeam_scaling = float(10947004)/15499027
+Nevents['OnBeam POT'] = 4.908e+19
 print "OffBeam_scaling:",OffBeam_scaling,"= N(on beam)/N(off beam) before sof. trig."
 
 # MC-BNB/Cosmic-DATA overlay
-summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_23_summary.csv')
+summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/prodgenie_bnb_nu_uboone_ovrelay_v4_summary.csv')
 Nevents['MC-BNB/Cosmic-DATA overlay'] = np.sum(summary.Nevents)
 Nevents['MC-BNB/Cosmic-DATA overlay POT'] = np.sum(summary.POT)
 MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
