@@ -319,14 +319,14 @@ def get_pureff_cut(MCbnbDATAcosmicSamples=None,reduced=None,pureff=None, cut_nam
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit April-4)
+# Dec-6,2017 (last edit April-7)
 def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
                 , bins=np.linspace(0,30,31)                 
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OnBeamColor
-                , do_add_legend=True , legend_loc='best',y_label='counts'                 
-                , do_OffBeam_scaling=True, remove_ticks_x=False, remove_ticks_y=False):
+                , do_add_legend=False , legend_loc='best',y_label='counts'
+                , remove_ticks_x=False, remove_ticks_y=False):
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
 
@@ -359,13 +359,13 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit Mar-20, 2018)
+# Dec-6,2017 (last edit April-7, 2018)
 def plot_OffBeam(OffBeamSample=None,OffBeamFV=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
                 , bins=np.linspace(0,30,31)                 
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OffBeamColor
-                , do_add_legend=True , legend_loc='best',y_label='counts'                 
+                , do_add_legend=False , legend_loc='best',y_label='counts'                 
                 , do_OffBeam_scaling=True, remove_ticks_x=False, remove_ticks_y=False):
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
