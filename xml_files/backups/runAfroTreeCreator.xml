@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!DOCTYPE project [
+<!ENTITY user_id "apapadop">
+
+<!ENTITY defname "prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2">
+<!ENTITY name "prodgenie_bnb_nu_uboone_overlay">
+
+<!ENTITY file_type "mc">
+<!ENTITY run_type "physics">
+<!ENTITY tag "mcc8">
+<!ENTITY number_of_jobs "1">
+<!ENTITY LArSoft_release "v06_26_01_12">
+<!ENTITY prod_mode "test">
+]>
+
+<job>
+    
+    <project name="&name;">
+        
+        <!-- Project size -->
+        <numevents>10</numevents>
+        <maxfilesperjob>1</maxfilesperjob>
+        
+        <!-- Operating System -->
+        <os>SL6</os>
+        <version>&prod_mode;_&LArSoft_release;</version>
+        <resource>OPPORTUNISTIC,OFFSITE</resource>
+        
+        <!-- Larsoft information -->
+        <larsoft>
+            <tag>&LArSoft_release;</tag>
+            <qual>e10:prof</qual>
+            <local>/pnfs/uboone/scratch/users/adi/adi_overlay_v06_26_01_12.tar</local>
+        </larsoft>
+        
+        <check>0</check>
+        <copy>0</copy>
+        
+        <!-- file type -->
+        <filetype>&file_type;</filetype>
+        
+        <!-- run type -->
+        <runtype>&run_type;</runtype>
+        
+        <!-- Project stages -->
+        <stage name="createTree_MC">
+            <fcl>/uboone/app/users/apapadop/LArSoft_v06_26_01_12/srcs/uboonecode/uboone/myCaliTTCreator/fclTTreeCreator_MCC87.fcl</fcl>
+            <inputdef>&defname;</inputdef>
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/CalibratedSamplesMCC87</workdir>
+            
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/CalibratedSamplesMCC87</outdir>
+            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/CalibratedSamplesMCC87</logdir>
+            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/CalibratedSamplesMCC87</bookdir>
+
+            <output>outputTreeMC.root</output>
+            <numjobs>&number_of_jobs;</numjobs>
+            <datatier>reconstructed</datatier>
+            <anadatatier>root-tuple</anadatatier>
+            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>1000</memory>
+        </stage>
+    </project>
+</job>
