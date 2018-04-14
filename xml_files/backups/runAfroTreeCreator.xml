@@ -8,7 +8,7 @@
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!ENTITY number_of_jobs "1">
+<!ENTITY number_of_jobs "2">
 <!ENTITY LArSoft_release "v06_26_01_12">
 <!ENTITY prod_mode "test">
 ]>
@@ -18,7 +18,7 @@
     <project name="&name;">
         
         <!-- Project size -->
-        <numevents>10</numevents>
+        <numevents>4</numevents>
         <maxfilesperjob>1</maxfilesperjob>
         
         <!-- Operating System -->
@@ -47,7 +47,7 @@
             <fcl>/uboone/app/users/apapadop/LArSoft_v06_26_01_12/srcs/uboonecode/uboone/myCaliTTCreator/fclTTreeCreator_MCC87.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <schema>root</schema>
-            <workdir>/pnfs/uboone/resilient/users/&user_id;/CalibratedSamplesMCC87</workdir>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;</workdir>
             
             <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/CalibratedSamplesMCC87</outdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/CalibratedSamplesMCC87</logdir>
