@@ -30,7 +30,7 @@
         <larsoft>
             <tag>&LArSoft_release;</tag>
             <qual>e10:prof</qual>
-            <local>/pnfs/uboone/scratch/users/adi/adi_overlay_v06_26_01_12.tar</local>
+            <local>/pnfs/uboone/resilient/users/apapadop/test.tar</local>
         </larsoft>
         
         <check>0</check>
