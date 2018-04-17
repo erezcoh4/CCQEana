@@ -118,7 +118,9 @@ public:
     void      SetMaxNHitsCali (Int_t maxnhits)              {MaxNHitsCali = maxnhits;};
     void     SetBestPlaneCali (Int_t best)                  {BestPlaneCali = best;};
     void  SetPIDaCaliPerPlane (Int_t plane , Float_t pida ) {PIDaCaliPerPlane[plane] = pida;};
-    void          SetPIDaCali ()                            {PIDaCali = PIDaCaliPerPlane[BestPlaneCali]; }; // calibrated PIDa
+    void          SetPIDaCali ()                            {PIDaCali = PIDaCaliPerPlane[BestPlaneCali]; };
+    void  SetPandoraNuCaliPID (Int_t plane , Float_t pida ) {PandoraNuCaliPIDPerPlane[plane] = pida;};
+
 
     
     
@@ -171,14 +173,17 @@ public:
 
     Float_t       GetCaloKEPerPlane ( Int_t plane ) const { return CaloKEPerPlane[plane];};
     Float_t         GetPIDaPerPlane ( Int_t plane ) const { return PIDaPerPlane[plane];};
-    Float_t                 GetPIDa () const {return PIDa; };
+    Float_t                 GetPIDa ()              const { return PIDa; };
     Float_t     GetPIDaCaliPerPlane ( Int_t plane ) const { return PIDaCaliPerPlane[plane];};
-    Float_t             GetPIDaCali () const {return PIDaCali; };
-    Float_t            GetDis2Flash (flash) const;
-    Float_t     GetDis2ClosestFlash () const ;
-    Float_t GetMaxdQinTruthMatchedHits () const {return max_dQinTruthMatchedHits;};
-    Float_t          GetdQinAllHits () const {return dQinAllHits;};
-    Float_t GetRatiodQinTruthMatchedHits () const
+    Float_t             GetPIDaCali ()              const { return PIDaCali; };
+    Float_t     GetPandoraNuCaliPID ( Int_t plane ) const { return PandoraNuCaliPIDPerPlane[plane];};
+
+    
+    Float_t                   GetDis2Flash (flash)  const;
+    Float_t            GetDis2ClosestFlash ()       const ;
+    Float_t     GetMaxdQinTruthMatchedHits ()       const {return max_dQinTruthMatchedHits;};
+    Float_t                 GetdQinAllHits ()       const {return dQinAllHits;};
+    Float_t   GetRatiodQinTruthMatchedHits ()       const
     {
         if (fabs(dQinAllHits)>0.01) {
         return (max_dQinTruthMatchedHits/dQinAllHits);
@@ -289,6 +294,8 @@ private:
     Float_t     PIDa=-1;
     Float_t     PIDaCaliPerPlane[3]={0,0,0};
     Float_t     PIDaCali=-1;
+    Float_t     PandoraNuCaliPIDPerPlane[3]={0,0,0};
+    Float_t     PandoraNuCaliPID=0;
     
     // completeness of the track MC-truth matching
     Float_t     max_dQinTruthMatchedHits=-1, dQinAllHits=-1;

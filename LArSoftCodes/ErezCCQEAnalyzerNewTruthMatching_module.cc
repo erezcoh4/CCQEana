@@ -279,7 +279,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // * SwT
     art::Handle<raw::ubdaqSoftwareTriggerData> softwareTriggerHandle;
     evt.getByLabel(fSwTModuleLabel, softwareTriggerHandle);
-    if (!softwareTriggerHandle.isValid()){ Debug(0,"SwT Handle doesn't exist!"); }
+    if (!softwareTriggerHandle.isValid()){ Debug(2,"SwT Handle doesn't exist!"); }
     if (softwareTriggerHandle.isValid()) {
         Debug(3,"Got SwT Handle!, number of algorithms: %",softwareTriggerHandle->getNumberOfAlgorithms());
         std::vector<std::string> algoNames = softwareTriggerHandle->getListOfAlgorithms();
@@ -319,8 +319,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     
     // * associations
     art::FindManyP<recob::Hit> fmth(trackListHandle, evt, fTrackModuleLabel);
-    art::FindMany<anab::Calorimetry>  fmcal(trackListHandle, evt, fCalorimetryModuleLabel);     // uncalibrated calorimetry
-    art::FindMany<anab::Calorimetry>  fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);   // calibrated calorimetry
+    // uncalibrated calorimetry
+    art::FindMany<anab::Calorimetry>    fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
+    // calibrated calorimetry
+    art::FindMany<anab::Calorimetry>    fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);
+    // pandoraNu PID (PIDa)
+    art::FindOneP<anab::ParticleID>     fmcalipid( trackListHandle, evt, "pandoraNucalipid" );
+    
     
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
@@ -540,6 +545,16 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             track.SetPIDaCali();
         }
 
+        // PIDa from PandoraNu
+        if (fmcalipid.isValid()) {
+            art::Ptr < anab::ParticleID > fPandoraNuPID = fmcalipid.at(i);
+            Debug(0,"fPandoraNuPID: %",fPandoraNuPID);
+//            for (int plane=0; plane < 3; plane++) {
+//                track.SetPandoraNuCaliPID( plane , pandoraNucalipid );
+//            }
+        }
+        
+        
         // Truncated Mean dE/dx
         if (fmcal.isValid()){
             TruncMean truncmean( debug , TruncMeanRad );
@@ -1141,7 +1156,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
 }
 
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVertex v, int plane, float r){
     Debug(3,"ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(vertex %, plane %, radius % cm)",v.GetVertexID(),plane,r);
@@ -1562,6 +1576,12 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "PIDa_assigned_muon"<< "," << "PIDa_assigned_proton" << ","
     << "l_assigned_muon"<< "," << "l_assigned_proton" << ","
     << "PIDaCali_assigned_muon"<< "," << "PIDaCali_assigned_proton" << ","
+    // we also want to consider PIDa using only the collection-plane
+    // since the induction planes are poorly modeled and show large angular dependence in data
+    << "PIDaYplane_assigned_muon"<< "," << "PIDaYplane_assigned_proton" << ","
+    << "PIDaCaliYplane_assigned_muon"<< "," << "PIDaCaliYplane_assigned_proton" << ","
+    // pandoraNu pid object
+    << "pandoraNucalipidYplane_assigned_muon"<< "," << "pandoraNucalipidCaliYplane_assigned_proton" << ","
     
     // flash matching of tracks
     << "ClosestFlash_YZdistance_assigned_muon"<< "," << "ClosestFlash_YZdistance_assigned_proton" << ","
@@ -1703,7 +1723,16 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
         << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << ","
         << v.GetAssignedMuonTrack().GetPIDaCali() << "," << v.GetAssignedProtonTrack().GetPIDaCali() << ",";
-        
+        // we also want to consider PIDa using only the collection-plane
+        // since the induction planes are poorly modeled and show large angular dependence in data
+        << v.GetAssignedMuonTrack().GetPIDaPerPlane(2) << ","
+        << v.GetAssignedProtonTrack().GetPIDaPerPlane(2)  << ","
+        << v.GetAssignedMuonTrack().GetPIDaCaliPerPlane(2) << ","
+        << v.GetAssignedProtonTrack().GetPIDaCaliPerPlane(2) << ","
+        // pandoraNu pid object
+        << v.GetAssignedMuonTrack().GetPandoraNuCaliPID(2) << ","
+        << v.GetAssignedProtonTrack().GetPandoraNuCaliPID(2) << ","
+
         // flash matching of tracks
         vertices_file
         << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
