@@ -41,6 +41,8 @@
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
+#include "lardataobj/AnalysisBase/ParticleID.h"
+
 
 // for SwT emulation
 #include "uboone/RawData/utils/ubdaqSoftwareTriggerData.h"
@@ -297,7 +299,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         return;
     }
     
-    
     // * hits
     art::Handle< std::vector<recob::Hit> > hitListHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
@@ -323,8 +324,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     art::FindMany<anab::Calorimetry>    fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
     // calibrated calorimetry
     art::FindMany<anab::Calorimetry>    fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);
-    // pandoraNu PID (PIDa)
-    art::FindOneP<anab::ParticleID>     fmcalipid( trackListHandle, evt, "pandoraNucalipid" );
+    // PIDa from PandoraNu
+    art::FindMany<anab::ParticleID>     fmpid(trackListHandle, evt, "pandoraNupid");
+    // PIDaCali from PandoraNu
+    art::FindMany<anab::ParticleID>     fmcalipid(trackListHandle, evt, "pandoraNucalipid");
+
+//    // pandoraNu PID (PIDa)
+//    art::FindOneP<anab::ParticleID>     fmcalipid( trackListHandle, evt, "pandoraNucalipid" );
     
     
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
@@ -509,16 +515,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             Debug(3 , "track.GetPIDa(): %",track.GetPIDa());
         }
         
-        
         // PIDa and calorimetric KE from calibrated calorimetery
-        Debug(3,"before fmcalical.isValid(): %",fmcalical.isValid());
         if (fmcalical.isValid()){
             unsigned maxnumhits = 0;
             std::vector<const anab::Calorimetry*> calicalos = fmcalical.at(i);
             for (auto const& calicalo : calicalos){
                 if (calicalo->PlaneID().isValid){
                     int plane = calicalo->PlaneID().Plane;
-                    
+                    if (plane<0||plane>2) continue;
+
                     // get the calorimetric kinetic energy of the track
                     track.SetCaloKEPerPlane( plane , calicalo->KineticEnergy() );
                     
@@ -544,14 +549,48 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }
             track.SetPIDaCali();
         }
-
+        
         // PIDa from PandoraNu
+        if (fmpid.isValid()) {
+            std::vector<const anab::ParticleID*> pids = fmpid.at(i);
+            for (auto const& pid : pids){
+                if (pid->PlaneID().isValid){
+                    int plane = pid->PlaneID().Plane;
+                    if (plane<0||plane>2) continue;
+                    
+                    track.SetPandoraNuPID( plane
+                                              , pid->Pdg()
+                                              , pid->MinChi2()
+                                              , pid->Chi2Proton()
+                                              , pid->Chi2Kaon()
+                                              , pid->Chi2Pion()
+                                              , pid->Chi2Muon()
+                                              , pid->PIDA()
+                                              );
+                    Debug(3,"PandoraNuPID(%) for track %: %",plane,track.GetTrackID(),track.GetPandoraNuPID_PIDA(plane));
+                }
+            }
+        }
+        // PIDaCali from PandoraNuCali
         if (fmcalipid.isValid()) {
-            art::Ptr < anab::ParticleID > fPandoraNuPID = fmcalipid.at(i);
-            Debug(0,"fPandoraNuPID: %",fPandoraNuPID);
-//            for (int plane=0; plane < 3; plane++) {
-//                track.SetPandoraNuCaliPID( plane , pandoraNucalipid );
-//            }
+            std::vector<const anab::ParticleID*> pids = fmcalipid.at(i);
+            for (auto const& pid : pids){
+                if (pid->PlaneID().isValid){
+                    int plane = pid->PlaneID().Plane;
+                    if (plane<0||plane>2) continue;
+                    
+                    track.SetPandoraNuCaliPID( plane
+                                              , pid->Pdg()
+                                              , pid->MinChi2()
+                                              , pid->Chi2Proton()
+                                              , pid->Chi2Kaon()
+                                              , pid->Chi2Pion()
+                                              , pid->Chi2Muon()
+                                              , pid->PIDA()
+                                              );
+                    Debug(3,"PandoraNuCaliPID(%) for track %: %",plane,track.GetTrackID(),track.GetPandoraNuCaliPID_PIDA(plane));
+                }
+            }
         }
         
         
@@ -1581,6 +1620,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "PIDaYplane_assigned_muon"<< "," << "PIDaYplane_assigned_proton" << ","
     << "PIDaCaliYplane_assigned_muon"<< "," << "PIDaCaliYplane_assigned_proton" << ","
     // pandoraNu pid object
+    << "pandoraNupid_assigned_muon"<< "," << "pandoraNupidCali_assigned_proton" << ","
+    << "pandoraNupidYplane_assigned_muon"<< "," << "pandoraNupidCaliYplane_assigned_proton" << ","
+    << "pandoraNucalipid_assigned_muon"<< "," << "pandoraNucalipidCali_assigned_proton" << ","
     << "pandoraNucalipidYplane_assigned_muon"<< "," << "pandoraNucalipidCaliYplane_assigned_proton" << ","
     
     // flash matching of tracks
@@ -1722,7 +1764,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file
         << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
         << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << ","
-        << v.GetAssignedMuonTrack().GetPIDaCali() << "," << v.GetAssignedProtonTrack().GetPIDaCali() << ",";
+        << v.GetAssignedMuonTrack().GetPIDaCali() << "," << v.GetAssignedProtonTrack().GetPIDaCali() << ","
         // we also want to consider PIDa using only the collection-plane
         // since the induction planes are poorly modeled and show large angular dependence in data
         << v.GetAssignedMuonTrack().GetPIDaPerPlane(2) << ","
@@ -1730,9 +1772,18 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         << v.GetAssignedMuonTrack().GetPIDaCaliPerPlane(2) << ","
         << v.GetAssignedProtonTrack().GetPIDaCaliPerPlane(2) << ","
         // pandoraNu pid object
-        << v.GetAssignedMuonTrack().GetPandoraNuCaliPID(2) << ","
-        << v.GetAssignedProtonTrack().GetPandoraNuCaliPID(2) << ","
+        << v.GetAssignedMuonTrack().GetPandoraNuPID_PIDA_BestPlane() << ","
+        << v.GetAssignedProtonTrack().GetPandoraNuPID_PIDA_BestPlane() << ","
+        << v.GetAssignedMuonTrack().GetPandoraNuPID_PIDA(2) << ","
+        << v.GetAssignedProtonTrack().GetPandoraNuPID_PIDA(2) << ","
+        << v.GetAssignedMuonTrack().GetPandoraNuCaliPID_PIDA_BestPlane() << ","
+        << v.GetAssignedProtonTrack().GetPandoraNuCaliPID_PIDA_BestPlane() << ","
+        << v.GetAssignedMuonTrack().GetPandoraNuCaliPID_PIDA(2) << ","
+        << v.GetAssignedProtonTrack().GetPandoraNuCaliPID_PIDA(2) << ",";
 
+        
+
+        
         // flash matching of tracks
         vertices_file
         << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
@@ -2038,14 +2089,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
         SHOW2( pot , pot_total );
     }
     Debug(4,"POT from this subrun: %" ,pot );
-    
-//    // Marco:
-//    if(sr.getByLabel("generator", potListHandle)) {
-//        marco_pot = potsum_h->totpot;
-//    }
-//    else {
-//        marco_pot = 0.;
-//    }
 }
 
 

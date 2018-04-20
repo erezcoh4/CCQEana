@@ -7,7 +7,7 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 3852 files; 191k events, so 200 jobs x 25 files -->
+<!-- 3852 files; 191k events, so 150 jobs x 30 max files per job -->
 <!ENTITY number_of_jobs "150">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">

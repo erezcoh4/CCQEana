@@ -75,7 +75,9 @@ public:
     
     
     
+    // -- - - -- -- -- -- ----- - - -- -- -- -- ----- - - -- -- -- -- ---
     /// SETters
+    // -- - - -- -- -- -- ----- - - -- -- -- -- ----- - - -- -- -- -- ---
     void      SetTruthProcess (std::string _process)        {truth_process = _process;};
     void            SetOrigin (std::string _origin)         {truth_origin = _origin;};
 
@@ -119,7 +121,6 @@ public:
     void     SetBestPlaneCali (Int_t best)                  {BestPlaneCali = best;};
     void  SetPIDaCaliPerPlane (Int_t plane , Float_t pida ) {PIDaCaliPerPlane[plane] = pida;};
     void          SetPIDaCali ()                            {PIDaCali = PIDaCaliPerPlane[BestPlaneCali]; };
-    void  SetPandoraNuCaliPID (Int_t plane , Float_t pida ) {PandoraNuCaliPIDPerPlane[plane] = pida;};
 
 
     
@@ -136,8 +137,37 @@ public:
     // truncated dE/dx
     void          SetdEdxTrunc (int plane, std::vector<float> fdEdx)    {dEdxTrunc[plane]=fdEdx;};
 
+    // PIDa from PandoraNu
+    void       SetPandoraNuPID (int plane,
+                                int fPdg , float fMinChi2, float fChi2Proton, float fChi2Kaon, float fChi2Pion, float fChi2Muon, float fPIDA )
+    {
+        PandoraNuPID_Pdg[plane]         = fPdg;
+        PandoraNuPID_MinChi2[plane]     = fMinChi2;
+        PandoraNuPID_Chi2Proton[plane]  = fChi2Proton;
+        PandoraNuPID_Chi2Kaon[plane]    = fChi2Kaon;
+        PandoraNuPID_Chi2Pion[plane]    = fChi2Pion;
+        PandoraNuPID_Chi2Muon[plane]    = fChi2Muon;
+        PandoraNuPID_PIDA[plane]        = fPIDA;
+    };
+    // PIDaCali from PandoraNu
+    void   SetPandoraNuCaliPID (int plane,
+                                int fPdg , float fMinChi2, float fChi2Proton, float fChi2Kaon, float fChi2Pion, float fChi2Muon, float fPIDA )
+    {
+        PandoraNuCaliPID_Pdg[plane]         = fPdg;
+        PandoraNuCaliPID_MinChi2[plane]     = fMinChi2;
+        PandoraNuCaliPID_Chi2Proton[plane]  = fChi2Proton;
+        PandoraNuCaliPID_Chi2Kaon[plane]    = fChi2Kaon;
+        PandoraNuCaliPID_Chi2Pion[plane]    = fChi2Pion;
+        PandoraNuCaliPID_Chi2Muon[plane]    = fChi2Muon;
+        PandoraNuCaliPID_PIDA[plane]        = fPIDA;
+    };
+
     
+    
+    
+    // -- - - -- -- -- -- ----- - - -- -- -- -- ----- - - -- -- -- -- ---
     // GETters
+    // -- - - -- -- -- -- ----- - - -- -- -- -- ----- - - -- -- -- -- ---
 
     std::string     GetTruthProcess () const {return truth_process;};
     std::string           GetOrigin () const {return truth_origin;};    // "unknown origin" / "beam neutrino" / "cosmic ray"
@@ -176,7 +206,12 @@ public:
     Float_t                 GetPIDa ()              const { return PIDa; };
     Float_t     GetPIDaCaliPerPlane ( Int_t plane ) const { return PIDaCaliPerPlane[plane];};
     Float_t             GetPIDaCali ()              const { return PIDaCali; };
-    Float_t     GetPandoraNuCaliPID ( Int_t plane ) const { return PandoraNuCaliPIDPerPlane[plane];};
+    
+    // pandoraNu features
+    Float_t                   GetPandoraNuPID_PIDA ( Int_t plane )  const { return PandoraNuPID_PIDA[plane];};
+    Float_t         GetPandoraNuPID_PIDA_BestPlane ( )              const { return PandoraNuPID_PIDA[BestPlane];};
+    Float_t               GetPandoraNuCaliPID_PIDA ( Int_t plane )  const { return PandoraNuCaliPID_PIDA[plane];};
+    Float_t     GetPandoraNuCaliPID_PIDA_BestPlane ( )              const { return PandoraNuPID_PIDA[BestPlane];};
 
     
     Float_t                   GetDis2Flash (flash)  const;
@@ -219,7 +254,7 @@ public:
     // functionallity
     void            FlipTrack ();
     void           CreateROIs ();
-    void                Print (bool DoPrintPandoraNuFeatures = true ) const;
+    void                Print (bool DoPrintPandoraNuFeatures = true , bool DoPrintAllPIDa = true ) const;
 
     
     // operators
@@ -294,8 +329,24 @@ private:
     Float_t     PIDa=-1;
     Float_t     PIDaCaliPerPlane[3]={0,0,0};
     Float_t     PIDaCali=-1;
-    Float_t     PandoraNuCaliPIDPerPlane[3]={0,0,0};
-    Float_t     PandoraNuCaliPID=0;
+    
+    // pandoraNu objects
+    Float_t     PandoraNuPID_Pdg[3]={0,0,0};
+    Float_t     PandoraNuPID_MinChi2[3]={0,0,0};
+    Float_t     PandoraNuPID_Chi2Proton[3]={0,0,0};
+    Float_t     PandoraNuPID_Chi2Kaon[3]={0,0,0};
+    Float_t     PandoraNuPID_Chi2Pion[3]={0,0,0};
+    Float_t     PandoraNuPID_Chi2Muon[3]={0,0,0};
+    Float_t     PandoraNuPID_PIDA[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_Pdg[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_MinChi2[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_Chi2Proton[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_Chi2Kaon[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_Chi2Pion[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_Chi2Muon[3]={0,0,0};
+    Float_t     PandoraNuCaliPID_PIDA[3]={0,0,0};
+    
+
     
     // completeness of the track MC-truth matching
     Float_t     max_dQinTruthMatchedHits=-1, dQinAllHits=-1;

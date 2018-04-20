@@ -21,7 +21,7 @@ end_pos(fend_pos)
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
+void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures , bool DoPrintAllPIDa ) const{
     
     cout << "\033[31m" << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
     << "track " << track_id << endl << "-------------------"    << "\033[0m" << endl;
@@ -33,7 +33,14 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures ) const{
     if (DoPrintPandoraNuFeatures){
         
         
-        SHOW( PIDa ); // SHOW3( PIDaPerPlane[0] , PIDaPerPlane[1] , PIDaPerPlane[2] );
+        SHOW( PIDa );
+        if (DoPrintAllPIDa) {
+            SHOW3( PIDaPerPlane[0]          , PIDaPerPlane[1]           , PIDaPerPlane[2]           );
+            SHOW3( PandoraNuPID_PIDA[0]     , PandoraNuPID_PIDA[1]      , PandoraNuPID_PIDA[2]      );
+            SHOW3( PIDaCaliPerPlane[0]      , PIDaCaliPerPlane[1]       , PIDaCaliPerPlane[2]       );
+            SHOW3( PandoraNuCaliPID_PIDA[0] , PandoraNuCaliPID_PIDA[1]  , PandoraNuCaliPID_PIDA[2]  );
+        }
+        
         PrintPhys(length,"cm");
         Printf("rec theta=%.1f, phi=%.1f deg.", r2d*rec_dir.Theta(), r2d*rec_dir.Phi() );
         SHOW(IsFlipped);
@@ -143,7 +150,6 @@ Int_t PandoraNuTrack::GetEndWire (int plane) const{
     }
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Int_t PandoraNuTrack::GetEndTime (int plane) const{
     switch (plane) {
@@ -159,10 +165,6 @@ Int_t PandoraNuTrack::GetEndTime (int plane) const{
             break;
     }
 }
-
-
-
-
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -183,9 +185,6 @@ Float_t PandoraNuTrack::DistanceFromPoint( TVector3 position, std::string * fSta
     
     return distance;
 }
-
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t PandoraNuTrack::ClosestDistanceToOtherTrack( PandoraNuTrack other_track, std::string * fStartOrEnd ){
@@ -226,8 +225,6 @@ void PandoraNuTrack::FlipTrack(){
     
 }
 
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t PandoraNuTrack::GetDis2Flash (flash Flash) const {
     float TrackZcenter = (start_pos.z() + end_pos.z())/2.;
@@ -244,8 +241,6 @@ Float_t PandoraNuTrack::GetDis2Flash (flash Flash) const {
 Float_t PandoraNuTrack::GetDis2ClosestFlash () const {
     return GetDis2Flash(ClosestFlash);
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t PandoraNuTrack::ClosestLine2LineDistance ( PandoraNuTrack other_track
@@ -269,8 +264,6 @@ Float_t PandoraNuTrack::ClosestLine2LineDistance ( PandoraNuTrack other_track
     return ( fabs( c.Dot( a.Cross(b) ))
             / (a.Cross(b)).Mag() );
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t PandoraNuTrack::ClosestLine2PointDistance ( TVector3 x0 ){

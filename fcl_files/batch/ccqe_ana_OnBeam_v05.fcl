@@ -50,7 +50,7 @@ physics:
       DoAddTracksEdep:      false
       DoWriteGENIEInfo:     false
       DoWriteEventsInfo:    true
-      DoOnlySwT:            true
+      DoOnlySwT:            false
       SwTModuleLabel:       "swtrigger"
       SwTAlgoModuleLabel:   "BNB_FEMBeamTriggerAlgo"
       TrackModuleLabel: 	"pandoraNu"
