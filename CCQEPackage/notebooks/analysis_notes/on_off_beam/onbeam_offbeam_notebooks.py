@@ -31,7 +31,7 @@ Nevents['OnBeam POT'] = 4.908e+19
 print "OffBeam_scaling:",OffBeam_scaling,"= N(on beam)/N(off beam) before sof. trig."
 
 # MC-BNB/Cosmic-DATA overlay
-summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/prodgenie_bnb_nu_uboone_ovrelay_v4_summary.csv')
+summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/prodgenie_bnb_nu_uboone_overlay_mcc8_v4_2018_04_18_summary.csv')
 Nevents['MC-BNB/Cosmic-DATA overlay'] = np.sum(summary.Nevents)
 Nevents['MC-BNB/Cosmic-DATA overlay POT'] = np.sum(summary.POT)
 MC_scaling_DATAcosmic = Nevents['OnBeam POT']/Nevents['MC-BNB/Cosmic-DATA overlay POT']
