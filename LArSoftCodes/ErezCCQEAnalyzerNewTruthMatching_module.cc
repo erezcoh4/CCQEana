@@ -220,6 +220,8 @@ private:
     std::string fG4ModuleLabel;
     std::string fSwTModuleLabel;
     std::string fSwTAlgoModuleLabel;
+    std::string fPIDModuleLabel;
+    std::string fCaliPIDModuleLabel;
     
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -325,13 +327,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     // calibrated calorimetry
     art::FindMany<anab::Calorimetry>    fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);
     // PIDa from PandoraNu
-    art::FindMany<anab::ParticleID>     fmpid(trackListHandle, evt, "pandoraNupid");
+    art::FindMany<anab::ParticleID>     fmpid(trackListHandle, evt, fPIDModuleLabel );
     // PIDaCali from PandoraNu
-    art::FindMany<anab::ParticleID>     fmcalipid(trackListHandle, evt, "pandoraNucalipid");
+    art::FindMany<anab::ParticleID>     fmcalipid(trackListHandle, evt, fCaliPIDModuleLabel );
 
-//    // pandoraNu PID (PIDa)
-//    art::FindOneP<anab::ParticleID>     fmcalipid( trackListHandle, evt, "pandoraNucalipid" );
-    
     
     // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
@@ -356,8 +355,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
     auto Nparticles = (int)mcparticlelist.size();
     Debug(1,"Nparticles: %",Nparticles);
-
-    
     if (MCmode) {
         evt.getByLabel(fG4ModuleLabel, pHandle);
         art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
@@ -567,10 +564,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                               , pid->Chi2Muon()
                                               , pid->PIDA()
                                               );
-                    Debug(3,"PandoraNuPID(%) for track %: %",plane,track.GetTrackID(),track.GetPandoraNuPID_PIDA(plane));
+                    Debug(3,"% PIDa (plane %) for track %: %",fPIDModuleLabel,plane,track.GetTrackID(),track.GetPID_PIDA(plane));
                 }
             }
         }
+        
         // PIDaCali from PandoraNuCali
         if (fmcalipid.isValid()) {
             std::vector<const anab::ParticleID*> pids = fmcalipid.at(i);
@@ -588,7 +586,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                               , pid->Chi2Muon()
                                               , pid->PIDA()
                                               );
-                    Debug(3,"PandoraNuCaliPID(%) for track %: %",plane,track.GetTrackID(),track.GetPandoraNuCaliPID_PIDA(plane));
+                    Debug(3,"% PIDa (plane %) for track %: %",fCaliPIDModuleLabel,plane,track.GetTrackID(),track.GetCaliPID_PIDA(plane));
                 }
             }
         }
@@ -1107,14 +1105,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
             ){
             
             // assign muon and proton tracks by PID-A
-            auto AssignedMuonTrack = v.GetSmallPIDaTrack();
-            auto PmuFromRange = trkm.GetTrackMomentum( AssignedMuonTrack.GetLength()  , 13  );
-            v.AssignMuonTrack( AssignedMuonTrack  );
+            auto Track_muCandidate = v.GetSmallPIDaTrack();
+            auto PmuFromRange = trkm.GetTrackMomentum( Track_muCandidate.GetLength()  , 13  );
+            v.AssignMuonTrack( Track_muCandidate  );
             
             
-            auto AssignedProtonTrack = v.GetLargePIDaTrack();
-            auto PpFromRange = trkm.GetTrackMomentum( AssignedProtonTrack.GetLength() , 2212);
-            v.AssignProtonTrack( AssignedProtonTrack );
+            auto Track_pCandidate = v.GetLargePIDaTrack();
+            auto PpFromRange = trkm.GetTrackMomentum( Track_pCandidate.GetLength() , 2212);
+            v.AssignProtonTrack( Track_pCandidate );
             
             v.FixTracksDirections ();
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
@@ -1160,8 +1158,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
     //
     for (auto & v:vertices){
         
-        PandoraNuTrack t1 = v.GetAssignedMuonTrack();
-        PandoraNuTrack t2 = v.GetAssignedProtonTrack();
+        PandoraNuTrack t1 = v.GetTrack_muCandidate();
+        PandoraNuTrack t2 = v.GetTrack_pCandidate();
         
         // for MC-BNB and cosmic-data overlay, we determine that a vertex is cosmic if one of its tracks is unrecognized (-9999)
         if ( (t1.GetMCpdgCode() * t2.GetMCpdgCode())==(13*2212) ){
@@ -1193,7 +1191,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
         }
     }
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVertex v, int plane, float r){
@@ -1267,7 +1264,6 @@ double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVert
     if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
     else return -1;
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderEventsInCSV(){
@@ -1501,8 +1497,12 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
     tracks_file
     << "start_x"<< "," << "start_y" << "," << "start_z" << ","
     << "end_x"  << "," << "end_y"   << "," << "end_z"   << ","
-    << "theta"  << "," << "phi"     << ","
-    << "PIDa"   << "," << "length"  << "," << "PIDaCali"   << "," ;
+    << "theta"  << "," << "phi"     << "," << "length"  << ","
+    << "PIDa"   << "," << "PIDaCali"<< ","
+    << "pid_PIDaYplane"             << ","
+    << "calipid_PIDaYplane"         << ","
+    << "calipid_Chi2ProtonYplane"   << ","
+    << "calipid_Chi2MuonYplane"     << "," ;
     
     // truth information
     tracks_file
@@ -1547,8 +1547,13 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
         tracks_file
         << t.GetStartPos().x()  << "," << t.GetStartPos().y()   << "," << t.GetStartPos().z()   << ","
         << t.GetEndPos().x()    << "," << t.GetEndPos().y()     << "," << t.GetEndPos().z()     << ","
-        << t.GetTheta()         << "," << t.GetPhi()            << ","
-        << t.GetPIDa()          << "," << t.GetLength()         << "," << t.GetPIDaCali()       << ",";
+        << t.GetTheta()         << "," << t.GetPhi()            << "," << t.GetLength()         << ","
+        << t.GetPIDa()          << "," << t.GetPIDaCali()       << ","
+        << t.GetPID_PIDA(2)     << ","
+        << t.GetCaliPID_PIDA(2)         << ","
+        << t.GetCaliPID_Chi2Proton(2)   << ","
+        << t.GetCaliPID_Chi2Muon(2)     << ",";
+        
         
         // truth information
         tracks_file
@@ -1603,45 +1608,49 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "run" << "," << "subrun" << "," << "event" << "," << "vertex_id" << ","
     << "x" << "," << "y" << "," << "z" << ","
     << "track_id" << ","
+    
     // tracks sorted by long / short
-    << "PIDa_long"<< "," << "PIDa_short" << ","
-    << "l_long"<< "," << "l_short" << ","
-    << "PIDaCali_long"<< "," << "PIDaCali_short" << ","
+    // << "PIDa_long"<< "," << "PIDa_short" << ","
+    // << "l_long"<< "," << "l_short" << ","
+    // << "PIDaCali_long"<< "," << "PIDaCali_short" << ","
     // tracks sorted by small / large PIDa
-    << "PIDa_small_PIDa"<< "," << "PIDa_large_PIDa" << ","
-    << "l_small_PIDa"<< "," << "l_large_PIDa" << ","
-    << "PIDaCali_small_PIDa"<< "," << "PIDaCali_large_PIDa" << ","
+    // << "PIDa_small_PIDa"<< "," << "PIDa_large_PIDa" << ","
+    // << "l_small_PIDa"<< "," << "l_large_PIDa" << ","
+    // << "PIDaCali_small_PIDa"<< "," << "PIDaCali_large_PIDa" << ","
+    
     // µ/p assigned tracks
-    << "PIDa_assigned_muon"<< "," << "PIDa_assigned_proton" << ","
-    << "l_assigned_muon"<< "," << "l_assigned_proton" << ","
-    << "PIDaCali_assigned_muon"<< "," << "PIDaCali_assigned_proton" << ","
+    << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
+    << "l_muCandidate"<< "," << "l_pCandidate" << ","
+    << "PIDaCali_muCandidate"<< "," << "PIDaCali_pCandidate" << ","
     // we also want to consider PIDa using only the collection-plane
     // since the induction planes are poorly modeled and show large angular dependence in data
-    << "PIDaYplane_assigned_muon"<< "," << "PIDaYplane_assigned_proton" << ","
-    << "PIDaCaliYplane_assigned_muon"<< "," << "PIDaCaliYplane_assigned_proton" << ","
+    << "PIDaYplane_muCandidate"<< "," << "PIDaYplane_pCandidate" << ","
+    << "PIDaCaliYplane_muCandidate"<< "," << "PIDaCaliYplane_pCandidate" << ","
     // pandoraNu pid object
-    << "pandoraNupid_assigned_muon"<< "," << "pandoraNupidCali_assigned_proton" << ","
-    << "pandoraNupidYplane_assigned_muon"<< "," << "pandoraNupidCaliYplane_assigned_proton" << ","
-    << "pandoraNucalipid_assigned_muon"<< "," << "pandoraNucalipidCali_assigned_proton" << ","
-    << "pandoraNucalipidYplane_assigned_muon"<< "," << "pandoraNucalipidCaliYplane_assigned_proton" << ","
+    << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
+    << "pid_PIDaYplane_muCandidate"<< "," << "pid_PIDaYplane_pCandidate" << ","
+    << "pidcali_PIDa_muCandidate"<< "," << "pidcali_PIDa_pCandidate" << ","
+    << "pidcali_PIDaYplane_muCandidate"<< "," << "pidcali_PIDaYplane_pCandidate" << ","
+    << "pidcali_Chi2ProtonYplane_muCandidate"<< "," << "pidcali_Chi2ProtonYplane_pCandidate" << ","
+    << "pidcali_Chi2MuonYplane_muCandidate"<< "," << "pidcali_Chi2MuonYplane_pCandidate" << ","
     
     // flash matching of tracks
-    << "ClosestFlash_YZdistance_assigned_muon"<< "," << "ClosestFlash_YZdistance_assigned_proton" << ","
-    << "ClosestFlash_TotalPE_assigned_muon"<< "," << "ClosestFlash_TotalPE_assigned_proton" << ","
+    << "ClosestFlash_YZdistance_muCandidate"<< "," << "ClosestFlash_YZdistance_pCandidate" << ","
+    << "ClosestFlash_TotalPE_muCandidate"<< "," << "ClosestFlash_TotalPE_pCandidate" << ","
     
     // start/end points, for FV cuts
-    << "startx_assigned_muon" << ","
-    << "starty_assigned_muon" << ","
-    << "startz_assigned_muon" << ","
-    << "startx_assigned_proton" << ","
-    << "starty_assigned_proton" << ","
-    << "startz_assigned_proton" << ","
-    << "endx_assigned_muon" << ","
-    << "endy_assigned_muon" << ","
-    << "endz_assigned_muon" << ","
-    << "endx_assigned_proton" << ","
-    << "endy_assigned_proton" << ","
-    << "endz_assigned_proton" << ","
+    << "startx_muCandidate" << ","
+    << "starty_muCandidate" << ","
+    << "startz_muCandidate" << ","
+    << "startx_pCandidate" << ","
+    << "starty_pCandidate" << ","
+    << "startz_pCandidate" << ","
+    << "endx_muCandidate" << ","
+    << "endy_muCandidate" << ","
+    << "endz_muCandidate" << ","
+    << "endx_pCandidate" << ","
+    << "endy_pCandidate" << ","
+    << "endz_pCandidate" << ","
     
     
     // CC1p0π reconstructed featues
@@ -1659,8 +1668,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     
     
     // truth MC information
-    << "truth_l_assigned_muon"<< "," << "truth_l_assigned_proton" << ","
-    << "truth_purity_assigned_muon"<< "," << "truth_purity_assigned_proton" << ","
+    << "truth_l_muCandidate"<< "," << "truth_l_pCandidate" << ","
+    << "truth_purity_muCandidate"<< "," << "truth_purity_pCandidate" << ","
     
     << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << "," << "truth_Pmu_theta" << ","<< "truth_Pmu_phi" << ","
     << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << "," << "truth_Pp_theta" << ","<< "truth_Pp_phi" << ","
@@ -1747,62 +1756,59 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << ",";
         
         
-        // tracks sorted by long / short
-        vertices_file
-        << v.GetLongestTrack().GetPIDa() << "," << v.GetShortestTrack().GetPIDa() << ","
-        << v.GetLongestTrack().GetLength() << "," << v.GetShortestTrack().GetLength() << ","
-        << v.GetLongestTrack().GetPIDaCali() << "," << v.GetShortestTrack().GetPIDaCali() << ",";
+        //        // tracks sorted by long / short
+        //        vertices_file
+        //        << v.GetLongestTrack().GetPIDa() << "," << v.GetShortestTrack().GetPIDa() << ","
+        //        << v.GetLongestTrack().GetLength() << "," << v.GetShortestTrack().GetLength() << ","
+        //        << v.GetLongestTrack().GetPIDaCali() << "," << v.GetShortestTrack().GetPIDaCali() << ",";
         
-        
-        // tracks sorted by small / large PIDa
-        vertices_file
-        << v.GetSmallPIDaTrack().GetPIDa() << "," << v.GetLargePIDaTrack().GetPIDa() << ","
-        << v.GetSmallPIDaTrack().GetLength() << "," << v.GetLargePIDaTrack().GetLength() << ","
-        << v.GetSmallPIDaTrack().GetPIDaCali() << "," << v.GetLargePIDaTrack().GetPIDaCali() << ",";
+        //        // tracks sorted by small / large PIDa
+        //        vertices_file
+        //        << v.GetSmallPIDaTrack().GetPIDa() << "," << v.GetLargePIDaTrack().GetPIDa() << ","
+        //        << v.GetSmallPIDaTrack().GetLength() << "," << v.GetLargePIDaTrack().GetLength() << ","
+        //        << v.GetSmallPIDaTrack().GetPIDaCali() << "," << v.GetLargePIDaTrack().GetPIDaCali() << ",";
 
         // µ/p assigned tracks
         vertices_file
-        << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
-        << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << ","
-        << v.GetAssignedMuonTrack().GetPIDaCali() << "," << v.GetAssignedProtonTrack().GetPIDaCali() << ","
+        << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
+        << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << ","
+        << v.GetTrack_muCandidate().GetPIDaCali() << "," << v.GetTrack_pCandidate().GetPIDaCali() << ","
         // we also want to consider PIDa using only the collection-plane
         // since the induction planes are poorly modeled and show large angular dependence in data
-        << v.GetAssignedMuonTrack().GetPIDaPerPlane(2) << ","
-        << v.GetAssignedProtonTrack().GetPIDaPerPlane(2)  << ","
-        << v.GetAssignedMuonTrack().GetPIDaCaliPerPlane(2) << ","
-        << v.GetAssignedProtonTrack().GetPIDaCaliPerPlane(2) << ","
+        << v.GetTrack_muCandidate().GetPIDaPerPlane(2) << ","
+        << v.GetTrack_pCandidate().GetPIDaPerPlane(2)  << ","
+        << v.GetTrack_muCandidate().GetPIDaCaliPerPlane(2) << ","
+        << v.GetTrack_pCandidate().GetPIDaCaliPerPlane(2) << ","
         // pandoraNu pid object
-        << v.GetAssignedMuonTrack().GetPandoraNuPID_PIDA_BestPlane() << ","
-        << v.GetAssignedProtonTrack().GetPandoraNuPID_PIDA_BestPlane() << ","
-        << v.GetAssignedMuonTrack().GetPandoraNuPID_PIDA(2) << ","
-        << v.GetAssignedProtonTrack().GetPandoraNuPID_PIDA(2) << ","
-        << v.GetAssignedMuonTrack().GetPandoraNuCaliPID_PIDA_BestPlane() << ","
-        << v.GetAssignedProtonTrack().GetPandoraNuCaliPID_PIDA_BestPlane() << ","
-        << v.GetAssignedMuonTrack().GetPandoraNuCaliPID_PIDA(2) << ","
-        << v.GetAssignedProtonTrack().GetPandoraNuCaliPID_PIDA(2) << ",";
+        << v.GetTrack_muCandidate().GetPID_PIDA()               << ","  << v.GetTrack_pCandidate().GetPID_PIDA() << ","
+        << v.GetTrack_muCandidate().GetPID_PIDA(2)              << ","  << v.GetTrack_pCandidate().GetPID_PIDA(2) << ","
+        << v.GetTrack_muCandidate().GetCaliPID_PIDA()           << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA() << ","
+        << v.GetTrack_muCandidate().GetCaliPID_PIDA(2)          << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA(2) << ","
+        << v.GetTrack_muCandidate().GetCaliPID_Chi2Proton(2)    << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Proton(2) << ","
+        << v.GetTrack_muCandidate().GetCaliPID_Chi2Muon(2)      << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Muon(2) << ",";
 
         
 
         
         // flash matching of tracks
         vertices_file
-        << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
-        << v.GetAssignedMuonTrack().GetClosestFlash().GetTotalPE() << "," << v.GetAssignedProtonTrack().GetClosestFlash().GetTotalPE() << "," ;
+        << v.GetTrack_muCandidate().GetDis2ClosestFlash() << "," << v.GetTrack_pCandidate().GetDis2ClosestFlash() << ","
+        << v.GetTrack_muCandidate().GetClosestFlash().GetTotalPE() << "," << v.GetTrack_pCandidate().GetClosestFlash().GetTotalPE() << "," ;
         
         // start/end points, for FV cuts
         vertices_file
-        << v.GetAssignedMuonTrack().GetStartPos().x() << ","
-        << v.GetAssignedMuonTrack().GetStartPos().y() << ","
-        << v.GetAssignedMuonTrack().GetStartPos().z() << ","
-        << v.GetAssignedProtonTrack().GetStartPos().x() << ","
-        << v.GetAssignedProtonTrack().GetStartPos().y() << ","
-        << v.GetAssignedProtonTrack().GetStartPos().z() << ","
-        << v.GetAssignedMuonTrack().GetEndPos().x() << ","
-        << v.GetAssignedMuonTrack().GetEndPos().y() << ","
-        << v.GetAssignedMuonTrack().GetEndPos().z() << ","
-        << v.GetAssignedProtonTrack().GetEndPos().x() << ","
-        << v.GetAssignedProtonTrack().GetEndPos().y() << ","
-        << v.GetAssignedProtonTrack().GetEndPos().z() << ",";
+        << v.GetTrack_muCandidate().GetStartPos().x() << ","
+        << v.GetTrack_muCandidate().GetStartPos().y() << ","
+        << v.GetTrack_muCandidate().GetStartPos().z() << ","
+        << v.GetTrack_pCandidate().GetStartPos().x() << ","
+        << v.GetTrack_pCandidate().GetStartPos().y() << ","
+        << v.GetTrack_pCandidate().GetStartPos().z() << ","
+        << v.GetTrack_muCandidate().GetEndPos().x() << ","
+        << v.GetTrack_muCandidate().GetEndPos().y() << ","
+        << v.GetTrack_muCandidate().GetEndPos().z() << ","
+        << v.GetTrack_pCandidate().GetEndPos().x() << ","
+        << v.GetTrack_pCandidate().GetEndPos().y() << ","
+        << v.GetTrack_pCandidate().GetEndPos().z() << ",";
         
         
         // CC1p0π reconstructed featues
@@ -1838,16 +1844,16 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";
         
         // truth MC information
-        vertices_file << v.GetAssignedMuonTrack().GetTruthLength() << "," << v.GetAssignedProtonTrack().GetTruthLength() << ",";
-        vertices_file << v.GetAssignedMuonTrack().GetTruthPurity() << "," << v.GetAssignedProtonTrack().GetTruthPurity() << ",";
+        vertices_file << v.GetTrack_muCandidate().GetTruthLength() << "," << v.GetTrack_pCandidate().GetTruthLength() << ",";
+        vertices_file << v.GetTrack_muCandidate().GetTruthPurity() << "," << v.GetTrack_pCandidate().GetTruthPurity() << ",";
         
         vertices_file
-        << v.GetAssignedMuonTrack().GetTruthMomentum().P() << ","
-        << v.GetAssignedMuonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Phi() << ",";
+        << v.GetTrack_muCandidate().GetTruthMomentum().P() << ","
+        << v.GetTrack_muCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Phi() << ",";
         
         vertices_file
-        << v.GetAssignedProtonTrack().GetTruthMomentum().P() << ","
-        << v.GetAssignedProtonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Phi() << ",";
+        << v.GetTrack_pCandidate().GetTruthMomentum().P() << ","
+        << v.GetTrack_pCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Phi() << ",";
         
         
         // mathing genie interaction
@@ -2114,8 +2120,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     DoOnlySwT               = p.get< bool >("DoOnlySwT",false);
     fSwTModuleLabel         = p.get< std::string >("SwTModuleLabel");
     fSwTAlgoModuleLabel     = p.get< std::string >("SwTAlgoModuleLabel");    
-    TruncMeanRad            = p.get< float >("TruncMeanRadLabel",10.0);
+    TruncMeanRad            = p.get< float >("TruncMeanRadLabel",1.0);
     
+    fPIDModuleLabel         = p.get< std::string >("PIDModuleLabel");
+    fCaliPIDModuleLabel     = p.get< std::string >("CaliPIDModuleLabel");
 }
 
 

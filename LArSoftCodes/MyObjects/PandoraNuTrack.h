@@ -208,10 +208,12 @@ public:
     Float_t             GetPIDaCali ()              const { return PIDaCali; };
     
     // pandoraNu features
-    Float_t                   GetPandoraNuPID_PIDA ( Int_t plane )  const { return PandoraNuPID_PIDA[plane];};
-    Float_t         GetPandoraNuPID_PIDA_BestPlane ( )              const { return PandoraNuPID_PIDA[BestPlane];};
-    Float_t               GetPandoraNuCaliPID_PIDA ( Int_t plane )  const { return PandoraNuCaliPID_PIDA[plane];};
-    Float_t     GetPandoraNuCaliPID_PIDA_BestPlane ( )              const { return PandoraNuPID_PIDA[BestPlane];};
+    Float_t                   GetPID_PIDA ( Int_t plane )   const { return PandoraNuPID_PIDA[plane];};
+    Float_t                   GetPID_PIDA ()                const { return PandoraNuPID_PIDA[BestPlane];}; // best plane
+    Float_t               GetCaliPID_PIDA ( Int_t plane )   const { return PandoraNuCaliPID_PIDA[plane];};
+    Float_t               GetCaliPID_PIDA ()                const { return PandoraNuCaliPID_PIDA[BestPlane];}; // best plane
+    Float_t         GetCaliPID_Chi2Proton ( Int_t plane )   const { return PandoraNuCaliPID_Chi2Proton[plane];};
+    Float_t           GetCaliPID_Chi2Muon ( Int_t plane )   const { return PandoraNuCaliPID_Chi2Muon[plane];};
 
     
     Float_t                   GetDis2Flash (flash)  const;

@@ -98,8 +98,8 @@ public:
     void               SetGENIEinfo (GENIEinteraction fgenie_interaction)           {genie_interaction = fgenie_interaction; };
     void            SetClosestGENIE (GENIEinteraction fgenie_interaction)           {closest_genie_interaction = fgenie_interaction; };
     void       SetReconstructedInfo ();
-    void            AssignMuonTrack (PandoraNuTrack ftrack)                         {AssignedMuonTrack = ftrack; };
-    void          AssignProtonTrack (PandoraNuTrack ftrack)                         {AssignedProtonTrack = ftrack; };
+    void            AssignMuonTrack (PandoraNuTrack ftrack)                         {Track_muCandidate = ftrack; };
+    void          AssignProtonTrack (PandoraNuTrack ftrack)                         {Track_pCandidate = ftrack; };
     void    SetReconstructedMomenta (float PmuFromRange = 0, float PpFromRange = 0 );
     void   SetReconstructedFeatures (float PmuFromRange = 0, float PpFromRange = 0 );
     void         SetPlaneProjection (int plane , float _wire , float _time )        {vertex_wire[plane]=_wire; vertex_time[plane]=_time;};
@@ -185,8 +185,8 @@ public:
     PandoraNuTrack         GetLongestTrack () const {return LongestTrack;};
     PandoraNuTrack       GetSmallPIDaTrack () const {return SmallPIDaTrack;};
     PandoraNuTrack       GetLargePIDaTrack () const {return LargePIDaTrack;};
-    PandoraNuTrack    GetAssignedMuonTrack () const {return AssignedMuonTrack;};
-    PandoraNuTrack  GetAssignedProtonTrack () const {return AssignedProtonTrack;};
+    PandoraNuTrack    GetTrack_muCandidate () const {return Track_muCandidate;};
+    PandoraNuTrack  GetTrack_pCandidate () const {return Track_pCandidate;};
     
     std::vector<PandoraNuTrack>  GetTracks () const {return tracks;};
     
@@ -258,7 +258,7 @@ private:
     PandoraNuTrack      muonTrueTrack,  protonTrueTrack;
     PandoraNuTrack      ShortestTrack,  LongestTrack;
     PandoraNuTrack      LargePIDaTrack, SmallPIDaTrack;
-    PandoraNuTrack      AssignedMuonTrack, AssignedProtonTrack;
+    PandoraNuTrack      Track_muCandidate, Track_pCandidate;
     
     GENIEinteraction    genie_interaction=GENIEinteraction();
     GENIEinteraction    closest_genie_interaction=GENIEinteraction();

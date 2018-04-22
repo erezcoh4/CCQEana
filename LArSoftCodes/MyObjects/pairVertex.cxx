@@ -113,7 +113,17 @@ bool pairVertex::SortTracksByLength(){
 vector<size_t> pairVertex::sort_pida(const vector<PandoraNuTrack> &v) {
     std::vector<size_t> idx(v.size());
     for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
-    std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].GetPIDa() > v[i2].GetPIDa();});
+    
+    // previous version (before April 2018):
+    //    // sort according to my calculation of PIDa using the "best plane"
+    //    std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].GetPIDa() > v[i2].GetPIDa();});
+    
+    // new version (April 2018)
+    // sort according to pandoraNu calculation of PIDa using only the collection plane
+    // The differences:
+    // U and V induction planes are poorly modeled and show large angular dependence in data
+    // The April-2018 pida calculation is based on median instead of mean.
+    std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].GetCaliPID_PIDA(2) > v[i2].GetCaliPID_PIDA(2);});
     return idx;
 }
 
@@ -241,8 +251,8 @@ float pairVertex::GetAngleBetween2tracks() const{
     // July-30 2017
     // return the angle between the two tracks in the vertex, in degrees (!)
     TVector3 t1_dir, t2_dir;
-    t1_dir.SetMagThetaPhi ( 1 , AssignedMuonTrack.GetTheta(), AssignedMuonTrack.GetPhi() );
-    t2_dir.SetMagThetaPhi ( 1 , AssignedProtonTrack.GetTheta(), AssignedProtonTrack.GetPhi() );
+    t1_dir.SetMagThetaPhi ( 1 , Track_muCandidate.GetTheta(), Track_muCandidate.GetPhi() );
+    t2_dir.SetMagThetaPhi ( 1 , Track_pCandidate.GetTheta(), Track_pCandidate.GetPhi() );
     return r2d*(t1_dir.Angle( t2_dir ));
 }
 
@@ -253,10 +263,10 @@ void pairVertex::FixTracksDirections(){
     // for CC1p events, we can fix the directions of the track
     // by looking at the reconstructed vertex position
     // and comparing the start/end point of the track to the vertex position
-    float start_start_distance  = (AssignedMuonTrack.GetStartPos()  - AssignedProtonTrack.GetStartPos()).Mag();
-    float end_start_distance    = (AssignedMuonTrack.GetEndPos()    - AssignedProtonTrack.GetStartPos()).Mag();
-    float start_end_distance    = (AssignedMuonTrack.GetStartPos()  - AssignedProtonTrack.GetEndPos()).Mag();
-    float end_end_distance      = (AssignedMuonTrack.GetEndPos()    - AssignedProtonTrack.GetEndPos()).Mag();
+    float start_start_distance  = (Track_muCandidate.GetStartPos()  - Track_pCandidate.GetStartPos()).Mag();
+    float end_start_distance    = (Track_muCandidate.GetEndPos()    - Track_pCandidate.GetStartPos()).Mag();
+    float start_end_distance    = (Track_muCandidate.GetStartPos()  - Track_pCandidate.GetEndPos()).Mag();
+    float end_end_distance      = (Track_muCandidate.GetEndPos()    - Track_pCandidate.GetEndPos()).Mag();
     float min_distance = std::min({start_start_distance, end_start_distance, start_end_distance, end_end_distance});
     if (debug>3){
         SHOW4(start_start_distance,end_start_distance,start_end_distance,end_end_distance);
@@ -264,26 +274,26 @@ void pairVertex::FixTracksDirections(){
     }
     // first fix the position of the vertex
     if (min_distance == start_start_distance){
-        position = 0.5*(AssignedMuonTrack.GetStartPos() + AssignedProtonTrack.GetStartPos());
+        position = 0.5*(Track_muCandidate.GetStartPos() + Track_pCandidate.GetStartPos());
     }
     else if (min_distance == end_start_distance){
-        position = 0.5*(AssignedMuonTrack.GetEndPos() + AssignedProtonTrack.GetStartPos());
+        position = 0.5*(Track_muCandidate.GetEndPos() + Track_pCandidate.GetStartPos());
     }
     else if (min_distance == start_end_distance){
-        position = 0.5*(AssignedMuonTrack.GetStartPos() + AssignedProtonTrack.GetEndPos());
+        position = 0.5*(Track_muCandidate.GetStartPos() + Track_pCandidate.GetEndPos());
     }
     else if (min_distance == end_end_distance){
-        position = 0.5*(AssignedMuonTrack.GetEndPos() + AssignedProtonTrack.GetEndPos());
+        position = 0.5*(Track_muCandidate.GetEndPos() + Track_pCandidate.GetEndPos());
     }
     
     // then, flip the tracks accordingly
-    if ( (AssignedMuonTrack.GetEndPos() - position).Mag() < (AssignedMuonTrack.GetStartPos() - position).Mag() ){
+    if ( (Track_muCandidate.GetEndPos() - position).Mag() < (Track_muCandidate.GetStartPos() - position).Mag() ){
         Debug(1,"Flipping muon track");
-        AssignedMuonTrack.FlipTrack();
+        Track_muCandidate.FlipTrack();
     }
-    if ( (AssignedProtonTrack.GetEndPos() - position).Mag() < (AssignedProtonTrack.GetStartPos() - position).Mag() ){
+    if ( (Track_pCandidate.GetEndPos() - position).Mag() < (Track_pCandidate.GetStartPos() - position).Mag() ){
         Debug(1,"Flipping proton track");
-        AssignedProtonTrack.FlipTrack();
+        Track_pCandidate.FlipTrack();
     }
     
     // -- - --- -- -- --- - - -- -- -- - -- - -- -- -- - -- -- - - -- - - -- - -- - -- - - - -- - - -- - - -
@@ -294,9 +304,9 @@ void pairVertex::FixTracksDirections(){
     // the MC correlation is a band around
     // 𝜽(p) = -𝜽(µ)/𝛑 + 1
     // so if 𝜽(p) is too far from this correlation we can flip the p-track
-    if (fabs( AssignedProtonTrack.GetTheta() - (-AssignedMuonTrack.GetTheta()/PI + 1.)) > 1.){
+    if (fabs( Track_pCandidate.GetTheta() - (-Track_muCandidate.GetTheta()/PI + 1.)) > 1.){
         Debug(1,"re-flipping proton track");
-        AssignedProtonTrack.FlipTrack();
+        Track_pCandidate.FlipTrack();
     }
     // -- - --- -- -- --- - - -- -- -- - -- - -- -- -- - -- -- - - -- - - -- - -- - -- - - - -- - - -- - - -
 }
@@ -310,15 +320,15 @@ void pairVertex::SetReconstructedMomenta( float PmuFromRange, float PpFromRange 
     // at a later stage we can maybe use calorimetery or multiple Coulomb scattering
     // p
     reco_Pp_3momentum = PpFromRange;
-    reco_Pp_3vect.SetMagThetaPhi( reco_Pp_3momentum , AssignedProtonTrack.GetTheta() , AssignedProtonTrack.GetPhi() );
+    reco_Pp_3vect.SetMagThetaPhi( reco_Pp_3momentum , Track_pCandidate.GetTheta() , Track_pCandidate.GetPhi() );
     reco_Pp.SetVectMag ( reco_Pp_3vect , 0.9385 );
     
     // µ
     reco_Pmu_3momentum = PmuFromRange;
-    reco_Pmu_3vect.SetMagThetaPhi( reco_Pmu_3momentum , AssignedMuonTrack.GetTheta() , AssignedMuonTrack.GetPhi() );
+    reco_Pmu_3vect.SetMagThetaPhi( reco_Pmu_3momentum , Track_muCandidate.GetTheta() , Track_muCandidate.GetPhi() );
     reco_Pmu.SetVectMag ( reco_Pmu_3vect , 0.1056 );
     
-    //    reco_Pmu_3vect_mcsllhd.SetMagThetaPhi( AssignedMuonTrack.mommsllhd , AssignedMuonTrack.theta , AssignedMuonTrack.phi );
+    //    reco_Pmu_3vect_mcsllhd.SetMagThetaPhi( Track_muCandidate.mommsllhd , Track_muCandidate.theta , Track_muCandidate.phi );
     //    reco_Pmu_mcsllhd.SetVectMag ( reco_Pmu_3vect_mcsllhd , 0.1056 );
     
 }
@@ -381,7 +391,7 @@ void pairVertex::ReconstructKinematics(){
 void pairVertex::SetReconstructedFeatures( float PmuFromRange, float PpFromRange ){
     
     // reconstructed distance between µ and p
-    reco_mu_p_distance = AssignedMuonTrack.ClosestDistanceToOtherTrack( AssignedProtonTrack );
+    reco_mu_p_distance = Track_muCandidate.ClosestDistanceToOtherTrack( Track_pCandidate );
     
     SetReconstructedMomenta( PmuFromRange, PpFromRange );
     ReconstructBeam();
@@ -393,8 +403,8 @@ void pairVertex::SetReconstructedFeatures( float PmuFromRange, float PpFromRange
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 float pairVertex::GetTruthDeltaPhi () const {
     // return the truth \Delta \phi between tracks in degrees
-    float muon_truth_phi = AssignedMuonTrack.GetTruthMomentum().Phi();
-    float proton_truth_phi = AssignedProtonTrack.GetTruthMomentum().Phi();
+    float muon_truth_phi = Track_muCandidate.GetTruthMomentum().Phi();
+    float proton_truth_phi = Track_pCandidate.GetTruthMomentum().Phi();
     return r2d*fabs( muon_truth_phi - proton_truth_phi );
 }
 
@@ -410,10 +420,10 @@ void pairVertex::AssociateHitsToTracks (std::vector<hit> hits) {
         
         int plane = hit.GetPlane();
         
-        if (hit.GetTrackKey()== AssignedMuonTrack.GetTrackID() ){
+        if (hit.GetTrackKey()== Track_muCandidate.GetTrackID() ){
             hits_muon[plane].push_back(hit);
         }
-        else if (hit.GetTrackKey()== AssignedProtonTrack.GetTrackID() ){
+        else if (hit.GetTrackKey()== Track_pCandidate.GetTrackID() ){
             hits_proton[plane].push_back(hit);
         }
     }
@@ -453,44 +463,6 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
     else return -9999;
 }
 
-
-
-
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//float pairVertex::GetChargeInSphere (int plane, std::vector<hit> hits, float r) const{
-//    // Feb-18,2018
-//    // get the charge deposition from a set of hits (std::vector<hit>) in a sphere around the vertex
-//    // of radius r [cm]
-//    float Q = 0.0;
-//    for (auto hit:hits){
-//        if (hit.InPlane(plane)
-//            && hit.InSphere( vertex_wire[plane] , vertex_time[plane] , r )){
-//            Q += hit.GetCharge();
-//        }
-//    }
-//    return Q;
-//    
-//}
-////
-//
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//float pairVertex::GetRdQSphereAroundVertex (int plane, float r, std::vector<hit> hits ) const {
-//    // Feb-18,2018
-//    // get the ratio of tracks-charge deposited to total-charge deposited
-//    // in a sphere of radius r [cm] around the vertex in plane i=0,1,2
-//    // a mal-function will return -1 (if plane is not 0,1,2) or -9999 (if Qtotal=0)
-//    // input:
-//    // plane, r [cm] for the sphere, hits in event
-//    if (plane<0 || plane>2) return -1;
-//    
-//    float Qtotal    = GetChargeInSphere( plane, hits, r );
-//    float Qmuon     = GetChargeInSphere( plane, hits_muon[plane], r );
-//    float Qproton   = GetChargeInSphere( plane, hits_proton[plane], r );
-//    if (fabs(Qtotal)>0) return ((Qmuon+Qproton)/Qtotal);
-//    
-//    else return -9999;
-//}
-//
 
 
 

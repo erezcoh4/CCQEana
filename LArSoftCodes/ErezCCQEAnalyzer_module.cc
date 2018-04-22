@@ -734,21 +734,21 @@ void ub::ErezCCQEAnalyzer::FilterGoodPairVertices(){
             ){
             
             // assign muon and proton tracks by PID-A
-            auto AssignedMuonTrack = v.GetSmallPIDaTrack();
-            auto PmuFromRange = trkm.GetTrackMomentum( AssignedMuonTrack.GetLength()  , 13  );
-            v.AssignMuonTrack( AssignedMuonTrack  );
+            auto Track_muCandidate = v.GetSmallPIDaTrack();
+            auto PmuFromRange = trkm.GetTrackMomentum( Track_muCandidate.GetLength()  , 13  );
+            v.AssignMuonTrack( Track_muCandidate  );
             
             
-            auto AssignedProtonTrack = v.GetLargePIDaTrack();
-            auto PpFromRange = trkm.GetTrackMomentum( AssignedProtonTrack.GetLength() , 2212);
-            v.AssignProtonTrack( AssignedProtonTrack );
+            auto Track_pCandidate = v.GetLargePIDaTrack();
+            auto PpFromRange = trkm.GetTrackMomentum( Track_pCandidate.GetLength() , 2212);
+            v.AssignProtonTrack( Track_pCandidate );
             
             v.FixTracksDirections ();
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
            
             // set vertex position in the three wire planes
-//             // version for v06_42_00
-//            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
+            //             // version for v06_42_00
+            //            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
             // version for v06_26_01
             double const v_position[3] = {v.GetPosition().X(),v.GetPosition().Y(),v.GetPosition().Z()};
             geo::TPCID tpcID = geom->FindTPCAtPosition( v_position );
@@ -789,8 +789,8 @@ void ub::ErezCCQEAnalyzer::TagVertices(){
     //
     for (auto & v:vertices){
         
-        PandoraNuTrack t1 = v.GetAssignedMuonTrack();
-        PandoraNuTrack t2 = v.GetAssignedProtonTrack();
+        PandoraNuTrack t1 = v.GetTrack_muCandidate();
+        PandoraNuTrack t2 = v.GetTrack_pCandidate();
         
         // for MC-BNB and cosmic-data overlay, we determine that a vertex is cosmic if one of its tracks is unrecognized (-9999)
         if ( (t1.GetMCpdgCode() * t2.GetMCpdgCode())==(13*2212) ){
@@ -951,27 +951,27 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         
         // µ/p assigned tracks
         vertices_file
-        << v.GetAssignedMuonTrack().GetPIDa() << "," << v.GetAssignedProtonTrack().GetPIDa() << ","
-        << v.GetAssignedMuonTrack().GetLength() << "," << v.GetAssignedProtonTrack().GetLength() << "," ;
+        << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
+        << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << "," ;
         // flash matching of tracks
         vertices_file
-        << v.GetAssignedMuonTrack().GetDis2ClosestFlash() << "," << v.GetAssignedProtonTrack().GetDis2ClosestFlash() << ","
-        << v.GetAssignedMuonTrack().GetClosestFlash().GetTotalPE() << "," << v.GetAssignedProtonTrack().GetClosestFlash().GetTotalPE() << "," ;
+        << v.GetTrack_muCandidate().GetDis2ClosestFlash() << "," << v.GetTrack_pCandidate().GetDis2ClosestFlash() << ","
+        << v.GetTrack_muCandidate().GetClosestFlash().GetTotalPE() << "," << v.GetTrack_pCandidate().GetClosestFlash().GetTotalPE() << "," ;
 
         // start/end points, for FV cuts
         vertices_file
-        << v.GetAssignedMuonTrack().GetStartPos().x() << ","
-        << v.GetAssignedMuonTrack().GetStartPos().y() << ","
-        << v.GetAssignedMuonTrack().GetStartPos().z() << ","
-        << v.GetAssignedProtonTrack().GetStartPos().x() << ","
-        << v.GetAssignedProtonTrack().GetStartPos().y() << ","
-        << v.GetAssignedProtonTrack().GetStartPos().z() << ","
-        << v.GetAssignedMuonTrack().GetEndPos().x() << ","
-        << v.GetAssignedMuonTrack().GetEndPos().y() << ","
-        << v.GetAssignedMuonTrack().GetEndPos().z() << ","
-        << v.GetAssignedProtonTrack().GetEndPos().x() << ","
-        << v.GetAssignedProtonTrack().GetEndPos().y() << ","
-        << v.GetAssignedProtonTrack().GetEndPos().z() << ",";
+        << v.GetTrack_muCandidate().GetStartPos().x() << ","
+        << v.GetTrack_muCandidate().GetStartPos().y() << ","
+        << v.GetTrack_muCandidate().GetStartPos().z() << ","
+        << v.GetTrack_pCandidate().GetStartPos().x() << ","
+        << v.GetTrack_pCandidate().GetStartPos().y() << ","
+        << v.GetTrack_pCandidate().GetStartPos().z() << ","
+        << v.GetTrack_muCandidate().GetEndPos().x() << ","
+        << v.GetTrack_muCandidate().GetEndPos().y() << ","
+        << v.GetTrack_muCandidate().GetEndPos().z() << ","
+        << v.GetTrack_pCandidate().GetEndPos().x() << ","
+        << v.GetTrack_pCandidate().GetEndPos().y() << ","
+        << v.GetTrack_pCandidate().GetEndPos().z() << ",";
         
         
         // CC1p0π reconstructed featues
@@ -1007,15 +1007,15 @@ void ub::ErezCCQEAnalyzer::StreamVerticesToCSV(){
         vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";
         
         // truth MC information
-        vertices_file << v.GetAssignedMuonTrack().GetTruthLength() << "," << v.GetAssignedProtonTrack().GetTruthLength() << ",";
+        vertices_file << v.GetTrack_muCandidate().GetTruthLength() << "," << v.GetTrack_pCandidate().GetTruthLength() << ",";
         
         vertices_file
-        << v.GetAssignedMuonTrack().GetTruthMomentum().P() << ","
-        << v.GetAssignedMuonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedMuonTrack().GetTruthMomentum().Phi() << ",";
+        << v.GetTrack_muCandidate().GetTruthMomentum().P() << ","
+        << v.GetTrack_muCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Phi() << ",";
         
         vertices_file
-        << v.GetAssignedProtonTrack().GetTruthMomentum().P() << ","
-        << v.GetAssignedProtonTrack().GetTruthMomentum().Px() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Py() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Pz() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Theta() << "," << v.GetAssignedProtonTrack().GetTruthMomentum().Phi() << ",";
+        << v.GetTrack_pCandidate().GetTruthMomentum().P() << ","
+        << v.GetTrack_pCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Phi() << ",";
         
 
         // mathing genie interaction

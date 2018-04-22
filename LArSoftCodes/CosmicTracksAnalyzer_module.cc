@@ -1234,18 +1234,18 @@ void ub::CosmicTracksAnalyzer::StreamVerticesToCSV(){
             
             // start/end points, for FV cuts
             vertices_file
-            << v.GetAssignedMuonTrack().GetStartPos().x() << ","
-            << v.GetAssignedMuonTrack().GetStartPos().y() << ","
-            << v.GetAssignedMuonTrack().GetStartPos().z() << ","
-            << v.GetAssignedProtonTrack().GetStartPos().x() << ","
-            << v.GetAssignedProtonTrack().GetStartPos().y() << ","
-            << v.GetAssignedProtonTrack().GetStartPos().z() << ","
-            << v.GetAssignedMuonTrack().GetEndPos().x() << ","
-            << v.GetAssignedMuonTrack().GetEndPos().y() << ","
-            << v.GetAssignedMuonTrack().GetEndPos().z() << ","
-            << v.GetAssignedProtonTrack().GetEndPos().x() << ","
-            << v.GetAssignedProtonTrack().GetEndPos().y() << ","
-            << v.GetAssignedProtonTrack().GetEndPos().z() << ",";
+            << v.GetTrack_muCandidate().GetStartPos().x() << ","
+            << v.GetTrack_muCandidate().GetStartPos().y() << ","
+            << v.GetTrack_muCandidate().GetStartPos().z() << ","
+            << v.GetTrack_pCandidate().GetStartPos().x() << ","
+            << v.GetTrack_pCandidate().GetStartPos().y() << ","
+            << v.GetTrack_pCandidate().GetStartPos().z() << ","
+            << v.GetTrack_muCandidate().GetEndPos().x() << ","
+            << v.GetTrack_muCandidate().GetEndPos().y() << ","
+            << v.GetTrack_muCandidate().GetEndPos().z() << ","
+            << v.GetTrack_pCandidate().GetEndPos().x() << ","
+            << v.GetTrack_pCandidate().GetEndPos().y() << ","
+            << v.GetTrack_pCandidate().GetEndPos().z() << ",";
 
             
             // reconstructed distance between the tracks

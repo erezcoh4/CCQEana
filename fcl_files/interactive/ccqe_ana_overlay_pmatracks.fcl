@@ -12,12 +12,11 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
 
-
-process_name: RunErezCCQEana
+process_name: RunErezCCQEana 
 
 services:
 {
-  TFileService: { fileName: "prodgenie_bnb_nu_uboone_overlay_mcc8_v4.root" closeFileFast: false}
+  TFileService: { fileName: "prodgenie_bnb_nu_uboone_ovrelay_v4_pmtracks.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -44,28 +43,28 @@ physics:
     EventsAnalyzer: 
     {
       module_type:                      "ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8_v4"
+      DataSampleLabel:                  "prodgenie_bnb_nu_uboone_ovrelay_v4_pmtracks"
       VerbosityLevel:                   1
       MCmodeLabel:                      true
       DoWriteTracksInfo:                true
-      DoAddTracksEdep:                  false
+      DoAddTracksEdep:                  true
       DoWriteGENIEInfo:                 true
       DoWriteEventsInfo:                true
       DoOnlySwT:                        false
       SwTModuleLabel:                   "swtrigger"
       SwTAlgoModuleLabel:               "BNB_FEMBeamTriggerAlgo"
-      TrackModuleLabel:                 "pandoraNu"
+      TrackModuleLabel:                 "pmtrack"
       HitsModuleLabel:                  "pandoraCosmicHitRemoval"
       MCTruthModuleLabel:               "generator"
       GenieGenModuleLabel:              "generator"
-      CalorimetryModuleLabel:           "pandoraNucalo"
       POTModuleLabel:                   "generator"
       FlashModuleLabel:                 "simpleFlashBeam"
       HitParticleAssnsModuleLabel:      "crHitRemovalTruthMatch"
-      CalibratedCalorimetryModuleLabel: "pandoraNucali"
+      CalorimetryModuleLabel:           "pmtrackcalo"
+      CalibratedCalorimetryModuleLabel: "pmtrackcali"
       TruncMeanRadLabel:                1.0
-      PIDModuleLabel:                   "pandoraNupid"
-      CaliPIDModuleLabel:               "pandoraNucalipid"
+      PIDModuleLabel:                   "pmtrackpid"
+      CaliPIDModuleLabel:               "pmtrackcalipid"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

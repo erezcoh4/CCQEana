@@ -12,8 +12,7 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
 
-
-process_name: RunErezCCQEana
+process_name: RunErezCCQEana 
 
 services:
 {
@@ -48,7 +47,7 @@ physics:
       VerbosityLevel:                   1
       MCmodeLabel:                      true
       DoWriteTracksInfo:                true
-      DoAddTracksEdep:                  false
+      DoAddTracksEdep:                  true
       DoWriteGENIEInfo:                 true
       DoWriteEventsInfo:                true
       DoOnlySwT:                        false
