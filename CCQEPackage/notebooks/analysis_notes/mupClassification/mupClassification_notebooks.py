@@ -15,7 +15,182 @@ pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
 
 
 # ------------------------------------------------
-# last edit: Feb-12,2018
+# March-6, 2018
+def get_Nreduced(MCbnbDATAcosmicSamples=None,reduced = dict()):
+    Noriginal , Nreduced , freduced = dict() , dict() , dict()
+    for pair_type in pair_types:
+        sam = MCbnbDATAcosmicSamples[pair_type]
+        Noriginal[pair_type] = len(MCbnbDATAcosmicSamples[pair_type])
+        Nreduced[pair_type] = float(len(reduced[pair_type]))
+        freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
+    return Nreduced , freduced
+# ------------------------------------------------
+
+
+# ------------------------------------------------
+# March 5, 2018
+def get_pureff_cut(MCbnbDATAcosmicSamples=None,reduced=None,pureff=None, cut_name = 'PIDa'):
+    eff,pur = dict(),dict()
+    Nreduced , freduced = get_Nreduced(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples,reduced=reduced)
+    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
+    eff['1mu-1p'] = freduced['1mu-1p']
+    pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
+    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
+    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    pureff_cut = pd.DataFrame({'label':cut_name
+                              ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
+                              ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
+                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
+                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
+                              , index=[cut_name]
+                              )
+        
+    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
+    pureff = pureff.append(pureff_cut)
+    return pureff
+# ------------------------------------------------
+
+
+
+
+# ------------------------------------------------
+# March-6, 2018 (last edit April-23)
+def apply_cuts_to_overlay(MCbnbDATAcosmicSamples=None
+                          ,N_On=1 # number of pairs in BeamOn before event-selection cuts
+                          ,PIDa_p_min=13
+                          ,minPEcut = 100
+                          ,maxdYZcut = 200
+                          ,delta_theta_12=55  # deg.
+                          ,opt_box=(50,100) # [Nwires x Nticks]
+                          ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                          ,delta_Delta_phi=35 # deg.
+                          ,Pt_max=0.35        # GeV/c
+                          ,cuts_order=['no cut']
+                          ,debug=0
+                          ,f_POT = 1
+                          ,do_PIDaCali=True
+                          ):
+    
+    cut_name = 'no cut'
+    reducedSamples = dict()
+    pureffOverlay = pd.DataFrame()
+    reducedSamples['no cut'] = dict()
+    numbers = pd.DataFrame()
+    for pair_type in pair_types: reducedSamples['no cut'][pair_type] = MCbnbDATAcosmicSamples[pair_type]
+    pureffOverlay = get_pureff_cut(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples ,pureff=pureffOverlay,cut_name=cut_name,reduced=reducedSamples[cut_name])
+    Noverlay,_ = gen_Noverlay(reducedSamples=reducedSamples,cut_name=cut_name,N_On=N_On,debug=debug,f_POT=f_POT )
+    numbers = numbers.append(pd.DataFrame({ r'$N_{Overlay}$':Noverlay['Overlay']
+                                          ,r'${\epsilon}_{Overlay}$ [%]':100
+                                          ,r'$N_{Overlay, cosmic-scaled}$':Noverlay['Overlay Cosmic Scaled']
+                                          ,r'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':Noverlay['Overlay Cosmic & POT Scaled']
+                                          ,r'${\epsilon}_{Overlay, cosmic-scaled}$ [%]':100
+                                          ,r'$N_{cosmic}$':Noverlay['Cosmic']
+                                          ,r'$N_{cosmic, cosmic-scaled}$':Noverlay['Cosmic Scaled']
+                                          ,r'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':f_POT*Noverlay['Cosmic Scaled']
+                                          },index=['preselection']))
+    for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
+        reduced = dict()
+        print 'grabbing reduced samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
+        samples_previous_cut = reducedSamples[cuts_order[i_cut-1]]
+        print 'len(samples_previous_cut):',len(samples_previous_cut)
+                        
+        for pair_type in pair_types:#{
+            sam = samples_previous_cut[pair_type]
+            print 'sam('+pair_type+'):',len(sam)
+                                    
+                                    
+            if cut == 'PIDa':#{
+                if do_PIDaCali:
+                    reduced[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
+                else:
+                    reduced[pair_type] = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
+            #}
+            elif cut == 'flash':#{
+                reduced[pair_type] = sam[(sam['Nflashes']>0)
+                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
+                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            #}
+            elif cut == 'length':#{
+                reduced[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
+            #}
+
+            elif cut == 'non-collinearity':#{
+                reduced[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
+            #}
+            elif cut == 'vertex activity':#{
+                R_str,box_str = 'RdQaroundVertex','[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
+                Ru,Rv,Ry = R_str+'[plane 0]'+box_str,R_str+'[plane 1]'+box_str,R_str+'[plane 2]'+box_str
+                reduced[pair_type] = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
+                                         |
+                                         (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
+                                          <= r_max_RdQ_CC1p0pi) ]
+            #}
+            elif cut == 'delta phi':#{
+                reduced[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
+            #}
+            elif cut == 'soft Pt':#{
+                reduced[pair_type] = sam[sam['reco_Pt']<Pt_max]
+            #}
+        #}
+        reducedSamples[cut] = reduced
+        pureffOverlay = get_pureff_cut(MCbnbDATAcosmicSamples=MCbnbDATAcosmicSamples,pureff=pureffOverlay,cut_name=cut,reduced=reduced)
+        Noverlay,_ = gen_Noverlay(reducedSamples=reducedSamples,cut_name=cut,N_On=N_On,debug=debug,f_POT=f_POT )
+        numbers = numbers.append(pd.DataFrame({ r'$N_{Overlay}$':Noverlay['Overlay']
+                                          ,r'${\epsilon}_{Overlay}$ [%]':100.*Noverlay['eff Overlay']
+                                          ,r'$N_{Overlay, cosmic-scaled}$':Noverlay['Overlay Cosmic Scaled']
+                                          ,r'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':Noverlay['Overlay Cosmic & POT Scaled']
+                                          ,r'${\epsilon}_{Overlay, cosmic-scaled}$ [%]':100.*Noverlay['eff Overlay Cosmic Scaled']
+                                          ,r'$N_{cosmic}$':Noverlay['Cosmic']
+                                          ,r'$N_{cosmic, cosmic-scaled}$':Noverlay['Cosmic Scaled']
+                                          ,r'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':f_POT*Noverlay['Cosmic Scaled']
+                                          },index=[cut]))
+    #}
+    os.system('say "I have completed applying % cuts to the overlay samples, from %s to %s".'%(len(cuts_order),cuts_order[0],cuts_order[-1]))
+    return reducedSamples,pureffOverlay,numbers
+#}
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+
+
+
+# ------------------------------------------------
+# April-4 (last edit April 23)
+def gen_Noverlay(reducedSamples=None,cut_name=''
+                 ,f_POT=1
+                 ,N_On=1 # number of pairs in BeamOn before event-selection cuts
+                 ,debug=0
+                 ):
+    # @return the number of events in each subsample of the overlay, POT-normalized
+    N = dict()
+    N['Cosmic'],N['mup'],N['others'] = float(len(reducedSamples[cut_name]['cosmic'])),float(len(reducedSamples[cut_name]['1mu-1p'])),float(len(reducedSamples[cut_name]['other pairs']))
+    N['MC'] = N['mup'] + N['others']
+    N['Overlay'] = N['Cosmic'] + N['MC']
+    N['eff Overlay'] = N['Overlay']/(len(reducedSamples['no cut']['cosmic'])
+                                     +len(reducedSamples['no cut']['1mu-1p'])
+                                     +len(reducedSamples['no cut']['other pairs']))
+    N['Overlay POT Scaled'] = f_POT*(N['Cosmic'] + N['MC'])
+    # scale the cosmic in the MC
+    N['Cosmic original'] = float(len(reducedSamples['no cut']['cosmic']))
+    f_Cosmic = (1./N['Cosmic original'])*(N_On/f_POT - N['MC'])
+    N['Cosmic Scaled'] = f_Cosmic*N['Cosmic']
+    N['Overlay Cosmic Scaled'] = N['MC'] + N['Cosmic Scaled']
+    N['eff Overlay Cosmic Scaled'] = (N['Overlay Cosmic Scaled']
+                                      /(f_Cosmic*len(reducedSamples['no cut']['cosmic'])
+                                        +len(reducedSamples['no cut']['1mu-1p'])
+                                        +len(reducedSamples['no cut']['other pairs'])))
+    N['Overlay Cosmic & POT Scaled'] = f_POT*N['Overlay Cosmic Scaled']
+    if debug:
+        print 'Noverlay in',cut_name
+        print N
+    return N,f_Cosmic
+# ------------------------------------------------
+
+
+
+
+# ------------------------------------------------
+# last edit: Feb-12,2018 (last edit April 23)
 def load_MCbnbDATAcosmicSamples(filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
     '''
         return:
@@ -36,6 +211,7 @@ def load_MCbnbDATAcosmicSamples(filename='ecohen_physical_files_adi_prodgenie_bn
         if pair_type=='CC 1p 0pi': print_line()
         print Ntype,'are '+pair_type+', %.1f'%(100.*float(Ntype)/len(MCbnbDATAcosmicPairsFV))+'%'
     #}
+    os.system('say "I finished loading overlay, MC BNB / data cosmic samples. We have in total %d pairs".'%len(pairs))
     return MCbnbDATAcosmicPairsFV, MCbnbDATAcosmicSamples
 # ------------------------------------------------
 
@@ -55,7 +231,8 @@ def get_pair_hpars(index):
 # ------------------------------------------------
 # last edit:
 # Feb. 12, 2018
-def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
+def apply_cuts_MCbnbDATAcosmic( OverlaySamples=None
+                               , PIDa_p_min=13
                                , delta_theta_12=55  # deg.
                                , delta_Delta_phi=35 # deg.
                                , theta_pq_max=25    # deg.
@@ -89,7 +266,10 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
     # --- -- --- - -- -- --- --
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
-        reduced_MCbnbDATAcosmic[pair_type] = MCbnbDATAcosmicSamples[pair_type]
+        # for overlay version v2
+        # reduced_MCbnbDATAcosmic[pair_type] = MCbnbDATAcosmicSamples[pair_type]
+        # for overlay version v4 and up
+        reduced_MCbnbDATAcosmic[pair_type] = OverlaySamples[pair_type]
     #}
     reduced_MCbnbDATAcosmicSamples['no cut'] = reduced_MCbnbDATAcosmic
 
@@ -108,7 +288,8 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
         sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
-        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
+        #        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
     #}
     get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
@@ -143,9 +324,11 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
     cut_name , cut_label = 'length', r'$l_{\mu}>l_{p}$'
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
-        #sam = reduced_MCbnbDATAcosmicSamples['PIDa'][pair_type]
         sam = reduced_MCbnbDATAcosmicSamples['flash'][pair_type]
-        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
+        # for overlay v2
+        # reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
+        # for overlay v4 and up
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
     #}
     get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
@@ -265,7 +448,10 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
     reduced_MCbnbDATAcosmic = dict()
     for pair_type in pair_types:#{
         sam = reduced_MCbnbDATAcosmicSamples['soft Pt'][pair_type]
-        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_assigned_proton']>10]
+        # for overlay v2
+        # reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_assigned_proton']>10]
+        # for overlay v4 and up
+        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_pCandidate']>10]
     #}
     get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
     get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
@@ -293,7 +479,10 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
         reduced_MCbnbDATAcosmic = dict()
         for pair_type in pair_types:#{
             sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
-            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min_cut]
+            # for overlay v2
+            #            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min_cut]
+            # for overlay v4 and up
+            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min_cut]
         #}
         get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
         get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
@@ -362,6 +551,7 @@ def apply_cuts_MCbnbDATAcosmic( PIDa_p_min=13
         get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
     #}
 
+    os.system('say "I have completed applying cuts to the overlay samples".')
     return pureff_MCbnbDATAcosmic,pureff_MCbnbDATAcosmic_numbers
 #}
 # ------------------------------------------------
@@ -437,30 +627,55 @@ def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduc
 
 
 
-
-
 # ------------------------------------------------
+# April-23, 2018
 def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
                  min_FV_z = 5, max_FV_z = 1037,
                  min_FV_x = 3, max_FV_x = 250): # 257
     sample_in_FV = sample[
-                          (np.abs(sample['starty_assigned_muon']) < max_FV_y)
-                          & (np.abs(sample['starty_assigned_proton']) < max_FV_y)
-                          & (np.abs(sample['endy_assigned_muon']) < max_FV_y)
-                          & (np.abs(sample['endy_assigned_proton']) < max_FV_y)
+                          (np.abs(sample['starty_muCandidate']) < max_FV_y)
+                          & (np.abs(sample['starty_pCandidate']) < max_FV_y)
+                          & (np.abs(sample['endy_muCandidate']) < max_FV_y)
+                          & (np.abs(sample['endy_pCandidate']) < max_FV_y)
                           
-                          & ((sample['startz_assigned_muon'] > min_FV_z) & (sample['startz_assigned_muon'] < max_FV_z) )
-                          & ((sample['startz_assigned_proton'] > min_FV_z) & (sample['startz_assigned_proton'] < max_FV_z) )
-                          & ((sample['endz_assigned_muon'] > min_FV_z) & (sample['endz_assigned_muon'] < max_FV_z) )
-                          & ((sample['endz_assigned_proton'] > min_FV_z) & (sample['endz_assigned_proton'] < max_FV_z) )
+                          & ((sample['startz_muCandidate'] > min_FV_z) & (sample['startz_muCandidate'] < max_FV_z) )
+                          & ((sample['startz_pCandidate'] > min_FV_z) & (sample['startz_pCandidate'] < max_FV_z) )
+                          & ((sample['endz_muCandidate'] > min_FV_z) & (sample['endz_muCandidate'] < max_FV_z) )
+                          & ((sample['endz_pCandidate'] > min_FV_z) & (sample['endz_pCandidate'] < max_FV_z) )
                           
-                          & ((sample['startx_assigned_muon'] > min_FV_x) & (sample['startx_assigned_muon'] < max_FV_x) )
-                          & ((sample['startx_assigned_proton'] > min_FV_x) & (sample['startx_assigned_proton'] < max_FV_x) )
-                          & ((sample['endx_assigned_muon'] > min_FV_x) & (sample['endx_assigned_muon'] < max_FV_x) )
-                          & ((sample['endx_assigned_proton'] > min_FV_x) & (sample['endx_assigned_proton'] < max_FV_x) )
+                          & ((sample['startx_muCandidate'] > min_FV_x) & (sample['startx_muCandidate'] < max_FV_x) )
+                          & ((sample['startx_pCandidate'] > min_FV_x) & (sample['startx_pCandidate'] < max_FV_x) )
+                          & ((sample['endx_muCandidate'] > min_FV_x) & (sample['endx_muCandidate'] < max_FV_x) )
+                          & ((sample['endx_pCandidate'] > min_FV_x) & (sample['endx_pCandidate'] < max_FV_x) )
                           ]
     return sample_in_FV
 # ------------------------------------------------
+
+
+
+#
+## ------------------------------------------------
+#def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
+#                 min_FV_z = 5, max_FV_z = 1037,
+#                 min_FV_x = 3, max_FV_x = 250): # 257
+#    sample_in_FV = sample[
+#                          (np.abs(sample['starty_assigned_muon']) < max_FV_y)
+#                          & (np.abs(sample['starty_assigned_proton']) < max_FV_y)
+#                          & (np.abs(sample['endy_assigned_muon']) < max_FV_y)
+#                          & (np.abs(sample['endy_assigned_proton']) < max_FV_y)
+#                          
+#                          & ((sample['startz_assigned_muon'] > min_FV_z) & (sample['startz_assigned_muon'] < max_FV_z) )
+#                          & ((sample['startz_assigned_proton'] > min_FV_z) & (sample['startz_assigned_proton'] < max_FV_z) )
+#                          & ((sample['endz_assigned_muon'] > min_FV_z) & (sample['endz_assigned_muon'] < max_FV_z) )
+#                          & ((sample['endz_assigned_proton'] > min_FV_z) & (sample['endz_assigned_proton'] < max_FV_z) )
+#                          
+#                          & ((sample['startx_assigned_muon'] > min_FV_x) & (sample['startx_assigned_muon'] < max_FV_x) )
+#                          & ((sample['startx_assigned_proton'] > min_FV_x) & (sample['startx_assigned_proton'] < max_FV_x) )
+#                          & ((sample['endx_assigned_muon'] > min_FV_x) & (sample['endx_assigned_muon'] < max_FV_x) )
+#                          & ((sample['endx_assigned_proton'] > min_FV_x) & (sample['endx_assigned_proton'] < max_FV_x) )
+#                          ]
+#    return sample_in_FV
+## ------------------------------------------------
 
 
 #---------------------------------------------------------------------------------------------
