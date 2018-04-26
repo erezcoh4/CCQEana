@@ -63,6 +63,8 @@ physics:
       HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
       CalibratedCalorimetryModuleLabel: "pandoraNucali"
       TruncMeanRadLabel:     1.0
+      PIDModuleLabel:        "pandoraNupid"
+      CaliPIDModuleLabel:    "pandoraNucalipid"
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms

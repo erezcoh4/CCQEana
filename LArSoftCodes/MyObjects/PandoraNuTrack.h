@@ -161,6 +161,17 @@ public:
         PandoraNuCaliPID_Chi2Muon[plane]    = fChi2Muon;
         PandoraNuCaliPID_PIDA[plane]        = fPIDA;
     };
+    
+    // momentum from momentum calculator
+    void SetMomCalc (
+                     Float_t fPmuHypothesisCalc=0, // momentum for muon hypothesis
+                     Float_t fPpHypothesisCalc=0 // momentum for proton hypothesis
+    )
+    {
+        PmuHypothesisCalc = fPmuHypothesisCalc;
+        PpHypothesisCalc = fPpHypothesisCalc;
+    };
+
 
     
     
@@ -248,8 +259,10 @@ public:
     // truncated dE/dx
     std::vector<float> GetdEdxTrunc (int plane) const {return dEdxTrunc[plane];};
     
+    // momentum for muon hypothesis from calculator
+    Float_t     GetPmuHypothesisCalc () const { return PmuHypothesisCalc;};
+    Float_t      GetPpHypothesisCalc () const { return PpHypothesisCalc;};
 
-    
     
     
     
@@ -348,6 +361,9 @@ private:
     Float_t     PandoraNuCaliPID_Chi2Muon[3]={0,0,0};
     Float_t     PandoraNuCaliPID_PIDA[3]={0,0,0};
     
+    // momentum calculator
+    Float_t     PmuHypothesisCalc=0;
+    Float_t     PpHypothesisCalc=0;
 
     
     // completeness of the track MC-truth matching

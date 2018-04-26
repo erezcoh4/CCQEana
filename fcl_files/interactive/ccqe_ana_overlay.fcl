@@ -16,7 +16,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "prodgenie_bnb_nu_uboone_overlay_mcc8_v4.root" closeFileFast: false}
+  TFileService: { fileName: "prodgenie_bnb_nu_uboone_overlay_mcc8_v5.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -43,7 +43,7 @@ physics:
     EventsAnalyzer: 
     {
       module_type:                      "ErezCCQEAnalyzerNewTruthMatching"
-      DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8_v4"
+      DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8_v5"
       VerbosityLevel:                   1
       MCmodeLabel:                      true
       DoWriteTracksInfo:                true

@@ -7,8 +7,6 @@
     
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=765
-    python scripts/download_files.py --name=adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
-    python scripts/download_files.py --name=ccqe_ana_MCBNBCosmicDATA --option=makeup --continue_makeup=3215875_826 --ctr=2397
 
     * for MC-BNB/MC-cosmic:
 
@@ -208,5 +206,5 @@ if (len(events_df_array)>0):#{
 print
 
 os.system('say "download files from grid has completed"')
-os.system('say "concatenated %d vertices to outputfile".'%len(vertices_all))
+os.system('say "concatenated %d vertices to outputfile from %d events".'%(len(vertices_all),len(events_all)))
 

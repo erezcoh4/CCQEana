@@ -29,19 +29,24 @@
 #include "lardataobj/RecoBase/TrackHitMeta.h"
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "lardata/ArtDataHelper/TrackUtils.h" // lar::util::TrackPitchInView()
-#include "lardata/Utilities/PxUtils.h"
-#include "lardata/Utilities/GeometryUtilities.h"
+#include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
+
+#include "lardata/ArtDataHelper/TrackUtils.h" // lar::util::TrackPitchInView()
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
-#include "nusimdata/SimulationBase/MCTruth.h"
+#include "lardata/Utilities/PxUtils.h"
+#include "lardata/Utilities/GeometryUtilities.h"
+
 #include "larreco/RecoAlg/PMAlg/Utilities.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
+#include "larreco/RecoAlg/TrackMomentumCalculator.h"
+
 #include "larcoreobj/SummaryData/POTSummary.h"
+
 #include "nusimdata/SimulationBase/MCFlux.h"
-#include "lardataobj/AnalysisBase/ParticleID.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
 
 
 // for SwT emulation
@@ -275,6 +280,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     ResetVars();
     
     art::ServiceHandle<geo::Geometry> geom;
+    trkf::TrackMomentumCalculator TrackMomCalc;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
     
     isdata = evt.isRealData();
@@ -591,7 +597,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }
         }
         
-        
         // Truncated Mean dE/dx
         if (fmcal.isValid()){
             TruncMean truncmean( debug , TruncMeanRad );
@@ -615,6 +620,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }
         }
         
+        // momentum from momentum calculator
+        track.SetMomCalc(
+                         TrackMomCalc.GetTrackMomentum(track.GetLength(),13),  // momentum for muon hypothesis
+                         TrackMomCalc.GetTrackMomentum(track.GetLength(),2212) // momentum for proton hypothesis
+                         );
         
         // flash - matching: find the closest flash to the track
         if (flashes.size()){
@@ -1620,12 +1630,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     
     // µ/p assigned tracks
     << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
-    << "l_muCandidate"<< "," << "l_pCandidate" << ","
-    << "PIDaCali_muCandidate"<< "," << "PIDaCali_pCandidate" << ","
-    // we also want to consider PIDa using only the collection-plane
-    // since the induction planes are poorly modeled and show large angular dependence in data
-    << "PIDaYplane_muCandidate"<< "," << "PIDaYplane_pCandidate" << ","
-    << "PIDaCaliYplane_muCandidate"<< "," << "PIDaCaliYplane_pCandidate" << ","
+    << "l_muCandidate"<< "," << "l_pCandidate" << "," << "l_mu-l_p"<< ","
+    
+    //    << "PIDaCali_muCandidate"<< "," << "PIDaCali_pCandidate" << ","
+    //    // we also want to consider PIDa using only the collection-plane
+    //    // since the induction planes are poorly modeled and show large angular dependence in data
+    //    << "PIDaYplane_muCandidate"<< "," << "PIDaYplane_pCandidate" << ","
+    //    << "PIDaCaliYplane_muCandidate"<< "," << "PIDaCaliYplane_pCandidate" << ","
+    
     // pandoraNu pid object
     << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
     << "pid_PIDaYplane_muCandidate"<< "," << "pid_PIDaYplane_pCandidate" << ","
@@ -1658,10 +1670,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
     << "theta_12" << ","
     
     // reconstructed kinematics
-    << "reco_Ev" << "," << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
-    << "reco_Pt" << "," << "reco_theta_pq" << ","
-    << "reco_Pmu" << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
-    << "reco_Pp" << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
+    << "reco_Ev"    << "," << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
+    << "reco_Pt"    << "," << "reco_theta_pq" << ","
+    << "reco_Pmu"   << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
+    << "reco_Pp"    << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
+    << "PmuHypothesisCalc" << "," << "PpHypothesisCalc" << ","
     
     // missing momentum (reconstructed struck neutron)
     << "reco_Pmiss" << ","  << "reco_Pmiss_x" << ","  << "reco_Pmiss_y" << ","  << "reco_Pmiss_z" << "," << "reco_Pmiss_t" << ","
@@ -1771,14 +1784,16 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         // µ/p assigned tracks
         vertices_file
         << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
-        << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << ","
-        << v.GetTrack_muCandidate().GetPIDaCali() << "," << v.GetTrack_pCandidate().GetPIDaCali() << ","
-        // we also want to consider PIDa using only the collection-plane
-        // since the induction planes are poorly modeled and show large angular dependence in data
-        << v.GetTrack_muCandidate().GetPIDaPerPlane(2) << ","
-        << v.GetTrack_pCandidate().GetPIDaPerPlane(2)  << ","
-        << v.GetTrack_muCandidate().GetPIDaCaliPerPlane(2) << ","
-        << v.GetTrack_pCandidate().GetPIDaCaliPerPlane(2) << ","
+        << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << "," <<v.GetTrack_muCandidate().GetLength() - v.GetTrack_pCandidate().GetLength() << ","
+        
+        //        << v.GetTrack_muCandidate().GetPIDaCali() << "," << v.GetTrack_pCandidate().GetPIDaCali() << ","
+        //        // we also want to consider PIDa using only the collection-plane
+        //        // since the induction planes are poorly modeled and show large angular dependence in data
+        //        << v.GetTrack_muCandidate().GetPIDaPerPlane(2) << ","
+        //        << v.GetTrack_pCandidate().GetPIDaPerPlane(2)  << ","
+        //        << v.GetTrack_muCandidate().GetPIDaCaliPerPlane(2) << ","
+        //        << v.GetTrack_pCandidate().GetPIDaCaliPerPlane(2) << ","
+        
         // pandoraNu pid object
         << v.GetTrack_muCandidate().GetPID_PIDA()               << ","  << v.GetTrack_pCandidate().GetPID_PIDA() << ","
         << v.GetTrack_muCandidate().GetPID_PIDA(2)              << ","  << v.GetTrack_pCandidate().GetPID_PIDA(2) << ","
@@ -1839,6 +1854,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
         vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
         vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";
+        vertices_file << v.GetTrack_muCandidate().GetPmuHypothesisCalc() << "," << v.GetTrack_pCandidate().GetPpHypothesisCalc() << ",";
         
         // missing momentum (reconstructed struck neutron)
         vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";

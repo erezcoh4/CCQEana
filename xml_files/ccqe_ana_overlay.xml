@@ -2,7 +2,7 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8_v4">
+<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8_v9">
 <!-- prodgenie_bnb_nu_uboone_overlay_mcc8_v4 -->
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
@@ -39,7 +39,7 @@
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_overlay.fcl</fcl>
             <!--            <inputdef>&defname;</inputdef>-->
-            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/&defname;_reco2.list</inputlist>
+            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/overlay/&defname;_reco2.list</inputlist>
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
