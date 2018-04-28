@@ -319,6 +319,73 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     if (evt.getByLabel(fFlashModuleLabel, flashListHandle))
     art::fill_ptr_vector(flashlist, flashListHandle);
 
+//    
+//    // * flash-matchihg from Marco
+//    // [https://github.com/marcodeltutto/UBXSec/blob/master/Modules/NeutrinoFlashMatch_module.cc]
+//    // Get Beam Flashes from the ART event
+//    ::art::Handle<std::vector<recob::OpFlash>> beamflashHandle;
+//    evt.getByLabel( fFlashModuleLabel , beamflashHandle);
+//    if( !beamflashHandle.isValid() || beamflashHandle->empty() ) {
+//        std::cout << "[NeutrinoFlashMatch] Don't have good flashes." << std::endl;
+//        evt.put(std::move(flashMatchTrackVector));
+//        evt.put(std::move(assnOutFlashMatchTrack));
+//        evt.put(std::move(assnOutFlashMatchPFParticle));
+//        evt.put(std::move(assnOutFlashMatchTPCObject));
+//        return;
+//    }
+//    int nBeamFlashes = 0;
+//    for (size_t n = 0; n < beamflashHandle->size(); n++) {
+//        auto const& flash = (*beamflashHandle)[n];
+//        std::cout << "[NeutrinoFlashMatch] Flash time from " << fFlashModuleLabel << ": " << flash.Time() << std::endl;
+//        if(flash.Time() < _flash_trange_start || _flash_trange_end < flash.Time()) {
+//            continue;
+//        }
+//        nBeamFlashes++;
+//        // Construct a Flash_t
+//        ::flashana::Flash_t f;
+//        f.x = f.x_err = 0;
+//        f.y = flash.YCenter();
+//        f.z = flash.ZCenter();
+//        f.y_err = flash.YWidth();
+//        f.z_err = flash.ZWidth();
+//        f.pe_v.resize(geo->NOpDets());
+//        f.pe_err_v.resize(geo->NOpDets());
+//        for (unsigned int i = 0; i < f.pe_v.size(); i++) {
+//            unsigned int opdet = geo->OpDetFromOpChannel(i);
+//            if (_do_opdet_swap && e.isRealData()) {
+//                opdet = _opdet_swap_map.at(opdet);
+//            }
+//            f.pe_v[opdet] = flash.PE(i);
+//            f.pe_err_v[opdet] = sqrt(flash.PE(i));
+//        }
+//        f.time = flash.Time();
+//        f.idx = nBeamFlashes-1;
+//        beam_flashes.resize(nBeamFlashes);
+//        beam_flashes[nBeamFlashes-1] = f;
+//    } // flash loop
+//    // Don't waste other time if there are no flashes in the beam spill
+//    if (nBeamFlashes == 0) {
+//        std::cout << "[NeutrinoFlashMatch] Zero beam flashes in this event." << std::endl;
+//        e.put(std::move(flashMatchTrackVector));
+//        e.put(std::move(assnOutFlashMatchTrack));
+//        e.put(std::move(assnOutFlashMatchPFParticle));
+//        e.put(std::move(assnOutFlashMatchTPCObject));
+//        return;
+//    }
+//    // If more than one beam flash, take the one with more PEs
+//    if (nBeamFlashes > 1) {
+//        Debug(0 , "More than one beam flash in this event. \n Taking beam flash with more PEs.");
+//        // Sort flashes by length
+//        std::sort(
+//                  beam_flashes.begin(), beam_flashes.end(),
+//                  [](::flashana::Flash_t a, ::flashana::Flash_t b) -> bool
+//                  { return a.TotalPE() > b.TotalPE();}
+//                  );
+//    }
+//    // ** end flash-matchihg from Marco
+
+    
+    
     
     // * tracks
     art::Handle< std::vector<recob::Track> > trackListHandle;
@@ -390,7 +457,6 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                   );
         
         hits.push_back( fhit );
-        
     }
     
     
@@ -568,7 +634,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                               , pid->Chi2Kaon()
                                               , pid->Chi2Pion()
                                               , pid->Chi2Muon()
-                                              , pid->PIDA()
+                                              ,
                                               );
                     Debug(3,"% PIDa (plane %) for track %: %",fPIDModuleLabel,plane,track.GetTrackID(),track.GetPID_PIDA(plane));
                 }
@@ -1803,6 +1869,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
         << v.GetTrack_muCandidate().GetCaliPID_Chi2Muon(2)      << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Muon(2) << ",";
 
         
+
 
         
         // flash matching of tracks

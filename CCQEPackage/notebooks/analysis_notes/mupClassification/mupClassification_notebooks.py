@@ -191,7 +191,7 @@ def gen_Noverlay(reducedSamples=None,cut_name=''
 
 # ------------------------------------------------
 # last edit: Feb-12,2018 (last edit April 23)
-def load_MCbnbDATAcosmicSamples(filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
+def load_MCbnbDATAcosmicSamples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
     '''
         return:
         MCbnbDATAcosmicSamples:  pandas.DataFrame() of prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices in FV
@@ -201,7 +201,7 @@ def load_MCbnbDATAcosmicSamples(filename='ecohen_physical_files_adi_prodgenie_bn
     # old overlay: prodgenie_bnb_nu_uboone_overlay_mcc8_reco2
     #pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
     # new overlay: ccqe_ana_MCBNBCosmicDATA_2018_01_30
-    pairs = pd.read_csv(vertices_files_path+filename+'.csv')
+    pairs = pd.read_csv(vertices_files_path+'/'+date+'/'+filename+'.csv')
     MCbnbDATAcosmicPairsFV = sample_in_FV(pairs)
     print len(pairs),'pairs from MC-BNB + cosmic DATA overlay'
     print len(MCbnbDATAcosmicPairsFV),'pairs in FV'
@@ -624,58 +624,6 @@ def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduc
                                                       )
     pureff_MCbnbDATAcosmic_numbers = pureff_MCbnbDATAcosmic_numbers.append(pureff_MCbnbDATAcosmic_numbers_cut)
 # ------------------------------------------------
-
-
-
-# ------------------------------------------------
-# April-23, 2018
-def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
-                 min_FV_z = 5, max_FV_z = 1037,
-                 min_FV_x = 3, max_FV_x = 250): # 257
-    sample_in_FV = sample[
-                          (np.abs(sample['starty_muCandidate']) < max_FV_y)
-                          & (np.abs(sample['starty_pCandidate']) < max_FV_y)
-                          & (np.abs(sample['endy_muCandidate']) < max_FV_y)
-                          & (np.abs(sample['endy_pCandidate']) < max_FV_y)
-                          
-                          & ((sample['startz_muCandidate'] > min_FV_z) & (sample['startz_muCandidate'] < max_FV_z) )
-                          & ((sample['startz_pCandidate'] > min_FV_z) & (sample['startz_pCandidate'] < max_FV_z) )
-                          & ((sample['endz_muCandidate'] > min_FV_z) & (sample['endz_muCandidate'] < max_FV_z) )
-                          & ((sample['endz_pCandidate'] > min_FV_z) & (sample['endz_pCandidate'] < max_FV_z) )
-                          
-                          & ((sample['startx_muCandidate'] > min_FV_x) & (sample['startx_muCandidate'] < max_FV_x) )
-                          & ((sample['startx_pCandidate'] > min_FV_x) & (sample['startx_pCandidate'] < max_FV_x) )
-                          & ((sample['endx_muCandidate'] > min_FV_x) & (sample['endx_muCandidate'] < max_FV_x) )
-                          & ((sample['endx_pCandidate'] > min_FV_x) & (sample['endx_pCandidate'] < max_FV_x) )
-                          ]
-    return sample_in_FV
-# ------------------------------------------------
-
-
-
-#
-## ------------------------------------------------
-#def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
-#                 min_FV_z = 5, max_FV_z = 1037,
-#                 min_FV_x = 3, max_FV_x = 250): # 257
-#    sample_in_FV = sample[
-#                          (np.abs(sample['starty_assigned_muon']) < max_FV_y)
-#                          & (np.abs(sample['starty_assigned_proton']) < max_FV_y)
-#                          & (np.abs(sample['endy_assigned_muon']) < max_FV_y)
-#                          & (np.abs(sample['endy_assigned_proton']) < max_FV_y)
-#                          
-#                          & ((sample['startz_assigned_muon'] > min_FV_z) & (sample['startz_assigned_muon'] < max_FV_z) )
-#                          & ((sample['startz_assigned_proton'] > min_FV_z) & (sample['startz_assigned_proton'] < max_FV_z) )
-#                          & ((sample['endz_assigned_muon'] > min_FV_z) & (sample['endz_assigned_muon'] < max_FV_z) )
-#                          & ((sample['endz_assigned_proton'] > min_FV_z) & (sample['endz_assigned_proton'] < max_FV_z) )
-#                          
-#                          & ((sample['startx_assigned_muon'] > min_FV_x) & (sample['startx_assigned_muon'] < max_FV_x) )
-#                          & ((sample['startx_assigned_proton'] > min_FV_x) & (sample['startx_assigned_proton'] < max_FV_x) )
-#                          & ((sample['endx_assigned_muon'] > min_FV_x) & (sample['endx_assigned_muon'] < max_FV_x) )
-#                          & ((sample['endx_assigned_proton'] > min_FV_x) & (sample['endx_assigned_proton'] < max_FV_x) )
-#                          ]
-#    return sample_in_FV
-## ------------------------------------------------
 
 
 #---------------------------------------------------------------------------------------------

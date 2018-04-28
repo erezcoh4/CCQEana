@@ -3,6 +3,10 @@
     -----
     * for MC-BNB/DATA-cosmic:
     
+    python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v9
+    python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v9 --option=makeup --continue_makeup=7216920_63 --ctr=761
+
+
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v4
     
     python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2

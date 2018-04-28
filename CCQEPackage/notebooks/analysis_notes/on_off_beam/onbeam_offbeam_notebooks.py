@@ -1,6 +1,3 @@
-overlay_name = 'prodgenie_bnb_nu_uboone_overlay_mcc8_v4_2018_04_18'
-# -- - --- - --- - --- - --- - --- - --- - --- - --- - --- - --- - -
-
 import sys; sys.path.insert(0, '../../'); sys.path.insert(0,'../mupClassification/')
 from ccqe_notebook_tools import *
 from numpy import sqrt,square
@@ -9,11 +6,20 @@ import pprint; pp = pprint.PrettyPrinter(indent=4)
 from matplotlib.pylab import *
 
 
+# -- - --- - --- - --- - --- - --- - --- - --- - --- - --- - --- - -
+versions = dict({'Overlay':'prodgenie_bnb_nu_uboone_overlay_mcc8_v9'
+                ,'OnBeam':'prod_reco_optfilter_bnb_v12_unblind_mcc8'
+                ,'OffBeam':'prod_reco_optfilter_extbnb_v12_mcc8_dev'
+                ,'date':'2018_04_28'})
+print 'versions:'
+pp.pprint(versions)
+# -- - --- - --- - --- - --- - --- - --- - --- - --- - --- - --- - -
+
 
 debug = 0
 Nevents=dict()
 OffBeam_scaling = float(10947004)/15499027 # from note "Off Beam scaling factor (Ariana, Feb 2018)"
-summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/'+overlay_name+'_summary.csv')
+summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/'+versions['date']+'/'+versions['Overlay']+'_'+versions['date']+'_summary.csv')
 
 Nevents['OnBeam POT'] = 4.908e+19
 Nevents['overlay']      = np.sum(summary.Nevents)

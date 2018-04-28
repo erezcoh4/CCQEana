@@ -64,28 +64,56 @@ def find_a_straight_line( x_array , y_array ):
 
 
 # ------------------------------------------------
-# Aug-4, 2017
+# April-23, 2018
 def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
                  min_FV_z = 5, max_FV_z = 1037,
                  min_FV_x = 3, max_FV_x = 250): # 257
     sample_in_FV = sample[
-                          (np.abs(sample['starty_assigned_muon']) < max_FV_y)
-                          & (np.abs(sample['starty_assigned_proton']) < max_FV_y)
-                          & (np.abs(sample['endy_assigned_muon']) < max_FV_y)
-                          & (np.abs(sample['endy_assigned_proton']) < max_FV_y)
+                          (np.abs(sample['starty_muCandidate']) < max_FV_y)
+                          & (np.abs(sample['starty_pCandidate']) < max_FV_y)
+                          & (np.abs(sample['endy_muCandidate']) < max_FV_y)
+                          & (np.abs(sample['endy_pCandidate']) < max_FV_y)
                           
-                          & ((sample['startz_assigned_muon'] > min_FV_z) & (sample['startz_assigned_muon'] < max_FV_z) )
-                          & ((sample['startz_assigned_proton'] > min_FV_z) & (sample['startz_assigned_proton'] < max_FV_z) )
-                          & ((sample['endz_assigned_muon'] > min_FV_z) & (sample['endz_assigned_muon'] < max_FV_z) )
-                          & ((sample['endz_assigned_proton'] > min_FV_z) & (sample['endz_assigned_proton'] < max_FV_z) )
+                          & ((sample['startz_muCandidate'] > min_FV_z) & (sample['startz_muCandidate'] < max_FV_z) )
+                          & ((sample['startz_pCandidate'] > min_FV_z) & (sample['startz_pCandidate'] < max_FV_z) )
+                          & ((sample['endz_muCandidate'] > min_FV_z) & (sample['endz_muCandidate'] < max_FV_z) )
+                          & ((sample['endz_pCandidate'] > min_FV_z) & (sample['endz_pCandidate'] < max_FV_z) )
                           
-                          & ((sample['startx_assigned_muon'] > min_FV_x) & (sample['startx_assigned_muon'] < max_FV_x) )
-                          & ((sample['startx_assigned_proton'] > min_FV_x) & (sample['startx_assigned_proton'] < max_FV_x) )
-                          & ((sample['endx_assigned_muon'] > min_FV_x) & (sample['endx_assigned_muon'] < max_FV_x) )
-                          & ((sample['endx_assigned_proton'] > min_FV_x) & (sample['endx_assigned_proton'] < max_FV_x) )
+                          & ((sample['startx_muCandidate'] > min_FV_x) & (sample['startx_muCandidate'] < max_FV_x) )
+                          & ((sample['startx_pCandidate'] > min_FV_x) & (sample['startx_pCandidate'] < max_FV_x) )
+                          & ((sample['endx_muCandidate'] > min_FV_x) & (sample['endx_muCandidate'] < max_FV_x) )
+                          & ((sample['endx_pCandidate'] > min_FV_x) & (sample['endx_pCandidate'] < max_FV_x) )
                           ]
     return sample_in_FV
 # ------------------------------------------------
+
+
+
+#
+## ------------------------------------------------
+#def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
+#                 min_FV_z = 5, max_FV_z = 1037,
+#                 min_FV_x = 3, max_FV_x = 250): # 257
+#    sample_in_FV = sample[
+#                          (np.abs(sample['starty_assigned_muon']) < max_FV_y)
+#                          & (np.abs(sample['starty_assigned_proton']) < max_FV_y)
+#                          & (np.abs(sample['endy_assigned_muon']) < max_FV_y)
+#                          & (np.abs(sample['endy_assigned_proton']) < max_FV_y)
+#
+#                          & ((sample['startz_assigned_muon'] > min_FV_z) & (sample['startz_assigned_muon'] < max_FV_z) )
+#                          & ((sample['startz_assigned_proton'] > min_FV_z) & (sample['startz_assigned_proton'] < max_FV_z) )
+#                          & ((sample['endz_assigned_muon'] > min_FV_z) & (sample['endz_assigned_muon'] < max_FV_z) )
+#                          & ((sample['endz_assigned_proton'] > min_FV_z) & (sample['endz_assigned_proton'] < max_FV_z) )
+#
+#                          & ((sample['startx_assigned_muon'] > min_FV_x) & (sample['startx_assigned_muon'] < max_FV_x) )
+#                          & ((sample['startx_assigned_proton'] > min_FV_x) & (sample['startx_assigned_proton'] < max_FV_x) )
+#                          & ((sample['endx_assigned_muon'] > min_FV_x) & (sample['endx_assigned_muon'] < max_FV_x) )
+#                          & ((sample['endx_assigned_proton'] > min_FV_x) & (sample['endx_assigned_proton'] < max_FV_x) )
+#                          ]
+#    return sample_in_FV
+## ------------------------------------------------
+
+
 
 #---------------------------------------------------------------------------------------------
 # April-30, 2017
