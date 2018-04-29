@@ -346,20 +346,20 @@ private:
     Float_t     PIDaCali=-1;
     
     // pandoraNu objects
-    Float_t     PandoraNuPID_Pdg[3]={0,0,0};
-    Float_t     PandoraNuPID_MinChi2[3]={0,0,0};
-    Float_t     PandoraNuPID_Chi2Proton[3]={0,0,0};
-    Float_t     PandoraNuPID_Chi2Kaon[3]={0,0,0};
-    Float_t     PandoraNuPID_Chi2Pion[3]={0,0,0};
-    Float_t     PandoraNuPID_Chi2Muon[3]={0,0,0};
-    Float_t     PandoraNuPID_PIDA[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_Pdg[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_MinChi2[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_Chi2Proton[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_Chi2Kaon[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_Chi2Pion[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_Chi2Muon[3]={0,0,0};
-    Float_t     PandoraNuCaliPID_PIDA[3]={0,0,0};
+    Float_t     PandoraNuPID_Pdg[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuPID_MinChi2[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuPID_Chi2Proton[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuPID_Chi2Kaon[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuPID_Chi2Pion[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuPID_Chi2Muon[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuPID_PIDA[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_Pdg[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_MinChi2[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_Chi2Proton[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_Chi2Kaon[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_Chi2Pion[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_Chi2Muon[3]={-9999,-9999,-9999};
+    Float_t     PandoraNuCaliPID_PIDA[3]={-9999,-9999,-9999};
     
     // momentum calculator
     Float_t     PmuHypothesisCalc=0;
