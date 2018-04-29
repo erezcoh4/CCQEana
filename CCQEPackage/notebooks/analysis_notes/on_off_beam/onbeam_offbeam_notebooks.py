@@ -33,8 +33,119 @@ print "f(POT):",Nevents['f(POT)'],"= N(POT on beam)/N(POT MC)"
 
 
 
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# written April-29, 2018
+def OnBeam_OffBeam( OnBeamSample=None , OffBeamSample=None , debug=0
+                   , var='PIDa_assigned_proton' , x_label=r'$PID_a^p$' , y_label='counts'
+                   , bins=np.linspace(0,30,31)
+                   , ax=None, figsize=(14,6),fontsize=25
+                   , color=OnBeamColor
+                   , doOffBeam_scaling=True
+                   , OriginalOnBeamSample=None , OriginalOffBeamSample=None
+                   , remove_ticks_x=False, remove_ticks_y=False):
+    bin_width = bins[1]-bins[0]
+    mid = 0.5*(bins[:-1]+bins[1:])
+    
+    
+    if ax is None: fig,ax=plt.subplots(figsize=figsize)
+    h_OnBeam,edges = np.histogram( OnBeamSample[var] , bins=bins )
+    h_OnBeam_err = np.sqrt(h_OnBeam)
+    h_OffBeam,edges = np.histogram( OffBeamSample[var] , bins=bins )
+    h_OffBeam_err = np.sqrt(h_OffBeam)
+    
+    if doOffBeam_scaling==True:#{
+        h_OnBeam_minus_OffBeam = h_OnBeam - OffBeam_scaling*h_OffBeam
+        h_OnBeam_minus_OffBeam_err = np.sqrt( np.abs(h_OnBeam + OffBeam_scaling*OffBeam_scaling*h_OffBeam) )
+        Integral = len(OnBeamSample) - OffBeam_scaling*len(OffBeamSample)
+        Integral_Original = len(OriginalOnBeamSample) - OffBeam_scaling*len(OriginalOffBeamSample)
+    #}
+    else:#{
+        h_OnBeam_minus_OffBeam = h_OnBeam - h_OffBeam
+        h_OnBeam_minus_OffBeam_err = np.sqrt( np.abs(h_OnBeam + h_OffBeam) )
+        Integral = len(OnBeamSample) - len(OffBeamSample)
+        Integral_Original = len(OriginalOnBeamSample) - len(OriginalOffBeamSample)
+    #}
+    
+    
+    plt.errorbar( x=mid, xerr=bin_width/2., markersize=12
+                 , y=h_OnBeam_minus_OffBeam , yerr=h_OnBeam_minus_OffBeam_err
+                 , fmt='o', color=color , ecolor='black'
+                 , label=r'(On-Off) Beam ($\int=$%.1f=%.1f'%(Integral,100*Integral/Integral_Original)+'%)'
+                 )
+    if debug>1: print "OnBeam-OffBeam (bins[:-1]):\n",bins[:-1]
+    plt.plot([np.min(ax.get_xlim()),np.min(ax.get_xlim())],[0,0],'--',color='black',linewidth=2)
+    
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
+             ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
+             ,remove_ticks_x=remove_ticks_x, remove_ticks_y=remove_ticks_y
+             )
+    plt.tight_layout()
+    return h_OnBeam_minus_OffBeam,h_OnBeam_minus_OffBeam_err
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+# ------------------------------------------------
+# April-29, 2018
+def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=linspace(0,180,31)
+                              ,scaling_name='only POT'
+                              ,color ='black',x_ticks=None
+                              ,figsize=(24,8)
+                              ,overlay_scalings=None,do_OffBeam=False
+                              ,reducedOffBeam=None,reducedOnBeam=None,reducedOverlay=None
+                              ,f_Cosmic=None,f_CosmicName=r'$f_{cosmic}$'
+                              ,chi2_xrange=None,xlim=None
+                              ,last_cut_name='soft Pt',last_cut_label='detection + kinematical cuts'
+                              ,debug=0
+                              ,do_show_cut=True,x_varcut=(0,np.inf)
+                              ,do_only_preselection=False
+                              ):
+    fig = plt.figure(figsize=figsize)
+    
+    for i_cut,(cut_name,cut_label) in enumerate(zip(['no cut',last_cut_name]
+                                                    ,['preselection',last_cut_label])):#{
+        
+        ax = fig.add_subplot(1,1 if do_only_preselection else 2 ,i_cut + 1)
+        
+        h_OnOff,h_OnOff_err = OnBeam_OffBeam( OnBeamSample=reducedOnBeam[cut_name] , OffBeamSample=reducedOffBeam[cut_name] , debug=debug
+                                             , var=var , x_label=x_label , bins=bins
+                                             , ax=ax, color=color
+                                             , doOffBeam_scaling=True
+                                             , OriginalOnBeamSample=reducedOnBeam['no cut'] , OriginalOffBeamSample=reducedOffBeam['no cut']
+                                             )
+            
+        h_stack,_=plot_stacked_MCsamples(reducedOverlay = reducedOverlay
+                                                                              , debug=0
+                                                                              , overlay_scaling=overlay_scalings[scaling_name]
+                                                                              , cut_name=cut_name
+                                                                              , var=var, x_label=x_label, y_label='overlay prediction',xlim=xlim
+                                                                              , bins=bins , alpha=0.8, ax=ax
+                                                                              , do_add_legend=False
+                                                                              );
+
+        chi2 , ndf = chi2_two_histograms( bins=bins, chi2_xrange=(np.min(bins),np.max(bins))
+                                                                              , h1=h_OnOff , h2=h_stack
+                                                                              , h1err=h_OnOff_err, h2err=np.sqrt(h_stack)
+                                                                              , debug=0 )
+        chi2_txt = r'$\chi^2/ndf=%.1f/%d$'%(chi2,ndf)
+        ax.set_title(cut_label+(', '+f_CosmicName+'=%.2f'%f_Cosmic if f_Cosmic is not None else '') + ',' + chi2_txt
+                                                          ,y=1.02,fontsize=25)
+
+        if do_show_cut:
+            plt.plot([x_varcut[0],x_varcut[0]],ax.get_ylim(),'--',[x_varcut[1],x_varcut[1]],ax.get_ylim(),'--',color='black')
+        if debug: print cut_label,': sum of h_OnOff:',np.sum(h_OnOff),',sum of h_stack:',np.sum(h_stack)
+    
+        if do_only_preselection and i_cut==0: return
+
+    #}
+    plt.tight_layout()
+    return h_OnOff,h_stack
+# ------------------------------------------------
+
+
 # ------------------------------------------------
 # April-26
+# for overlay_vs_BeamOn-Off
 def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=linspace(0,180,31)
                         ,scaling_name='N(On) scaling and f(cosmic)=0.92'
                         ,scaling_color ='black',x_ticks=None
@@ -82,6 +193,7 @@ def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=li
         if do_only_preselection and i_cut==0: return
     #}
     plt.tight_layout()
+    return h_OnBeam,h_stack
 # ------------------------------------------------
 
 
@@ -90,6 +202,7 @@ def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=li
 # April-26
 def get_samples_scaling( N_total=1 # total integral of all overlay
                         , f_Cosmic=None  # fraction of cosmic in the overlay, need to be in the range 0-1
+                        , f_OverlayCosmic=None # by which factor should we increase the cosmic part in the overlay
                         , OverlaySubsamples=None
                         , debug=0
                         , f_POT=Nevents['f(POT)']):
@@ -98,15 +211,26 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     
     for pair_type in pair_types: N[pair_type] = float(len(OverlaySubsamples[pair_type]))
     N['MC'] = N['1mu-1p']+N['other pairs']
-    if N_total=='MC(tot) x POT':
-        N['total']=(N['MC']+N['cosmic'])*f_POT
-    else:
-        N['total']=N_total
     
-    if f_Cosmic is None:
+    # option 1:
+    # scale the total integral of the overlay to the number of POT in the BeamOn data
+    if N_total=='MC(tot) x POT':#{
+        N['total']=(N['MC']+N['cosmic'])*f_POT
+    #}
+    else:#{
+        N['total']=N_total
+    #}
+    
+    # option 2:
+    # change the fraction of cosmic pairs in the overlay,
+    # simultaneously to changing the beam part,
+    # so that the total integral is retained
+    if f_Cosmic is None:#{
         f['Cosmic'] = N['cosmic']/(N['MC']+N['cosmic'])
-    else:
+    #}
+    else:#{
         f['Cosmic'] = f_Cosmic
+    #}
     f['MC'] = 1-f['Cosmic']
     
     f['1mu-1p in MC'] = N['1mu-1p']/N['MC']
@@ -119,12 +243,19 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     scaling['1mu-1p']     = N['total']*f['MC']*f['1mu-1p in MC']/N['1mu-1p']
     scaling['CC 1p 0pi']  = N['total']*f['MC']*f['CC 1p 0pi in MC']/N['CC 1p 0pi']
     
+    # option 3:
+    # increase the number of cosmic pairs in the overlay,
+    # without changing the beam part
+    if f_OverlayCosmic is not None: scaling['cosmic'] = f['MC']*f_OverlayCosmic
+    
+    
     if debug:
         print 'N';pp.pprint(N)
         print 'f';pp.pprint(f)
         print 'scaling:';pp.pprint(scaling)
     return scaling
 # ------------------------------------------------
+
 
 # ------------------------------------------------
 # April-4 (last edit April-26)
@@ -241,6 +372,7 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 def apply_cuts_to_overlay(OverlaySamples=None
                           ,N_On=1 # number of pairs in BeamOn before event-selection cuts
                           ,PIDa_p_min=13
+                          ,do_PIDaCali=True
                           ,minPEcut = 100
                           ,maxdYZcut = 200
                           ,delta_theta_12=55  # deg.
@@ -251,7 +383,9 @@ def apply_cuts_to_overlay(OverlaySamples=None
                           ,cuts_order=['no cut']
                           ,debug=0
                           ,f_POT=Nevents['f(POT)']
-                          ,do_PIDaCali=True
+                          # replace the cut on PIDa to a cut on chi2_proton
+                          ,Chi2Proton_muCandidate_min=70,Chi2Proton_muCandidate_max=250
+                          ,Chi2Proton_pCandidate_min=0,Chi2Proton_pCandidate_max=15
                           ):
     reducedSamples = dict()
     pureffOverlay,numbers = pd.DataFrame(),pd.DataFrame()
@@ -290,6 +424,14 @@ def apply_cuts_to_overlay(OverlaySamples=None
                 else:
                     reduced[pair_type] = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
         
+            # replace the cut on PIDa to a cut on chi2_proton
+            elif cut == 'Chi2Proton':
+                reduced[pair_type] = sam[ (sam['pidcali_Chi2ProtonYplane_muCandidate']>Chi2Proton_muCandidate_min)
+                                         &(sam['pidcali_Chi2ProtonYplane_muCandidate']<Chi2Proton_muCandidate_max)
+                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']>Chi2Proton_pCandidate_min)
+                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
+            
+            
             elif cut == 'flash':
                 reduced[pair_type] = sam[(sam['Nflashes']>0)
                                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
