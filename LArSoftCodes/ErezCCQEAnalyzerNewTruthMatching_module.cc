@@ -76,6 +76,9 @@
 #include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
 #include "uboone/ErezCCQEana/MyObjects/TruncMean.h"
 
+//// flash matching from Marco
+//#include "uboone/UBXSec/Modules/NeutrinoFlashMatch_module.cc"
+
 // constants
 constexpr int debug          = 1;
 constexpr int kMaxTrack      = 1000;  //maximum number of tracks
@@ -319,7 +322,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     if (evt.getByLabel(fFlashModuleLabel, flashListHandle))
     art::fill_ptr_vector(flashlist, flashListHandle);
 
-//    
+    
 //    // * flash-matchihg from Marco
 //    // [https://github.com/marcodeltutto/UBXSec/blob/master/Modules/NeutrinoFlashMatch_module.cc]
 //    // Get Beam Flashes from the ART event
@@ -634,7 +637,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                                               , pid->Chi2Kaon()
                                               , pid->Chi2Pion()
                                               , pid->Chi2Muon()
-                                              ,
+                                              , pid->PIDA()
                                               );
                     Debug(3,"% PIDa (plane %) for track %: %",fPIDModuleLabel,plane,track.GetTrackID(),track.GetPID_PIDA(plane));
                 }
