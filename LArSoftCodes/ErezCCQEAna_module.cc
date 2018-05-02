@@ -1,10 +1,12 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       ErezCCQEAnalyzerNewTruthMatching
+// Class:       ErezCCQEAna
 // Plugin Type: analyzer (art v2_05_00)
-// File:        ErezCCQEAnalyzerNewTruthMatching_module.cc
+// File:        ErezCCQEAna_module.cc
 //
-// Generated at Wed Jul 12 16:10:16 2017 by Erez Cohen using cetskelgen
-// from cetlib version v1_21_00.
+// Generated at Wed May 2 2018 by Erez Cohen as a copy of "ErezCCQEAnalyzerNewTruthMatching_module.cc"
+// The main differences are (during creation)
+// (1) cleaning of the code,
+// (2) adding Marco' flash-matching from NeutrinoFlashMatch_module.cc
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -51,8 +53,7 @@
 
 // for SwT emulation
 #include "uboone/RawData/utils/ubdaqSoftwareTriggerData.h"
-
-// for the new MC truth matching (by Wes)
+// for MC truth matching
 #include "uboone/AnalysisTree/MCTruth/AssociationsTruth_tool.h"
 #include "uboone/AnalysisTree/MCTruth/BackTrackerTruth_tool.h"
 // ROOT includes
@@ -83,6 +84,10 @@
 #include "uboone/UBXSec/DataTypes/SelectionResult.h"
 #include "uboone/UBXSec/Algorithms/UBXSecHelper.h"
 #include "uboone/LLSelectionTool/OpT0Finder/Base/FlashMatchManager.h"
+#include "uboone/LLSelectionTool/OpT0Finder/Algorithms/LightPath.h"
+#include "uboone/LLSelectionTool/OpT0Finder/Algorithms/PhotonLibHypothesis.h"
+#include "uboone/LLBasicTool/GeoAlgo/GeoTrajectory.h"
+
 
 // constants
 constexpr int debug          = 1;
@@ -106,20 +111,20 @@ constexpr float Min_r_around_vertex = 0;
 constexpr float dr_around_vertex  = 0.5;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-namespace ub { class ErezCCQEAnalyzerNewTruthMatching; }
+namespace ub { class ErezCCQEAna; }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-class ub::ErezCCQEAnalyzerNewTruthMatching : public art::EDAnalyzer {
+class ub::ErezCCQEAna : public art::EDAnalyzer {
 public:
-    explicit ErezCCQEAnalyzerNewTruthMatching(fhicl::ParameterSet const & p);
+    explicit ErezCCQEAna(fhicl::ParameterSet const & p);
     // The compiler-generated destructor is fine for non-base
     // classes without bare pointers or other resource use.
     
     // Plugins should not be copied or assigned.
-    ErezCCQEAnalyzerNewTruthMatching(ErezCCQEAnalyzerNewTruthMatching const &) = delete;
-    ErezCCQEAnalyzerNewTruthMatching(ErezCCQEAnalyzerNewTruthMatching &&) = delete;
-    ErezCCQEAnalyzerNewTruthMatching & operator = (ErezCCQEAnalyzerNewTruthMatching const &) = delete;
-    ErezCCQEAnalyzerNewTruthMatching & operator = (ErezCCQEAnalyzerNewTruthMatching &&) = delete;
+    ErezCCQEAna(ErezCCQEAna const &) = delete;
+    ErezCCQEAna(ErezCCQEAna &&) = delete;
+    ErezCCQEAna & operator = (ErezCCQEAna const &) = delete;
+    ErezCCQEAna & operator = (ErezCCQEAna &&) = delete;
     
     // Required functions.
     void                   analyze (art::Event const & e) override;
@@ -235,8 +240,7 @@ private:
     std::string fSwTAlgoModuleLabel;
     std::string fPIDModuleLabel;
     std::string fCaliPIDModuleLabel;
-    std::string fNuFlashMatchProducer;
-    std::string fTPCObjectProducer;
+    std::string fTPCobjectProducer;
     
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -249,50 +253,57 @@ private:
     
     
     //flux information
-    Int_t    ptype_flux;        //Parent GEANT code particle ID
+    Int_t       ptype_flux;        //Parent GEANT code particle ID
+    Int_t       tptype_flux;     //Type of parent particle leaving BNB/NuMI target
+    Int_t       pntype_flux;      //oscillated neutrino type
     
-    Float_t  pdpx_flux;        //Parent X momentum at decay point (GeV)
-    Float_t  pdpy_flux;        //Parent Y momentum at decay point (GeV)
-    Float_t  pdpz_flux;        //Parent Z momentum at decay point (GeV)
+    Float_t     pdpx_flux;        //Parent X momentum at decay point (GeV)
+    Float_t     pdpy_flux;        //Parent Y momentum at decay point (GeV)
+    Float_t     pdpz_flux;        //Parent Z momentum at decay point (GeV)
+    Float_t     ppvx_flux;        //Parent production vertex X (cm)
+    Float_t     ppvy_flux;        //Parent production vertex Y (cm)
+    Float_t     ppvz_flux;        //Parent production vertex Z (cm)
+    Float_t     pppz_flux;        //Parent Z momentum at production (GeV)
+    Float_t     vx_flux;          //X position of hadron/muon decay (cm)
+    Float_t     vy_flux;          //Y position of hadron/muon decay (cm)
+    Float_t     vz_flux;          //Z position of hadron/muon decay (cm)
+    Float_t     muparpx_flux;     //Muon neutrino parent production vertex X (cm)
+    Float_t     muparpy_flux;     //Muon neutrino parent production vertex Y (cm)
+    Float_t     muparpz_flux;     //Muon neutrino parent production vertex Z (cm)
+    Float_t     mupare_flux;      //Muon neutrino parent energy (GeV)
+    Float_t     tprivx_flux;      //Primary particle interaction vertex X (cm)
+    Float_t     tprivy_flux;      //Primary particle interaction vertex Y (cm)
+    Float_t     tprivz_flux;      //Primary particle interaction vertex Z (cm)
+    
+    
+    // Marco' flash matching
+    Float_t     FlashRangeStart, FlashRangeEnd;
+    
+    std::vector<::flashana::Flash_t>    beam_flashes;
+    bool DoOpDetSwap;                 ///< If true swaps reconstructed OpDets according to _opdet_swap_map
+    std::vector<int>        OpDetSwapMap;    ///< The OpDet swap map for reco flashes
+    std::vector<double>     BeamFlashSpec;
+    ::flashana::FlashMatchManager       FlashMatch_mgr;
+    std::vector<flashana::FlashMatch_t> FlashMatch_result;
+    
+    // methods
+    flashana::QCluster_t    GetQCluster (std::vector<art::Ptr<recob::Track>>);
+    void               GetFlashLocation (std::vector<double>, double&, double&, double&, double&);
 
-    Float_t  ppvx_flux;        //Parent production vertex X (cm)
-    Float_t  ppvy_flux;        //Parent production vertex Y (cm)
-    Float_t  ppvz_flux;        //Parent production vertex Z (cm)
-    Float_t  pppz_flux;        //Parent Z momentum at production (GeV)
-
-    Int_t    pntype_flux;      //oscillated neutrino type
-    Float_t  vx_flux;          //X position of hadron/muon decay (cm)
-    Float_t  vy_flux;          //Y position of hadron/muon decay (cm)
-    Float_t  vz_flux;          //Z position of hadron/muon decay (cm)
-    
-    Float_t  muparpx_flux;     //Muon neutrino parent production vertex X (cm)
-    Float_t  muparpy_flux;     //Muon neutrino parent production vertex Y (cm)
-    Float_t  muparpz_flux;     //Muon neutrino parent production vertex Z (cm)
-    Float_t  mupare_flux;      //Muon neutrino parent energy (GeV)
-    
-    Float_t  tprivx_flux;      //Primary particle interaction vertex X (cm)
-    Float_t  tprivy_flux;      //Primary particle interaction vertex Y (cm)
-    Float_t  tprivz_flux;      //Primary particle interaction vertex Z (cm)
-    
-    Int_t    tptype_flux;     //Type of parent particle leaving BNB/NuMI target
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-ub::ErezCCQEAnalyzerNewTruthMatching::ErezCCQEAnalyzerNewTruthMatching(fhicl::ParameterSet const & p):EDAnalyzer(p){
+ub::ErezCCQEAna::ErezCCQEAna(fhicl::ParameterSet const & p):EDAnalyzer(p){
     reconfigure(p);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
-    
-    // return; // for just counting POTs in prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
+void ub::ErezCCQEAna::analyze(art::Event const & evt){
     
     ResetVars();
-    
     art::ServiceHandle<geo::Geometry> geom;
     trkf::TrackMomentumCalculator TrackMomCalc;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    
     isdata = evt.isRealData();
     run = evt.run(); subrun = evt.subRun(); event = evt.id().event();
     
@@ -357,19 +368,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
     art::FindMany<anab::ParticleID>     fmcalipid(trackListHandle, evt, fCaliPIDModuleLabel );
 
     
-    // * Flash-Matching from Marco (May 2018)
-    // Get TPCObjects from the Event
-    Debug(2,"// * Flash-Matching from Marco (May 2018)");
-    art::Handle<std::vector<ubana::TPCObject>> TPCobjectHandle;
-    evt.getByLabel(fTPCObjectProducer, TPCobjectHandle);
-    if (!TPCobjectHandle.isValid()) Debug(0,"[ErezCCQEAnalyzerNewTruthMatching] Cannote locate ubana::TPCObject." );
-    art::FindManyP<ubana::FlashMatch> tpcobjToFlashMatchAssns(TPCobjectHandle, evt, fNuFlashMatchProducer);
-    art::FindManyP<recob::Track>      tpcobjToTrackAssns(TPCobjectHandle, evt, fTPCObjectProducer);
-
     
-    
-    
-    // * new truth matching from /uboone/app/users/wketchum/dev_areas/mcc8_4_drop/gallery_macros/TruthMatchTracks.C
+    // * truth matching
     auto const& hit_handle = evt.getValidHandle<std::vector<recob::Hit>>(fHitsModuleLabel);
     auto const& trk_handle = evt.getValidHandle<std::vector<recob::Track>>(fTrackModuleLabel);
     art::FindManyP<recob::Hit> hits_per_track(trk_handle, evt, fTrackModuleLabel);
@@ -457,45 +457,166 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
         }
     }
 
+
     // ----------------------------------------
     // Neutrino Flash match from Marco
     // ----------------------------------------
-    for (unsigned int slice = 0; slice < TPCobjectHandle->size(); slice++){
+    // ToDo:
+    // (1) replace "n" as the loop index with "f"
+    int nBeamFlashes = 0;
+    for (size_t n = 0; n < flashListHandle->size(); n++) {
+        auto const& flash = (*flashListHandle)[n];
+        Debug( 2 , "[NeutrinoFlashMatch] Flash time from % : %",  fFlashModuleLabel,flash.Time());
+        // keep only flashes in the veto time range
+        if(flash.Time() < FlashRangeStart || FlashRangeEnd < flash.Time()) continue;
+        nBeamFlashes++;
         
-        Debug(0,"[ErezCCQEGENIENewTruthMatching] >>> SLICE %", slice );
-        ubana::TPCObject tpcobj = (*TPCobjectHandle)[slice];
-        
-        //    ubxsec_event->slc_flsmatch_score[slice] = -9999;
-        std::vector<art::Ptr<ubana::FlashMatch>> pfpToFlashMatch_v = tpcobjToFlashMatchAssns.at(slice);
-        if (pfpToFlashMatch_v.size() > 1) {
-            Debug(0,"[ErezCCQEGENIENewTruthMatching] >>> More than one flash match per nu pfp? continuing");
-            continue;
-        } else if (pfpToFlashMatch_v.size() == 0){
-            Debug(0,"[ErezCCQEGENIENewTruthMatching] >>> No Flash-Match for this TPCObject");
-        } else {
-            auto fp0 = pfpToFlashMatch_v[0];
-//            SHOW4(fp0->GetScore(), fp0->GetEstimatedX(), fp0->GetTPCX() , fp0->GetT0());
-            auto Zcenter = UBXSecHelper::GetFlashZCenter( fp0->GetHypoFlashSpec());
-            SHOW( Zcenter );
-//            SHOW4( fp0->GetXFixedChi2() , fp0->GetXFixedLl() , fp0->GetXFixedHypoFlashSpec() , fp0->GetHypoFlashSpec() );
-            
-//            ubxsec_event->slc_flsmatch_score[slice]       = pfpToFlashMatch_v[0]->GetScore();
-//            ubxsec_event->slc_flsmatch_qllx[slice]        = pfpToFlashMatch_v[0]->GetEstimatedX();
-//            ubxsec_event->slc_flsmatch_tpcx[slice]        = pfpToFlashMatch_v[0]->GetTPCX();
-//            ubxsec_event->slc_flsmatch_t0[slice]          = pfpToFlashMatch_v[0]->GetT0();
-//            ubxsec_event->slc_flsmatch_hypoz[slice]       = UBXSecHelper::GetFlashZCenter(pfpToFlashMatch_v[0]->GetHypoFlashSpec());
-//            ubxsec_event->slc_flsmatch_xfixed_chi2[slice] = pfpToFlashMatch_v[0]->GetXFixedChi2();
-//            ubxsec_event->slc_flsmatch_xfixed_ll[slice]   = pfpToFlashMatch_v[0]->GetXFixedLl();
-//            ubxsec_event->slc_flshypo_xfixed_spec[slice]  = pfpToFlashMatch_v[0]->GetXFixedHypoFlashSpec();
-//            ubxsec_event->slc_flshypo_spec[slice]         = pfpToFlashMatch_v[0]->GetHypoFlashSpec();
-            //for (auto v : _slc_flshypo_spec[slice]) std::cout << "Hypo PE: " << v << std::endl;
-//            std::cout << "[UBXSec] \t FM score:       " << ubxsec_event->slc_flsmatch_score[slice] << std::endl;
-//            std::cout << "[UBXSec] \t qllx - tpcx is: " << ubxsec_event->slc_flsmatch_qllx[slice] - ubxsec_event->slc_flsmatch_tpcx[slice] << std::endl;
+        // Construct a Flash_t
+        ::flashana::Flash_t f;
+        f.x = f.x_err = 0;
+        f.pe_v.resize(geom->NOpDets());
+        f.pe_err_v.resize(geom->NOpDets());
+        for (unsigned int i = 0; i < f.pe_v.size(); i++) {
+            unsigned int opdet = geom->OpDetFromOpChannel(i);
+            if (DoOpDetSwap && evt.isRealData()) {
+                opdet = OpDetSwapMap.at(opdet);
+            }
+            f.pe_v[opdet] = flash.PE(i);
+            f.pe_err_v[opdet] = sqrt(flash.PE(i));
         }
+        double Ycenter, Zcenter, Ywidth, Zwidth;
+        GetFlashLocation(f.pe_v, Ycenter, Zcenter, Ywidth, Zwidth);
+        f.y = Ycenter;
+        f.z = Zcenter;
+        f.y_err = Ywidth;
+        f.z_err = Zwidth;
+        f.time = flash.Time();
+        f.idx = nBeamFlashes-1;
+        beam_flashes.resize(nBeamFlashes);
+        beam_flashes[nBeamFlashes-1] = f;
+    } // flash loop
+    
+    // If more than one beam flash, take the one with more PEs
+    if (nBeamFlashes > 1) {
+        Debug( 2, "More than one beam flash in this event. Taking beam flash with more PEs.");
+        // Sort flashes by length
+        std::sort(beam_flashes.begin(), beam_flashes.end(),
+                  [](::flashana::Flash_t a, ::flashana::Flash_t b) -> bool
+                  {return a.TotalPE() > b.TotalPE();});
     }
     
+    // Emplace flash to Flash Matching Manager
+    ::flashana::Flash_t f = beam_flashes[0];
+    BeamFlashSpec.resize(f.pe_v.size());
+    BeamFlashSpec = f.pe_v;
+    FlashMatch_mgr.Emplace(std::move(f));
+    Debug(2,"f.pe_v.size(): %",f.pe_v.size());
+    
+    // ********************
+    // Construct TPC Objects
+    // ********************
+    std::vector<flashana::Flash_t> xfixed_hypo_v;
+    std::vector<double> xfixed_chi2_v, xfixed_ll_v;
+    
+    // Get TPCObjects from the Event
+//    art::Handle<std::vector<ubana::TPCObject>> TPCobjHandle;
+//    evt.getByLabel( fTPCobjectProducer, TPCobjHandle);
+//    if (!TPCobjHandle.isValid()) {
+//        e.put(std::move(flashMatchTrackVector));
+//        e.put(std::move(assnOutFlashMatchTrack));
+//        e.put(std::move(assnOutFlashMatchTPCObject));
+//        return;
+//    }
+//    art::FindManyP<recob::Track>     tpcobjToTracks (TPCobjHandle, evt, fTPCobjectProducer);
+    
+//    int n_objects = TPCobjHandle->size();
+//    xfixed_hypo_v.resize(n_objects);
+//    xfixed_chi2_v.resize(n_objects);
+//    xfixed_ll_v.resize(n_objects);
+//  
     
     
+    // The class method GetQCluster(std::vector<art::Ptr<recob::Track>>)
+    // takes in input a vector of tracks and returns a QCluster_t,
+    // which is the data product needed by the flash matching
+    flashana::QCluster_t qcluster;
+    qcluster = this->GetQCluster( tracklist );
+    FlashMatch_mgr.Emplace(std::move(qcluster));
+    FlashMatch_result = FlashMatch_mgr.Match();
+    Debug(2,"FlashMatch_result: size %",FlashMatch_result.size());
+    for( int _matchid=0; _matchid < (int)(FlashMatch_result.size()); ++_matchid) {
+        
+        auto const& match = FlashMatch_result[_matchid];
+        
+        Debug(2,"match.flash_id: %, match.score: %", match.flash_id, match.score);
+        
+        auto const& flash = FlashMatch_mgr.FlashArray()[match.flash_id];
+        Debug(2,"t0[%]: %", _matchid, flash.time);
+    }
+    
+//    for(_matchid=0; _matchid < (int)(_result.size()); ++_matchid) {
+//        
+//        auto const& match = _result[_matchid];
+//        
+//        _flashid         = match.flash_id;
+//        _score[_matchid] = match.score;
+//        
+//        auto const& flash = _mgr.FlashArray()[_flashid];
+//        _t0[_matchid] = flash.time;
+//        
+//        if(_debug) std::cout << "[NeutrinoFlashMatch] For this match, the score is " << match.score << std::endl;
+//        
+//        // Get the TPCObject
+//        art::Ptr<ubana::TPCObject> the_tpcobj(tpcobj_h, match.tpc_id);
+//        std::vector<art::Ptr<recob::Track>> track_v    = tpcobjToTracks.at(match.tpc_id);
+//        std::vector<art::Ptr<recob::PFParticle>> pfp_v = tpcobjToPFPs.at(match.tpc_id);
+//        std::vector<art::Ptr<ubana::TPCObject>>  tpcobj_v;
+//        tpcobj_v.resize(1);
+//        tpcobj_v.at(0) = the_tpcobj;
+//        
+//        // Get hypo spec
+//        _hypo_flash_spec[_matchid].resize(geo->NOpDets());
+//        for(size_t pmt=0; pmt<_hypo_flash_spec[_matchid].size(); ++pmt) _hypo_flash_spec[_matchid][pmt] = match.hypothesis[pmt];
+//        
+//        _xfixed_hypo_spec = xfixed_hypo_v[_matchid].pe_v;
+//        _xfixed_chi2      = xfixed_chi2_v[_matchid];
+//        _xfixed_ll        = xfixed_ll_v[_matchid];
+//        
+//        // Save x position
+//        _qll_xmin[_matchid] = match.tpc_point.x;
+//        
+//        _tpc_xmin[_matchid] = 1.e4;
+//        for(auto const& pt : _mgr.QClusterArray()[match.tpc_id]) {
+//            if(pt.x < _tpc_xmin[_matchid]) _tpc_xmin[_matchid] = pt.x;
+//        }
+//        
+//        // X correction
+//        _tpc_xmin[_matchid] = _tpc_xmin[_matchid] - _t0[_matchid] * 0.1114359;
+//        
+//        ubana::FlashMatch fm;
+//        fm.SetScore               ( _score[_matchid] );
+//        fm.SetTPCX                ( _tpc_xmin[_matchid] );
+//        fm.SetEstimatedX          ( _qll_xmin[_matchid] );
+//        fm.SetT0                  ( _t0[_matchid] );
+//        fm.SetHypoFlashSpec       ( _hypo_flash_spec[_matchid] );
+//        fm.SetRecoFlashSpec       ( _beam_flash_spec );
+//        fm.SetXFixedHypoFlashSpec ( _xfixed_hypo_spec );
+//        fm.SetXFixedChi2          ( _xfixed_chi2 );
+//        fm.SetXFixedLl            ( _xfixed_ll );
+//        
+//        flashMatchTrackVector->emplace_back(std::move(fm));
+//        util::CreateAssn(*this, e, *flashMatchTrackVector, track_v,  *assnOutFlashMatchTrack);
+//    }
+    
+    // ----------------------------------------
+    // end Marco' flash matching
+    // ----------------------------------------
+
+
+    
+    
+    
+
 
     // ----------------------------------------
     // tracks information
@@ -547,48 +668,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
             }
         }
         
-        // PIDa and calorimetric KE
-        if (fmcal.isValid()){
-            unsigned maxnumhits = 0;
-            std::vector<const anab::Calorimetry*> calos = fmcal.at(i);
-            for (auto const& calo : calos){
-                if (calo->PlaneID().isValid){
-                    int plane = calo->PlaneID().Plane;
-                    
-                    // get the calorimetric kinetic energy of the track
-                    track.SetCaloKEPerPlane( plane , calo->KineticEnergy() );
-                    
-                    // select the best plane as the one with the maximal number of charge deposition points
-                    if (calo->dEdx().size() > maxnumhits){
-                        if (debug>3) SHOW3(track.GetTrackID(),plane,calo->dEdx().size());
-                        
-                        maxnumhits = calo->dEdx().size();
-                        track.SetBestPlane ( plane );
-                        track.SetMaxNHits ( maxnumhits );
-                    }
-                    // build the PIDa as a fit the reduced Bethe Bloch
-                    // dE/dx = A * R^{0.42}
-                    double pida = 0;
-                    int used_trkres = 0;
-                    for (size_t ip = 0; ip < calo->dEdx().size(); ++ip){
-                        if (calo->ResidualRange()[ip]<30){
-                            pida += calo->dEdx()[ip]*pow( calo->ResidualRange()[ip],0.42);
-                            ++used_trkres;
-                            Debug(3 , "pida: %",pida);
-                        }
-                        // record the track dE/dx vs. residual range
-                        track.FillResRange( plane , calo->ResidualRange()[ip] );
-                        track.FilldEdxHit( plane , calo->dEdx()[ip] );
-                    }
-                    if (used_trkres) pida /= used_trkres;
-                    track.SetPIDaPerPlane( plane , pida );
-                }
-            }
-            track.SetPIDa();
-            Debug(3 , "track.GetPIDa(): %",track.GetPIDa());
-        }
-        
-        // PIDa and calorimetric KE from calibrated calorimetery
+        // calorimetric KE from calibrated calorimetery
         if (fmcalical.isValid()){
             unsigned maxnumhits = 0;
             std::vector<const anab::Calorimetry*> calicalos = fmcalical.at(i);
@@ -606,46 +686,11 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                         track.SetBestPlaneCali ( plane );
                         track.SetMaxNHitsCali ( maxnumhits );
                     }
-                    // build the PIDa as a fit the reduced Bethe Bloch
-                    // dE/dx = A * R^{0.42}
-                    double pidacali = 0;
-                    int used_trkres = 0;
-                    for (size_t ip = 0; ip < calicalo->dEdx().size(); ++ip){
-                        if (calicalo->ResidualRange()[ip]<30){
-                            pidacali += calicalo->dEdx()[ip]*pow( calicalo->ResidualRange()[ip],0.42);
-                            ++used_trkres;
-                        }
-                    }
-                    if (used_trkres) pidacali /= used_trkres;
-                    track.SetPIDaCaliPerPlane( plane , pidacali );
-                }
-            }
-            track.SetPIDaCali();
-        }
-        
-        // PIDa from PandoraNu
-        if (fmpid.isValid()) {
-            std::vector<const anab::ParticleID*> pids = fmpid.at(i);
-            for (auto const& pid : pids){
-                if (pid->PlaneID().isValid){
-                    int plane = pid->PlaneID().Plane;
-                    if (plane<0||plane>2) continue;
-                    
-                    track.SetPandoraNuPID( plane
-                                              , pid->Pdg()
-                                              , pid->MinChi2()
-                                              , pid->Chi2Proton()
-                                              , pid->Chi2Kaon()
-                                              , pid->Chi2Pion()
-                                              , pid->Chi2Muon()
-                                              , pid->PIDA()
-                                              );
-                    Debug(3,"% PIDa (plane %) for track %: %",fPIDModuleLabel,plane,track.GetTrackID(),track.GetPID_PIDA(plane));
                 }
             }
         }
-        
-        // PIDaCali from PandoraNuCali
+    
+        // PIDaCali and chi2 for particles hypotheses from PandoraNuCali
         if (fmcalipid.isValid()) {
             std::vector<const anab::ParticleID*> pids = fmcalipid.at(i);
             for (auto const& pid : pids){
@@ -681,12 +726,10 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
                 
                 truncmean.CalcTruncMean( trkresrg , trkdedx , trkdedx_truncated );
                 track.SetdEdxTrunc( plane , trkdedx_truncated );
-                
                 if (debug>5) {
                     SHOWstdVector( track.GetdEdx(plane) );
                     SHOWstdVector( track.GetdEdxTrunc(plane) );
                 }
-                
             }
         }
         
@@ -986,15 +1029,14 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::analyze(art::Event const & evt){
 }
 
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-bool ub::ErezCCQEAnalyzerNewTruthMatching::ParticleAlreadyMatchedInThisHit(std::vector<int> AlreadyMatched_TrackIDs
+bool ub::ErezCCQEAna::ParticleAlreadyMatchedInThisHit(std::vector<int> AlreadyMatched_TrackIDs
                                          ,int cTrackID ){
     // to avoid from matching the same particle more than once
     // we introduce a vector of matched TrackId-s for each hit
     // and require that the matched particle has not been mathced already for this hit
     if (debug>5) {
-        cout << "ub::ErezCCQEAnalyzerNewTruthMatching::ParticleAlreadyMatchedInThisHit()" << endl;
+        cout << "ub::ErezCCQEAna::ParticleAlreadyMatchedInThisHit()" << endl;
         cout << "looking if track " <<  cTrackID << " has already matched in the list: " << endl;
         for (auto trk_id:AlreadyMatched_TrackIDs) {
             cout << trk_id << ",";
@@ -1008,7 +1050,7 @@ bool ub::ErezCCQEAnalyzerNewTruthMatching::ParticleAlreadyMatchedInThisHit(std::
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::ConstructVertices(){
+void ub::ErezCCQEAna::ConstructVertices(){
     
     // cluster all tracks at close proximity to vertices
     ClusterTracksToVertices();
@@ -1024,7 +1066,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::ConstructVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::ClusterTracksToVertices(){
+void ub::ErezCCQEAna::ClusterTracksToVertices(){
     
     // Jan-18, 2018
     // cluster all tracks at close proximity to vertices, and fix the position of each vertex
@@ -1112,7 +1154,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::ClusterTracksToVertices(){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-bool ub::ErezCCQEAnalyzerNewTruthMatching::TrackAlreadyInVertices(int ftrack_id){
+bool ub::ErezCCQEAna::TrackAlreadyInVertices(int ftrack_id){
     for (auto v:vertices){
         if ( v.IncludesTrack( ftrack_id ) ) return true;
     }
@@ -1120,7 +1162,7 @@ bool ub::ErezCCQEAnalyzerNewTruthMatching::TrackAlreadyInVertices(int ftrack_id)
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::AnalyzeVertices(){
+void ub::ErezCCQEAna::AnalyzeVertices(){
     if (vertices.size()>0){
         for (auto & v:vertices){
             // after fixing the vertext position, remove far tracks
@@ -1160,7 +1202,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::AnalyzeVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
+void ub::ErezCCQEAna::FilterGoodPairVertices(){
     
     art::ServiceHandle<geo::Geometry> geom;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
@@ -1174,7 +1216,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
     std::vector<pairVertex> tmp_vertices = vertices;
     vertices.clear();
     
-    Debug(3 , "ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices()");
+    Debug(3 , "ub::ErezCCQEAna::FilterGoodPairVertices()");
     for (auto & v:tmp_vertices) {
         // vertices with only two tracks at close proximity and nothing else
         if (
@@ -1225,7 +1267,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::FilterGoodPairVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
+void ub::ErezCCQEAna::TagVertices(){
     
     // tag vertices
     // ------------
@@ -1273,8 +1315,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::TagVertices(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVertex v, int plane, float r){
-    Debug(3,"ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(vertex %, plane %, radius % cm)",v.GetVertexID(),plane,r);
+double ub::ErezCCQEAna::GetRdQInSphereAroundVertex(pairVertex v, int plane, float r){
+    Debug(3,"ub::ErezCCQEAna::GetRdQInSphereAroundVertex(vertex %, plane %, radius % cm)",v.GetVertexID(),plane,r);
     // Feb-18,2018
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a sphere of radius r [cm] around the vertex in plane i=0,1,2
@@ -1337,7 +1379,7 @@ double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVert
             }
         }
     }
-    Debug(3,"completed ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(), Qtotal: %, Qmuon: %, Qproton: %",Qtotal,Qmuon,Qproton);
+    Debug(3,"completed ub::ErezCCQEAna::GetRdQInSphereAroundVertex(), Qtotal: %, Qmuon: %, Qproton: %",Qtotal,Qmuon,Qproton);
     if (Qmuon>Qtotal || Qproton>Qtotal) {
         Debug(1,"Qtotal=% < Qmuon=% or Qproton=% !? ",Qtotal,Qmuon,Qproton);
     }
@@ -1346,7 +1388,7 @@ double ub::ErezCCQEAnalyzerNewTruthMatching::GetRdQInSphereAroundVertex(pairVert
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderEventsInCSV(){
+void ub::ErezCCQEAna::HeaderEventsInCSV(){
     
     events_ctr = 0;
     
@@ -1374,7 +1416,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderEventsInCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::StreamEventsToCSV(){
+void ub::ErezCCQEAna::StreamEventsToCSV(){
     
     // whatever you add here - must add also in header
     // i.e. in
@@ -1420,7 +1462,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamEventsToCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
+void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     
     genie_interactions_ctr = 0;
     
@@ -1490,7 +1532,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderGENIEInCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::StreamGENIEToCSV(){
+void ub::ErezCCQEAna::StreamGENIEToCSV(){
     // Jan-26, 2018
     // whatever you add here - must add also in header - ub::ErezCCQEGENIENewTruthMatching::HeaderVerticesInCSV()
     for (auto g:genie_interactions){
@@ -1565,7 +1607,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamGENIEToCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
+void ub::ErezCCQEAna::HeaderTracksInCSV(){
     
     tracks_ctr = 0;
     
@@ -1610,7 +1652,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderTracksInCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
+void ub::ErezCCQEAna::StreamTracksToCSV(){
     
     // whatever you add here - must add also in header
     // i.e. in
@@ -1680,7 +1722,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamTracksToCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
+void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     
     vertices_ctr = 0;
     
@@ -1816,9 +1858,9 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
+void ub::ErezCCQEAna::StreamVerticesToCSV(){
     // July-25, 2017
-    // whatever you add here - must add also in header - ub::ErezCCQEAnalyzerNewTruthMatching::HeaderVerticesInCSV()
+    // whatever you add here - must add also in header - ub::ErezCCQEAna::HeaderVerticesInCSV()
     for (auto v:vertices){
         
         vertices_ctr++;
@@ -2004,7 +2046,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::StreamVerticesToCSV(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(bool DoPrintTracksFull){
+void ub::ErezCCQEAna::PrintInformation(bool DoPrintTracksFull){
     
     PrintXLine();
     SHOW3( run , subrun , event );
@@ -2060,7 +2102,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::PrintInformation(bool DoPrintTracksFu
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
+void ub::ErezCCQEAna::beginJob(){
     
     // charge deposition around the vertex in a box of N(wires) x N(time-ticks)
     for (int i_box_size=0 ; i_box_size < N_box_sizes ; i_box_size++){
@@ -2127,8 +2169,8 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::beginJob(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
-    Debug(3,"ub::ErezCCQEAnalyzerNewTruthMatching::endJob()");
+void ub::ErezCCQEAna::endJob(){
+    Debug(3,"ub::ErezCCQEAna::endJob()");
     
     std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     summary_file.open(fDataSampleLabel+"_summary.csv");
@@ -2161,7 +2203,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endJob(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
+void ub::ErezCCQEAna::endSubRun(const art::SubRun& sr){
     
     art::Handle< sumdata::POTSummary > potListHandle;
     
@@ -2187,7 +2229,7 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::endSubRun(const art::SubRun& sr){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::ResetVars(){
+void ub::ErezCCQEAna::ResetVars(){
     
     run = subrun = event = -9999;
     Ntracks = Nhits = Nhits_stored = Nvertices = 0 ;
@@ -2203,8 +2245,89 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::ResetVars(){
 }
 
 
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const & p){
+void ub::ErezCCQEAna::GetFlashLocation(std::vector<double> pePerOpDet,
+                                          double& Ycenter,
+                                          double& Zcenter,
+                                          double& Ywidth,
+                                          double& Zwidth)
+{
+    
+    // Reset variables
+    Ycenter = Zcenter = 0.;
+    Ywidth  = Zwidth  = -999.;
+    double totalPE = 0.;
+    double sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
+    
+    for (unsigned int opdet = 0; opdet < pePerOpDet.size(); opdet++) {
+        
+        if (opdet > 31 && opdet < 200){
+            //  std::cout << "Ignoring channel " << opch << " as it's not a real channel" << std::endl;
+            continue;
+        }
+        
+        // Get physical detector location for this opChannel
+        double PMTxyz[3];
+        ::art::ServiceHandle<geo::Geometry> geo;
+        geo->OpDetGeoFromOpDet(opdet).GetCenter(PMTxyz);
+        
+        // Add up the position, weighting with PEs
+        sumy    += pePerOpDet[opdet]*PMTxyz[1];
+        sumy2   += pePerOpDet[opdet]*PMTxyz[1]*PMTxyz[1];
+        sumz    += pePerOpDet[opdet]*PMTxyz[2];
+        sumz2   += pePerOpDet[opdet]*PMTxyz[2]*PMTxyz[2];
+        
+        totalPE += pePerOpDet[opdet];
+    }
+    
+    Ycenter = sumy/totalPE;
+    Zcenter = sumz/totalPE;
+    
+    // This is just sqrt(<x^2> - <x>^2)
+    if ( (sumy2*totalPE - sumy*sumy) > 0. )
+        Ywidth = std::sqrt(sumy2*totalPE - sumy*sumy)/totalPE;
+    
+    if ( (sumz2*totalPE - sumz*sumz) > 0. ) 
+        Zwidth = std::sqrt(sumz2*totalPE - sumz*sumz)/totalPE;
+}
+
+
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+flashana::QCluster_t ub::ErezCCQEAna::GetQCluster(std::vector<art::Ptr<recob::Track>> track_v) {
+    
+    flashana::QCluster_t summed_qcluster;
+    summed_qcluster.clear();
+    
+    for (unsigned int trk = 0; trk < track_v.size(); trk++) {
+        
+        art::Ptr<recob::Track> trk_ptr = track_v.at(trk);
+        
+        ::geoalgo::Trajectory track_geotrj;
+        track_geotrj.resize(trk_ptr->NumberTrajectoryPoints(),::geoalgo::Vector(0.,0.,0.));
+        
+        for (size_t pt_idx=0; pt_idx < trk_ptr->NumberTrajectoryPoints(); ++pt_idx) {
+            auto const& pt = trk_ptr->LocationAtPoint(pt_idx);
+            track_geotrj[pt_idx][0] = pt[0];
+            track_geotrj[pt_idx][1] = pt[1];
+            track_geotrj[pt_idx][2] = pt[2];
+        }
+        
+        auto qcluster = ((flashana::LightPath*)(FlashMatch_mgr.GetCustomAlgo("LightPath")))->FlashHypothesis(track_geotrj);
+        summed_qcluster += qcluster;
+        
+    } // track loop
+    
+    return summed_qcluster;
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     fTrackModuleLabel       = p.get< std::string >("TrackModuleLabel");
     fHitsModuleLabel        = p.get< std::string >("HitsModuleLabel");
     fGenieGenModuleLabel    = p.get< std::string >("GenieGenModuleLabel");
@@ -2231,12 +2354,15 @@ void ub::ErezCCQEAnalyzerNewTruthMatching::reconfigure(fhicl::ParameterSet const
     fCaliPIDModuleLabel     = p.get< std::string >("CaliPIDModuleLabel");
     
     // For Marco' Flash-matching
-    fNuFlashMatchProducer   = p.get<std::string>("NeutrinoFlashMatchProducer");
-    fTPCObjectProducer      = p.get<std::string>("TPCObjectProducer");
-
+    FlashRangeStart         = p.get<double>     ("FlashVetoTimeStart",    3);
+    FlashRangeEnd           = p.get<double>     ("FlashVetoTimeEnd",      5);
+    DoOpDetSwap             = p.get<bool>       ("DoOpDetSwap", false);
+    OpDetSwapMap            = p.get<std::vector<int> >("OpDetSwapMap");
+    FlashMatch_mgr.Configure(p.get<flashana::Config_t>("FlashMatchConfig"));
+    fTPCobjectProducer      = p.get<std::string>("TPCObjectModule","TPCObjectMaker");
 }
 
 
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
-DEFINE_ART_MODULE(ub::ErezCCQEAnalyzerNewTruthMatching)
+DEFINE_ART_MODULE(ub::ErezCCQEAna)
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -

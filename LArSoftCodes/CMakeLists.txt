@@ -1,7 +1,10 @@
 add_subdirectory(MyObjects)
+add_subdirectory(fcl)
 
 art_make( 
           MODULE_LIBRARIES 
+			uboonecode_uboone_UBXSec_Algorithms
+			uboonecode_uboone_UBXSec_DataTypes
 			uboonecode_uboone_BasicTool_GeoAlgo
 			uboone_ErezCCQEana_MyObjects
 	  		larcore_Geometry

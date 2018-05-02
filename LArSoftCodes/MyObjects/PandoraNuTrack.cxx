@@ -32,15 +32,7 @@ void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures , bool DoPrintAllPIDa 
 
     if (DoPrintPandoraNuFeatures){
         
-        
-        SHOW( PIDa );
-        if (DoPrintAllPIDa) {
-            SHOW3( PIDaPerPlane[0]          , PIDaPerPlane[1]           , PIDaPerPlane[2]           );
-            SHOW3( PandoraNuPID_PIDA[0]     , PandoraNuPID_PIDA[1]      , PandoraNuPID_PIDA[2]      );
-            SHOW3( PIDaCaliPerPlane[0]      , PIDaCaliPerPlane[1]       , PIDaCaliPerPlane[2]       );
-            SHOW3( PandoraNuCaliPID_PIDA[0] , PandoraNuCaliPID_PIDA[1]  , PandoraNuCaliPID_PIDA[2]  );
-        }
-        
+        SHOW3( PandoraNuCaliPID_PIDA[0] , PandoraNuCaliPID_PIDA[1]  , PandoraNuCaliPID_PIDA[2]  );
         PrintPhys(length,"cm");
         Printf("rec theta=%.1f, phi=%.1f deg.", r2d*rec_dir.Theta(), r2d*rec_dir.Phi() );
         SHOW(IsFlipped);
