@@ -56,7 +56,7 @@ physics:
     {
       module_type:                      "ErezCCQEAna"
       DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8_v9"
-      VerbosityLevel:                   4
+      VerbosityLevel:                   0
       MCmodeLabel:                      true
       DoWriteTracksInfo:                true
       DoAddTracksEdep:                  true

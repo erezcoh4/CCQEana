@@ -281,10 +281,15 @@ private:
     
     std::vector<::flashana::Flash_t>    beam_flashes;
     bool DoOpDetSwap;                 ///< If true swaps reconstructed OpDets according to _opdet_swap_map
+    
     std::vector<int>        OpDetSwapMap;    ///< The OpDet swap map for reco flashes
     std::vector<double>     BeamFlashSpec;
+    std::vector<std::vector<double>> HypothesisFlashSpec;
+    
+
     ::flashana::FlashMatchManager       FlashMatch_mgr;
     std::vector<flashana::FlashMatch_t> FlashMatch_result;
+    
     
     // methods
     flashana::QCluster_t    GetQCluster (std::vector<art::Ptr<recob::Track>>);
@@ -301,6 +306,7 @@ ub::ErezCCQEAna::ErezCCQEAna(fhicl::ParameterSet const & p):EDAnalyzer(p){
 void ub::ErezCCQEAna::analyze(art::Event const & evt){
     
     ResetVars();
+    Debug(-1,"ResetVars: FlashMatch_result: size %",FlashMatch_result.size());
     art::ServiceHandle<geo::Geometry> geom;
     trkf::TrackMomentumCalculator TrackMomCalc;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
@@ -392,7 +398,7 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     if (evt.getByLabel("largeant",MCParticleListHandle))
         art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
     auto Nparticles = (int)mcparticlelist.size();
-    Debug(1,"Nparticles: %",Nparticles);
+    Debug(2,"Nparticles: %",Nparticles);
     if (MCmode) {
         evt.getByLabel(fG4ModuleLabel, pHandle);
         art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
@@ -461,12 +467,11 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     // ----------------------------------------
     // Neutrino Flash match from Marco
     // ----------------------------------------
-    // ToDo:
-    // (1) replace "n" as the loop index with "f"
+    FlashMatch_mgr.PrintConfig();
     int nBeamFlashes = 0;
     for (size_t n = 0; n < flashListHandle->size(); n++) {
         auto const& flash = (*flashListHandle)[n];
-        Debug( 2 , "[NeutrinoFlashMatch] Flash time from % : %",  fFlashModuleLabel,flash.Time());
+        Debug( -1 , "[NeutrinoFlashMatch] Flash time from % : %",  fFlashModuleLabel,flash.Time());
         // keep only flashes in the veto time range
         if(flash.Time() < FlashRangeStart || FlashRangeEnd < flash.Time()) continue;
         nBeamFlashes++;
@@ -498,116 +503,51 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     
     // If more than one beam flash, take the one with more PEs
     if (nBeamFlashes > 1) {
-        Debug( 2, "More than one beam flash in this event. Taking beam flash with more PEs.");
+        Debug( -1, "More than one beam flash in this event. Taking beam flash with more PEs.");
         // Sort flashes by length
         std::sort(beam_flashes.begin(), beam_flashes.end(),
                   [](::flashana::Flash_t a, ::flashana::Flash_t b) -> bool
                   {return a.TotalPE() > b.TotalPE();});
     }
-    
-    // Emplace flash to Flash Matching Manager
+    Debug(-1,"nBeamFlashes: %",nBeamFlashes);
+    // Emplace the 'best' flash to Flash Matching Manager
     ::flashana::Flash_t f = beam_flashes[0];
     BeamFlashSpec.resize(f.pe_v.size());
     BeamFlashSpec = f.pe_v;
     FlashMatch_mgr.Emplace(std::move(f));
-    Debug(2,"f.pe_v.size(): %",f.pe_v.size());
-    
-    // ********************
-    // Construct TPC Objects
-    // ********************
-    std::vector<flashana::Flash_t> xfixed_hypo_v;
-    std::vector<double> xfixed_chi2_v, xfixed_ll_v;
-    
-    // Get TPCObjects from the Event
-//    art::Handle<std::vector<ubana::TPCObject>> TPCobjHandle;
-//    evt.getByLabel( fTPCobjectProducer, TPCobjHandle);
-//    if (!TPCobjHandle.isValid()) {
-//        e.put(std::move(flashMatchTrackVector));
-//        e.put(std::move(assnOutFlashMatchTrack));
-//        e.put(std::move(assnOutFlashMatchTPCObject));
-//        return;
-//    }
-//    art::FindManyP<recob::Track>     tpcobjToTracks (TPCobjHandle, evt, fTPCobjectProducer);
-    
-//    int n_objects = TPCobjHandle->size();
-//    xfixed_hypo_v.resize(n_objects);
-//    xfixed_chi2_v.resize(n_objects);
-//    xfixed_ll_v.resize(n_objects);
-//  
+    Debug(-1,"f.pe_v.size(): %",f.pe_v.size());
     
     
+    // match
+    // -------
     // The class method GetQCluster(std::vector<art::Ptr<recob::Track>>)
     // takes in input a vector of tracks and returns a QCluster_t,
     // which is the data product needed by the flash matching
+    // In Marco' original module (NeutrinoFlashMatch) this is done by passing TPCobject to the manager
+    // which is a product of the entire UBXsec chain.
+    // Here,
+    // since we do not want to impose the UBXsec chain analysiss
+    // we work aroud this by giving the pandoraNu track-list (tracklist) as an input to the manager
     flashana::QCluster_t qcluster;
     qcluster = this->GetQCluster( tracklist );
     FlashMatch_mgr.Emplace(std::move(qcluster));
     FlashMatch_result = FlashMatch_mgr.Match();
-    Debug(2,"FlashMatch_result: size %",FlashMatch_result.size());
+    
+    // save the results
+    // ---------------------
+    Debug(-1,"save the results: FlashMatch_result: size %",FlashMatch_result.size());
+    HypothesisFlashSpec.resize( FlashMatch_result.size() );
     for( int _matchid=0; _matchid < (int)(FlashMatch_result.size()); ++_matchid) {
         
         auto const& match = FlashMatch_result[_matchid];
-        
-        Debug(2,"match.flash_id: %, match.score: %", match.flash_id, match.score);
+        Debug(-1,"match.flash_id: %, match.score: %", match.flash_id, match.score);
         
         auto const& flash = FlashMatch_mgr.FlashArray()[match.flash_id];
-        Debug(2,"t0[%]: %", _matchid, flash.time);
+        Debug(-1,"t0[%]: %, HypothesisFlashSpec[%].size(): %", _matchid, flash.time, _matchid, HypothesisFlashSpec[_matchid].size());
+        for(size_t pmt=0; pmt < HypothesisFlashSpec[_matchid].size(); ++pmt) {
+            Debug(-1,"match.hypothesis[pmt %]: %", pmt, match.hypothesis[pmt]);
+        };
     }
-    
-//    for(_matchid=0; _matchid < (int)(_result.size()); ++_matchid) {
-//        
-//        auto const& match = _result[_matchid];
-//        
-//        _flashid         = match.flash_id;
-//        _score[_matchid] = match.score;
-//        
-//        auto const& flash = _mgr.FlashArray()[_flashid];
-//        _t0[_matchid] = flash.time;
-//        
-//        if(_debug) std::cout << "[NeutrinoFlashMatch] For this match, the score is " << match.score << std::endl;
-//        
-//        // Get the TPCObject
-//        art::Ptr<ubana::TPCObject> the_tpcobj(tpcobj_h, match.tpc_id);
-//        std::vector<art::Ptr<recob::Track>> track_v    = tpcobjToTracks.at(match.tpc_id);
-//        std::vector<art::Ptr<recob::PFParticle>> pfp_v = tpcobjToPFPs.at(match.tpc_id);
-//        std::vector<art::Ptr<ubana::TPCObject>>  tpcobj_v;
-//        tpcobj_v.resize(1);
-//        tpcobj_v.at(0) = the_tpcobj;
-//        
-//        // Get hypo spec
-//        _hypo_flash_spec[_matchid].resize(geo->NOpDets());
-//        for(size_t pmt=0; pmt<_hypo_flash_spec[_matchid].size(); ++pmt) _hypo_flash_spec[_matchid][pmt] = match.hypothesis[pmt];
-//        
-//        _xfixed_hypo_spec = xfixed_hypo_v[_matchid].pe_v;
-//        _xfixed_chi2      = xfixed_chi2_v[_matchid];
-//        _xfixed_ll        = xfixed_ll_v[_matchid];
-//        
-//        // Save x position
-//        _qll_xmin[_matchid] = match.tpc_point.x;
-//        
-//        _tpc_xmin[_matchid] = 1.e4;
-//        for(auto const& pt : _mgr.QClusterArray()[match.tpc_id]) {
-//            if(pt.x < _tpc_xmin[_matchid]) _tpc_xmin[_matchid] = pt.x;
-//        }
-//        
-//        // X correction
-//        _tpc_xmin[_matchid] = _tpc_xmin[_matchid] - _t0[_matchid] * 0.1114359;
-//        
-//        ubana::FlashMatch fm;
-//        fm.SetScore               ( _score[_matchid] );
-//        fm.SetTPCX                ( _tpc_xmin[_matchid] );
-//        fm.SetEstimatedX          ( _qll_xmin[_matchid] );
-//        fm.SetT0                  ( _t0[_matchid] );
-//        fm.SetHypoFlashSpec       ( _hypo_flash_spec[_matchid] );
-//        fm.SetRecoFlashSpec       ( _beam_flash_spec );
-//        fm.SetXFixedHypoFlashSpec ( _xfixed_hypo_spec );
-//        fm.SetXFixedChi2          ( _xfixed_chi2 );
-//        fm.SetXFixedLl            ( _xfixed_ll );
-//        
-//        flashMatchTrackVector->emplace_back(std::move(fm));
-//        util::CreateAssn(*this, e, *flashMatchTrackVector, track_v,  *assnOutFlashMatchTrack);
-//    }
-    
     // ----------------------------------------
     // end Marco' flash matching
     // ----------------------------------------
@@ -881,7 +821,9 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     
     
     
-
+    // ----------------------------------------
+    // MC information
+    // ----------------------------------------
     Debug(4,"before if (MCmode=%)",MCmode);
     if (MCmode) {
         
@@ -1025,7 +967,9 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     // print and finish
     // ----------------------------------------
     fTree -> Fill();
-    PrintInformation( (debug>0) ? true : false );
+    if (debug>0) {
+        PrintInformation( (debug>0) ? true : false );
+    }
 }
 
 
@@ -1117,10 +1061,12 @@ void ub::ErezCCQEAna::ClusterTracksToVertices(){
                     if ( mc_id_t0 >= 0
                         &&
                         mc_id_t0 == mc_id_t1 ){
-                        Debug( 8 , "vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );");
                         vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );
-                        Printf("matched GENIE information");
-                        vertex.GetGENIEinfo().Print(); // PRINTOUT
+                        if (debug>6){
+                            Debug( 8 , "vertex.SetGENIEinfo( genie_interactions.at( mc_id_t0 ) );");
+                            Printf("matched GENIE information");
+                            vertex.GetGENIEinfo().Print(); // PRINTOUT
+                        }
                     }
                 }
                 Debug( 6 , "} (vertex.GetTracks().size()>1)");
@@ -2240,6 +2186,10 @@ void ub::ErezCCQEAna::ResetVars(){
     genie_interactions.clear();
     vertices.clear();
     EventPassedSwTrigger=false;
+    BeamFlashSpec.clear();
+    FlashMatch_result.clear();
+    HypothesisFlashSpec.clear();
+    FlashMatch_mgr.Reset();
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
 }
