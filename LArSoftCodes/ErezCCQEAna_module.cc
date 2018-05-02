@@ -306,7 +306,6 @@ ub::ErezCCQEAna::ErezCCQEAna(fhicl::ParameterSet const & p):EDAnalyzer(p){
 void ub::ErezCCQEAna::analyze(art::Event const & evt){
     
     ResetVars();
-    Debug(-1,"ResetVars: FlashMatch_result: size %",FlashMatch_result.size());
     art::ServiceHandle<geo::Geometry> geom;
     trkf::TrackMomentumCalculator TrackMomCalc;
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
@@ -467,7 +466,6 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     // ----------------------------------------
     // Neutrino Flash match from Marco
     // ----------------------------------------
-    FlashMatch_mgr.PrintConfig();
     int nBeamFlashes = 0;
     for (size_t n = 0; n < flashListHandle->size(); n++) {
         auto const& flash = (*flashListHandle)[n];
@@ -1207,7 +1205,7 @@ void ub::ErezCCQEAna::FilterGoodPairVertices(){
             vertices.push_back( v );
         }
         // if the vertex is not with only two tracks at close proximity and nothing else, kill it
-        else { Debug( 0 , Form("erasing vertex %d, since N(tracks)=%d, N(close semi-contained tracks):%d"
+        else { Debug( 3 , Form("erasing vertex %d, since N(tracks)=%d, N(close semi-contained tracks):%d"
                                , v.GetVertexID(), v.GetNtracks(), (int)(v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size()) ) );}
     }
 }
@@ -2112,6 +2110,10 @@ void ub::ErezCCQEAna::beginJob(){
     HeaderVerticesInCSV();
     
     pot_total = 0;
+    
+    Printf("FlashMatch_mgr Configuration:");
+    FlashMatch_mgr.PrintConfig();
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
