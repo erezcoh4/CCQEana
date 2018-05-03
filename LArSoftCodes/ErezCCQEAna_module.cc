@@ -282,10 +282,16 @@ private:
     std::vector<::flashana::Flash_t>    beam_flashes;
     bool DoOpDetSwap;                 ///< If true swaps reconstructed OpDets according to _opdet_swap_map
     
-    std::vector<int>        OpDetSwapMap;    ///< The OpDet swap map for reco flashes
-    std::vector<double>     BeamFlashSpec;
-    std::vector<std::vector<double>> HypothesisFlashSpec;
+    double                              FlashMatch_xfixed_chi2, FlashMatch_xfixed_ll;
     
+    std::vector<int>                    OpDetSwapMap;    ///< The OpDet swap map for reco flashes
+    std::vector<double>                 NumcFlashSpec;
+    std::vector<double>                 BeamFlashSpec;
+    std::vector<std::vector<double>>    HypothesisFlashSpec;
+    std::vector<double>                 FlashMatch_score, FlashMatch_t0;
+    std::vector<double>                 FlashMatch_qll_xmin, FlashMatch_tpc_xmin;
+    std::vector<double>                 FlashMatch_xfixed_hypo_spec;
+    std::vector<ubana::FlashMatch>      flashMatchTrackVector;
 
     ::flashana::FlashMatchManager       FlashMatch_mgr;
     std::vector<flashana::FlashMatch_t> FlashMatch_result;
@@ -533,6 +539,11 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     
     // save the results
     // ---------------------
+//    FlashMatch_score.resize(FlashMatch_result.size());
+//    FlashMatch_t0.resize(FlashMatch_result.size());
+//    FlashMatch_qll_xmin.resize(FlashMatch_result.size());
+//    FlashMatch_tpc_xmin.resize(FlashMatch_result.size());
+
     Debug(-1,"save the results: FlashMatch_result: size %",FlashMatch_result.size());
     HypothesisFlashSpec.resize( FlashMatch_result.size() );
     for( int _matchid=0; _matchid < (int)(FlashMatch_result.size()); ++_matchid) {
@@ -540,11 +551,45 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
         auto const& match = FlashMatch_result[_matchid];
         Debug(-1,"match.flash_id: %, match.score: %", match.flash_id, match.score);
         
+        //        FlashMatch_flashid = match.flash_id;
+        FlashMatch_score.push_back( match.score );
+        
         auto const& flash = FlashMatch_mgr.FlashArray()[match.flash_id];
+        FlashMatch_t0.push_back( flash.time );
+        
         Debug(-1,"t0[%]: %, HypothesisFlashSpec[%].size(): %", _matchid, flash.time, _matchid, HypothesisFlashSpec[_matchid].size());
         for(size_t pmt=0; pmt < HypothesisFlashSpec[_matchid].size(); ++pmt) {
             Debug(-1,"match.hypothesis[pmt %]: %", pmt, match.hypothesis[pmt]);
         };
+        
+        
+        //        FlashMatch_xfixed_hypo_spec = xfixed_hypo_v[_matchid].pe_v;
+        //        FlashMatch_xfixed_chi2      = xfixed_chi2_v[_matchid];
+        //        FlashMatch_xfixed_ll        = xfixed_ll_v[_matchid];
+        
+        // Save x position
+        FlashMatch_qll_xmin.push_back( match.tpc_point.x );
+        FlashMatch_tpc_xmin.push_back( 1.e4 );
+        for(auto const& pt : FlashMatch_mgr.QClusterArray()[match.tpc_id]) {
+            if(pt.x < FlashMatch_tpc_xmin.back()) FlashMatch_tpc_xmin.back() = pt.x;
+        }
+        
+        // X correction
+        Debug(-1,"// X correction");
+        FlashMatch_tpc_xmin.back() = FlashMatch_tpc_xmin.back() - FlashMatch_t0.back() * 0.1114359;
+        
+        ubana::FlashMatch fm;
+        fm.SetScore               ( FlashMatch_score.back() );
+        fm.SetTPCX                ( FlashMatch_tpc_xmin.back() );
+        fm.SetEstimatedX          ( FlashMatch_qll_xmin.back() );
+        fm.SetT0                  ( FlashMatch_t0.back() );
+        fm.SetHypoFlashSpec       ( HypothesisFlashSpec.back() );
+        fm.SetRecoFlashSpec       ( BeamFlashSpec );
+        //        fm.SetXFixedHypoFlashSpec ( FlashMatch_xfixed_hypo_spec );
+        //        fm.SetXFixedChi2          ( FlashMatch_xfixed_chi2 );
+        //        fm.SetXFixedLl            ( FlashMatch_xfixed_ll );
+        
+        flashMatchTrackVector.push_back(fm);
     }
     // ----------------------------------------
     // end Marco' flash matching
@@ -818,7 +863,6 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     }
     
     
-    
     // ----------------------------------------
     // MC information
     // ----------------------------------------
@@ -939,9 +983,6 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
         }//is neutrino
     }
     
-
-    
-    
     // ----------------------------------------
     // write information to CSV files
     // ----------------------------------------
@@ -968,6 +1009,7 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     if (debug>0) {
         PrintInformation( (debug>0) ? true : false );
     }
+    if (debug>-1) PrintXLine();
 }
 
 
@@ -2191,7 +2233,14 @@ void ub::ErezCCQEAna::ResetVars(){
     BeamFlashSpec.clear();
     FlashMatch_result.clear();
     HypothesisFlashSpec.clear();
+    NumcFlashSpec.clear();
+    FlashMatch_score.clear();
+    FlashMatch_t0.clear();
+    FlashMatch_qll_xmin.clear();
+    FlashMatch_tpc_xmin.clear();
+    FlashMatch_xfixed_hypo_spec.clear();
     FlashMatch_mgr.Reset();
+    flashMatchTrackVector.clear();
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
 }
@@ -2311,7 +2360,6 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     DoOpDetSwap             = p.get<bool>       ("DoOpDetSwap", false);
     OpDetSwapMap            = p.get<std::vector<int> >("OpDetSwapMap");
     FlashMatch_mgr.Configure(p.get<flashana::Config_t>("FlashMatchConfig"));
-    fTPCobjectProducer      = p.get<std::string>("TPCObjectModule","TPCObjectMaker");
 }
 
 
