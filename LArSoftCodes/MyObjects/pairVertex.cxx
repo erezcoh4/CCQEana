@@ -467,21 +467,32 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-Float_t pairVertex::GetDis2Flash (flash Flash) const {
+Float_t pairVertex::GetZDis2Flash (flash Flash) const {
     float vZ = position.z();
     float FlashZcenter = Flash.GetZcenter();
     float Zdis = vZ - FlashZcenter;
+    return Zdis;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t pairVertex::GetYDis2Flash (flash Flash) const {
     float vY = position.y() ;
     float FlashYcenter = Flash.GetYcenter();
     float Ydis = vY - FlashYcenter;
+    return Ydis;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Float_t pairVertex::GetDis2Flash (flash Flash) const {
+    float Zdis = GetZDis2Flash (Flash);
+    float Ydis = GetYDis2Flash (Flash);
     float YZdistance = sqrt( Zdis*Zdis + Ydis*Ydis );
     return YZdistance;
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-Float_t pairVertex::GetDis2ClosestFlash () const {
-    return GetDis2Flash(ClosestFlash);
-}
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::BuildVertexIDFromTracks () {
@@ -559,8 +570,11 @@ void pairVertex::Print(bool DoPrintTracks,bool DoPrintFull,bool DoPrintGENIE) co
         SHOW(genie_interaction.Get_theta_pq());
         if (!tracks.empty()) SHOW(reco_theta_pq);
     }
-    cout << "closest-flash:" << endl;
+    cout <<"\033[31m" << "closest-flash:" << endl;
     ClosestFlash.Print();
+    cout <<"\033[31m" << "matched-flash:" << endl;
+    MatchedFlash.Print();
+    SHOW(MatchedFlashScore);
 
     // GENIE interaction features
     PrintLine();

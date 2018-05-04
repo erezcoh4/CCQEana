@@ -469,132 +469,6 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     }
 
 
-    // ----------------------------------------
-    // Neutrino Flash match from Marco
-    // ----------------------------------------
-    int nBeamFlashes = 0;
-    for (size_t n = 0; n < flashListHandle->size(); n++) {
-        auto const& flash = (*flashListHandle)[n];
-        Debug( -1 , "[NeutrinoFlashMatch] Flash time from % : %",  fFlashModuleLabel,flash.Time());
-        // keep only flashes in the veto time range
-        if(flash.Time() < FlashRangeStart || FlashRangeEnd < flash.Time()) continue;
-        nBeamFlashes++;
-        
-        // Construct a Flash_t
-        ::flashana::Flash_t f;
-        f.x = f.x_err = 0;
-        f.pe_v.resize(geom->NOpDets());
-        f.pe_err_v.resize(geom->NOpDets());
-        for (unsigned int i = 0; i < f.pe_v.size(); i++) {
-            unsigned int opdet = geom->OpDetFromOpChannel(i);
-            if (DoOpDetSwap && evt.isRealData()) {
-                opdet = OpDetSwapMap.at(opdet);
-            }
-            f.pe_v[opdet] = flash.PE(i);
-            f.pe_err_v[opdet] = sqrt(flash.PE(i));
-        }
-        double Ycenter, Zcenter, Ywidth, Zwidth;
-        GetFlashLocation(f.pe_v, Ycenter, Zcenter, Ywidth, Zwidth);
-        f.y = Ycenter;
-        f.z = Zcenter;
-        f.y_err = Ywidth;
-        f.z_err = Zwidth;
-        f.time = flash.Time();
-        f.idx = nBeamFlashes-1;
-        beam_flashes.resize(nBeamFlashes);
-        beam_flashes[nBeamFlashes-1] = f;
-    } // flash loop
-    
-    // If more than one beam flash, take the one with more PEs
-    if (nBeamFlashes > 1) {
-        Debug( -1, "More than one beam flash in this event. Taking beam flash with more PEs.");
-        // Sort flashes by length
-        std::sort(beam_flashes.begin(), beam_flashes.end(),
-                  [](::flashana::Flash_t a, ::flashana::Flash_t b) -> bool
-                  {return a.TotalPE() > b.TotalPE();});
-    }
-    Debug(-1,"nBeamFlashes: %",nBeamFlashes);
-    // Emplace the 'best' flash to Flash Matching Manager
-    ::flashana::Flash_t f = beam_flashes[0];
-    BeamFlashSpec.resize(f.pe_v.size());
-    BeamFlashSpec = f.pe_v;
-    FlashMatch_mgr.Emplace(std::move(f));
-    Debug(-1,"f.pe_v.size(): %",f.pe_v.size());
-    
-    
-    // match
-    // -------
-    // The class method GetQCluster(std::vector<art::Ptr<recob::Track>>)
-    // takes in input a vector of tracks and returns a QCluster_t,
-    // which is the data product needed by the flash matching
-    // In Marco' original module (NeutrinoFlashMatch) this is done by passing TPCobject to the manager
-    // which is a product of the entire UBXsec chain.
-    // Here,
-    // since we do not want to impose the UBXsec chain analysiss
-    // we work aroud this by giving the pandoraNu track-list (tracklist) as an input to the manager
-    flashana::QCluster_t qcluster;
-    qcluster = this->GetQCluster( tracklist );
-    FlashMatch_mgr.Emplace(std::move(qcluster));
-    FlashMatch_result = FlashMatch_mgr.Match();
-    
-    // save the results
-    // ---------------------
-//    FlashMatch_score.resize(FlashMatch_result.size());
-//    FlashMatch_t0.resize(FlashMatch_result.size());
-//    FlashMatch_qll_xmin.resize(FlashMatch_result.size());
-//    FlashMatch_tpc_xmin.resize(FlashMatch_result.size());
-
-    Debug(-1,"save the results: FlashMatch_result: size %",FlashMatch_result.size());
-    HypothesisFlashSpec.resize( FlashMatch_result.size() );
-    for( int _matchid=0; _matchid < (int)(FlashMatch_result.size()); ++_matchid) {
-        
-        auto const& match = FlashMatch_result[_matchid];
-        Debug(-1,"match.flash_id: %, match.score: %", match.flash_id, match.score);
-        
-        //        FlashMatch_flashid = match.flash_id;
-        FlashMatch_score.push_back( match.score );
-        
-        auto const& flash = FlashMatch_mgr.FlashArray()[match.flash_id];
-        FlashMatch_t0.push_back( flash.time );
-        
-        Debug(-1,"t0[%]: %, HypothesisFlashSpec[%].size(): %", _matchid, flash.time, _matchid, HypothesisFlashSpec[_matchid].size());
-        for(size_t pmt=0; pmt < HypothesisFlashSpec[_matchid].size(); ++pmt) {
-            Debug(-1,"match.hypothesis[pmt %]: %", pmt, match.hypothesis[pmt]);
-        };
-        
-        
-        //        FlashMatch_xfixed_hypo_spec = xfixed_hypo_v[_matchid].pe_v;
-        //        FlashMatch_xfixed_chi2      = xfixed_chi2_v[_matchid];
-        //        FlashMatch_xfixed_ll        = xfixed_ll_v[_matchid];
-        
-        // Save x position
-        FlashMatch_qll_xmin.push_back( match.tpc_point.x );
-        FlashMatch_tpc_xmin.push_back( 1.e4 );
-        for(auto const& pt : FlashMatch_mgr.QClusterArray()[match.tpc_id]) {
-            if(pt.x < FlashMatch_tpc_xmin.back()) FlashMatch_tpc_xmin.back() = pt.x;
-        }
-        
-        // X correction
-        Debug(-1,"// X correction");
-        FlashMatch_tpc_xmin.back() = FlashMatch_tpc_xmin.back() - FlashMatch_t0.back() * 0.1114359;
-        
-        ubana::FlashMatch fm;
-        fm.SetScore               ( FlashMatch_score.back() );
-        fm.SetTPCX                ( FlashMatch_tpc_xmin.back() );
-        fm.SetEstimatedX          ( FlashMatch_qll_xmin.back() );
-        fm.SetT0                  ( FlashMatch_t0.back() );
-        fm.SetHypoFlashSpec       ( HypothesisFlashSpec.back() );
-        fm.SetRecoFlashSpec       ( BeamFlashSpec );
-        //        fm.SetXFixedHypoFlashSpec ( FlashMatch_xfixed_hypo_spec );
-        //        fm.SetXFixedChi2          ( FlashMatch_xfixed_chi2 );
-        //        fm.SetXFixedLl            ( FlashMatch_xfixed_ll );
-        
-        flashMatchTrackVector.push_back(fm);
-    }
-    // ----------------------------------------
-    // end Marco' flash matching
-    // ----------------------------------------
-
 
     
     
@@ -999,8 +873,152 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
         StreamGENIEToCSV();
         Debug(5,"StreamGENIEToCSV()");
     }
+
+    
+    // ----------------------------------------
+    // Construct the candidate CCQE vertices
+    // ----------------------------------------
     ConstructVertices();
     Debug(5,"ConstructVertices()");
+    
+    
+    
+    // ----------------------------------------
+    // Neutrino Flash match from Marco
+    //
+    // We emplace the tracks-vector from
+    // each candidate vertex (muon and proton candidates),
+    // and create a vector of matchings
+    // to the candidate vertices.
+    // This way we can ask for example about
+    // the matching score for each vertex,
+    // the distance of the matched flash
+    // to that vertex, the N(PE) etc.
+    // ----------------------------------------
+    int nBeamFlashes = 0;
+    for (size_t n = 0; n < flashListHandle->size(); n++) {
+        auto const& flash = (*flashListHandle)[n];
+        Debug( 2 , "[NeutrinoFlashMatch] Flash time from % : %",  fFlashModuleLabel,flash.Time());
+        // keep only flashes in the veto time range
+        if(flash.Time() < FlashRangeStart || FlashRangeEnd < flash.Time()) continue;
+        nBeamFlashes++;
+        
+        // Construct a Flash_t
+        ::flashana::Flash_t f;
+        f.x = f.x_err = 0;
+        f.pe_v.resize(geom->NOpDets());
+        f.pe_err_v.resize(geom->NOpDets());
+        for (unsigned int i = 0; i < f.pe_v.size(); i++) {
+            unsigned int opdet = geom->OpDetFromOpChannel(i);
+            if (DoOpDetSwap && evt.isRealData()) {
+                opdet = OpDetSwapMap.at(opdet);
+            }
+            f.pe_v[opdet] = flash.PE(i);
+            f.pe_err_v[opdet] = sqrt(flash.PE(i));
+        }
+        double Ycenter, Zcenter, Ywidth, Zwidth;
+        GetFlashLocation(f.pe_v, Ycenter, Zcenter, Ywidth, Zwidth);
+        f.y = Ycenter;
+        f.z = Zcenter;
+        f.y_err = Ywidth;
+        f.z_err = Zwidth;
+        f.time = flash.Time();
+        f.idx = nBeamFlashes-1;
+        beam_flashes.resize(nBeamFlashes);
+        beam_flashes[nBeamFlashes-1] = f;
+    } // flash loop
+    // If more than one beam flash, take the one with more PEs
+    if (nBeamFlashes > 1) {
+        Debug( 4, "More than one beam flash in this event. Taking beam flash with more PEs.");
+        // Sort flashes by length
+        std::sort(beam_flashes.begin(), beam_flashes.end(),
+                  [](::flashana::Flash_t a, ::flashana::Flash_t b) -> bool
+                  {return a.TotalPE() > b.TotalPE();});
+    }
+    Debug(3,"nBeamFlashes: %",nBeamFlashes);
+    // Emplace the 'best' flash to Flash Matching Manager
+    ::flashana::Flash_t f = beam_flashes[0];
+    BeamFlashSpec.resize(f.pe_v.size());
+    BeamFlashSpec = f.pe_v;
+    Debug(4,"f.pe_v.size(): %",f.pe_v.size());
+    FlashMatch_mgr.Emplace(std::move(f));
+    
+    
+    // match
+    // -------
+    // The class method GetQCluster(std::vector<art::Ptr<recob::Track>>)
+    // takes in input a vector of tracks and returns a QCluster_t,
+    // which is the data product needed by the flash matching
+    // In Marco' original module (NeutrinoFlashMatch) this is done by passing TPCobject to the manager
+    // which is a product of the entire UBXsec chain.
+    // Here,
+    // since we do not want to impose the UBXsec chain analysiss
+    // we work aroud this by giving the pandoraNu track-list (tracklist) as an input to the manager
+    for (auto & v: vertices) {
+        // Build the QCluster for this vertex
+        flashana::QCluster_t qcluster;
+        // to get the right tracks for this vertex we use the track-id's for this event
+        art::Ptr<recob::Track> recobTrack_muCandidate = tracklist[v.GetTrack_muCandidate().GetTrackID()];
+        art::Ptr<recob::Track> recobTrack_pCandidate = tracklist[v.GetTrack_pCandidate().GetTrackID()];
+        std::vector<art::Ptr<recob::Track> > vertex_tracks = {recobTrack_muCandidate,recobTrack_pCandidate};
+        qcluster = this->GetQCluster( vertex_tracks );
+        FlashMatch_mgr.Emplace(std::move(qcluster));
+    }
+    
+    // Now the matching is done by the manager 1 time
+    // and it scores the matching for all objects
+    // (candidate pairs in our case)
+    FlashMatch_result = FlashMatch_mgr.Match();
+    
+    // save the results
+    // i.e. the matched flashs
+    // to each of the vertices
+    // ------------------------
+    Debug(4,"save the results: FlashMatch_result: size %",FlashMatch_result.size());
+    HypothesisFlashSpec.resize( FlashMatch_result.size() );
+    for( int _matchid=0; _matchid < (int)(FlashMatch_result.size()); ++_matchid) {
+        
+        auto const& match = FlashMatch_result[_matchid];
+        Debug(4,"match.flash_id: %, match.score: %", match.flash_id, match.score);
+        
+        FlashMatch_score.push_back( match.score );
+        
+        auto const& matched_flash = FlashMatch_mgr.FlashArray()[match.flash_id];
+        FlashMatch_t0.push_back( matched_flash.time );
+        
+        double Ycenter, Zcenter, Ywidth, Zwidth;
+        GetFlashLocation(matched_flash.pe_v, Ycenter, Zcenter, Ywidth, Zwidth);
+
+        flash matched_fflash(
+                     matched_flash.time,    // flash time
+                     matched_flash.time,    // flash time width, that I do not know, and is unimportant here
+                     Zcenter,      // flash z-center
+                     Zwidth,       // flash z-width
+                     Ycenter,      // flash y-center
+                     Ywidth,       // flash y-width
+                     matched_flash.TotalPE()       // flash total PE
+                     );
+        auto & v = vertices.at(_matchid);
+        v.SetMatchedFlash( matched_fflash , match.score );
+        if (debug>4){
+            matched_fflash.Print();
+            Debug(4,"t0[%]: %, HypothesisFlashSpec[%].size(): %", _matchid, matched_flash.time, _matchid, HypothesisFlashSpec[_matchid].size());
+            for(size_t pmt=0; pmt < HypothesisFlashSpec[_matchid].size(); ++pmt) {
+                Debug(4,"match.hypothesis[pmt %]: %", pmt, match.hypothesis[pmt]);
+            };
+        }
+    }
+    // ----------------------------------------
+    // end Marco' flash matching
+    // ----------------------------------------
+    
+
+    // ----------------------------------------
+    // write ccqe-candidate pairs to CSV files
+    // ----------------------------------------
+    StreamVerticesToCSV();
+
+    
     
     // ----------------------------------------
     // print and finish
@@ -1044,9 +1062,6 @@ void ub::ErezCCQEAna::ConstructVertices(){
     FilterGoodPairVertices();
     // if its a MC event, tag the vertex by their MC information
     if (MCmode) TagVertices();
-    // output to csv file
-    // debug = (vertices.size()>0) ? 2 : 0; // ToDo: Remove this!
-    StreamVerticesToCSV();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -1717,24 +1732,9 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "x" << "," << "y" << "," << "z" << ","
     << "track_id" << ","
     
-    // tracks sorted by long / short
-    // << "PIDa_long"<< "," << "PIDa_short" << ","
-    // << "l_long"<< "," << "l_short" << ","
-    // << "PIDaCali_long"<< "," << "PIDaCali_short" << ","
-    // tracks sorted by small / large PIDa
-    // << "PIDa_small_PIDa"<< "," << "PIDa_large_PIDa" << ","
-    // << "l_small_PIDa"<< "," << "l_large_PIDa" << ","
-    // << "PIDaCali_small_PIDa"<< "," << "PIDaCali_large_PIDa" << ","
-    
     // µ/p assigned tracks
     << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
     << "l_muCandidate"<< "," << "l_pCandidate" << "," << "l_mu-l_p"<< ","
-    
-    //    << "PIDaCali_muCandidate"<< "," << "PIDaCali_pCandidate" << ","
-    //    // we also want to consider PIDa using only the collection-plane
-    //    // since the induction planes are poorly modeled and show large angular dependence in data
-    //    << "PIDaYplane_muCandidate"<< "," << "PIDaYplane_pCandidate" << ","
-    //    << "PIDaCaliYplane_muCandidate"<< "," << "PIDaCaliYplane_pCandidate" << ","
     
     // pandoraNu pid object
     << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
@@ -1829,6 +1829,16 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "ClosestFlash_TotalPE" << ","
     << "ClosestFlash_Time" << ","
     << "Nflashes" << ",";
+
+    // flash matching by Marco' method
+    vertices_file
+    << "MatchedFlash_Ydistance"     << ","
+    << "MatchedFlash_Zdistance"     << ","
+    << "MatchedFlash_YZdistance"    << ","
+    << "MatchedFlash_TotalPE"       << ","
+    << "MatchedFlash_Time"          << ","
+    << "MatchedFlash_Score"         << ",";
+
     
     
     // broken trajectories
@@ -1867,30 +1877,10 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         vertices_file << ",";
         
         
-        //        // tracks sorted by long / short
-        //        vertices_file
-        //        << v.GetLongestTrack().GetPIDa() << "," << v.GetShortestTrack().GetPIDa() << ","
-        //        << v.GetLongestTrack().GetLength() << "," << v.GetShortestTrack().GetLength() << ","
-        //        << v.GetLongestTrack().GetPIDaCali() << "," << v.GetShortestTrack().GetPIDaCali() << ",";
-        
-        //        // tracks sorted by small / large PIDa
-        //        vertices_file
-        //        << v.GetSmallPIDaTrack().GetPIDa() << "," << v.GetLargePIDaTrack().GetPIDa() << ","
-        //        << v.GetSmallPIDaTrack().GetLength() << "," << v.GetLargePIDaTrack().GetLength() << ","
-        //        << v.GetSmallPIDaTrack().GetPIDaCali() << "," << v.GetLargePIDaTrack().GetPIDaCali() << ",";
-
         // µ/p assigned tracks
         vertices_file
         << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
         << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << "," <<v.GetTrack_muCandidate().GetLength() - v.GetTrack_pCandidate().GetLength() << ","
-        
-        //        << v.GetTrack_muCandidate().GetPIDaCali() << "," << v.GetTrack_pCandidate().GetPIDaCali() << ","
-        //        // we also want to consider PIDa using only the collection-plane
-        //        // since the induction planes are poorly modeled and show large angular dependence in data
-        //        << v.GetTrack_muCandidate().GetPIDaPerPlane(2) << ","
-        //        << v.GetTrack_pCandidate().GetPIDaPerPlane(2)  << ","
-        //        << v.GetTrack_muCandidate().GetPIDaCaliPerPlane(2) << ","
-        //        << v.GetTrack_pCandidate().GetPIDaCaliPerPlane(2) << ","
         
         // pandoraNu pid object
         << v.GetTrack_muCandidate().GetPID_PIDA()               << ","  << v.GetTrack_pCandidate().GetPID_PIDA() << ","
@@ -2017,6 +2007,16 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         << v.GetClosestFlash().GetTotalPE() << ","
         << v.GetClosestFlash().GetTime() << ","
         << flashes.size() << "," ;
+        
+        // flash matching by Marco' method
+        vertices_file
+        << v.GetYDis2MatchedFlash()         << ","
+        << v.GetZDis2MatchedFlash()         << ","
+        << v.GetDis2MatchedFlash()          << ","
+        << v.GetMatchedFlash().GetTotalPE() << ","
+        << v.GetMatchedFlash().GetTime()    << ","
+        << v.GetMatchedFlashScore()         << ",";
+
         
         // broken trajectories
         vertices_file

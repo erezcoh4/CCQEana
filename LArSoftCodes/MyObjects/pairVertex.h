@@ -110,7 +110,7 @@ public:
     void      SetIsBrokenTrajectory (bool fIsBroken)                                {IsBrokenTrajectory = fIsBroken;};
     void         SetClosestDistance (float fdistances_ij)                           {reco_mu_p_distance=fdistances_ij;};
 
-    
+    void            SetMatchedFlash ( flash _flash, float _fscore )                 {MatchedFlash = _flash; MatchedFlashScore = _fscore;};
     
     
     // GETters
@@ -162,10 +162,17 @@ public:
     // input: plane, radius in [cm]
     float         GetRdQSphereAroundVertex (int plane, float r, std::vector<hit> hits ) const ;
     float                GetChargeInSphere (int plane, std::vector<hit> hits, float r) const;
+    float             GetMatchedFlashScore () const {return MatchedFlashScore;};
     
-    
+    Float_t                  GetYDis2Flash (flash) const;
+    Float_t                  GetZDis2Flash (flash) const;
     Float_t                   GetDis2Flash (flash) const;
-    Float_t            GetDis2ClosestFlash () const ;
+    Float_t            GetDis2ClosestFlash () const {return GetDis2Flash( ClosestFlash );} ;
+    Float_t            GetDis2MatchedFlash () const {return GetDis2Flash( MatchedFlash );};
+    Float_t           GetYDis2MatchedFlash () const {return GetYDis2Flash( MatchedFlash );};
+    Float_t           GetZDis2MatchedFlash () const {return GetZDis2Flash( MatchedFlash );};
+    
+
 
     std::vector<float>    Get_delta_phi_ij () const {return delta_phi_ij;};
     std::vector<float>    Get_distances_ij () const {return distances_ij;};
@@ -186,13 +193,14 @@ public:
     PandoraNuTrack       GetSmallPIDaTrack () const {return SmallPIDaTrack;};
     PandoraNuTrack       GetLargePIDaTrack () const {return LargePIDaTrack;};
     PandoraNuTrack    GetTrack_muCandidate () const {return Track_muCandidate;};
-    PandoraNuTrack  GetTrack_pCandidate () const {return Track_pCandidate;};
+    PandoraNuTrack     GetTrack_pCandidate () const {return Track_pCandidate;};
     
     std::vector<PandoraNuTrack>  GetTracks () const {return tracks;};
     
     GENIEinteraction          GetGENIEinfo () const {return genie_interaction;};
     GENIEinteraction       GetClosestGENIE () const {return closest_genie_interaction;};
     flash                  GetClosestFlash () const {return ClosestFlash;};
+    flash                  GetMatchedFlash () const {return MatchedFlash;};
 
     std::vector<hit>           GetMuonHits (int plane) const {return hits_muon[plane];};
     std::vector<hit>         GetProtonHits (int plane) const {return hits_proton[plane];};
@@ -246,6 +254,7 @@ private:
     // --- - - --- -- - -- -- -- -- --- -- - --- - -- - -- -- -- --- - -- - --- - - -- - -- -
     
     float               truth_alpha_q, truth_alpha_p, truth_alpha_mu, truth_alpha_miss;
+    float               MatchedFlashScore=-1;   // score of flash-matchig by Marco
     
     TVector3            position=TVector3();
     TVector3            reco_Pp_3vect=TVector3(), reco_Pmu_3vect=TVector3();
@@ -273,6 +282,7 @@ private:
     
     std::vector<hit>    hits_muon[3], hits_proton[3]; // in 3 wire planes
     flash               ClosestFlash=flash();
+    flash               MatchedFlash=flash();           // Flash-matchig by Marco
     
 };
 

@@ -29,7 +29,7 @@ void flash::Print() const{
     << "Zcenter: " << Zcenter << ",Zwidth: " << Zwidth << std::endl
     << "Ycenter: " << Ycenter << ",Ywidth: " << Ywidth << std::endl
     << "totalPE: " << totalPE
-    << "\033[30m" << std::endl;
+    << "\033[31m" << std::endl;
 }
 
 

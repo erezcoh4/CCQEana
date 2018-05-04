@@ -11,7 +11,18 @@
 #include "caldata_microboone.fcl"
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
+#include "triggeralgo_service.fcl"
 
+#include "flashmatchalg.fcl"
+#include "flashmatchcalib.fcl"
+#include "fiducial_volume_settings.fcl"
+#include "ubflashfinder.fcl"
+#include "neutrinomcflash.fcl"
+#include "neutrinoflashmatch.fcl"
+#include "photonactivity.fcl"
+#include "tpcneutrinoidfilter_microboone.fcl"
+
+#include "my_flashmatchcalib.fcl"
 
 process_name: RunErezCCQEana
 
@@ -23,6 +34,7 @@ services:
   message:      @local::standard_info
                 @table::microboone_services_reco
                 @table::microboone_simulation_services
+  @table::microboone_simulation_services
 }
 
 source:
@@ -43,7 +55,7 @@ physics:
   {
     EventsAnalyzer: 
     {
-      module_type:                      "ErezCCQEAnalyzerNewTruthMatching"
+      module_type:                      "ErezCCQEAna"
       DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8_v9"
       VerbosityLevel:                   1
       MCmodeLabel:                      true
@@ -66,6 +78,10 @@ physics:
       TruncMeanRadLabel:                1.0
       PIDModuleLabel:                   "pandoraNupid"
       CaliPIDModuleLabel:               "pandoraNucalipid"
+      TPCObjectModule:                  "TPCObjectMaker"
+      DoOpDetSwap:                      false
+      OpDetSwapMap:                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 31, 26, 28, 29, 30, 25, 27]
+      FlashMatchConfig:                 @local::flashmatch_config
     }
   }
   analysis: [ EventsAnalyzer ] #Directory for histograms
