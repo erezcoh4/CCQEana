@@ -2,13 +2,13 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8_v9">
+<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2">
 <!-- prodgenie_bnb_nu_uboone_overlay_mcc8_v4 -->
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 1828 files; 91k events = 100 jobs x 25 files per job -->
-<!ENTITY number_of_jobs "100">
+<!-- 11379 files; 570980 events <= 250 jobs x 50 files per job -->
+<!ENTITY number_of_jobs "250">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -18,7 +18,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>25</maxfilesperjob>
+        <maxfilesperjob>50</maxfilesperjob>
 
         <!-- Operating System and Project Version -->
         <os>SL6</os>
@@ -38,8 +38,8 @@
         <!-- Project stages -->
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_overlay.fcl</fcl>
-            <!--            <inputdef>&defname;</inputdef>-->
-            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/overlay/&defname;_reco2.list</inputlist>
+            <inputdef>&defname;</inputdef>
+            <!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/overlay/&defname;_reco2.list</inputlist>-->
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
@@ -48,8 +48,8 @@
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=2h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>1700</memory>
+            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>2000</memory>
         </stage>
     </project>
 </job>

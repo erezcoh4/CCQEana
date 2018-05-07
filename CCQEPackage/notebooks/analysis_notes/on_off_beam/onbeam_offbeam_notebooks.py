@@ -432,11 +432,20 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                          &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
             
             
-            elif cut == 'flash':
+            elif cut == 'ClosestFlash':
                 reduced[pair_type] = sam[(sam['Nflashes']>0)
                                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
                                          &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
             
+            # replace the cut on ClosestFlash to a cut on MatchedFlash
+            elif cut == 'MatchedFlash':
+                reduced[pair_type] = sam[(sam['Nflashes']>0)
+                                         &(sam['MatchedFlash_TotalPE'] > minPEcut)
+                                         &(sam['MatchedFlash_YZdistance'] < maxdYZcut)]
+         
+         
+
+
             elif cut == 'length':
                 reduced[pair_type] = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
     
