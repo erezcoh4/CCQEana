@@ -7,8 +7,8 @@
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 1828 files; 91k events = 100 jobs x 25 files per job -->
-<!ENTITY number_of_jobs "100">
+<!-- 1828 files; 91k events <= 120 jobs x 20 files per job -->
+<!ENTITY number_of_jobs "120">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -18,7 +18,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>25</maxfilesperjob>
+        <maxfilesperjob>2</maxfilesperjob>
 
         <!-- Operating System and Project Version -->
         <os>SL6</os>
