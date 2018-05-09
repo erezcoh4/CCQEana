@@ -7,10 +7,13 @@ from matplotlib.pylab import *
 
 
 # -- - --- - --- - --- - --- - --- - --- - --- - --- - --- - --- - -
-versions = dict({'Overlay':'prodgenie_bnb_nu_uboone_overlay_mcc8_v9'
+versions = dict({'Overlay':'prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2'
                 ,'OnBeam':'prod_reco_optfilter_bnb_v12_unblind_mcc8'
                 ,'OffBeam':'prod_reco_optfilter_extbnb_v12_mcc8_dev'
-                ,'date':'2018_04_28'})
+                ,'date':'2018_04_28'
+                ,'overlay date':'2018_05_07'
+                ,'data date':'2018_04_28'
+                })
 print 'versions:'
 pp.pprint(versions)
 # -- - --- - --- - --- - --- - --- - --- - --- - --- - --- - --- - -
@@ -328,11 +331,25 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
                 else:
                     sam = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
             
-            elif cut == 'flash':
-                sam = sam[(sam['Nflashes']>0)
-                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
-                          &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            # replace the cut on PIDa to a cut on chi2_proton
+            elif cut == 'Chi2Proton':
+                reduced[pair_type] = sam[ (sam['pidcali_Chi2ProtonYplane_muCandidate']>Chi2Proton_muCandidate_min)
+                                         &(sam['pidcali_Chi2ProtonYplane_muCandidate']<Chi2Proton_muCandidate_max)
+                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']>Chi2Proton_pCandidate_min)
+                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
             
+            
+            elif cut == 'ClosestFlash':
+                reduced[pair_type] = sam[(sam['Nflashes']>0)
+                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
+                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            
+            # replace the cut on ClosestFlash to a cut on MatchedFlash
+            elif cut == 'MatchedFlash':
+                reduced[pair_type] = sam[(sam['Nflashes']>0)
+                                         &(sam['MatchedFlash_TotalPE'] > minPEcut)
+                                         &(sam['MatchedFlash_YZdistance'] < maxdYZcut)]
+                    
             elif cut == 'length':
                 sam = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
     
@@ -432,11 +449,20 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                          &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
             
             
-            elif cut == 'flash':
+            elif cut == 'ClosestFlash':
                 reduced[pair_type] = sam[(sam['Nflashes']>0)
                                          &(sam['ClosestFlash_TotalPE'] > minPEcut)
                                          &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
             
+            # replace the cut on ClosestFlash to a cut on MatchedFlash
+            elif cut == 'MatchedFlash':
+                reduced[pair_type] = sam[(sam['Nflashes']>0)
+                                         &(sam['MatchedFlash_TotalPE'] > minPEcut)
+                                         &(sam['MatchedFlash_YZdistance'] < maxdYZcut)]
+         
+         
+
+
             elif cut == 'length':
                 reduced[pair_type] = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
     
