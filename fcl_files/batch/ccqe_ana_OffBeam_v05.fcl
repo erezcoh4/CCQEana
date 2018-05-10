@@ -54,7 +54,7 @@ physics:
   {
     EventsAnalyzer: 
     {
-      module_type:      	"ErezCCQEAnalyzerNewTruthMatching"
+      module_type:      	"ErezCCQEAna"
       DataSampleLabel:		"prod_reco_optfilter_extbnb_v12_mcc8_dev_05"
       VerbosityLevel:		1
       MCmodeLabel:          false
