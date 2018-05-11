@@ -1797,6 +1797,11 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
     << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
     << "closest_genie_mode" << ","
+    << "closest_genie_Nprotons" << ","
+    << "closest_genie_Nneutrons" << ","
+    << "closest_genie_Npions" << ","
+    << "closest_genie_CCNC" << ","
+    
     
     // truth delta-phi
     << "truth_delta_phi" << ","
@@ -1974,7 +1979,12 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         vertices_file << v.GetClosestGENIE().GetEv() << "," << v.GetClosestGENIE().GetQ2() << "," << v.GetClosestGENIE().GetXb() << "," << v.GetClosestGENIE().GetY() << "," << v.GetClosestGENIE().GetW2() << ",";
         vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
         vertices_file << v.GetClosestGENIE().GetMode() << ",";
+        vertices_file << v.GetClosestGENIE().GetNprotons() << ",";
+        vertices_file << v.GetClosestGENIE().GetNneutrons() << ",";
+        vertices_file << v.GetClosestGENIE().GetNpions() << ",";
+        vertices_file << v.GetClosestGENIE().GetCCNC() << ",";
         
+
         
         // truth delta-phi
         vertices_file << v.GetTruthDeltaPhi() << ",";

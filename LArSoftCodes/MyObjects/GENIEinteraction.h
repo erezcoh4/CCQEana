@@ -182,7 +182,7 @@ private:
     // Int_t
     Int_t                   nuPDG=-9999;
     Int_t                   ccnc=-9999; // CC=0/NC=1
-    Int_t                   mode=-9999; // QE=0
+    Int_t                   mode=-9999; // neutrino nucleus 0=Quasi-elastic or Elastic, 1=Resonant (RES), 2=DIS, 3=Coherent production, 10=MEC
     Int_t                   run=-9999, subrun=-9999, event=-9999, mcevent_id=-9999;
     Int_t                   Nprimaries=0;
     Int_t                   Nnu=0, Nnu_e=0, Nnu_mu=0;
