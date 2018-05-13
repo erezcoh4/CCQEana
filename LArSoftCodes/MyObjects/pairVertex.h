@@ -48,6 +48,8 @@ public:
     bool                              SortTracksByLength ();
     vector<size_t>                             sort_pida (const std::vector<PandoraNuTrack> &v);
     bool                                SortTracksByPIDA ();
+    vector<size_t>                       sort_chi2proton (const std::vector<PandoraNuTrack> &v);
+    bool                          SortTracksByChi2Proton ();
     
     void                             FixTracksDirections ();
     void                                        AddTrack (PandoraNuTrack ftrack);
@@ -192,6 +194,8 @@ public:
     PandoraNuTrack         GetLongestTrack () const {return LongestTrack;};
     PandoraNuTrack       GetSmallPIDaTrack () const {return SmallPIDaTrack;};
     PandoraNuTrack       GetLargePIDaTrack () const {return LargePIDaTrack;};
+    PandoraNuTrack GetSmallChi2ProtonTrack () const {return SmallChi2ProtonTrack;};
+    PandoraNuTrack GetLargeChi2ProtonTrack () const {return LargeChi2ProtonTrack;};
     PandoraNuTrack    GetTrack_muCandidate () const {return Track_muCandidate;};
     PandoraNuTrack     GetTrack_pCandidate () const {return Track_pCandidate;};
     
@@ -267,6 +271,7 @@ private:
     PandoraNuTrack      muonTrueTrack,  protonTrueTrack;
     PandoraNuTrack      ShortestTrack,  LongestTrack;
     PandoraNuTrack      LargePIDaTrack, SmallPIDaTrack;
+    PandoraNuTrack      LargeChi2ProtonTrack, SmallChi2ProtonTrack;
     PandoraNuTrack      Track_muCandidate, Track_pCandidate;
     
     GENIEinteraction    genie_interaction=GENIEinteraction();
@@ -278,7 +283,7 @@ private:
     std::vector <std::vector<float> >   tracks_delta_phi;
     std::vector <std::vector<float> >   tracks_delta_theta;
     std::vector<float>                  tracks_dis_from_vertex, delta_phi_ij,    distances_ij , delta_theta_ij;
-    std::vector<PandoraNuTrack>         tracks, tracks_lengthsorted,  tracks_pidasorted ;
+    std::vector<PandoraNuTrack>         tracks, tracks_lengthsorted,  tracks_pidasorted, tracks_chi2protonsorted ;
     
     std::vector<hit>    hits_muon[3], hits_proton[3]; // in 3 wire planes
     flash               ClosestFlash=flash();

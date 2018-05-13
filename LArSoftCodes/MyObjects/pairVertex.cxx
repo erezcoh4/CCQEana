@@ -114,18 +114,20 @@ vector<size_t> pairVertex::sort_pida(const vector<PandoraNuTrack> &v) {
     std::vector<size_t> idx(v.size());
     for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
     
-    // previous version (before April 2018):
-    //    // sort according to my calculation of PIDa using the "best plane"
+    // version-1 (before April 2018):
+    // sort according to my calculation of PIDa using the "best plane"
     //    std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].GetPIDa() > v[i2].GetPIDa();});
     
-    // new version (April 2018)
+    // version-2 (April 2018)
     // sort according to pandoraNu calculation of PIDa using only the collection plane
     // The differences:
     // U and V induction planes are poorly modeled and show large angular dependence in data
     // The April-2018 pida calculation is based on median instead of mean.
     std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].GetCaliPID_PIDA(2) > v[i2].GetCaliPID_PIDA(2);});
+    
     return idx;
 }
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool pairVertex::SortTracksByPIDA(){
@@ -135,6 +137,32 @@ bool pairVertex::SortTracksByPIDA(){
     }
     SmallPIDaTrack = tracks_pidasorted.at( tmp_tracks.size() - 1 );
     LargePIDaTrack = tracks_pidasorted.at( 0 );
+    return true;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+vector<size_t> pairVertex::sort_chi2proton(const vector<PandoraNuTrack> &v) {
+    std::vector<size_t> idx(v.size());
+    for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+    // version-3 (May 2018)
+    // sort according to pandoraNu calculation of chi^2(proton) using only the collection plane
+    // The differences:
+    // chi^2 shows much better data/MC agreement.
+    std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].GetCaliPID_Chi2Proton(2) > v[i2].GetCaliPID_Chi2Proton(2);});
+    
+    return idx;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+bool pairVertex::SortTracksByChi2Proton(){
+    std::vector<PandoraNuTrack> tmp_tracks = tracks;
+    for (auto i:sort_pida( tmp_tracks )){
+        tracks_chi2protonsorted.push_back( tmp_tracks.at(i) );
+    }
+    LargeChi2ProtonTrack = tracks_chi2protonsorted.at( tmp_tracks.size() - 1 );
+    SmallChi2ProtonTrack = tracks_chi2protonsorted.at( 0 );
     return true;
 }
 

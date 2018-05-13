@@ -954,6 +954,7 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     // Here,
     // since we do not want to impose the UBXsec chain analysiss
     // we work aroud this by giving the pandoraNu track-list (tracklist) as an input to the manager
+    Debug(4,"match: len(vertices): %",vertices.size());
     for (auto & v: vertices) {
         // Build the QCluster for this vertex
         flashana::QCluster_t qcluster;
@@ -968,6 +969,7 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     // Now the matching is done by the manager 1 time
     // and it scores the matching for all objects
     // (candidate pairs in our case)
+    Debug(4,"FlashMatch_mgr.Match!...");
     FlashMatch_result = FlashMatch_mgr.Match();
     
     // save the results
@@ -1176,8 +1178,13 @@ void ub::ErezCCQEAna::AnalyzeVertices(){
             Debug( 4 ,"SortTracksByPIDA;" );
             v.SortTracksByPIDA ();
             
+            Debug( 4 , "SortTracksByChi2Proton;" );
+            v.SortTracksByChi2Proton ();
+            
+            
             Debug( 4 , "SortTracksByLength;" );
             v.SortTracksByLength ();
+
             
             // and the relations between the tracks
             // inter-track distances, delta-theta, delta-phi...
@@ -1228,14 +1235,20 @@ void ub::ErezCCQEAna::FilterGoodPairVertices(){
             ){
             
             // assign muon and proton tracks by PID-A
-            auto Track_muCandidate = v.GetSmallPIDaTrack();
+            //            auto Track_muCandidate = v.GetSmallPIDaTrack();
+            // assign muon and proton tracks by chi2-proton
+            auto Track_muCandidate = v.GetLargeChi2ProtonTrack();
             auto PmuFromRange = trkm.GetTrackMomentum( Track_muCandidate.GetLength()  , 13  );
             v.AssignMuonTrack( Track_muCandidate  );
             
             
-            auto Track_pCandidate = v.GetLargePIDaTrack();
+            // assign muon and proton tracks by PID-A
+            //            auto Track_pCandidate = v.GetLargePIDaTrack();
+            auto Track_pCandidate = v.GetSmallChi2ProtonTrack();
             auto PpFromRange = trkm.GetTrackMomentum( Track_pCandidate.GetLength() , 2212);
             v.AssignProtonTrack( Track_pCandidate );
+            
+            Debug(4,"set muon and proton candidates: track % is muon and track % is proton candidate",Track_muCandidate.GetTrackID(),Track_pCandidate.GetTrackID());
             
             v.FixTracksDirections ();
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
