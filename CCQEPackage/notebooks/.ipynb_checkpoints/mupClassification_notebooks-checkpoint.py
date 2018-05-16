@@ -65,7 +65,6 @@ def apply_cuts_to_overlay(OverlaySamples=None
                           ,r_max_RdQ_CC1p0pi = 0.39 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                           ,delta_Delta_phi=35 # deg.
                           ,Pt_max=0.35        # GeV/c
-                          ,theta_pq_max=25    # deg.
                           ,cuts_order=['no cut']
                           ,debug=0
                           ,N_On=1 # number of pairs in BeamOn before event-selection cuts
@@ -165,12 +164,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                 reduced[pair_type] = sam[(sam['reco_Pt']<Pt_max)
                                          &(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
             #}
-            elif cut == 'theta_pq & delta phi':#{
-                sam = reducedSamples['delta phi'][pair_type]
-                reduced[pair_type] = sam[sam['reco_theta_pq']<theta_pq_max]
-            #}
             elif cut == 'tight Pt':#{
-                sam = reducedSamples['Pt & delta phi'][pair_type]
                 reduced[pair_type] = sam[(sam['reco_Pt']<0.15)
                                          &(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
             #}
