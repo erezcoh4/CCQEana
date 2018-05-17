@@ -146,25 +146,30 @@ def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',b
 
 
 # ------------------------------------------------
-# April-26
-# for overlay_vs_BeamOn-Off
-def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=linspace(0,180,31)
-                        ,scaling_name='N(On) scaling and f(cosmic)=0.92'
-                        ,scaling_color ='black',x_ticks=None
-                        ,figsize=(24,8)
-                        ,overlay_scalings=None,do_OffBeam=False
-                        ,reducedOffBeam=None,reducedOnBeam=None,reducedOverlay=None
-                        ,f_Cosmic=None
-                        ,chi2_xrange=None,xlim=None
-                        ,last_cut_name='Pt & delta phi',last_cut_label='detection + kinematical cuts'
-                        ,debug=0
-                        ,do_show_cut=True,x_varcut=(0,np.inf)
-                        ,do_only_preselection=False
+# April-26 (last edit May-17,2018)
+# for OverlayRescaledVsBeamOn
+def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
+                           ,bins_before_cuts=linspace(0,180,31)
+                           ,overlay_scaling=None
+                           ,overlay_color ='black'
+                           ,beam_color='purple'
+                           ,x_ticks=None
+                           ,figsize=(24,8)
+                           ,do_OffBeam=False
+                           ,reducedOffBeam=None,reducedOnBeam=None,reducedOverlay=None
+                           ,chi2_xrange=None,xlim_before_cuts=None,xlim_after_cuts=None
+                           ,last_cut_name='Pt & delta phi',last_cut_label='detection + kinematical cuts'
+                           ,bins_after_cuts=linspace(0,180,31)
+                           ,debug=0
+                           ,do_show_cut=True,x_varcut=(0,np.inf)
+                           ,do_only_preselection=False
                         ):
     fig = plt.figure(figsize=figsize)
     
-    for i_cut,(cut_name,cut_label) in enumerate(zip(['no cut',last_cut_name]
-                                                  ,['preselection',last_cut_label])):#{
+    for i_cut,(cut_name,cut_label,bins,xlim) in enumerate(zip(['no cut',last_cut_name]
+                                                         ,['preselection',last_cut_label]
+                                                         ,[bins_before_cuts,bins_after_cuts]
+                                                              ,[xlim_before_cuts,xlim_after_cuts])):#{
                                                   
         ax = fig.add_subplot(1,1 if do_only_preselection else 2 ,i_cut + 1)
         if do_OffBeam:#{
@@ -172,11 +177,11 @@ def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=li
                                        ,color='white', var=var, bins=bins, ax=ax , do_OffBeam_scaling=True)
         #}
         _,h_OnBeam = plot_OnBeam(OnBeamSample=reducedOnBeam[cut_name],OnBeamFV=reducedOnBeam['no cut']
-                                 ,color='black', var=var, bins=bins, ax=ax)
+                                 ,color=beam_color, var=var, bins=bins, ax=ax)
                                  
         h_stack,_=plot_stacked_MCsamples(reducedOverlay = reducedOverlay
                                          , debug=0
-                                         , overlay_scaling=overlay_scalings[scaling_name]
+                                         , overlay_scaling=overlay_scaling
                                          , cut_name=cut_name
                                          , var=var, x_label=x_label, y_label='overlay prediction',xlim=xlim
                                          , bins=bins , alpha=0.8, ax=ax
@@ -187,8 +192,7 @@ def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=li
                                      , h1err=np.sqrt(h_OnBeam), h2err=np.sqrt(h_stack)
                                      , debug=0 )
         chi2_txt = r'$\chi^2/ndf=%.1f/%d$'%(chi2,ndf)
-        ax.set_title(cut_label+(', $f_{cosmic}=%.2f$'%f_Cosmic if f_Cosmic is not None else '') + ',' + chi2_txt
-                                                  ,y=1.02,fontsize=25)
+        ax.set_title(cut_label + chi2_txt,y=1.02,fontsize=25)
         if do_show_cut:
             plt.plot([x_varcut[0],x_varcut[0]],ax.get_ylim(),'--',[x_varcut[1],x_varcut[1]],ax.get_ylim(),'--',color='black')
         if debug: print cut_label,': sum of h_OnBeam:',np.sum(h_OnBeam),',sum of h_stack:',np.sum(h_stack)
