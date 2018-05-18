@@ -146,25 +146,30 @@ def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',b
 
 
 # ------------------------------------------------
-# April-26
-# for overlay_vs_BeamOn-Off
-def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=linspace(0,180,31)
-                        ,scaling_name='N(On) scaling and f(cosmic)=0.92'
-                        ,scaling_color ='black',x_ticks=None
-                        ,figsize=(24,8)
-                        ,overlay_scalings=None,do_OffBeam=False
-                        ,reducedOffBeam=None,reducedOnBeam=None,reducedOverlay=None
-                        ,f_Cosmic=None
-                        ,chi2_xrange=None,xlim=None
-                        ,last_cut_name='Pt & delta phi',last_cut_label='detection + kinematical cuts'
-                        ,debug=0
-                        ,do_show_cut=True,x_varcut=(0,np.inf)
-                        ,do_only_preselection=False
+# April-26 (last edit May-17,2018)
+# for OverlayRescaledVsBeamOn
+def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
+                           ,bins_before_cuts=linspace(0,180,31)
+                           ,overlay_scaling=None
+                           ,overlay_color ='black'
+                           ,beam_color='purple'
+                           ,x_ticks=None
+                           ,figsize=(24,8)
+                           ,do_OffBeam=False
+                           ,reducedOffBeam=None,reducedOnBeam=None,reducedOverlay=None
+                           ,chi2_xrange=None,xlim_before_cuts=None,xlim_after_cuts=None
+                           ,last_cut_name='Pt & delta phi',last_cut_label='detection + kinematical cuts'
+                           ,bins_after_cuts=linspace(0,180,31)
+                           ,debug=0
+                           ,do_show_cut=True,x_varcut=(0,np.inf)
+                           ,do_only_preselection=False
                         ):
     fig = plt.figure(figsize=figsize)
     
-    for i_cut,(cut_name,cut_label) in enumerate(zip(['no cut',last_cut_name]
-                                                  ,['preselection',last_cut_label])):#{
+    for i_cut,(cut_name,cut_label,bins,xlim) in enumerate(zip(['no cut',last_cut_name]
+                                                         ,['preselection',last_cut_label]
+                                                         ,[bins_before_cuts,bins_after_cuts]
+                                                              ,[xlim_before_cuts,xlim_after_cuts])):#{
                                                   
         ax = fig.add_subplot(1,1 if do_only_preselection else 2 ,i_cut + 1)
         if do_OffBeam:#{
@@ -172,11 +177,11 @@ def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=li
                                        ,color='white', var=var, bins=bins, ax=ax , do_OffBeam_scaling=True)
         #}
         _,h_OnBeam = plot_OnBeam(OnBeamSample=reducedOnBeam[cut_name],OnBeamFV=reducedOnBeam['no cut']
-                                 ,color='black', var=var, bins=bins, ax=ax)
+                                 ,color=beam_color, var=var, bins=bins, ax=ax)
                                  
         h_stack,_=plot_stacked_MCsamples(reducedOverlay = reducedOverlay
                                          , debug=0
-                                         , overlay_scaling=overlay_scalings[scaling_name]
+                                         , overlay_scaling=overlay_scaling
                                          , cut_name=cut_name
                                          , var=var, x_label=x_label, y_label='overlay prediction',xlim=xlim
                                          , bins=bins , alpha=0.8, ax=ax
@@ -187,8 +192,7 @@ def plot_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=li
                                      , h1err=np.sqrt(h_OnBeam), h2err=np.sqrt(h_stack)
                                      , debug=0 )
         chi2_txt = r'$\chi^2/ndf=%.1f/%d$'%(chi2,ndf)
-        ax.set_title(cut_label+(', $f_{cosmic}=%.2f$'%f_Cosmic if f_Cosmic is not None else '') + ',' + chi2_txt
-                                                  ,y=1.02,fontsize=25)
+        ax.set_title(cut_label + chi2_txt,y=1.02,fontsize=25)
         if do_show_cut:
             plt.plot([x_varcut[0],x_varcut[0]],ax.get_ylim(),'--',[x_varcut[1],x_varcut[1]],ax.get_ylim(),'--',color='black')
         if debug: print cut_label,': sum of h_OnBeam:',np.sum(h_OnBeam),',sum of h_stack:',np.sum(h_stack)
@@ -313,6 +317,8 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
     numbers = pd.DataFrame()
     
     reducedOnBeam['no cut'] = OnBeamFV
+    reducedOffBeam = None
+
     if OffBeamFV is not None:
         reducedOffBeam = dict()
         reducedOffBeam['no cut'] = OffBeamFV
@@ -376,8 +382,8 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
             elif cut == 'delta phi':
                 sam = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
                                       
-            elif cut == 'soft Pt':
-                sam = sam[sam['reco_Pt']<Pt_max]
+            elif cut == 'Pt & delta phi':
+                sam = sam[(sam['reco_Pt']<Pt_max)&(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
                                               
             if sam_name=='OnBeam': reducedOnBeam[cut] = sam
             if sam_name=='OffBeam': reducedOffBeam[cut] = sam
@@ -559,9 +565,9 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 # Dec-6,2017 (last edit April-7)
 def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
-                , bins=np.linspace(0,30,31)                 
+                , bins=np.linspace(0,30,31),markersize=12
                 , ax=None, figsize=(14,6),fontsize=25                
-                , color=OnBeamColor
+                , color=OnBeamColor, ecolor='black'
                 , do_add_legend=False , legend_loc='best',y_label='counts'
                 , remove_ticks_x=False, remove_ticks_y=False):
     bin_width = bins[1]-bins[0]
@@ -572,9 +578,9 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
     h_OnBeam,edges = np.histogram( x , bins=bins )
     h_OnBeam_err = np.sqrt(h_OnBeam)
     
-    plt.errorbar( x = mid, xerr=bin_width/2., markersize=12
+    plt.errorbar( x = mid, xerr=bin_width/2., markersize=markersize
                  , y=h_OnBeam , yerr=h_OnBeam_err
-                 , fmt='o', color=color , ecolor=color
+                 , fmt='o', color=color , ecolor=ecolor
                  , label='BNB (%d=%.1f'%(len(OnBeamSample),100*float(len(OnBeamSample))/len(OnBeamFV))+'%)'
                 )
     plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
@@ -844,10 +850,9 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted April-26, 2018)
+# Nov-20,2017 (last editted May-16, 2018)
 def plot_stacked_MCsamples( reducedOverlay=None
                            , ax=None, debug=0,overlay_scaling=None,cut_name='no cut'
-                           , MC_scaling=Nevents['f(POT)']
                            , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
                            , remove_ticks_x=False, remove_ticks_y=False 
                            , xlim=None
@@ -868,11 +873,11 @@ def plot_stacked_MCsamples( reducedOverlay=None
         sample = reducedOverlay[cut_name][pair_type]
         N[pair_type] = float(len(sample))
         Noriginal = len(reducedOverlay['no cut'][pair_type])
-        labels[pair_type] = MClabels[i_pair_type]+' (%.1f=%.1f'%(N[pair_type],100.*N[pair_type]/Noriginal)+'%)'
+        labels[pair_type] = MClabels[i_pair_type]+' (%.1f'%(100.*N[pair_type]/Noriginal)+'%)'
         colors[pair_type] = MCcolors[i_pair_type];
         x = sample[var]; x = x[x<1e5];
         h[pair_type],edges = np.histogram(x,bins=bins)
-        h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type]
+        h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
     if do_individual_histograms:#{
 
@@ -894,7 +899,8 @@ def plot_stacked_MCsamples( reducedOverlay=None
     plt.step(mid+0.5*bin_width,h_stack ,color=stackColor,alpha=alpha, label=stackLabel)
 
     if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
-    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize          
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
+             ,do_add_legend=do_add_legend
              ,xlim=(np.min(bins)-0.5*bin_width,np.max(bins)+0.5*bin_width) if xlim is None else xlim
              ,remove_ticks_x=remove_ticks_x             
              ,remove_ticks_y=remove_ticks_y                 
