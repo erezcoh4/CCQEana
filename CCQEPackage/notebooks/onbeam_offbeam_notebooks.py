@@ -181,10 +181,9 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
         _,h_OnBeam = plot_OnBeam(OnBeamSample=reducedOnBeam[cut_name],OnBeamFV=reducedOnBeam['no cut']
                                  ,color=beam_color, var=var, bins=bins, ax=ax)
                                  
-        h_stack,_=plot_stacked_MCsamples(reducedOverlay = reducedOverlay
+        h_stack,_=plot_stacked_MCsamples(reducedOverlay=reducedOverlay,cut_name=cut_name
                                          , debug=0
                                          , overlay_scaling=overlay_scaling
-                                         , cut_name=cut_name
                                          , var=var, x_label=x_label, y_label='overlay prediction',xlim=xlim
                                          , bins=bins , alpha=0.8, ax=ax
                                          , do_add_legend=do_add_legend
@@ -857,7 +856,7 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted May-16, 2018)
+# Nov-20,2017 (last editted May-21, 2018)
 def plot_stacked_MCsamples( reducedOverlay=None
                            , ax=None, debug=0,overlay_scaling=None,cut_name='no cut'
                            , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
