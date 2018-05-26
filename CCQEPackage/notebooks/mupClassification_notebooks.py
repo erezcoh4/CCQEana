@@ -54,10 +54,9 @@ def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PID
 
 
 # ------------------------------------------------
-# March-6, 2018 (last edit May 16)
+# March-6, 2018 (last edit May 26)
 def apply_cuts_to_overlay(OverlaySamples=None
-                          ,PIDa_p_min=13
-                          ,do_PIDaCali=True
+                          ,PIDa_p_min=13,do_PIDaCali=True
                           ,minPEcut = 150
                           ,maxdYZcut = 200
                           ,delta_theta_12=55  # deg.
@@ -66,15 +65,15 @@ def apply_cuts_to_overlay(OverlaySamples=None
                           ,delta_Delta_phi=35 # deg.
                           ,Pt_max=0.35        # GeV/c
                           ,theta_pq_max=25    # deg.
-                          ,cuts_order=['no cut']
-                          ,debug=0
-                          ,N_On=1 # number of pairs in BeamOn before event-selection cuts
-                          ,f_POT=1 #Nevents['f(POT)']
                           # replace the cut on PIDa to a cut on chi2_proton
                           ,Chi2Proton_muCandidate_min=80
                           ,Chi2Proton_muCandidate_max=np.inf
                           ,Chi2Proton_pCandidate_min=0
                           ,Chi2Proton_pCandidate_max=30
+                          # hyper-parameters
+                          ,overlay_scaling=None
+                          ,cuts_order=['no cut']
+                          ,debug=0
                           ):
     reducedSamples = dict()
     pureffOverlay,numbers = pd.DataFrame(),pd.DataFrame()
@@ -85,8 +84,10 @@ def apply_cuts_to_overlay(OverlaySamples=None
     for pair_type in pair_types: reducedSamples['no cut'][pair_type] = OverlaySamples[pair_type]
     pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples,OriginalOverlaySamples=reducedSamples['no cut']
                                    ,pureff=pureffOverlay,cut_name=cut_name,reduced=reducedSamples[cut_name])
-    Noverlay,_ = gen_Noverlay(reducedSamples=reducedSamples,cut_name=cut_name,N_On=N_On,debug=debug,f_POT=f_POT )
+    Noverlay = get_Noverlay(reducedSamples=reducedSamples,cut_name=cut_name,debug=debug,overlay_scaling=overlay_scaling )
     numbers = numbers.append(pd.DataFrame({ r'$N_{Overlay}$':Noverlay['Overlay']
+                                          ,r'${\epsilon}_{Overlay}$ [%]':100
+                                          
                                           ,r'$N_{cosmic}$':Noverlay['cosmic']
                                           ,r'$N_{other pairs}$':Noverlay['other pairs']
                                           ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
@@ -100,12 +101,14 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
                                           ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
                                           
-                                          ,r'${\epsilon}_{Overlay}$ [%]':100
-                                          ,r'$N_{Overlay, cosmic-scaled}$':Noverlay['Overlay Cosmic Scaled']
-                                          ,r'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':Noverlay['Overlay Cosmic & POT Scaled']
-                                          ,r'${\epsilon}_{Overlay, cosmic-scaled}$ [%]':100
-                                          ,r'$N_{cosmic, cosmic-scaled}$':Noverlay['Cosmic Scaled']
-                                          ,r'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':f_POT*Noverlay['Cosmic Scaled']
+                                          # scaling and re-weighting
+                                          ,r'$N_{Overlay scaled}$':Noverlay['Overlay scaled']
+                                          ,r'${\epsilon}_{Overlay scaled}$ [%]':100
+                                          
+                                          ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
+                                          ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
+                                          ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
+                                          ,r'$N_{CC 1p 0pi scaled}$':Noverlay['CC 1p 0pi scaled']
                                            },index=['preselection']))
                                           
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
@@ -187,27 +190,32 @@ def apply_cuts_to_overlay(OverlaySamples=None
         reducedSamples[cut] = reduced
         pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples,pureff=pureffOverlay,cut_name=cut
                                        ,reduced=reduced,OriginalOverlaySamples=reducedSamples['no cut'])
-        Noverlay,_ = gen_Noverlay(reducedSamples=reducedSamples,cut_name=cut,N_On=N_On,debug=debug,f_POT=f_POT )
+        Noverlay = get_Noverlay(reducedSamples=reducedSamples,cut_name=cut,debug=debug,overlay_scaling=overlay_scaling )
         numbers = numbers.append(pd.DataFrame({ r'$N_{Overlay}$':Noverlay['Overlay']
-                                               ,r'$N_{cosmic}$':Noverlay['cosmic']
-                                          ,r'$N_{other pairs}$':Noverlay['other pairs']
-                                          ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
-                                          ,r'$N_{CC 1p 0pi}$':Noverlay['CC 1p 0pi']
+                                              ,r'${\epsilon}_{Overlay}$ [%]':100.*Noverlay['eff Overlay']
+                                              
+                                              ,r'$N_{cosmic}$':Noverlay['cosmic']
+                                              ,r'$N_{other pairs}$':Noverlay['other pairs']
+                                              ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
+                                              ,r'$N_{CC 1p 0pi}$':Noverlay['CC 1p 0pi']
 
-                                          ,r'${\epsilon}_{cosmic}$ [%]':100*Noverlay['eff cosmic']
-                                          ,r'${\epsilon}_{CC 1p 0pi}$ [%]':100*Noverlay['eff CC 1p 0pi']
-                                          ,r'${\epsilon}_{1mu-1p}$ [%]':100*Noverlay['eff 1mu-1p']
-                                          ,r'${\epsilon}_{other pairs}$ [%]':100*Noverlay['eff other pairs']
+                                              ,r'${\epsilon}_{cosmic}$ [%]':100*Noverlay['eff cosmic']
+                                              ,r'${\epsilon}_{CC 1p 0pi}$ [%]':100*Noverlay['eff CC 1p 0pi']
+                                              ,r'${\epsilon}_{1mu-1p}$ [%]':100*Noverlay['eff 1mu-1p']
+                                              ,r'${\epsilon}_{other pairs}$ [%]':100*Noverlay['eff other pairs']
                                            
-                                          ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
-                                          ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
+                                              ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
+                                              ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
 
-                                          ,r'${\epsilon}_{Overlay}$ [%]':100.*Noverlay['eff Overlay']
-                                          ,r'$N_{Overlay, cosmic-scaled}$':Noverlay['Overlay Cosmic Scaled']
-                                          ,r'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':Noverlay['Overlay Cosmic & POT Scaled']
-                                          ,r'${\epsilon}_{Overlay, cosmic-scaled}$ [%]':100.*Noverlay['eff Overlay Cosmic Scaled']
-                                          ,r'$N_{cosmic, cosmic-scaled}$':Noverlay['Cosmic Scaled']
-                                          ,r'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':f_POT*Noverlay['Cosmic Scaled']
+                                              # scaling and re-weighting
+                                              ,r'$N_{Overlay scaled}$':Noverlay['Overlay scaled']
+                                              ,r'${\epsilon}_{Overlay scaled}$ [%]':100*Noverlay['eff Overlay scaled']
+                                              
+                                              ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
+                                              ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
+                                              ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
+                                              ,r'$N_{CC 1p 0pi scaled}$':Noverlay['CC 1p 0pi scaled']
+
                                           },index=[cut]))
     #}
     if debug>1: os.system('say "I have completed applying % cuts to the overlay samples, from %s to %s".'%(len(cuts_order),cuts_order[0],cuts_order[-1]))
@@ -220,39 +228,41 @@ def apply_cuts_to_overlay(OverlaySamples=None
 
 
 # ------------------------------------------------
-# April-4 (last edit May 14)
-def gen_Noverlay(reducedSamples=None,cut_name=''
-                 ,f_POT=1
-                 ,N_On=1 # number of pairs in BeamOn before event-selection cuts
+# April-4 (last edit May 26)
+def get_Noverlay(reducedSamples=None,cut_name=''
+                 ,overlay_scaling=None
                  ,debug=0
                  ):
     # @return the number of events in each subsample of the overlay, POT-normalized
     N = dict()
-    for pair_type in pair_types: 
+    for pair_type in pair_types: #{
+        N[pair_type+' original'] = float(len(reducedSamples['no cut'][pair_type]))
         N[pair_type] = float(len(reducedSamples[cut_name][pair_type]))
-        N['eff '+pair_type] = N[pair_type]/len(reducedSamples['no cut'][pair_type])                
+        N['eff '+pair_type] = N[pair_type]/N[pair_type+' original']
+    #}
     N['MC'] = N['1mu-1p'] + N['other pairs']
     N['Overlay'] = N['cosmic'] + N['MC']
-    for pair_type in pair_types: N['pur '+pair_type] = N[pair_type]/N['Overlay']    
-    N['eff Overlay'] = N['Overlay']/(len(reducedSamples['no cut']['cosmic'])
-                                     +len(reducedSamples['no cut']['1mu-1p'])
-                                     +len(reducedSamples['no cut']['other pairs']))
+    N['MC original'] = N['1mu-1p original'] + N['other pairs original']
+    N['Overlay original'] = N['cosmic original'] + N['MC original']
+    for pair_type in pair_types: N['pur '+pair_type] = N[pair_type]/N['Overlay']
+    N['eff Overlay'] = N['Overlay']/N['Overlay original']
                                      
-    N['Overlay POT Scaled'] = f_POT*(N['cosmic'] + N['MC'])
-    # scale the cosmic in the MC
-    N['Cosmic original'] = float(len(reducedSamples['no cut']['cosmic']))
-    f_Cosmic = (1./N['Cosmic original'])*(N_On/f_POT - N['MC'])
-    N['Cosmic Scaled'] = f_Cosmic*N['cosmic']
-    N['Overlay Cosmic Scaled'] = N['MC'] + N['Cosmic Scaled']
-    N['eff Overlay Cosmic Scaled'] = (N['Overlay Cosmic Scaled']
-                                      /(f_Cosmic*len(reducedSamples['no cut']['cosmic'])
-                                        +len(reducedSamples['no cut']['1mu-1p'])
-                                        +len(reducedSamples['no cut']['other pairs'])))
-    N['Overlay Cosmic & POT Scaled'] = f_POT*N['Overlay Cosmic Scaled']
-    if debug:
-        print 'Noverlay in',cut_name
-        print N
-    return N,f_Cosmic
+
+    # scaling and re-weighting
+    for pair_type in pair_types:#{
+        N[pair_type+' original scaled'] = overlay_scaling[pair_type]*N[pair_type+' original'] if overlay_scaling else N[pair_type+' original']
+        N[pair_type+' scaled'] = overlay_scaling[pair_type]*N[pair_type] if overlay_scaling else N[pair_type]
+        N['eff '+pair_type+' scaled'] = N[pair_type+' scaled']/N[pair_type+' original scaled']
+    #}
+    N['MC scaled'] = N['1mu-1p scaled'] + N['other pairs scaled']
+    N['Overlay scaled'] = N['cosmic scaled'] + N['MC scaled']
+    N['MC original scaled'] = N['1mu-1p original scaled'] + N['other pairs original scaled']
+    N['Overlay original scaled'] = N['cosmic original scaled'] + N['MC original scaled']
+    for pair_type in pair_types: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
+    N['eff Overlay scaled'] = N['Overlay scaled']/N['Overlay original scaled']
+
+    if debug: print 'Noverlay in',cut_name,'\n',N
+    return N
 # ------------------------------------------------
 
 

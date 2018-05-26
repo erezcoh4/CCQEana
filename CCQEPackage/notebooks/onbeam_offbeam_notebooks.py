@@ -269,55 +269,27 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
 # ------------------------------------------------
 
 
-## ------------------------------------------------
-## April-4 (last edit April-26)
-#def gen_Noverlay(reducedSamples=None,cut_name=''
-#                 ,f_POT = Nevents['f(POT)']
-#                 ,N_On=1 # number of pairs in BeamOn before event-selection cuts
-#                 ,debug=0
-#                ):
-#    # @return the number of events in each subsample of the overlay, POT-normalized
-#    N = dict()
-#    N['Cosmic'],N['mup'],N['others'] = float(len(reducedSamples[cut_name]['cosmic'])),float(len(reducedSamples[cut_name]['1mu-1p'])),float(len(reducedSamples[cut_name]['other pairs']))
-#    N['MC'] = N['mup'] + N['others']
-#    N['Overlay'] = N['Cosmic'] + N['MC']                     
-#    N['eff Overlay'] = N['Overlay']/(len(reducedSamples['no cut']['cosmic'])
-#                                     +len(reducedSamples['no cut']['1mu-1p'])                                     
-#                                     +len(reducedSamples['no cut']['other pairs']))
-#    N['Overlay POT Scaled'] = f_POT*(N['Cosmic'] + N['MC'])
-#    # scale the cosmic in the MC
-#    N['Cosmic original'] = float(len(reducedSamples['no cut']['cosmic']))
-#    f_Cosmic = (1./N['Cosmic original'])*(N_On/f_POT - N['MC'])
-#    N['Cosmic Scaled'] = f_Cosmic*N['Cosmic']
-#    N['Overlay Cosmic Scaled'] = N['MC'] + N['Cosmic Scaled']
-#    N['eff Overlay Cosmic Scaled'] = (N['Overlay Cosmic Scaled']
-#                                      /(f_Cosmic*len(reducedSamples['no cut']['cosmic'])                                                    
-#                                        +len(reducedSamples['no cut']['1mu-1p'])
-#                                        +len(reducedSamples['no cut']['other pairs'])))
-#    N['Overlay Cosmic & POT Scaled'] = f_POT*N['Overlay Cosmic Scaled']
-#    if debug:   print N
-#    return N,f_Cosmic
-## ------------------------------------------------
-
-
 # ------------------------------------------------
 # March-6, 2018 (last edit May-15)
 def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
                        ,PIDa_p_min=13,do_PIDaCali=True
-                       ,minPEcut = 100
+                       ,minPEcut = 150
                        ,maxdYZcut = 200
                        ,delta_theta_12=55  # deg.
                        ,opt_box=(50,100) # [Nwires x Nticks]
-                       ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                       ,r_max_RdQ_CC1p0pi = 0.39 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                        ,delta_Delta_phi=35 # deg.
                        ,Pt_max=0.35        # GeV/c
-                       ,cuts_order=['no cut']
-                       ,debug=0
+                       ,theta_pq_max=25    # deg.
                        # replace the cut on PIDa to a cut on chi2_proton
                        ,Chi2Proton_muCandidate_min=80
                        ,Chi2Proton_muCandidate_max=np.inf
                        ,Chi2Proton_pCandidate_min=0
                        ,Chi2Proton_pCandidate_max=30
+                       # hyper-parameters
+                       ,overlay_scaling=None
+                       ,cuts_order=['no cut']
+                       ,debug=0
                        ):
     reducedOnBeam = dict()
     numbers = pd.DataFrame()
@@ -406,165 +378,6 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
     if OffBeamFV is not None: reducedOnBeam,reducedOffBeam,numbers
     return reducedOnBeam,numbers
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
-#
-## ------------------------------------------------
-## March-6, 2018 (last edit May 14)
-#def apply_cuts_to_overlay(OverlaySamples=None
-#                          ,N_On=1 # number of pairs in BeamOn before event-selection cuts
-#                          ,PIDa_p_min=13
-#                          ,do_PIDaCali=True
-#                          ,minPEcut = 100
-#                          ,maxdYZcut = 200
-#                          ,delta_theta_12=55  # deg.
-#                          ,opt_box=(50,100) # [Nwires x Nticks]
-#                          ,r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
-#                          ,delta_Delta_phi=35 # deg.
-#                          ,Pt_max=0.35        # GeV/c
-#                          ,cuts_order=['no cut']
-#                          ,debug=0
-#                          ,f_POT=Nevents['f(POT)']
-#                          # replace the cut on PIDa to a cut on chi2_proton
-#                          ,Chi2Proton_muCandidate_min=80
-#                          ,Chi2Proton_muCandidate_max=np.inf
-#                          ,Chi2Proton_pCandidate_min=0
-#                          ,Chi2Proton_pCandidate_max=30
-#                          ):
-#    reducedSamples = dict()
-#    pureffOverlay,numbers = pd.DataFrame(),pd.DataFrame()
-#
-#
-#    cut_name = 'no cut'
-#    reducedSamples[cut_name] = dict()
-#    for pair_type in pair_types: reducedSamples['no cut'][pair_type] = OverlaySamples[pair_type]
-#    pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples
-#                                   ,pureff=pureffOverlay,cut_name='no cut',reduced=reducedSamples['no cut'])
-#    Noverlay,_ = gen_Noverlay(reducedSamples=reducedSamples,cut_name=cut_name,N_On=N_On,debug=debug,f_POT=f_POT )
-#    numbers = numbers.append(pd.DataFrame({ r'$N_{Overlay}$':Noverlay['Overlay']
-#                                          ,r'${\epsilon}_{Overlay}$ [%]':100
-#                                          ,r'$N_{Overlay, cosmic-scaled}$':Noverlay['Overlay Cosmic Scaled']
-#                                          ,r'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':Noverlay['Overlay Cosmic & POT Scaled']
-#                                          ,r'${\epsilon}_{Overlay, cosmic-scaled}$ [%]':100
-#                                          ,r'$N_{cosmic}$':Noverlay['Cosmic']
-#                                          ,r'$N_{cosmic, cosmic-scaled}$':Noverlay['Cosmic Scaled']
-#                                          ,r'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':f_POT*Noverlay['Cosmic Scaled']
-#                                          },index=['preselection']))
-#
-#
-#    for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
-#        reduced = dict()
-#        
-#        if debug: print 'grabbing reduced samples after (',cuts_order[i_cut-1],') and applying cut on (',cuts_order[i_cut],')'
-#        samples_previous_cut = reducedSamples[cuts_order[i_cut-1]]
-#        if debug: print 'len(samples_previous_cut):',len(samples_previous_cut)
-#        
-#        for pair_type in pair_types:#{
-#            sam = samples_previous_cut[pair_type]
-#            
-#            if cut == 'PIDa':
-#                if do_PIDaCali:
-#                    reduced[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
-#                else:
-#                    reduced[pair_type] = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
-#        
-#            # replace the cut on PIDa to a cut on chi2_proton
-#            elif cut == 'Chi2Proton':
-#                reduced[pair_type] = sam[ (sam['pidcali_Chi2ProtonYplane_muCandidate']>Chi2Proton_muCandidate_min)
-#                                         &(sam['pidcali_Chi2ProtonYplane_muCandidate']<Chi2Proton_muCandidate_max)
-#                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']>Chi2Proton_pCandidate_min)
-#                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
-#            
-#            
-#            elif cut == 'ClosestFlash':
-#                reduced[pair_type] = sam[(sam['Nflashes']>0)
-#                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
-#                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
-#            
-#            # replace the cut on ClosestFlash to a cut on MatchedFlash
-#            elif cut == 'MatchedFlash':
-#                reduced[pair_type] = sam[(sam['Nflashes']>0)
-#                                         &(sam['MatchedFlash_TotalPE'] > minPEcut)
-#                                         &(sam['MatchedFlash_YZdistance'] < maxdYZcut)]
-#         
-#         
-#
-#
-#            elif cut == 'length':
-#                reduced[pair_type] = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
-#    
-#            elif cut == 'non-collinearity':
-#                reduced[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
-#            
-#            elif cut == 'vertex activity':
-#                R_str,box_str = 'RdQaroundVertex','[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
-#                Ru,Rv,Ry = R_str+'[plane 0]'+box_str,R_str+'[plane 1]'+box_str,R_str+'[plane 2]'+box_str
-#                reduced[pair_type] = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
-#                                         |
-#                                         (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
-#                                          <= r_max_RdQ_CC1p0pi) ]
-#            elif cut == 'delta phi':
-#                reduced[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
-#
-#            elif cut == 'soft Pt':
-#                reduced[pair_type] = sam[sam['reco_Pt']<Pt_max]
-#        #}
-#        reducedSamples[cut] = reduced
-#        pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples
-#                                       ,pureff=pureffOverlay,cut_name=cut,reduced=reduced)
-#        Noverlay,_ = gen_Noverlay(reducedSamples=reducedSamples,cut_name=cut,N_On=N_On,debug=debug,f_POT=f_POT )
-#        numbers = numbers.append(pd.DataFrame({ r'$N_{Overlay}$':Noverlay['Overlay']
-#                                          ,r'${\epsilon}_{Overlay}$ [%]':100.*Noverlay['eff Overlay']
-#                                          ,r'$N_{Overlay, cosmic-scaled}$':Noverlay['Overlay Cosmic Scaled']
-#                                          ,r'$N_{Overlay, cosmic-scaled}^{POT-scaled}$':Noverlay['Overlay Cosmic & POT Scaled']
-#                                          ,r'${\epsilon}_{Overlay, cosmic-scaled}$ [%]':100.*Noverlay['eff Overlay Cosmic Scaled']
-#                                          ,r'$N_{cosmic}$':Noverlay['Cosmic']
-#                                          ,r'$N_{cosmic, cosmic-scaled}$':Noverlay['Cosmic Scaled']
-#                                          ,r'$N_{cosmic, cosmic-scaled}^{POT-scaled}$':f_POT*Noverlay['Cosmic Scaled']
-#                                          },index=[cut]))
-#                                          
-#    #}
-#    return reducedSamples,pureffOverlay,numbers
-## -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-#
-#
-
-
-#
-#
-## ------------------------------------------------
-## March-6, 2018
-#def get_Nreduced(OverlaySamples=None,reduced = dict()):
-#    Noriginal , Nreduced , freduced = dict() , dict() , dict()
-#    for pair_type in pair_types:
-#        sam = OverlaySamples[pair_type]
-#        Noriginal[pair_type] = len(OverlaySamples[pair_type])
-#        Nreduced[pair_type] = float(len(reduced[pair_type]))
-#        freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
-#    return Nreduced , freduced
-## ------------------------------------------------
-#
-## ------------------------------------------------
-## March 5, 2018
-#def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PIDa'):
-#    eff,pur = dict(),dict()
-#    Nreduced , freduced = get_Nreduced(OverlaySamples=OverlaySamples,reduced=reduced)
-#    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
-#    eff['1mu-1p'] = freduced['1mu-1p']
-#    pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
-#    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
-#    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
-#    pureff_cut = pd.DataFrame({'label':cut_name
-#                              ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
-#                              ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
-#                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
-#                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
-#                              , index=[cut_name]
-#                              )
-#
-#    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
-#    pureff = pureff.append(pureff_cut)
-#    return pureff
-## ------------------------------------------------
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
