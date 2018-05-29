@@ -117,6 +117,7 @@ private:
     
     // my variables for CC 1p 0pi
     bool            CC1p0pi=false;
+    bool            IsCC_Np_200MeVc=false,IsCC_1p_200MeVc=false,IsCC_1p_200MeVc_0pi=false;
     TLorentzVector  pmomentum; //tmp...
     TLorentzVector  proton, muon, nu, q, Pmiss;
     TLorentzVector  proton_before_FSI;   // before FSI

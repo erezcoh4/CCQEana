@@ -73,7 +73,8 @@ bool GenieFile::Initialize(){
         pdgf[i] = -9999;
         pxf[i] = pyf[i] = pzf[i] = -9999;
     }
-    CC1p0pi = false;
+    //    CC1p0pi = false;
+    IsCC_Np_200MeVc = IsCC_1p_200MeVc = IsCC_1p_200MeVc_0pi=false;
     Pmiss = muon  = proton = q = nu = proton_before_FSI = TLorentzVector();
     protons.clear();
     neutrons.clear();
@@ -120,7 +121,9 @@ bool GenieFile::HeaderCSV (){
     
     // my variables for CC1p0pi
     csv_file
-    << "CC1p0pi"    << ","
+    << "IsCC_Np_200MeVc"    << ","
+    << "IsCC_1p_200MeVc"    << ","
+    << "IsCC_1p_200MeVc_0pi"<< ","
     << "Pmu"        << "," << "Pmu_theta"   << ","
     << "Pmu_x"      << "," << "Pmu_y"       << "," << "Pmu_z"   << ","
     << "Pp"         << "," << "Pp_theta"    << ","
@@ -167,7 +170,9 @@ bool GenieFile::StreamToCSV (){
     
     // my variables for CC1p0pi
     csv_file
-    << CC1p0pi      << ","
+    << IsCC_Np_200MeVc  << ","
+    << IsCC_1p_200MeVc  << ","
+    << IsCC_1p_200MeVc_0pi  << ","
     << muon.P()     << "," << muon.Theta()      << ","
     << muon.Px()    << "," << muon.Py()         << "," << muon.Pz()     << ","
     << proton.P()   << "," << proton.Theta()    << ","
@@ -245,32 +250,63 @@ bool GenieFile::SetTopology (){
     }
         
     
+    
     // CCQE with FSI (the A-1 system can not exit the nucleus)
     Debug(2,"cc:% , qel:%, Nmu:%, Np_200MeVc:%, Npi:%, Nn_200MeVc:%, Nel:%, Ngamma:%"
           ,cc,qel,Nmu,Np_200MeVc,Npi,Nn_200MeVc,Nel,Ngamma);
-    if ((cc==true)
-        && ( Np_200MeVc==1 )
+    // IsCC_Np_200MeVc
+    if ( cc==true
         //        && ( Nmu>=1 ) // if cc==0 then we have a muon!
-        && ( Npi==0 && Nel==0 && Ngamma==0 )
-        && Nn_200MeVc==0
-        //        && ((nf == 1) && (pdgf[0]==2212) )
-        )
-    {
-        CC1p0pi = true;
-        q = nu - muon;
-        Pmiss = proton - q;
-        // proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 ); // correct this!
+        && Np_200MeVc>=1 ){
+        IsCC_Np_200MeVc = true;
+        
+        // IsCC_1p_200MeVc
+        if ( Np_200MeVc==1 ){
+            IsCC_1p_200MeVc = true;
+            
+            // IsCC_1p_200MeVc_0pi
+            // which means that the final state includes
+            // 1 protons with momentum >= 200 MeV/c
+            // any number of neutrons
+            // 0 pions
+            // 0 electrons
+            // 0 photons
+            if ( Npi==0 && Nel==0 && Ngamma==0 ){
+                IsCC_1p_200MeVc_0pi = true;
+                q = nu - muon;
+                Pmiss = proton - q;
+//                // Delete this!
+//                CC1p0pi = true;
+            }
+        }
     }
-     // CCQE with no FSI
-    else if ((cc==true)
-             && (nf == 2) && (pdgf[0]==1000180390) && (pdgf[1]==2212) ){
-        CC1p0pi = true;
-        muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
-        q = nu - muon;
-        proton.SetXYZM( pxf[1], pyf[1], pzf[1], 0.9382720813 );
-        Pmiss = proton - q;
-        proton_before_FSI.SetXYZM( pxi[1],pyi[1],pzi[1], 0.9382720813 );
-    }
+
+    
+//    
+//    if ((cc==true)
+//        && ( Np_200MeVc==1 )
+//        //        && ( Nmu>=1 ) // if cc==0 then we have a muon!
+//        && ( Npi==0 && Nel==0 && Ngamma==0 )
+//        && Nn_200MeVc==0
+//        //        && ((nf == 1) && (pdgf[0]==2212) )
+//        )
+//    {
+//        CC1p0pi = true;
+//        q = nu - muon;
+//        Pmiss = proton - q;
+//        // proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 ); // correct this!
+//    }
+    
+//    // CCQE with no FSI
+//    else if ((cc==true)
+//             && (nf == 2) && (pdgf[0]==1000180390) && (pdgf[1]==2212) ){
+//        CC1p0pi = true;
+//        muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
+//        q = nu - muon;
+//        proton.SetXYZM( pxf[1], pyf[1], pzf[1], 0.9382720813 );
+//        Pmiss = proton - q;
+//        proton_before_FSI.SetXYZM( pxi[1],pyi[1],pzi[1], 0.9382720813 );
+//    }
     
     return true;
 }
