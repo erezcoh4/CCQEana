@@ -203,9 +203,11 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                 ax.annotate("", xy=(x+dx*(1 if ix==0 else -1), 0.7*np.max(ax.get_ylim())), xytext=(x, 0.7*np.max(ax.get_ylim())),arrowprops=dict(color='k',linewidth=5))
         if debug: print cut_label,': sum of h_OnBeam:',np.sum(h_OnBeam),',sum of h_stack:',np.sum(h_stack)
         if do_only_preselection and i_cut==0: return
+        if i_cut==1: chi2_after_cuts,ndf_after_cuts=chi2 , ndf
+                                                              
     #}
     plt.tight_layout()
-    return h_OnBeam,h_stack
+    return h_OnBeam,h_stack,chi2_after_cuts,ndf_after_cuts
 # ------------------------------------------------
 
 
@@ -254,6 +256,7 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     scaling['other pairs']= N['total']*f['MC']*f['other pairs in MC']/N['other pairs']
     scaling['1mu-1p']     = N['total']*f['MC']*f['1mu-1p in MC']/N['1mu-1p']
     scaling['CC 1p 0pi']  = N['total']*f['MC']*f['CC 1p 0pi in MC']/N['CC 1p 0pi']
+    scaling['N(Ovelay)/N(On)'] = (N['MC']+N['cosmic'])/N['total']
     
     # option 3:
     # increase the number of cosmic pairs in the overlay,
@@ -658,8 +661,6 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
     if do_add_legend==False: return ax
     return ax,leg
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
-
 
 
 

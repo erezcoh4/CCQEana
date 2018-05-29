@@ -14,6 +14,118 @@ pureff_MCbnbMCcosmic = pd.DataFrame()
 pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
 
 
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# May-29,2018
+def Gaussian_resolution(df=None,vgen='',vrec=''
+                        ,bins=None
+                        ,truncation_limit=np.inf
+                        ,p0=[0,1] # initial guess
+                        ,do_plot_bestfit=False,precision=3
+                        ):
+    delta = df[vgen] - df[vrec]
+    histo,_ = np.histogram( delta , bins=bins , normed=1);
+    trunc_df = df[np.abs(df[vgen] - df[vrec])<truncation_limit]
+    trunc_delta = trunc_df[vgen] - trunc_df[vrec]
+    h_trun,bins = np.histogram( trunc_delta , bins=bins , normed=1);
+    mid = 0.5*(bins[1:]+bins[:-1])
+    xdata,ydata = mid,h_trun
+    pars, cov = curve_fit(lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig), xdata, ydata, p0=p0)
+    results = dict({'mid':mid,'histo':histo,'bin_width':(bins[1]-bins[0])
+                   ,'mu':pars[0],'mu_err':np.sqrt(cov[0,0])
+                   ,'sigma':pars[1],'sigma_err':np.sqrt(cov[1,1])
+                   })
+    if do_plot_bestfit:
+        x = linspace(np.min(bins),np.max(bins),100)
+        plt.plot(x, norm.pdf(x,*pars), 'k--',linewidth = 2, label=None)
+
+    return results
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# May-29,2018
+def Gaussian_relative_resolution(df=None,vgen='',vrec=''
+                                 ,bins=linspace(-100,100,100)
+                                 ,truncation_limit=np.inf
+                                 ,p0=[0,1] # initial guess
+                                 ,do_plot_bestfit=False,precision=3
+                                 ):
+    R = 100.*(df[vgen] - df[vrec])/df[vgen]
+    histo,_ = np.histogram( R , bins=bins , normed=1);
+    trunc_df = df[np.abs(df[vgen] - df[vrec])<truncation_limit]
+    trunc_R = 100.*(trunc_df[vgen] - trunc_df[vrec])/trunc_df[vgen]
+    h_trun,bins = np.histogram( trunc_R , bins=bins , normed=1);
+    mid = 0.5*(bins[1:]+bins[:-1])
+    xdata,ydata = mid,h_trun
+    pars, cov = curve_fit(lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig), xdata, ydata, p0=p0)
+    results = dict({'mid':mid,'histo':histo,'bin_width':(bins[1]-bins[0])
+                   ,'mu':pars[0],'mu_err':np.sqrt(cov[0,0])
+                   ,'sigma':pars[1],'sigma_err':np.sqrt(cov[1,1])
+                   })
+
+    if do_plot_bestfit:
+        x = linspace(np.min(bins),np.max(bins),100)
+        plt.plot(x, norm.pdf(x,*pars), 'k--',linewidth = 2, label=None)
+
+    return results
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# May-29, 2018
+def plot_purity( OverlaySamples=None
+                , ax=None, debug=0,overlay_scaling=None
+                , purity_pair_type='CC 1p 0pi'
+                , var=None, bins=None
+                , x_label=''
+                , y_label='purity [%]'
+                , fontsize=25,markersize=15
+                , xlim=None
+                , color='blue',ecolor='black',label=r'$CC1p0\pi$ purity'
+                ):
+    '''
+        return: x , pur
+        purity of the sample 'purity_subsample' in the overlay for the given purity_pair_type
+        '''
+    bin_width = bins[1]-bins[0]
+    mid = 0.5*(bins[:-1]+bins[1:])
+    h = dict()
+    for i_pair_type,pair_type in enumerate(pair_types):
+        h[pair_type],edges = np.histogram(OverlaySamples[pair_type][var],bins=bins)
+        h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
+    # -- - - - --------- - - -- ---- -  - --- -- -- -- --
+    h_ovrelay = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
+    # for the statistical uncertainty of the purity to really decrease with increasing statistics
+    # in the overlay,
+    # we need to bring back the "real" statistics in the overlay,
+    # by multiplying back with overlay_scaling['N(Ovelay)/N(On)']
+    numerator = np.array(h[purity_pair_type+' scaled'])*overlay_scaling['N(Ovelay)/N(On)']
+    denominator = np.array([h_ovrelay[i] if h_ovrelay[i] else 1000 for i in range(len(h_ovrelay))])*overlay_scaling['N(Ovelay)/N(On)']
+    purity = numerator/denominator
+    purity_err = np.array([purity[i]*np.sqrt((1./numerator[i] if numerator[i]>0.5 else 0)
+                                             + (1./denominator[i] if denominator[i]>0.5 else 0))
+                           for i in range(len(purity))])
+    if debug:
+        print 'h_ovrelay:',h_ovrelay
+        print 'h['+purity_pair_type+' scaled]:',h[purity_pair_type+' scaled']
+        print 'purity:',purity
+        print 'purity_err:',purity_err
+
+
+    plt.errorbar(x=mid,xerr=0.5*bin_width
+             , y=100.*purity
+             , yerr=100.*purity_err
+             ,color=color, label=label
+             ,fmt='o',markersize=markersize,capthick=3,capsize=3,ecolor=ecolor)
+    
+    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,alpha_grid=1,fontsize=fontsize
+             ,ylim=(0,100)
+             ,xlim=(np.min(bins)-0.5*bin_width,np.max(bins)+0.5*bin_width) if xlim is None else xlim
+             )
+    return mid,purity,purity_err
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+
+
 # ------------------------------------------------
 # March-6, 2018 (last edit May-14)
 def get_Nreduced(OverlaySamples=None,reduced = dict(),OriginalOverlaySamples=None):

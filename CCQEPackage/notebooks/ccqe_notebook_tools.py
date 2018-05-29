@@ -5,7 +5,9 @@ from plot_tools import *
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import NullFormatter, MultipleLocator, FormatStrFormatter
 from matplotlib import ticker
-
+from scipy.optimize import leastsq
+from scipy.stats import norm
+from scipy.optimize import curve_fit
 
 
 #---------------------------------------------------------------------------------------------
