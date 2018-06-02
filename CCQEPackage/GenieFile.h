@@ -46,8 +46,10 @@ public:
     
     
     // GETters
-    int           GetNevents () const {return (int)GenieTree->GetEntries();};
-    bool          GetCC1p0pi () const {return CC1p0pi;};
+    int                   GetNevents () const {return (int)GenieTree->GetEntries();};
+    bool            GetCC_Np_200MeVc () const {return IsCC_Np_200MeVc;};
+    bool            GetCC_1p_200MeVc () const {return IsCC_1p_200MeVc;};
+    bool        GetCC_1p_200MeVc_0pi () const {return IsCC_1p_200MeVc_0pi;};
     
     // funcionality
     bool           ReadEvent (int fi_event);
