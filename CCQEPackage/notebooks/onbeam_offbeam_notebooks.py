@@ -211,9 +211,8 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
 # ------------------------------------------------
 
 
-
 # ------------------------------------------------
-# April-26
+# April-26 (last edit May-31)
 def get_samples_scaling( N_total=1 # total integral of all overlay
                         , f_Cosmic=None  # fraction of cosmic in the overlay, need to be in the range 0-1
                         , f_OverlayCosmic=None # by which factor should we increase the cosmic part in the overlay
