@@ -143,16 +143,14 @@ def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',b
     plt.tight_layout()
     return h_OnOff,h_stack
 # ------------------------------------------------
-
-
 # ------------------------------------------------
-# April-26 (last edit May-20,2018)
+# April-26 (last edit June-04,2018)
 # for OverlayRescaledVsBeamOn
 def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,bins_before_cuts=linspace(0,180,31)
                            ,overlay_scaling=None
                            ,overlay_color ='black'
-                           ,beam_color='purple'
+                           ,beam_color='purple',y_label='overlay prediction'
                            ,x_ticks=None
                            ,figsize=(24,8)
                            ,do_OffBeam=False
@@ -164,6 +162,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,do_show_cut=True,x_varcut=(0,np.inf),dx=None
                            ,do_add_legend=False,legend_loc='best'
                            ,do_only_preselection=False
+                           ,do_area_normalized_after_cuts=True
                            ,yscale='linear'
                         ):
     fig = plt.figure(figsize=figsize)
@@ -184,7 +183,9 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
         h_stack,_=plot_stacked_MCsamples(reducedOverlay=reducedOverlay,cut_name=cut_name
                                          , debug=0
                                          , overlay_scaling=overlay_scaling
-                                         , var=var, x_label=x_label, y_label='overlay prediction',xlim=xlim
+                                         , var=var, x_label=x_label
+                                         , y_label=y_label if i_cut==0 else ''
+                                         , xlim=xlim
                                          , bins=bins , alpha=0.8, ax=ax
                                          , do_add_legend=do_add_legend
                                  );
@@ -203,8 +204,14 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                 ax.annotate("", xy=(x+dx*(1 if ix==0 else -1), 0.7*np.max(ax.get_ylim())), xytext=(x, 0.7*np.max(ax.get_ylim())),arrowprops=dict(color='k',linewidth=5))
         if debug: print cut_label,': sum of h_OnBeam:',np.sum(h_OnBeam),',sum of h_stack:',np.sum(h_stack)
         if do_only_preselection and i_cut==0: return
-        if i_cut==1: chi2_after_cuts,ndf_after_cuts=chi2 , ndf
-                                                              
+        if i_cut==1: #{
+            chi2_after_cuts,ndf_after_cuts=chi2 , ndf
+            if do_area_normalized_after_cuts:#{
+                h_stack = h_stack*np.sum(h_OnBeam)/np.sum(h_stack)
+                mid = 0.5*(bins[:-1]+bins[1:]);bin_width = bins[1]-bins[0]
+                plt.step(mid-0.5*bin_width,h_stack ,color='red',where='post',label='area-normalized overlay')
+            #}
+        #}
     #}
     plt.tight_layout()
     return h_OnBeam,h_stack,chi2_after_cuts,ndf_after_cuts
