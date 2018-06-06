@@ -143,8 +143,10 @@ def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',b
     plt.tight_layout()
     return h_OnOff,h_stack
 # ------------------------------------------------
+
+
 # ------------------------------------------------
-# April-26 (last edit June-04,2018)
+# April-26 (last edit June-06,2018)
 # for OverlayRescaledVsBeamOn
 def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,bins_before_cuts=linspace(0,180,31)
@@ -163,6 +165,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,do_add_legend=False,legend_loc='best'
                            ,do_only_preselection=False
                            ,do_area_normalized_after_cuts=True
+                           ,where='post' # or 'pre' or 'mid'
                            ,yscale='linear'
                         ):
     fig = plt.figure(figsize=figsize)
@@ -209,7 +212,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
             if do_area_normalized_after_cuts:#{
                 h_stack = h_stack*np.sum(h_OnBeam)/np.sum(h_stack)
                 mid = 0.5*(bins[:-1]+bins[1:]);bin_width = bins[1]-bins[0]
-                plt.step(mid-0.5*bin_width,h_stack ,color='red',where='post',label='area-normalized overlay')
+                plt.step(mid-0.5*bin_width*(1 if where=='post' else -1 if where=='pre' else 0),h_stack ,color='red',where=where,label='area-normalized overlay')
             #}
         #}
     #}
