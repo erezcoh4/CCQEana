@@ -146,7 +146,7 @@ def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',b
 
 
 # ------------------------------------------------
-# April-26 (last edit June-06,2018)
+# April-26 (last edit June-09,2018)
 # for OverlayRescaledVsBeamOn
 def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,bins_before_cuts=linspace(0,180,31)
@@ -169,7 +169,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,yscale='linear'
                         ):
     fig = plt.figure(figsize=figsize)
-    
+    chi2_dict=dict()
     for i_cut,(cut_name,cut_label,bins,xlim) in enumerate(zip(['no cut',last_cut_name]
                                                          ,['preselection',last_cut_label]
                                                          ,[bins_before_cuts,bins_after_cuts]
@@ -208,16 +208,22 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
         if debug: print cut_label,': sum of h_OnBeam:',np.sum(h_OnBeam),',sum of h_stack:',np.sum(h_stack)
         if do_only_preselection and i_cut==0: return
         if i_cut==1: #{
-            chi2_after_cuts,ndf_after_cuts=chi2 , ndf
+            chi2_dict['chi2 after cuts'] = chi2
+            chi2_dict['ndf after cuts'] = ndf
             if do_area_normalized_after_cuts:#{
                 h_stack = h_stack*np.sum(h_OnBeam)/np.sum(h_stack)
                 mid = 0.5*(bins[:-1]+bins[1:]);bin_width = bins[1]-bins[0]
                 plt.step(mid-0.5*bin_width*(1 if where=='post' else -1 if where=='pre' else 0),h_stack ,color='red',where=where,label='area-normalized overlay')
+                chi2 , ndf = chi2_two_histograms( bins=bins, chi2_xrange=(np.min(bins),np.max(bins))
+                                     , h1=h_OnBeam , h2=h_stack
+                                     , h1err=np.sqrt(h_OnBeam), h2err=np.sqrt(h_stack)
+                                     , debug=0 )
+                chi2_dict['chi2(shape) after cuts'] = chi2
             #}
         #}
     #}
     plt.tight_layout()
-    return h_OnBeam,h_stack,chi2_after_cuts,ndf_after_cuts
+    return h_OnBeam,h_stack,chi2_dict
 # ------------------------------------------------
 
 
