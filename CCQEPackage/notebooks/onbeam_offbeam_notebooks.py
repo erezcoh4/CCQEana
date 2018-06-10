@@ -158,7 +158,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,do_OffBeam=False
                            ,reducedOffBeam=None,reducedOnBeam=None,reducedOverlay=None
                            ,chi2_xrange=None,xlim_before_cuts=None,xlim_after_cuts=None
-                           ,last_cut_name='Pt & delta phi',last_cut_label='detection + kinematical cuts'
+                           ,last_cut_name='Pt & delta phi',last_cut_label='all other cuts'
                            ,bins_after_cuts=linspace(0,180,31)
                            ,debug=0
                            ,do_show_cut=True,x_varcut=(0,np.inf),dx=None
@@ -195,7 +195,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
         chi2 , ndf = chi2_two_histograms( bins=bins, chi2_xrange=(np.min(bins),np.max(bins))
                                      , h1=h_OnBeam , h2=h_stack
                                      , h1err=np.sqrt(h_OnBeam), h2err=np.sqrt(h_stack)
-                                     , debug=0 )
+                                     , debug=debug )
         chi2_txt = r'$\chi^2/ndf=%.1f/%d$'%(chi2,ndf)
         ax.set_title(cut_label + ' ' + chi2_txt,y=1.02,fontsize=25)
         ax.set_yscale(yscale)
@@ -217,7 +217,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                 chi2 , ndf = chi2_two_histograms( bins=bins, chi2_xrange=(np.min(bins),np.max(bins))
                                      , h1=h_OnBeam , h2=h_stack
                                      , h1err=np.sqrt(h_OnBeam), h2err=np.sqrt(h_stack)
-                                     , debug=0 )
+                                     , debug=debug )
                 chi2_dict['chi2(shape) after cuts'] = chi2
             #}
         #}
@@ -747,7 +747,7 @@ def plot_stacked_MCsamples( reducedOverlay=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-3, 2017 (last edit Dec-9)
+# Dec-3, 2017 (last edit June-10)
 def chi2_two_histograms( bins=None, chi2_xrange=None
                         , h1=None , h2=None 
                         , h1err=None, h2err=None 
@@ -760,11 +760,18 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
     Nbins_compares = 0
     for i_bin in range(len(bins)-1):
         if chi2_xrange is None or (bins[i_bin]>=chi2_xrange[0] and bins[i_bin]<=chi2_xrange[1]):
-            if debug: 
-                print 'comparing in bin:',bins[i_bin],'h1:',h1[i_bin],'+/-',h1err[i_bin],'h2:',h2[i_bin],'+/-',h2err[i_bin]
-                print 'chi2+=',(np.square( h1[i_bin] - h2[i_bin] ) / np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1]))
-            chi2 += np.square( h1[i_bin] - h2[i_bin] ) / np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1])
+            num = np.square( h1[i_bin] - h2[i_bin] )
+            den = np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1])
+            chi2_bin = num / den
+            chi2 += chi2_bin
             Nbins_compares += 1
+            
+            if debug:
+                print 'comparing in bin:',bins[i_bin],'h1: %.1f+/-%.1f,'%(h1[i_bin],h1err[i_bin]),'h2: %.1f+/-%.1f'%(h2[i_bin],h2err[i_bin])
+                print 'num = %.1f'%num, 'den = %.1f'%den
+                print 'chi2 this bin: num/den = %.1f'%chi2_bin
+                print 'chi2 : %.1f'%chi2_bin
+
     ndf = Nbins_compares - 1
     if debug: print 'chi2,ndf:',chi2,ndf
     return chi2,ndf
