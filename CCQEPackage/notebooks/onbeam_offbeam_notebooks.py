@@ -161,7 +161,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
                            ,last_cut_name='Pt & delta phi',last_cut_label='all other cuts'
                            ,bins_after_cuts=linspace(0,180,31)
                            ,debug=0
-                           ,do_show_cut=True,x_varcut=(0,np.inf),dx=None
+                           ,do_show_cut=True,x_varcut=(0,np.inf),dx_varcut=None
                            ,do_add_legend=False,legend_loc='best'
                            ,do_only_preselection=False
                            ,do_area_normalized_after_cuts=True
@@ -201,9 +201,9 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
         ax.set_yscale(yscale)
         if do_show_cut:
             plt.plot([x_varcut[0],x_varcut[0]],ax.get_ylim(),'--',[x_varcut[1],x_varcut[1]],ax.get_ylim(),'--',color='black')
-            for ix,x in enumerate(x_varcut):
+            if dx_varcut is None: dx_varcut = [0.2*x_varcut[0],0.2*x_varcut[1]]
+            for ix,(x,dx) in enumerate(zip(x_varcut,dx_varcut)):
                 if x_varcut[0]==x_varcut[1] and ix>0: continue
-                if dx is None: dx = 0.2*x
                 ax.annotate("", xy=(x+dx*(1 if ix==0 else -1), 0.7*np.max(ax.get_ylim())), xytext=(x, 0.7*np.max(ax.get_ylim())),arrowprops=dict(color='k',linewidth=5))
         if debug: print cut_label,': sum of h_OnBeam:',np.sum(h_OnBeam),',sum of h_stack:',np.sum(h_stack)
         if do_only_preselection and i_cut==0: return
