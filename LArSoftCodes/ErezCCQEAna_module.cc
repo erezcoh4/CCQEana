@@ -78,6 +78,8 @@
 #include "uboone/LLSelectionTool/OpT0Finder/Algorithms/LightPath.h"
 #include "uboone/LLSelectionTool/OpT0Finder/Algorithms/PhotonLibHypothesis.h"
 #include "uboone/LLBasicTool/GeoAlgo/GeoTrajectory.h"
+// MC event weight
+#include "uboone/EventWeight/MCEventWeight.h"
 
 
 // constants
@@ -233,6 +235,7 @@ private:
     std::string fPIDModuleLabel;
     std::string fCaliPIDModuleLabel;
     std::string fTPCobjectProducer;
+    std::string fEventWeightModuleLabel;
     
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -2381,31 +2384,43 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     FlashMatch_mgr.Configure(p.get<flashana::Config_t>("FlashMatchConfig"));
     
     // event weight
-    fEvwghModuleLabel       = p.get< std::string >("evwghModuleLabel");
+    fEventWeightModuleLabel = p.get< std::string >("EventWeightModuleLabel");
 }
 
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::GetEventWeight (art::Event const & evt){
-
+    int fDebug = 0 ;
+    
     // June-14, 2018
     // reweighting for different mA values,
     // to extract mA from CCQE-like events
+    Debug ( fDebug , "in ub::ErezCCQEAna::GetEventWeight()" );
     
-    art::Handle< std::vector <evwgh::MCEventWeight> > evwghListHandle;
+    art::Handle< std::vector <evwgh::MCEventWeight> > MCEventWeightlistHandle;
     std::vector< art::Ptr <evwgh::MCEventWeight> > MCEventWeightlist;
-    if (evt.getByLabel( evwghModuleLabel , evwghListHandle))
-        art::fill_ptr_vector( MCEventWeight , evwghListHandle );
-    
-//    if (evwghListHandle.isValid()) {
-//        Debug(3,"Got evwghList Handle!, number of evwgh: %",evwghListHandle.size());
-//        
-////        for (int i = 0; i < int(MCEventWeightlist.size()); i++) {
-////            SHOW( MCEventWeightlist.at(i) );
-////        }
-//    }
+    if (evt.getByLabel( fEventWeightModuleLabel , MCEventWeightlistHandle))
+        art::fill_ptr_vector( MCEventWeightlist , MCEventWeightlistHandle );
 
+    
+    Debug ( fDebug , "MCEventWeightlist size is %" , MCEventWeightlist.size());
+    if (MCEventWeightlist.size() > 0) {
+        Debug ( fDebug , "MCEventWeightlist size is %, stepping through the first element ...", MCEventWeightlist.size());
+        art::Ptr<evwgh::MCEventWeight> evt_wgt = MCEventWeightlist.at(0); // Just for the first nu interaction
+        std::map<std::string, std::vector<double>> evtwgt_map = evt_wgt->fWeight;
+        int countFunc = 0;
+        // loop over the map and save the name of the function and the vector of weights for each function
+        for(auto it : evtwgt_map) {
+            std::string func_name = it.first;
+            std::vector<double> weight_v = it.second;
+            Debug( fDebug , "func_name: % , weight_v.size(): %",func_name , weight_v.size());
+            countFunc++;
+        }
+        Debug(fDebug,"countFunc: %",countFunc);
+    }
+
+ 
 }
 
 
