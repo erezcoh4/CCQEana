@@ -20,7 +20,6 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/RecoBase/Track.h"
@@ -33,24 +32,18 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
-
 #include "lardata/ArtDataHelper/TrackUtils.h" // lar::util::TrackPitchInView()
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/Utilities/PxUtils.h"
 #include "lardata/Utilities/GeometryUtilities.h"
-
 #include "larreco/RecoAlg/PMAlg/Utilities.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "larreco/RecoAlg/TrackMomentumCalculator.h"
-
 #include "larcoreobj/SummaryData/POTSummary.h"
-
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-
-
 // for SwT emulation
 #include "uboone/RawData/utils/ubdaqSoftwareTriggerData.h"
 // for MC truth matching
@@ -67,7 +60,6 @@
 #include <fstream>
 #include <algorithm>
 #include <cstdarg>
-
 // my pandoraNu track...
 #include "uboone/ErezCCQEana/MyObjects/PandoraNuTrack.h"
 #include "uboone/ErezCCQEana/MyObjects/hit.h"
@@ -76,7 +68,6 @@
 #include "uboone/ErezCCQEana/MyObjects/GENIEinteraction.h"
 #include "uboone/ErezCCQEana/MyObjects/pairVertex.h"
 #include "uboone/ErezCCQEana/MyObjects/TruncMean.h"
-
 //// flash matching from Marco
 #include "uboone/UBXSec/DataTypes/FlashMatch.h"
 #include "uboone/UBXSec/DataTypes/TPCObject.h"
@@ -153,6 +144,7 @@ public:
     void         StreamTracksToCSV ();
     void          HeaderGENIEInCSV ();
     void          StreamGENIEToCSV ();
+    void            GetEventWeight (art::Event const & evt);
 
     bool ParticleAlreadyMatchedInThisHit ( std::vector<int> ,int );
     double    GetRdQInSphereAroundVertex ( pairVertex v, int plane, float r);
@@ -338,6 +330,10 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
         StreamEventsToCSV();
         return;
     }
+    
+    // * Event Weight
+    Debug(2,"// * Event Weight");
+    if (MCmode) {GetEventWeight(evt);}
     
     // * hits
     Debug(2,"// * hits");
@@ -2383,7 +2379,35 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     DoOpDetSwap             = p.get<bool>       ("DoOpDetSwap", false);
     OpDetSwapMap            = p.get<std::vector<int> >("OpDetSwapMap");
     FlashMatch_mgr.Configure(p.get<flashana::Config_t>("FlashMatchConfig"));
+    
+    // event weight
+    fEvwghModuleLabel       = p.get< std::string >("evwghModuleLabel");
 }
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAna::GetEventWeight (art::Event const & evt){
+
+    // June-14, 2018
+    // reweighting for different mA values,
+    // to extract mA from CCQE-like events
+    
+    art::Handle< std::vector <evwgh::MCEventWeight> > evwghListHandle;
+    std::vector< art::Ptr <evwgh::MCEventWeight> > MCEventWeightlist;
+    if (evt.getByLabel( evwghModuleLabel , evwghListHandle))
+        art::fill_ptr_vector( MCEventWeight , evwghListHandle );
+    
+//    if (evwghListHandle.isValid()) {
+//        Debug(3,"Got evwghList Handle!, number of evwgh: %",evwghListHandle.size());
+//        
+////        for (int i = 0; i < int(MCEventWeightlist.size()); i++) {
+////            SHOW( MCEventWeightlist.at(i) );
+////        }
+//    }
+
+}
+
 
 
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
