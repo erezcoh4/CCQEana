@@ -150,6 +150,10 @@ public:
 
     bool ParticleAlreadyMatchedInThisHit ( std::vector<int> ,int );
     double    GetRdQInSphereAroundVertex ( pairVertex v, int plane, float r);
+
+    flashana::QCluster_t     GetQCluster (std::vector<art::Ptr<recob::Track>>);
+    void                GetFlashLocation (std::vector<double>, double&, double&, double&, double&);
+
     
     // ---- - - -- -- - -- -- -- -- --- - - - - -- --- - - - --- -- - -
     // debug
@@ -292,9 +296,9 @@ private:
     std::vector<flashana::FlashMatch_t> FlashMatch_result;
     
     
-    // methods
-    flashana::QCluster_t    GetQCluster (std::vector<art::Ptr<recob::Track>>);
-    void               GetFlashLocation (std::vector<double>, double&, double&, double&, double&);
+    // event-weights
+    std::vector<std::string>            event_weight_names;
+    std::vector<float>                  event_weight_values;
 
 };
 
@@ -1533,11 +1537,18 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     << "truth_y" << ","
     << "truth_z" << ",";
 
+    // event weight
+    for (auto name: event_weight_names) {
+        genie_file << name << ",";
+    }
+
+    
     // v-interaction point in beam coordinates system
     genie_file
     << "truth_x_beamCoordinates" << ","
     << "truth_y_beamCoordinates" << ","
     << "truth_z_beamCoordinates";
+    
     
     // finish
     genie_file << endl;
@@ -1605,6 +1616,12 @@ void ub::ErezCCQEAna::StreamGENIEToCSV(){
         << g.GetVertexPosition().x() << ","
         << g.GetVertexPosition().y() << ","
         << g.GetVertexPosition().z() << ",";
+        
+        // event weight
+        for (auto weight: event_weight_values) {
+            genie_file << weight << ",";
+        }
+
         
         // v-interaction point in beam coordinates system
         genie_file
@@ -1862,9 +1879,17 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     vertices_file
     << "isBrokenTrajectory" << ",";
 
+    
+    // event weight
+    for (auto name: event_weight_names) {
+        vertices_file << name << ",";
+    }
+
+    
     // vertex truth-topology in MC
     vertices_file
     << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
+    
     
     << endl;
     
@@ -2044,6 +2069,11 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         vertices_file
         << v.GetIsBrokenTrajectory() << ",";
 
+        
+        // event weight
+        for (auto weight: event_weight_values) {
+            vertices_file << weight << ",";
+        }
         
         // vertex truth-topology in MC
         vertices_file << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
@@ -2263,6 +2293,9 @@ void ub::ErezCCQEAna::ResetVars(){
     FlashMatch_xfixed_hypo_spec.clear();
     FlashMatch_mgr.Reset();
     flashMatchTrackVector.clear();
+    event_weight_names.clear();
+    event_weight_values.clear();
+
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
 }
@@ -2385,13 +2418,14 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     
     // event weight
     fEventWeightModuleLabel = p.get< std::string >("EventWeightModuleLabel");
+    event_weight_names      = p.get<std::vector<std::string> >("EventWeightNames");
 }
 
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::GetEventWeight (art::Event const & evt){
-    int fDebug = 0 ;
+    int fDebug = 3 ;
     
     // June-14, 2018
     // reweighting for different mA values,
@@ -2406,20 +2440,19 @@ void ub::ErezCCQEAna::GetEventWeight (art::Event const & evt){
     
     Debug ( fDebug , "MCEventWeightlist size is %" , MCEventWeightlist.size());
     if (MCEventWeightlist.size() > 0) {
-        Debug ( fDebug , "MCEventWeightlist size is %, stepping through the first element ...", MCEventWeightlist.size());
+        Debug ( fDebug , "stepping through the first element ...");
         art::Ptr<evwgh::MCEventWeight> evt_wgt = MCEventWeightlist.at(0); // Just for the first nu interaction
         std::map<std::string, std::vector<double>> evtwgt_map = evt_wgt->fWeight;
-        int countFunc = 0;
-        // loop over the map and save the name of the function and the vector of weights for each function
         for(auto it : evtwgt_map) {
-            std::string func_name = it.first;
-            std::vector<double> weight_v = it.second;
-            Debug( fDebug , "func_name: % , weight_v.size(): %",func_name , weight_v.size());
-            countFunc++;
+            event_weight_names.push_back(it.first);
+            event_weight_values.push_back(it.second.at(0));
         }
-        Debug(fDebug,"countFunc: %",countFunc);
     }
-
+    if ( debug > fDebug ) {
+        for (size_t i=0; i<event_weight_names.size(); i++) {
+            SHOW2(event_weight_names.at(i),event_weight_values.at(i));
+        }
+    }
  
 }
 

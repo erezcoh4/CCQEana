@@ -32,8 +32,16 @@ genie_microboone_eventweight:
 {
     module_type:	"EventWeight"
 
-    # Ma +/- 1sigma for CCQE-like analysis
-    weight_functions: [ genie_qema_ccqe_1sigam ]
+    # Ma +/- N(sigma) for CCQE-like analysis
+    # Ref. [https://arxiv.org/pdf/1510.05494.pdf] states that
+    # mA = 0.990 - 15% + 25% = 0.99 - 0.1485 + 0.2475 = (0.8415 -> 1.2375) GeV/c2
+    # this means that
+    # mA + 1.4545\sigma = 0.99 + 1.4545*0.2475 = 1.35
+    # mA + 2.909\sigma = 0.99 + 2.909*0.2475 = 1.71
+    # mA - 2.289\sigma = 0.99 - 1.952*0.1485 = 0.7
+    # mA + 2.289\sigma = 0.99 - 2.289*0.1485 = 0.4
+
+    weight_functions: [ evwgh_mA099,evwgh_mA135, evwgh_mA171, evwgh_mA070, evwgh_mA040 ]
 
     # throw exception if weight outside limits
     min_weight: 0
@@ -41,7 +49,18 @@ genie_microboone_eventweight:
 
     genie_module_label:    generator
 
-    genie_qema_ccqe_1sigam : {
+
+
+    evwgh_mA099 : {
+        type: Genie
+        random_seed: 1
+        parameter_list:        ["QEMA"]
+        parameter_sigma:       [-0.0001] # corresponds to Ma = 0.99 GeV
+        mode: reweight
+        number_of_multisims:    1
+    }
+
+    evwgh_mA135 : {
         type: Genie
         random_seed: 1
         parameter_list:        ["QEMA"]
@@ -50,7 +69,7 @@ genie_microboone_eventweight:
         number_of_multisims:    1
     }
 
-    genie_qema_ccqe_3sigam : {
+    evwgh_mA171 : {
         type: Genie
         random_seed: 1
         parameter_list:        ["QEMA"]
@@ -58,6 +77,27 @@ genie_microboone_eventweight:
         mode: reweight
         number_of_multisims:    1
     }
+
+
+    evwgh_mA070 : {
+        type: Genie
+        random_seed: 1
+        parameter_list:        ["QEMA"]
+        parameter_sigma:       [-1.952] # corresponds to Ma = 0.7 GeV
+        mode: reweight
+        number_of_multisims:    1
+    }
+
+    evwgh_mA040 : {
+        type: Genie
+        random_seed: 1
+        parameter_list:        ["QEMA"]
+        parameter_sigma:       [-2.289] # corresponds to Ma = 0.4 GeV
+        mode: reweight
+        number_of_multisims:    1
+    }
+
+
 }
 
 physics:

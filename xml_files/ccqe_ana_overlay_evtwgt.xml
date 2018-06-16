@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!DOCTYPE project [
+<!ENTITY user_id "ecohen">
+
+<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2">
+<!ENTITY file_type "data">
+<!ENTITY run_type "physics">
+<!ENTITY tag "mcc8">
+<!-- 11379 files; 570980 events <= 250 jobs x 50 files per job -->
+<!ENTITY number_of_jobs "3">
+<!ENTITY name "&defname;_CCQE">
+<!ENTITY LArSoft_release "06_26_01_09">
+<!ENTITY prod_mode "test">
+]>
+
+<job>
+    <project name="&name;_analysis">
+        <!-- Project size -->
+        <numevents>10</numevents>
+        <maxfilesperjob>2</maxfilesperjob>
+
+        <!-- Operating System and Project Version -->
+        <os>SL6</os>
+        <version>&prod_mode;_&LArSoft_release;</version>
+        <resource>OPPORTUNISTIC,OFFSITE</resource>
+        <larsoft>
+            <tag>&LArSoft_release;</tag>
+            <qual>e10:prof</qual>
+            <local>/pnfs/uboone/resilient/users/ecohen/test.tar</local>
+        </larsoft>
+        
+        <check>0</check>
+        <copy>0</copy>
+        <filetype>&file_type;</filetype>
+        <runtype>&run_type;</runtype>
+        
+        <!-- Project stages -->
+        <stage name="event_weight">
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/EventWeight/run_genie_reweight_uboone_erez.fcl</fcl>
+            <inputdef>&defname;</inputdef>
+            <!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/overlay/&defname;_reco2.list</inputlist>-->
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/event_weight/&name;</workdir>
+            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</logdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</outdir>
+            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/event_weight/&name;</bookdir>
+            <numjobs>&number_of_jobs;</numjobs>
+            <datatier>reconstructed</datatier>
+            <anadatatier>root-tuple</anadatatier>
+            <jobsub> --expected-lifetime=2h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>2000</memory>
+        </stage>
+        
+        
+        <stage name="ccqe_ana">
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/batch/ccqe_ana_overlay.fcl</fcl>
+            <!--            <inputdef>&defname;</inputdef>-->
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
+            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</outdir>
+            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/ccqe_ana/&name;</bookdir>
+            <numjobs>&number_of_jobs;</numjobs>
+            <datatier>reconstructed</datatier>
+            <anadatatier>root-tuple</anadatatier>
+            <jobsub> --expected-lifetime=6h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>2000</memory>
+        </stage>
+    </project>
+</job>
+
+
+
