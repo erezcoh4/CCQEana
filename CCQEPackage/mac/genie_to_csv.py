@@ -1,12 +1,14 @@
 '''
     usage:
     ------
+    Afro files:
+    python mac/genie_to_csv.py -mA=0.99 -evf=0.01
+    python mac/genie_to_csv.py --DataType=argon40_numu_mA_0_99 -evf=0.01
+    make && python mac/genie_to_csv.py --DataType=uboone_CCinclMEC_argon40_numu_mA_0_99 -evf=1
+    
     My files:
     python mac/genie_to_csv.py --DataType=40Ar_spline_CCinclMEC_muons_mA0.40 -evf=0.01
     
-    Afro files:
-    python mac/genie_to_csv.py --DataType=argon40_numu_mA_0_99 -evf=0.01
-    make && python mac/genie_to_csv.py --DataType=uboone_CCinclMEC_argon40_numu_mA_0_99 -evf=1
 '''
 
 import ROOT , time , os, sys , math
@@ -21,14 +23,14 @@ flags = input_flags.get_args()
 print flags
 
 
-infilename = flags.DataType
+#infilename = flags.DataType
 
-gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/genie_files/" # path
-               ,infilename # RootFileName
+gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
+               ,"CC_100k_mA_%.2f"%float(flags.mA) # RootFileName
                ,"gst" # RootFileName
                ,flags.verbose )
-
 gf.HeaderCSV()
+
 
 Nevents = gf.GetNevents()
 ctr_CC1p0pi = 0
