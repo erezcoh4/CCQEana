@@ -7,7 +7,7 @@
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
 <!-- 11379 files; 570980 events <= 250 jobs x 50 files per job -->
-<!ENTITY number_of_jobs "20">
+<!ENTITY number_of_jobs "4">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -17,7 +17,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>1000000</numevents>
-        <maxfilesperjob>1</maxfilesperjob>
+        <maxfilesperjob>10</maxfilesperjob>
 
         <!-- Operating System and Project Version -->
         <os>SL6</os>
@@ -49,6 +49,7 @@
             <anadatatier>root-tuple</anadatatier>
             <jobsub> --expected-lifetime=2h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
             <memory>6000</memory>
+            <disk>100GB</disk> <!-- 1 event ~= 0.002 GB -->
         </stage>
         
         
