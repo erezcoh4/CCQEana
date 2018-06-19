@@ -56,7 +56,7 @@ ub::ErezCCQEFilter::ErezCCQEFilter(fhicl::ParameterSet const & p)
     // Call appropriate produces<>() functions here.
 }
 
-bool ub::ErezCCQEFilter::filter(art::Event & e)
+bool ub::ErezCCQEFilter::filter(art::Event & evt)
 {
     int run = evt.run();
     std::cout << "run: "<< run << std::endl;
