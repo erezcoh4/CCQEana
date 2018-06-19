@@ -61,9 +61,9 @@ bool ub::ErezCCQEFilter::filter(art::Event & evt)
     int run = evt.run();
     std::cout << "run: "<< run << std::endl;
     
-    if(run < 10) return true;
+    if (run < 10) return true;
 
-    return false
+    return false;
 }
 
 void ub::ErezCCQEFilter::beginJob()
