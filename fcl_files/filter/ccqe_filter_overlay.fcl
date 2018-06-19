@@ -28,65 +28,84 @@ process_name: RunErezCCQEfilter
 
 services:
 {
-  TFileService: { fileName: "overlay_ccqe_like_vertices_filtered.root" closeFileFast: false}
-  TimeTracker:       {}
-  RandomNumberGenerator: {} 
-  message:      @local::standard_info
-                @table::microboone_services_reco
-                @table::microboone_simulation_services
-  @table::microboone_simulation_services
+    TFileService:           { fileName: "overlay_ccqe_filtered.root" }
+    RandomNumberGenerator:  {}
+    TimeTracker:             @local::microboone_time_tracker
+    MemoryTracker:           @local::microboone_memory_tracker
+    RandomNumberGenerator:  {} #ART native random number generator
+    message:                @local::microboone_message_services_prod_debug
+    FileCatalogMetadata:    @local::art_file_catalog_mc
+    @table::microboone_simulation_services
 }
 
 source:
 {
   module_type: RootInput
-  firstEvent : 1
   maxEvents:   -1
 }
-
-
-outputs:{}
 
 
 physics:
 {
 
-  filters:
-  {
-    EventsFilter:
+    filters:
     {
-      module_type:                      "ErezCCQEFilter"
-      DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8.11"
-      VerbosityLevel:                   1
-      MCmodeLabel:                      true
-      DoWriteTracksInfo:                true
-      DoAddTracksEdep:                  true
-      DoWriteGENIEInfo:                 true
-      DoWriteEventsInfo:                true
-      DoOnlySwT:                        false
-      SwTModuleLabel:                   "swtrigger"
-      SwTAlgoModuleLabel:               "BNB_FEMBeamTriggerAlgo"
-      TrackModuleLabel:                 "pandoraNu"
-      HitsModuleLabel:                  "pandoraCosmicHitRemoval"
-      MCTruthModuleLabel:               "generator"
-      GenieGenModuleLabel:              "generator"
-      CalorimetryModuleLabel:           "pandoraNucalo"
-      POTModuleLabel:                   "generator"
-      FlashModuleLabel:                 "simpleFlashBeam"
-      HitParticleAssnsModuleLabel:      "crHitRemovalTruthMatch"
-      CalibratedCalorimetryModuleLabel: "pandoraNucali"
-      PIDModuleLabel:                   "pandoraNupid"
-      CaliPIDModuleLabel:               "pandoraNucalipid"
-      TPCObjectModule:                  "TPCObjectMaker"
-      DoOpDetSwap:                      false
-      OpDetSwapMap:                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 31, 26, 28, 29, 30, 25, 27]
-      FlashMatchConfig:                 @local::flashmatch_config
+        EventsFilter:
+        {
+        module_type:                      "ErezCCQEFilter"
+        VerbosityLevel:                   1
+        SwTModuleLabel:                   "swtrigger"
+        SwTAlgoModuleLabel:               "BNB_FEMBeamTriggerAlgo"
+        TrackModuleLabel:                 "pandoraNu"
+        HitsModuleLabel:                  "pandoraCosmicHitRemoval"
+        MCTruthModuleLabel:               "generator"
+        GenieGenModuleLabel:              "generator"
+        CalorimetryModuleLabel:           "pandoraNucalo"
+        FlashModuleLabel:                 "simpleFlashBeam"
+        PIDModuleLabel:                   "pandoraNupid"
+        CaliPIDModuleLabel:               "pandoraNucalipid"
+        }
     }
-  }
-  filter: [ EventsFilter ] #Directory for histograms
-  end_paths: [ analysis ]
+    stream1:  [ out1 ]
+    filter: [ EventsFilter ] #Directory for histograms
+    end_paths: [ stream1,filter ]
 }
 
 
 services.DetectorClocksService.InheritClockConfig:                      false
 services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos
+
+
+
+
+
+
+outputs.out1.fileName: "%ifb_ccqe_filtered.root"
+outputs:
+{
+    out1:
+    {
+        module_type: RootOutput
+        dataTier:    "reconstructed"
+        fileName:    "%ifb_ccqe_filtered.root"    # can override using -o or --output
+        outputCommands: [
+                    "keep *_*_*_*",
+                    "drop raw::*_*_*_*",
+                    "drop art::*_*_*_*",
+                    "drop sim::*_*_*_*",
+                    "drop recob::Cluster_*_*_*",
+                    "drop recob::EndPoint2D_*_*_*",
+                    "drop recob::Vertex_*_*_*",
+                    "drop recob::Wires_*_*_*",
+                    "drop recob::PFParticle_*_*_*",
+                    "drop recob::Wire_*_*_*",
+                    "drop recob::SpacePoints_*_*_DataRecoStage2",
+                    "drop recob::Hits_trajcluster_*_DataRecoStage2",
+                    "drop recob::Seeds_*_*_DataRecoStage2",
+                    "drop *_*_*_McRecoAprStage1",
+                    "drop *_*_*_DataRecoAprStage1",
+                    "drop *_*_*_DetsimNoNoise",
+                    "drop *_*_*_Swizzler"
+                    ]
+    }
+}
