@@ -58,7 +58,7 @@ physics:
     }
     stream1:  [ out1 ]
     filter: [ EventsFilter ] #Directory for histograms
-    end_paths: [ filter ]
+    end_paths: [ filter,stream1 ]
 }
 
 
