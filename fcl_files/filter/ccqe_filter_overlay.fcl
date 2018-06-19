@@ -13,16 +13,6 @@
 #include "photpropservices_microboone.fcl"
 #include "triggeralgo_service.fcl"
 
-#include "flashmatchalg.fcl"
-#include "flashmatchcalib.fcl"
-#include "fiducial_volume_settings.fcl"
-#include "ubflashfinder.fcl"
-#include "neutrinomcflash.fcl"
-#include "neutrinoflashmatch.fcl"
-#include "photonactivity.fcl"
-#include "tpcneutrinoidfilter_microboone.fcl"
-
-#include "my_flashmatchcalib.fcl"
 
 process_name: RunErezCCQEfilter
 
@@ -68,7 +58,7 @@ physics:
     }
     stream1:  [ out1 ]
     filter: [ EventsFilter ] #Directory for histograms
-    end_paths: [ stream1,filter ]
+    end_paths: [ stream1 ]
 }
 
 

@@ -59,9 +59,11 @@ ub::ErezCCQEFilter::ErezCCQEFilter(fhicl::ParameterSet const & p)
 bool ub::ErezCCQEFilter::filter(art::Event & evt)
 {
     int run = evt.run();
-    std::cout << "run: "<< run << std::endl;
+    //    int subrun = evt.subRun();
+    int event = evt.id().event();
+    std::cout << "run: "<< run << ", event: "<< event << std::endl;
     
-    if (run < 10) return true;
+    if (run==7004 && (event == 21860 || event==21859|| event==21857)) return true;
 
     return false;
 }
