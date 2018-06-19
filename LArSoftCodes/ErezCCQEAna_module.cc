@@ -898,6 +898,9 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     // the distance of the matched flash
     // to that vertex, the N(PE) etc.
     // ----------------------------------------
+    Debug(5, "Before Neutrino Flash match from Marco");
+    evt.getByLabel(fFlashModuleLabel, flashListHandle);
+    Debug(5, "flashListHandle->size() is %",flashListHandle->size());
     int nBeamFlashes = 0;
     for (size_t n = 0; n < flashListHandle->size(); n++) {
         auto const& flash = (*flashListHandle)[n];
@@ -945,7 +948,8 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     BeamFlashSpec = f.pe_v;
     Debug(4,"f.pe_v.size(): %",f.pe_v.size());
     FlashMatch_mgr.Emplace(std::move(f));
-    
+    Debug(5, "Done Neutrino Flash match from Marco");
+
     
     // match
     // -------

@@ -119,8 +119,78 @@ outputs:
     out1:
     {
         module_type: RootOutput
-        fileName:    "%ifb_reweighted_mA.root"    # default, can override using -o or --output
+        fileName:    "%ifb_reweighted_mA_slimmed.root"    # default, can override using -o or --output
         dataTier:    "reconstructed"
         compressionLevel: 1
+        outputCommands: [
+                            "keep *_*_*_*",
+                            "drop raw::*_*_*_*",
+                            "drop art::*_*_*_*",
+                            "drop sim::*_*_*_*",
+                            "drop recob::Cluster_*_*_*",
+                            "drop recob::EndPoint2D_*_*_*",
+                            "drop recob::Vertex_*_*_*",
+                            "drop recob::Wires_*_*_*",
+                            "drop recob::PFParticle_*_*_*",
+                            "drop recob::Wire_*_*_*",
+                            "drop recob::SpacePoint_*_*_*",
+                            "drop recob::SpacePoints_pandoraCosmic_*_DataRecoStage2",
+                            "drop recob::SpacePoints_*_*_DataRecoStage2",
+                            "drop recob::Hits_trajcluster_*_DataRecoStage2",
+                            "drop recob::Seeds_*_*_DataRecoStage2",
+                            "drop recob::*_*_*_SpacePoint",
+                            "drop recob::Seed_*_*_*",
+                            "drop recob::Shower_*_*_*",
+                            "drop recob::*_*_pandoraCosmic_*",
+                            "drop *_*_pandoraCosmic_*",
+                            "drop recob::*_*_pandoraCosmic_DataRecoStage2",
+                            "drop *_*_*_McRecoAprStage1",
+                            "drop *_*_*_DataRecoAprStage1",
+                            "drop *_*_*_DetsimNoNoise",
+                            "drop *_*_*_Swizzler",
+                            #"drop *_*_*_OverlayStage1a",
+                            #"keep *_*_simpleFlashBeam_OverlayStage1a",
+                            "drop *_*_*_DetSim",
+                            "drop *_*_pmtrack_*",
+                            "drop *_*_trajcluster_*",
+"drop *_*_pandoraNuPMA_*",
+"drop *_*_pandoraNuKalmanTrackFlashMatch_*",
+"drop *_*_pandoraCosmicT0RecoBeam_*",
+"drop *_*_pandoraCosmicKHitpid_*",
+"drop *_*_pandoraCosmicKHit_*",
+"drop *_*_pandoraCosmicKHitFlashMatch_*",
+"drop *_*_pmtrackcalo_*"
+                            ]
     }
 }
+
+
+
+
+
+
+services.message.destinations :
+{
+    STDCOUT:
+    {
+        type:      "cout"      #tells the message service to output this destination to cout
+        threshold: "WARNING"   #tells the message service that this destination applies to WARNING and higher level messages
+        append:     true       #says to append all messages to the output
+        categories:
+        {
+            ChannelFilter:
+            {
+                limit: 0
+                reportEvery: 0
+            }
+            default:
+            {
+                limit: -1  #don't print anything at the infomsg level except the explicitly named categories
+                reportEvery: 1
+            }
+        }
+    }
+}
+
+
+
