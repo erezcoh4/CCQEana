@@ -1,12 +1,10 @@
 '''
     usage:
     ------
-    Afro files:
+    Afro files, June 2018:
     python mac/genie_to_csv.py -mA=0.99 -evf=0.01
-    python mac/genie_to_csv.py --DataType=argon40_numu_mA_0_99 -evf=0.01
-    make && python mac/genie_to_csv.py --DataType=uboone_CCinclMEC_argon40_numu_mA_0_99 -evf=1
     
-    My files:
+    My files, May 2018:
     python mac/genie_to_csv.py --DataType=40Ar_spline_CCinclMEC_muons_mA0.40 -evf=0.01
     
 '''
