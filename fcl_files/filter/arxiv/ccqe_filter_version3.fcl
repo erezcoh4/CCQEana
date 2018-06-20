@@ -1,0 +1,39 @@
+#include "reco_uboone_data_mcc8_driver_common.fcl"
+
+process_name : CCQEFilter
+
+source : {
+    module_type : RootInput
+    maxEvents   : -1
+    inputCommands: [ "keep *_*_*_*"]
+}
+
+services : {
+    TFileService:           { fileName: "CCQEFilter_hist.root" }
+    TimeTracker:            {}
+    MemoryTracker:          {}
+    RandomNumberGenerator:  {}                     #ART native random number generator
+    @table::microboone_reco_data_services
+    message:                @local::microboone_message_services_prod_debug
+}
+
+outputs: {
+    out: { module_type: RootOutput
+            fileName: "outfile_ccqe_filter.root"
+            fastCloning: true
+            compressionLevel: 1
+            SelectEvents: ccqefilter
+    }
+}
+
+physics: {
+    filters : {
+        ccqefilter: {
+        module_type: "ErezCCQEFilter" #module name
+        }
+    }
+    ccqe_path :     [ ccqefilter ]
+    trigger_paths : [ ccqe_path ] # this part actually runs the filter (ErezCCQEFilter_module) on the input file
+    output :        [ out ]
+    end_paths:      [ ccqe_path ]
+}

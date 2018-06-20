@@ -28,7 +28,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "overlay_events.root" closeFileFast: false}
+  TFileService: { fileName: "prodgenie_bnb_nu_uboone_overlay_mcc8.11.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info

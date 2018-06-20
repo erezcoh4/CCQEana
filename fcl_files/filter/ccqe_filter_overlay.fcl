@@ -28,19 +28,105 @@ services:
     @table::microboone_simulation_services
 }
 
+
+services.DetectorClocksService.InheritClockConfig:                      false
+services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos
+
+
+
 source:
 {
-  module_type: RootInput
-  maxEvents:   -1
+    module_type: RootInput
+    maxEvents:   -1
 }
+
+
+
+
+
+genie_microboone_eventweight:
+{
+    module_type:	"EventWeight"
+    
+    # Ma +/- N(sigma) for CCQE-like analysis
+    # Ref. [https://arxiv.org/pdf/1510.05494.pdf] states that
+    # mA = 0.990 - 15% + 25% = 0.99 - 0.1485 + 0.2475 = (0.8415-1.2375) GeV/c2
+    # this means that
+    # mA + 1.4545\sigma = 0.99 + 1.4545*0.2475 = 1.35
+    # mA + 2.909\sigma = 0.99 + 2.909*0.2475 = 1.71
+    # mA - 2.289\sigma = 0.99 - 1.952*0.1485 = 0.7
+    # mA + 2.289\sigma = 0.99 - 2.289*0.1485 = 0.4
+    
+    weight_functions: [ evwgh_mA099,evwgh_mA135, evwgh_mA171, evwgh_mA070, evwgh_mA040 ]
+
+    # throw exception if weight outside limits
+    min_weight: 0
+    max_weight: 100
+
+    genie_module_label:    generator
+
+    evwgh_mA099 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-0.0001] # corresponds to Ma = 0.99 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA135 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [1.4545] # corresponds to Ma = 1.35 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA171 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [2.909] # corresponds to Ma = 1.71 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    
+    evwgh_mA070 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-1.952] # corresponds to Ma = 0.7 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA040 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-2.289] # corresponds to Ma = 0.4 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+}
+
+
+
 
 
 physics:
 {
+    producers:
+    {
+        genieeventweight:    @local::genie_microboone_eventweight
+    }
 
     filters:
     {
-        EventsFilter:
+        ccqefilter:
         {
         module_type:                      "ErezCCQEFilter"
         VerbosityLevel:                   1
@@ -56,46 +142,87 @@ physics:
         CaliPIDModuleLabel:               "pandoraNucalipid"
         }
     }
-    stream1:  [ out1 ]
-    filter: [ EventsFilter ] #Directory for histograms
-    end_paths: [ filter,stream1 ]
+
+    simulate: [ genieeventweight ]
+
+
+    # define the producer and filter modules for this path, order matters,
+    # filters reject all following items.  see lines starting physics.producers below
+    filter:         [ ccqefilter ]
+
+    # define the output stream, there could be more than one if using filters
+    stream1:        [ out1 ]
+
+    # trigger_paths is a keyword and contains the paths that modify the art::event,
+    # i.e. filters and producers
+    trigger_paths:  [ filter , simulate ]
+
+
+    # end_paths is a keyword and contains the paths that do not modify the art::Event,
+    # i.e. analyzers and output streams.  these all run simultaneously
+    end_paths:      [ stream1 ]
 }
 
 
-services.DetectorClocksService.InheritClockConfig:                      false
-services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos
 
 
 
-
-
-
-outputs.out1.fileName: "%ifb_ccqe_filtered.root"
+# block to define where the output goes.  if you defined a filter in the physics
+# block and put it in the trigger_paths then you need to put a
+#
+#       SelectEvents: {SelectEvents: [XXX]}
+#
+# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
 outputs:
 {
     out1:
     {
         module_type: RootOutput
+        fileName:    "%ifb_ccqe_filtered_mA_reweighted.root" # can override using -o or --output
         dataTier:    "reconstructed"
-        fileName:    "%ifb_ccqe_filtered.root"    # can override using -o or --output
-        outputCommands: [
-                    "keep *_*_*_*",
-                    "drop raw::*_*_*_*",
-                    "drop art::*_*_*_*",
-                    "drop sim::*_*_*_*",
-                    "drop recob::Cluster_*_*_*",
-                    "drop recob::EndPoint2D_*_*_*",
-                    "drop recob::Vertex_*_*_*",
-                    "drop recob::Wires_*_*_*",
-                    "drop recob::PFParticle_*_*_*",
-                    "drop recob::Wire_*_*_*",
-                    "drop recob::SpacePoints_*_*_DataRecoStage2",
-                    "drop recob::Hits_trajcluster_*_DataRecoStage2",
-                    "drop recob::Seeds_*_*_DataRecoStage2",
-                    "drop *_*_*_McRecoAprStage1",
-                    "drop *_*_*_DataRecoAprStage1",
-                    "drop *_*_*_DetsimNoNoise",
-                    "drop *_*_*_Swizzler"
-                    ]
+        saveMemoryObjectThreshold: 0
+        compressionLevel: 1
+        SelectEvents: [ filter ]
+        outputCommands: [   "keep *_*_*_*",
+                            "drop raw::*_*_*_*","drop art::*_*_*_*","drop sim::*_*_*_*",
+                            "drop recob::Cluster_*_*_*","drop recob::EndPoint2D_*_*_*","drop recob::Vertex_*_*_*","drop recob::PFParticle_*_*_*",
+                            "drop recob::Wires_*_*_*","drop recob::Wire_*_*_*","drop recob::SpacePoints_*_*_DataRecoStage2",
+                            "drop recob::Hits_trajcluster_*_DataRecoStage2","drop recob::Seeds_*_*_DataRecoStage2",
+                            "drop *_*_*_McRecoAprStage1","drop *_*_*_DataRecoAprStage1","drop *_*_*_DetsimNoNoise","drop *_*_*_Swizzler"
+                        ]
     }
 }
+
+
+
+
+
+
+
+services.message.destinations :
+{
+    STDCOUT:
+    {
+        type:      "cout"      #tells the message service to output this destination to cout
+        threshold: "WARNING"   #tells the message service that this destination applies to WARNING and higher level messages
+        append:     true       #says to append all messages to the output
+        categories:
+        {
+            ChannelFilter:
+            {
+                limit: 0
+                reportEvery: 0
+            }
+            default:
+            {
+                limit: -1  #don't print anything at the infomsg level except the explicitly named categories
+                reportEvery: 1
+            }
+        }
+    }
+}
+
+
+
+
+
