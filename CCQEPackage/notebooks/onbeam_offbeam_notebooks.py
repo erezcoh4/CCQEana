@@ -685,47 +685,47 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted May-21, 2018)
-def plot_stacked_MCsamples( reducedOverlay=None
-                           , ax=None, debug=0,overlay_scaling=None,cut_name='no cut'
+# Nov-20,2017 (last editted June-22, 2018)
+def plot_stacked_MCsamples( OverlaySamples=None
+                           , ax=None, debug=0,overlay_scaling=None
                            , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
-                           , remove_ticks_x=False, remove_ticks_y=False 
+                           , remove_ticks_x=False, remove_ticks_y=False
                            , xlim=None
                            , do_add_legend=False
                            , do_individual_histograms=True
                            , stackColor='black',stackLabel='overlay'):
     '''
-    return: h, bins
-            stacked histogram values and bins,
-            of the samples from the overlay: 
-            (cosmic, other-pairs) + 1mu 1p pairs
-    '''
+        return: h, bins
+        stacked histogram values and bins,
+        of the samples from the overlay:
+        (cosmic, other-pairs) + 1mu 1p pairs
+        '''
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
     h,labels,colors,N = dict(),dict(),dict(),dict()
     
     for i_pair_type,pair_type in enumerate(pair_types):
-        sample = reducedOverlay[cut_name][pair_type]
+        sample = OverlaySamples[pair_type] #reducedOverlay[cut_name][pair_type]
         N[pair_type] = float(len(sample))
-        Noriginal = len(reducedOverlay['no cut'][pair_type])
-        labels[pair_type] = MClabels[i_pair_type]+' (%.1f'%(100.*N[pair_type]/Noriginal)+'%)'
+        #Noriginal = len(reducedOverlay['no cut'][pair_type])
+        labels[pair_type] = MClabels[i_pair_type]#+' (%.1f'%(100.*N[pair_type]/Noriginal)+'%)'
         colors[pair_type] = MCcolors[i_pair_type];
         x = sample[var]; x = x[x<1e5];
         h[pair_type],edges = np.histogram(x,bins=bins)
         h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
     if do_individual_histograms:#{
-
+        
         # mu-p
         plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
-            ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
+                ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
         # CC 1p 0pi
         plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['CC 1p 0pi scaled'] , width=bin_width
-                ,color=colors['CC 1p 0pi'],alpha=alpha, label=labels['CC 1p 0pi'])
+                        ,color=colors['CC 1p 0pi'],alpha=alpha, label=labels['CC 1p 0pi'])
         # other pairs
         plt.bar(mid,h['cosmic scaled']+h['other pairs scaled'] , width=bin_width
                         ,color=colors['other pairs'],alpha=alpha , label=labels['other pairs'])
-                        # cosmic
+        # cosmic
         plt.bar(mid, h['cosmic scaled'] , width=bin_width
                         ,color=colors['cosmic'],alpha=alpha, label=labels['cosmic'])
     #}
@@ -737,12 +737,11 @@ def plot_stacked_MCsamples( reducedOverlay=None
     set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
              ,do_add_legend=do_add_legend
              ,xlim=(np.min(bins)-0.5*bin_width,np.max(bins)+0.5*bin_width) if xlim is None else xlim
-             ,remove_ticks_x=remove_ticks_x             
-             ,remove_ticks_y=remove_ticks_y                 
-            )    
+             ,remove_ticks_x=remove_ticks_x
+             ,remove_ticks_y=remove_ticks_y
+             )
     return h_stack , bins
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-
 
 
 
