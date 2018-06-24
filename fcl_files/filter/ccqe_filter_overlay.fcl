@@ -42,11 +42,11 @@ source:
 
 
 
-
-
 genie_microboone_eventweight:
 {
     module_type:	"EventWeight"
+    # for GENIE 2.10.X uses Messenger_production.xml from genie_phyopt
+    GENIEMsgThresholds: "Messenger_laconic.xml"
     
     # Ma +/- N(sigma) for CCQE-like analysis
     # Ref. [https://arxiv.org/pdf/1510.05494.pdf] states that
@@ -76,7 +76,7 @@ genie_microboone_eventweight:
     
     evwgh_mA135 : {
     type: Genie
-    random_seed: 1
+    random_seed: 2
     parameter_list:        ["QEMA"]
     parameter_sigma:       [1.4545] # corresponds to Ma = 1.35 GeV
     mode: reweight
@@ -85,7 +85,7 @@ genie_microboone_eventweight:
     
     evwgh_mA171 : {
     type: Genie
-    random_seed: 1
+    random_seed: 3
     parameter_list:        ["QEMA"]
     parameter_sigma:       [2.909] # corresponds to Ma = 1.71 GeV
     mode: reweight
@@ -95,7 +95,7 @@ genie_microboone_eventweight:
     
     evwgh_mA070 : {
     type: Genie
-    random_seed: 1
+    random_seed: 4
     parameter_list:        ["QEMA"]
     parameter_sigma:       [-1.952] # corresponds to Ma = 0.7 GeV
     mode: reweight
@@ -104,7 +104,7 @@ genie_microboone_eventweight:
     
     evwgh_mA040 : {
     type: Genie
-    random_seed: 1
+    random_seed: 5
     parameter_list:        ["QEMA"]
     parameter_sigma:       [-2.289] # corresponds to Ma = 0.4 GeV
     mode: reweight
@@ -155,7 +155,8 @@ physics:
 
     # trigger_paths is a keyword and contains the paths that modify the art::event,
     # i.e. filters and producers
-    trigger_paths:  [ filter , simulate ]
+    # trigger_paths:  [ filter , simulate ] to add producers
+    trigger_paths:  [ filter ]
 
 
     # end_paths is a keyword and contains the paths that do not modify the art::Event,

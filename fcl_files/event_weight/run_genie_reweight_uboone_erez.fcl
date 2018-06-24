@@ -153,13 +153,13 @@ outputs:
                             "drop *_*_*_DetSim",
                             "drop *_*_pmtrack_*",
                             "drop *_*_trajcluster_*",
-"drop *_*_pandoraNuPMA_*",
-"drop *_*_pandoraNuKalmanTrackFlashMatch_*",
-"drop *_*_pandoraCosmicT0RecoBeam_*",
-"drop *_*_pandoraCosmicKHitpid_*",
-"drop *_*_pandoraCosmicKHit_*",
-"drop *_*_pandoraCosmicKHitFlashMatch_*",
-"drop *_*_pmtrackcalo_*"
+                            "drop *_*_pandoraNuPMA_*",
+                            "drop *_*_pandoraNuKalmanTrackFlashMatch_*",
+                            "drop *_*_pandoraCosmicT0RecoBeam_*",
+                            "drop *_*_pandoraCosmicKHitpid_*",
+                            "drop *_*_pandoraCosmicKHit_*",
+                            "drop *_*_pandoraCosmicKHitFlashMatch_*",
+                            "drop *_*_pmtrackcalo_*"
                             ]
     }
 }
