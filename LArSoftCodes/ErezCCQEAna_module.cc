@@ -1600,7 +1600,7 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
 
     // event weight
     for (auto name: event_weight_names) {
-        Debug(0,"for (auto name: event_weight_names), name=%",name)
+        Debug(0,"for (auto name: event_weight_names), name=%",name);
         genie_file << name << ",";
     }
 
