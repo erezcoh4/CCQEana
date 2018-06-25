@@ -57,7 +57,7 @@ genie_microboone_eventweight:
     # mA - 2.289\sigma = 0.99 - 1.952*0.1485 = 0.7
     # mA + 2.289\sigma = 0.99 - 2.289*0.1485 = 0.4
     
-    weight_functions: [ evwgh_mA099,evwgh_mA135, evwgh_mA171, evwgh_mA070, evwgh_mA040 ]
+    weight_functions: [evwgh_mA099,evwgh_mA135,evwgh_mA171,evwgh_mA070,evwgh_mA040]
 
     # throw exception if weight outside limits
     min_weight: 0
@@ -155,8 +155,8 @@ physics:
 
     # trigger_paths is a keyword and contains the paths that modify the art::event,
     # i.e. filters and producers
-    # trigger_paths:  [ filter , simulate ] to add producers
-    trigger_paths:  [ filter ]
+    # trigger_paths:  [ filter ,  ] to add producers
+    trigger_paths:  [ filter , simulate ]
 
 
     # end_paths is a keyword and contains the paths that do not modify the art::Event,

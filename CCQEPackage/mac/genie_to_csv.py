@@ -22,11 +22,15 @@ print flags
 
 
 #infilename = flags.DataType
+acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
+Pmu_theta_acceptance_map_name = "Pmu_theta_5x5_bins"
+Pp_theta_acceptance_map_name = "Pp_theta_7x7_bins"
 
 gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
                ,"CC_100k_mA_%.2f"%float(flags.mA) # RootFileName
                ,"gst" # RootFileName
-               ,flags.verbose )
+               ,flags.verbose
+               ,acceptance_map_path,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name)
 gf.HeaderCSV()
 
 
@@ -36,6 +40,7 @@ for i_event in range(int(flags.evnts_frac*Nevents)): #{
     if i_event%(Nevents/10)==0: print 'reading event',i_event,'(%.0f'%(100*float(i_event)/Nevents),'%)'
     gf.ReadEvent(i_event)
     gf.SetTopology()
+    gf.SetMicroBooNEWeight()
     #    gf.Print()
     if gf.GetCC_1p_200MeVc_0pi() is True:#{
         #        print 'CC1p0pi event!'

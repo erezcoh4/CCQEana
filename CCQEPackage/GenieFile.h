@@ -16,10 +16,14 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "TFile.h"
 #include "TTree.h"
 #include "Rtypes.h"
+#include "TRandom3.h"
 #include "GENIEinteraction.h"
 
 #define NMAX 40
@@ -37,30 +41,38 @@ public:
     GenieFile( TString fPath
               ,TString fRootFileName
               ,TString fRootTreeName
-              ,int fdebug );
+              ,int fdebug
+              ,TString fAccMapPath
+              ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName);
     
 
     
     // SETters
-    bool    SetInTree ();
+    bool                         SetInTree ();
+    void         SetPmuThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
+    void         SetPpThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
     
     
     // GETters
-    int                   GetNevents () const {return (int)GenieTree->GetEntries();};
-    bool            GetCC_Np_200MeVc () const {return IsCC_Np_200MeVc;};
-    bool            GetCC_1p_200MeVc () const {return IsCC_1p_200MeVc;};
-    bool        GetCC_1p_200MeVc_0pi () const {return IsCC_1p_200MeVc_0pi;};
+    int                         GetNevents () const {return (int)GenieTree->GetEntries();};
+    bool                  GetCC_Np_200MeVc () const {return IsCC_Np_200MeVc;};
+    bool                  GetCC_1p_200MeVc () const {return IsCC_1p_200MeVc;};
+    bool              GetCC_1p_200MeVc_0pi () const {return IsCC_1p_200MeVc_0pi;};
     
     // funcionality
-    bool           ReadEvent (int fi_event);
-    bool           HeaderCSV ();
-    bool         StreamToCSV ();
-    bool               Print ();
-    bool         SetTopology ();
-    bool          Initialize ();
-    bool              EndJob ();
+    bool                         ReadEvent (int fi_event);
+    bool                         HeaderCSV ();
+    bool                       StreamToCSV ();
+    bool                             Print ();
+    bool                       SetTopology ();
+    bool                        Initialize ();
+    bool                            EndJob ();
     
-    float     LightConeAlpha ( TLorentzVector v ){ return (v.E() - v.Pz())/(mAr40/40.); };
+    std::vector<double>              Read1dArrayFromFile (TString filename);
+    std::vector<std::vector<double>> Read2dArrayFromFile (TString filename);
+    void                             SetMicroBooNEWeight ();
+    int                                     FindWhichBin ( double x, std::vector<double> bins );
+    float                                 LightConeAlpha ( TLorentzVector v ){ return (v.E() - v.Pz())/(mAr40/40.); };
     
     int     debug=0;
     void Debug(Int_t verobosity_level, const char* format) // base function
@@ -115,7 +127,8 @@ private:
     int     ni; // Number of 'primary' particles in hadronic system.
     Int_t   pdgi[NMAX]; //PDG code of kth 'primary' particle in hadronic system (before FSI)
     double  pxi[NMAX],pyi[NMAX],pzi[NMAX];
-    
+    // a weight to the event based on MicroBooNE acceptance
+    double  MicroBooNEWeight_Pmu_theta=0, MicroBooNEWeight_Pp_theta=0;
     
     // my variables for CC 1p 0pi
     bool            CC1p0pi=false;
@@ -124,6 +137,14 @@ private:
     TLorentzVector  proton, muon, nu, q, Pmiss;
     TLorentzVector  proton_before_FSI;   // before FSI
     std::vector<TLorentzVector> protons, neutrons;
+    
+    // event weight for detector-effect emulation
+    std::vector<double>              Pmu_xbins, Pmu_theta_ybins;
+    std::vector<std::vector<double>> Pmu_theta_acceptance, Pmu_theta_acc_err;
+    std::vector<double>              Pp_xbins, Pp_theta_ybins;
+    std::vector<std::vector<double>> Pp_theta_acceptance, Pp_theta_acc_err;
+    
+    TRandom3  rand;
 };
 
 #endif

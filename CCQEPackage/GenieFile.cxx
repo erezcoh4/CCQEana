@@ -7,16 +7,115 @@
 GenieFile::GenieFile( TString fPath
                      ,TString fRootFileName     // without the .root suffix (!)
                      ,TString fRootTreeName
-                     ,int fdebug  ):
+                     ,int fdebug
+                     ,TString fAccMapPath
+                     ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName):
+debug(fdebug),
 Path( fPath ),
 RootFileName( fRootFileName + ".root"),
 RootTreeName( fRootTreeName ),
-OutputCSVname( fRootFileName + ".csv"),
-debug(fdebug)
+OutputCSVname( fRootFileName + ".csv")
 {
     SetInTree();
+    SetPmuThetaAcceptanceMaps(fAccMapPath,fPmuThetaAccMapName);
+    SetPpThetaAcceptanceMaps(fAccMapPath,fPpThetaAccMapName);
 }
 
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+std::vector<double> GenieFile::Read1dArrayFromFile(TString filename){
+    // read a 1d array from a file
+    // which is of unknown size
+    // and each line is a different number
+    // e.g.
+    // 1
+    // 2.1
+    // 3.05
+    // 5.2
+    // ....
+    Debug(0,"GenieFile::Read1dArrayFromFile(%)",filename);
+    ifstream fin;
+    fin.open(filename);
+    std::vector<double> numbers;
+    double number;
+    while(fin >> number) //  >> delim
+        numbers.push_back(number);
+    fin.close();
+    if(debug>0){
+        SHOWstdVector(numbers);
+    }
+    return numbers;
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+std::vector<std::vector<double>> GenieFile::Read2dArrayFromFile(TString filename){
+    // read a 2d array from a file
+    // which is of unknown size
+    // and each line is a different number
+    // e.g.
+    // 1,3,2.2,10
+    // 2.1,3.0,8.2,1
+    // 3.05,1.1,29.2,3
+    // ....
+    Debug(0,"GenieFile::Read2dArrayFromFile(%)",filename);
+    ifstream fin;
+    fin.open(filename);
+    std::vector<std::vector<double>> numbers;
+    string line;
+    while(!fin.eof()){
+        getline ( fin, line, '\n' );
+        stringstream sep(line);
+        string numbers_in_line;
+        numbers.push_back(std::vector<double>());
+        while (getline(sep, numbers_in_line, ',')) {
+            numbers.back().push_back(stod(numbers_in_line));
+        }
+    }
+    fin.close();
+    if(debug>0){
+        for (auto row : numbers) {
+            for (auto number : row) {
+                cout << std::setprecision(5) << number << ' ';
+            }
+            cout << '\n';
+        };
+    }
+    return numbers;
+}
+
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetPmuThetaAcceptanceMaps(TString fAccMapPath,TString fAccMapName){
+    TString xbinsfilename   = fAccMapPath + fAccMapName + "_xbins.csv";
+    TString ybinsfilename   = fAccMapPath + fAccMapName + "_ybins.csv";
+    TString accfilename     = fAccMapPath + fAccMapName + "_acceptance.csv";
+    TString errfilename     = fAccMapPath + fAccMapName + "_acc_err.csv";
+    
+    Pmu_xbins               = Read1dArrayFromFile(xbinsfilename);
+    Pmu_theta_ybins         = Read1dArrayFromFile(ybinsfilename);
+    Pmu_theta_acceptance    = Read2dArrayFromFile(accfilename);
+    Pmu_theta_acc_err       = Read2dArrayFromFile(errfilename);
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetPpThetaAcceptanceMaps(TString fAccMapPath,TString fAccMapName){
+    TString xbinsfilename   = fAccMapPath + fAccMapName + "_xbins.csv";
+    TString ybinsfilename   = fAccMapPath + fAccMapName + "_ybins.csv";
+    TString accfilename     = fAccMapPath + fAccMapName + "_acceptance.csv";
+    TString errfilename     = fAccMapPath + fAccMapName + "_acc_err.csv";
+    
+    Pp_xbins                = Read1dArrayFromFile(xbinsfilename);
+    Pp_theta_ybins          = Read1dArrayFromFile(ybinsfilename);
+    Pp_theta_acceptance     = Read2dArrayFromFile(accfilename);
+    Pp_theta_acc_err        = Read2dArrayFromFile(errfilename);
+}
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -80,6 +179,7 @@ bool GenieFile::Initialize(){
     neutrons.clear();
     return true;
 }
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::ReadEvent (int fi_event){
     i_event = fi_event;
@@ -134,7 +234,11 @@ bool GenieFile::HeaderCSV (){
     << "alpha_q"    << ","
     << "alpha_miss"
     << "Pp_before_FSI"         << "," << "Pp_before_FSI_theta"    << ","
-    << "Pp_before_FSI_x"       << "," << "Pp_before_FSI_y"        << "," << "Pp_before_FSI_z"
+    << "Pp_before_FSI_x"       << "," << "Pp_before_FSI_y"        << "," << "Pp_before_FSI_z" << ",";
+    
+    // weight to the event based on MicroBooNE acceptance
+    csv_file
+    << "MicroBooNEWeight_Pmu_theta"
     << endl;
     
     return true;
@@ -183,7 +287,11 @@ bool GenieFile::StreamToCSV (){
     << LightConeAlpha( q )      << ","
     << LightConeAlpha( proton ) - LightConeAlpha( q )   
     << proton_before_FSI.P()   << "," << proton_before_FSI.Theta()    << ","
-    << proton_before_FSI.Px()  << "," << proton_before_FSI.Py()       << "," << proton_before_FSI.Pz()
+    << proton_before_FSI.Px()  << "," << proton_before_FSI.Py()       << "," << proton_before_FSI.Pz() << ",";
+    
+    // weight to the event based on MicroBooNE acceptance
+    csv_file
+    << MicroBooNEWeight_Pmu_theta
     << endl;
     
 
@@ -309,6 +417,72 @@ bool GenieFile::SetTopology (){
 //    }
     
     return true;
+}
+
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+int GenieFile::FindWhichBin( double x, std::vector<double> bins ){
+    for (size_t i=0; i<bins.size()-1; i++) {
+        if ( bins.at(i) < x && x < bins.at(i+1) ){
+            Debug(4,"GenieFile::FindWhichBin( %, std::vector<double> ): bin %",x,i);
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetMicroBooNEWeight (){
+    int fDebug=3;
+    Debug(fDebug,"GenieFile::SetMicroBooNEWeight ()");
+    // assign a weight to the event based on MicroBooNE acceptance
+    // as a function of the muon momentum and scattering angle
+    //
+    // To account for the uncertainties in the acceptance,
+    // weight generated from a Gaussian distribution fuction
+    // with the mean being the acceptance from the overlay
+    // and the sigma being the uncertainty in this acceptance
+    
+    MicroBooNEWeight_Pmu_theta = MicroBooNEWeight_Pp_theta = 0;
+    
+    // (1) find the xbin and ybin of the event
+    int Pmu_bin = FindWhichBin( muon.P(), Pmu_xbins );
+    Debug(fDebug,"GenieFile::FindWhichBin( muon.P()=%, Pmu_xbins): %",muon.P(),Pmu_bin);
+    int Pmu_theta_bin = FindWhichBin( muon.Theta(), Pmu_theta_ybins );
+    Debug(fDebug,"GenieFile::FindWhichBin( muon.Theta()=%, Pmu_theta_ybins): %",muon.Theta(),Pmu_theta_bin);
+    
+    // (2) apply the weight
+    if ( Pmu_bin<0 || Pmu_theta_bin<0 ) {
+        MicroBooNEWeight_Pmu_theta = 0;
+    } else {
+        double mean  = Pmu_theta_acceptance.at(Pmu_theta_bin).at(Pmu_bin);
+        Debug(fDebug,"MicroBooNE Weight[Pmu-theta bin %][Pmu bin %]: %",Pmu_theta_bin,Pmu_bin,mean);
+        double sigma = Pmu_theta_acc_err.at(Pmu_theta_bin).at(Pmu_bin);
+        MicroBooNEWeight_Pmu_theta = rand.Gaus( mean , sigma );
+    }
+
+    
+    
+    // (1) find the xbin and ybin of the event
+    int Pp_bin = FindWhichBin( proton.P(), Pp_xbins );
+    Debug(fDebug,"GenieFile::FindWhichBin( proton.P()=%, Pp_xbins): %",proton.P(),Pp_bin);
+    int Pp_theta_bin = FindWhichBin( proton.Theta(), Pp_theta_ybins );
+    Debug(fDebug,"GenieFile::FindWhichBin( muon.Theta()=%, Pp_theta_ybins): %",proton.Theta(),Pp_theta_bin);
+    
+    // (2) apply the weight
+    if ( Pp_bin<0 || Pp_theta_bin<0 ) {
+        MicroBooNEWeight_Pp_theta = 0;
+    } else {
+        double mean  = Pp_theta_acceptance.at(Pp_theta_bin).at(Pp_bin);
+        Debug(fDebug,"MicroBooNE Weight[Pp-theta bin %][Pp bin %]: %",Pp_theta_bin,Pp_bin,mean);
+        double sigma = Pp_theta_acc_err.at(Pp_theta_bin).at(Pp_bin);
+        MicroBooNEWeight_Pp_theta = rand.Gaus( mean , sigma );
+    }
+
+    
+    Debug(fDebug,"MicroBooNEWeight_Pp_theta: %",MicroBooNEWeight_Pp_theta);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

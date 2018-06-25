@@ -137,6 +137,7 @@ public:
     void           CollectMCinformation (art::Event const & evt);
     void            CollectEventWeights (art::Event const & evt);
     void                  RunFlashMatch (art::Event const & evt);
+    void                   OpenCSVFiles ();
     void                    StreamToCSV ();
     void                   PrintAndFill ();
     
@@ -203,6 +204,7 @@ private:
     
     short   isdata;
     
+    bool    CSVfilesAlreadyOpened=false;
     bool    DoAnalyze=true;
     bool    MCmode=false;
     bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
@@ -340,6 +342,8 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
     CollectHits( evt );
     CollectFlashes( evt );
     CollectTracks( evt );
+    
+    // if this is an MC event, collect all MC information
     if (MCmode) {
         CollectMCinformation( evt );
         CollectEventWeights(evt);
@@ -1441,10 +1445,47 @@ void ub::ErezCCQEAna::RunFlashMatch(art::Event const & evt){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void ub::ErezCCQEAna::OpenCSVFiles(){
+    // output csv files
+    Debug( 2, Form( "DoWriteEventsInformation: %d",DoWriteEventsInformation) );
+    if (DoWriteEventsInformation) {
+        events_file.open(fDataSampleLabel+"_events.csv");
+        cout << "opened events file: "+fDataSampleLabel+"_events.csv" << endl;
+        HeaderEventsInCSV();
+    }
+    
+    
+    Debug( 2, Form( "DoWriteGNEIEInformation: %d",DoWriteGENIEInformation) );
+    if (DoWriteGENIEInformation) {
+        genie_file.open(fDataSampleLabel+"_genie.csv");
+        cout << "opened genie file: "+fDataSampleLabel+"_genie.csv" << endl;
+        HeaderGENIEInCSV();
+    }
+    
+    Debug( 2, Form( "DoWriteTracksInformation: %d",DoWriteTracksInformation) );
+    if (DoWriteTracksInformation) {
+        tracks_file.open(fDataSampleLabel+"_tracks.csv");
+        cout << "opened tracks file: "+fDataSampleLabel+"_tracks.csv" << endl;
+        HeaderTracksInCSV();
+    }
+    //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
+    vertices_file.open(fDataSampleLabel+"_vertices.csv");
+    cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
+    HeaderVerticesInCSV();
+    CSVfilesAlreadyOpened = true;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::StreamToCSV(){
+    
     // ----------------------------------------
     // write information to CSV files
     // ----------------------------------------
+    // if this is the first event - open and write a header into the csv files
+    if (!CSVfilesAlreadyOpened) {
+        OpenCSVFiles();
+    }
+    
     Debug(4,"ub::ErezCCQEAna::StreamToCSV()");
     if (DoWriteEventsInformation) {
         StreamEventsToCSV();
@@ -1463,7 +1504,6 @@ void ub::ErezCCQEAna::StreamToCSV(){
     // ----------------------------------------
     StreamVerticesToCSV();
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::HeaderEventsInCSV(){
@@ -1541,7 +1581,7 @@ void ub::ErezCCQEAna::StreamEventsToCSV(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::HeaderGENIEInCSV(){
-    
+    Debug(0,"ub::ErezCCQEAna::HeaderGENIEInCSV()");
     genie_interactions_ctr = 0;
     
     genie_file
@@ -1587,7 +1627,6 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     << "truth_Pv_theta" << ",";
     
     
-    
     // only for 1mu-1p vertices
     genie_file
     << "reconstructed mu-p distance" << "," ;
@@ -1600,10 +1639,9 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
 
     // event weight
     for (auto name: event_weight_names) {
-        Debug(0,"for (auto name: event_weight_names), name=%",name);
+        Debug(3,"for (auto name: event_weight_names), name=%",name);
         genie_file << name << ",";
     }
-
     
     // v-interaction point in beam coordinates system
     genie_file
@@ -1614,7 +1652,6 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     
     // finish
     genie_file << endl;
-    
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -2177,7 +2214,6 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
     }
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::PrintAndFill(){
     Debug(4,"ub::ErezCCQEAna::PrintAndFill()");
@@ -2284,33 +2320,6 @@ void ub::ErezCCQEAna::beginJob(){
     fPOTTree->Branch("subrun",&subrun,"subrun/I");
     
     SHOW(debug);
-    // output csv files
-    Debug( 2, Form( "DoWriteEventsInformation: %d",DoWriteEventsInformation) );
-    if (DoWriteEventsInformation) {
-        events_file.open(fDataSampleLabel+"_events.csv");
-        cout << "opened events file: "+fDataSampleLabel+"_events.csv" << endl;
-        HeaderEventsInCSV();
-    }
-
-    
-    Debug( 2, Form( "DoWriteGNEIEInformation: %d",DoWriteGENIEInformation) );
-    if (DoWriteGENIEInformation) {
-        genie_file.open(fDataSampleLabel+"_genie.csv");
-        cout << "opened genie file: "+fDataSampleLabel+"_genie.csv" << endl;
-        HeaderGENIEInCSV();
-    }
-    
-    Debug( 2, Form( "DoWriteTracksInformation: %d",DoWriteTracksInformation) );
-    if (DoWriteTracksInformation) {
-        tracks_file.open(fDataSampleLabel+"_tracks.csv");
-        cout << "opened tracks file: "+fDataSampleLabel+"_tracks.csv" << endl;
-        HeaderTracksInCSV();
-    }
-    //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
-    vertices_file.open(fDataSampleLabel+"_vertices.csv");
-    cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
-    HeaderVerticesInCSV();
-    
     pot_total = 0;
     
     Printf("FlashMatch_mgr Configuration:");
@@ -2375,7 +2384,6 @@ void ub::ErezCCQEAna::endSubRun(const art::SubRun& sr){
     }
     Debug(4,"POT from this subrun: %" ,pot );
 }
-
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -2533,7 +2541,6 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     
     // event weight
     fEventWeightModuleLabel = p.get< std::string >("EventWeightModuleLabel");
-    event_weight_names      = p.get<std::vector<std::string> >      ("EventWeightNames");
     DoDebugRSE              = p.get<bool>                           ("DoDebugRSE",false);
     DebugRSEarray           = p.get<std::vector<std::vector<int>> > ("DebugRSE",{});
 }
@@ -2542,7 +2549,7 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::CollectEventWeights (art::Event const & evt){
-    int fDebug = 3 ;
+    int fDebug = 3;
     
     // June-14, 2018
     // reweighting for different mA values,
@@ -2571,7 +2578,6 @@ void ub::ErezCCQEAna::CollectEventWeights (art::Event const & evt){
             SHOW2(event_weight_names.at(i),event_weight_values.at(i));
         }
     }
- 
 }
 
 

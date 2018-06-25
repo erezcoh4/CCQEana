@@ -758,7 +758,7 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
     chi2 = 0
     Nbins_compares = 0
     for i_bin in range(len(bins)-1):
-        if chi2_xrange is None or (bins[i_bin]>=chi2_xrange[0] and bins[i_bin]<=chi2_xrange[1]):
+        if chi2_xrange is None or (bins[i_bin]>=chi2_xrange[0] and bins[i_bin]<chi2_xrange[1]):
             num = np.square( h1[i_bin] - h2[i_bin] )
             den = np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),1])
             chi2_bin = num / den
