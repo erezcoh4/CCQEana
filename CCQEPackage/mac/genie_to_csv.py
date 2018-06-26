@@ -24,7 +24,7 @@ print flags
 #infilename = flags.DataType
 acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
 Pmu_theta_acceptance_map_name = "Pmu_theta_5x5_bins"
-Pp_theta_acceptance_map_name = "Pp_theta_7x7_bins"
+Pp_theta_acceptance_map_name = "Pp_theta_5x5_bins"
 
 gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
                ,"CC_100k_mA_%.2f"%float(flags.mA) # RootFileName

@@ -238,7 +238,9 @@ bool GenieFile::HeaderCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
-    << "MicroBooNEWeight_Pmu_theta"
+    << "MicroBooNEWeight_Pmu_theta" << ","
+    << "MicroBooNEWeight_Pp_theta"  << ","
+    << "MicroBooNEWeight_Pmu_theta_Pp_theta"
     << endl;
     
     return true;
@@ -291,7 +293,9 @@ bool GenieFile::StreamToCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
-    << MicroBooNEWeight_Pmu_theta
+    << MicroBooNEWeight_Pmu_theta   << ","
+    << MicroBooNEWeight_Pp_theta    << ","
+    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta)
     << endl;
     
 
