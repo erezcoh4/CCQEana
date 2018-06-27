@@ -440,7 +440,9 @@ int GenieFile::FindWhichBin( double x, std::vector<double> bins ){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetMicroBooNEWeight (){
     int fDebug=3;
-    Debug(fDebug,"GenieFile::SetMicroBooNEWeight ()");
+    Debug(fDebug,"GenieFile::SetMicroBooNEWeight");
+    Debug(fDebug,"p(mu): %, \\theta(mu): %,p(p): %, \\theta(p): %",muon.P(),muon.Theta(),proton.P(),proton.Theta());
+    
     // assign a weight to the event based on MicroBooNE acceptance
     // as a function of the muon momentum and scattering angle
     //
@@ -453,16 +455,14 @@ void GenieFile::SetMicroBooNEWeight (){
     
     // (1) find the xbin and ybin of the event
     int Pmu_bin = FindWhichBin( muon.P(), Pmu_xbins );
-    Debug(fDebug,"GenieFile::FindWhichBin( muon.P()=%, Pmu_xbins): %",muon.P(),Pmu_bin);
     int Pmu_theta_bin = FindWhichBin( muon.Theta(), Pmu_theta_ybins );
-    Debug(fDebug,"GenieFile::FindWhichBin( muon.Theta()=%, Pmu_theta_ybins): %",muon.Theta(),Pmu_theta_bin);
-    
+    Debug(fDebug,"Pmu_bin: %, Pmu_theta_bin: %",Pmu_bin,Pmu_theta_bin);
     // (2) apply the weight
     if ( Pmu_bin<0 || Pmu_theta_bin<0 ) {
         MicroBooNEWeight_Pmu_theta = 0;
     } else {
         double mean  = Pmu_theta_acceptance.at(Pmu_theta_bin).at(Pmu_bin);
-        Debug(fDebug,"MicroBooNE Weight[Pmu-theta bin %][Pmu bin %]: %",Pmu_theta_bin,Pmu_bin,mean);
+        Debug(fDebug+1,"MicroBooNE Weight[Pmu-theta bin %][Pmu bin %]: %",Pmu_theta_bin,Pmu_bin,mean);
         double sigma = Pmu_theta_acc_err.at(Pmu_theta_bin).at(Pmu_bin);
         MicroBooNEWeight_Pmu_theta = rand.Gaus( mean , sigma );
     }
@@ -471,22 +471,20 @@ void GenieFile::SetMicroBooNEWeight (){
     
     // (1) find the xbin and ybin of the event
     int Pp_bin = FindWhichBin( proton.P(), Pp_xbins );
-    Debug(fDebug,"GenieFile::FindWhichBin( proton.P()=%, Pp_xbins): %",proton.P(),Pp_bin);
     int Pp_theta_bin = FindWhichBin( proton.Theta(), Pp_theta_ybins );
-    Debug(fDebug,"GenieFile::FindWhichBin( muon.Theta()=%, Pp_theta_ybins): %",proton.Theta(),Pp_theta_bin);
+    Debug(fDebug,"Pp_bin: %, Pp_theta_bin: %",Pp_bin,Pp_theta_bin);
     
     // (2) apply the weight
     if ( Pp_bin<0 || Pp_theta_bin<0 ) {
         MicroBooNEWeight_Pp_theta = 0;
     } else {
         double mean  = Pp_theta_acceptance.at(Pp_theta_bin).at(Pp_bin);
-        Debug(fDebug,"MicroBooNE Weight[Pp-theta bin %][Pp bin %]: %",Pp_theta_bin,Pp_bin,mean);
+        Debug(fDebug+1,"MicroBooNE Weight[Pp-theta bin %][Pp bin %]: %",Pp_theta_bin,Pp_bin,mean);
         double sigma = Pp_theta_acc_err.at(Pp_theta_bin).at(Pp_bin);
         MicroBooNEWeight_Pp_theta = rand.Gaus( mean , sigma );
     }
-
     
-    Debug(fDebug,"MicroBooNEWeight_Pp_theta: %",MicroBooNEWeight_Pp_theta);
+    Debug(fDebug,"muon weight: %, proton weight: %",MicroBooNEWeight_Pmu_theta,MicroBooNEWeight_Pp_theta);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -499,6 +497,7 @@ bool GenieFile::EndJob(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::Print(){
     SHOW(Q2);
+    EndEventBlock();
     return true;
 }
 
