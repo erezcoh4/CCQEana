@@ -399,21 +399,22 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit April-7)
+# Dec-6,2017 (last edit June-28)
 def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
                 , bins=np.linspace(0,30,31),markersize=12
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OnBeamColor, ecolor='black'
                 , do_add_legend=False , legend_loc='best',y_label='counts'
-                , remove_ticks_x=False, remove_ticks_y=False):
+                , remove_ticks_x=False, remove_ticks_y=False
+                , do_return_h=False):
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
 
     if ax is None: fig,ax=plt.subplots(figsize=figsize)
     x = OnBeamSample[var]
     h_OnBeam,edges = np.histogram( x , bins=bins )
-    h_OnBeam_err = np.sqrt(h_OnBeam)
+    h_OnBeam_err = np.array([np.max([1,np.sqrt(h_OnBeam[i])]) for i in range(len(h_OnBeam))])
     
     plt.errorbar( x = mid, xerr=bin_width/2., markersize=markersize
                  , y=h_OnBeam , yerr=h_OnBeam_err
@@ -432,8 +433,9 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
         else:
             leg=plt.legend(fontsize=fontsize,loc=legend_loc)
     plt.tight_layout()
-    if do_add_legend is False: return ax,h_OnBeam    
-    return ax,leg,h_OnBeam
+    if do_return_h is True: return h_OnBeam,h_OnBeam_err
+    if do_add_legend is False: return ax,h_OnBeam
+    return ax,leg,h_OnBeam,h_OnBeam_err
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 
