@@ -49,8 +49,28 @@
             <anadatatier>root-tuple</anadatatier>
             <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
             <memory>800</memory>
-            <disk>10GB</disk> <!-- 1 event ~= 1.6M, 10 files ~= 500 events ~= 0.8 GB -->
+            <disk>20GB</disk> <!-- 1 event ~= 1.6M, 10 files ~= 500 events ~= 0.8 GB -->
         </stage>
+        
+        
+        
+        <!-- Project stages -->
+        <stage name="event_weight">
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/event_weight/run_event_weight_overlay.fcl</fcl>
+            <inputdef>&defname;</inputdef>
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/event_weight/&name;</workdir>
+            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</logdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</outdir>
+            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/event_weight/&name;</bookdir>
+            <numjobs>&number_of_jobs;</numjobs>
+            <datatier>reconstructed</datatier>
+            <anadatatier>root-tuple</anadatatier>
+            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>800</memory>
+            <disk>20GB</disk> <!-- 1 event ~= 1.6M, 10 files ~= 500 events ~= 0.8 GB -->
+        </stage>
+        
         
         
         <stage name="ccqe_ana">

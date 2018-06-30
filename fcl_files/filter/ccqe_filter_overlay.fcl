@@ -155,8 +155,8 @@ physics:
 
     # trigger_paths is a keyword and contains the paths that modify the art::event,
     # i.e. filters and producers
-    # trigger_paths:  [ filter ,  ] to add producers
-    trigger_paths:  [ filter , simulate ]
+    # trigger_paths:  [ filter , simulate  ] to add producers
+    trigger_paths:  [ filter ]
 
 
     # end_paths is a keyword and contains the paths that do not modify the art::Event,
