@@ -56,7 +56,7 @@
         
         <!-- Project stages -->
         <stage name="event_weight">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/event_weight/run_event_weight_overlay.fcl</fcl>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/event_weight/run_genie_reweight_uboone_erez.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/event_weight/&name;</workdir>
