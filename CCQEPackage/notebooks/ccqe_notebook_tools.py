@@ -9,6 +9,15 @@ from scipy.optimize import leastsq
 from scipy.stats import norm
 from scipy.optimize import curve_fit
 
+#---------------------------------------------------------------------------------------------
+def theta_rad_label(theta):
+    if theta==0: return "0"
+    if np.abs(theta-np.pi)<0.001: return "$\pi$"
+    for n in range(2,10):
+        if np.abs(theta-(np.pi/n))<0.001:
+            return "$\pi/%d$"%n
+    return "$%.1f\pi$"%(theta/np.pi)
+#---------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------
 def print_and_say(string=''):#{
