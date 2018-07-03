@@ -9,6 +9,17 @@ from scipy.optimize import leastsq
 from scipy.stats import norm
 from scipy.optimize import curve_fit
 
+
+# ----------------------------------------------------------
+def find_x_poly(poly,y0,xmin=0,xmax=2):
+    roots = (poly - y0).roots
+    x_poly=-1
+    for root in roots:
+        if xmin<root and root<xmax:
+            x_poly = root
+    return x_poly
+# ----------------------------------------------------------
+
 #---------------------------------------------------------------------------------------------
 def theta_rad_label(theta):
     if theta==0: return "0"

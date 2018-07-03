@@ -75,6 +75,7 @@
         
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/ana/ccqe_ana_overlay.fcl</fcl>
+            <maxfilesperjob>1</maxfilesperjob>
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
