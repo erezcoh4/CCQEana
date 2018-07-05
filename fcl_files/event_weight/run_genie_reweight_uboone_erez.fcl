@@ -27,6 +27,7 @@ source:
     maxEvents:   -1        # Number of events to create
 }
 
+source.inputCommands: ["keep *_*_*_*", "drop sumdata::RunData_*_*_*" ]
 
 genie_microboone_eventweight:
 {
