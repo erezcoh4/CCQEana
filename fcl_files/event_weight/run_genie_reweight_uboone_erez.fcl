@@ -35,13 +35,17 @@ genie_microboone_eventweight:
     # Ma +/- N(sigma) for CCQE-like analysis
     # Ref. [https://arxiv.org/pdf/1510.05494.pdf] states that
     # mA = 0.990 - 15% + 25% = 0.99 - 0.1485 + 0.2475 = (0.8415 -> 1.2375) GeV/c2
+    
+    # x\sigma = (mA (>0.99) - 0.99)/0.245
+    # x\sigma = (0.99 - mA (<0.99))/0.1485
+    
     # this means that
     # mA + 1.4545\sigma = 0.99 + 1.4545*0.2475 = 1.35
     # mA + 2.909\sigma = 0.99 + 2.909*0.2475 = 1.71
-    # mA - 2.289\sigma = 0.99 - 1.952*0.1485 = 0.7
+    # mA - 1.952\sigma = 0.99 - 1.952*0.1485 = 0.7
     # mA + 2.289\sigma = 0.99 - 2.289*0.1485 = 0.4
-
-    weight_functions: [ evwgh_mA099,evwgh_mA135, evwgh_mA171, evwgh_mA070, evwgh_mA040 ]
+    
+    weight_functions: [ evwgh_mA099,evwgh_mA135, evwgh_mA171, evwgh_mA070, evwgh_mA040, evwgh_mA080, evwgh_mA085, evwgh_mA090, evwgh_mA095, evwgh_mA100, evwgh_mA105, evwgh_mA110, evwgh_mA115 ]
 
     # throw exception if weight outside limits
     min_weight: 0
@@ -97,6 +101,78 @@ genie_microboone_eventweight:
         number_of_multisims:    1
     }
 
+    evwgh_mA080 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-1.279] # corresponds to Ma = 0.80 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA085 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-0.9427] # corresponds to Ma = 0.85 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA090 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-0.6060] # corresponds to Ma = 0.90 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA095 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [-0.2693] # corresponds to Ma = 0.95 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA100 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [0.0408] # corresponds to Ma = 1.0 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA105 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [0.2448] # corresponds to Ma = 1.05 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA110 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [0.4489] # corresponds to Ma = 1.10 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
+    evwgh_mA115 : {
+    type: Genie
+    random_seed: 1
+    parameter_list:        ["QEMA"]
+    parameter_sigma:       [0.6530] # corresponds to Ma = 1.15 GeV
+    mode: reweight
+    number_of_multisims:    1
+    }
+    
 
 }
 
@@ -127,6 +203,7 @@ outputs:
                             "drop raw::*_*_*_*",
                             "drop art::*_*_*_*",
                             "drop sim::*_*_*_*",
+                         "drop sumdata::RunData_*_*_*",
                             "drop recob::Cluster_*_*_*",
                             "drop recob::EndPoint2D_*_*_*",
                             "drop recob::Vertex_*_*_*",

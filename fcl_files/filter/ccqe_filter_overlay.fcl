@@ -179,7 +179,7 @@ outputs:
     out1:
     {
         module_type: RootOutput
-        fileName:    "%ifb_ccqe_filtered_mA_reweighted.root" # can override using -o or --output
+        fileName:    "%ifb_ccqe_filtered.root" # can override using -o or --output
         dataTier:    "reconstructed"
         saveMemoryObjectThreshold: 0
         compressionLevel: 1

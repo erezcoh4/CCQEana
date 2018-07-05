@@ -295,7 +295,7 @@ bool GenieFile::StreamToCSV (){
     csv_file
     << MicroBooNEWeight_Pmu_theta   << ","
     << MicroBooNEWeight_Pp_theta    << ","
-    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta)
+    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta * 1.0e6) // the 1.0e6 is to avoid from very small weights...
     << endl;
     
 

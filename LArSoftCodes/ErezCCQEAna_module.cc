@@ -1896,22 +1896,30 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "theta_12" << ","
     
     // reconstructed kinematics
-    << "reco_Ev"    << "," << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
-    << "reco_Pt"    << "," << "reco_theta_pq" << ","
-    << "reco_Pmu"   << "," << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
-    << "reco_Pp"    << "," << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
-    << "PmuHypothesisCalc" << "," << "PpHypothesisCalc" << ","
+    << "reco_Ev"    << ","  << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
+    << "reco_Pt"    << ","  << "reco_theta_pq" << ","
+    << "reco_Emu"   << ","
+    << "reco_Pmu"   << ","  << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
+    << "reco_Ep"    << ","
+    << "reco_Pp"    << ","  << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
+    << "PmuHypothesisCalc"  << "," << "PpHypothesisCalc" << ","
+    << "reco_q"     << ","  << "reco_omega"   << ","
+    
     
     // missing momentum (reconstructed struck neutron)
     << "reco_Pmiss" << ","  << "reco_Pmiss_x" << ","  << "reco_Pmiss_y" << ","  << "reco_Pmiss_z" << "," << "reco_Pmiss_t" << ","
+    
+    
     
     
     // truth MC information
     << "truth_l_muCandidate"<< "," << "truth_l_pCandidate" << ","
     << "truth_purity_muCandidate"<< "," << "truth_purity_pCandidate" << ","
     
-    << "truth_Pmu" << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << "," << "truth_Pmu_theta" << ","<< "truth_Pmu_phi" << ","
-    << "truth_Pp" << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << "," << "truth_Pp_theta" << ","<< "truth_Pp_phi" << ","
+    << "truth_Emu"  << ","
+    << "truth_Pmu"  << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << "," << "truth_Pmu_theta" << ","<< "truth_Pmu_phi" << ","
+    << "truth_Ep"  << ","
+    << "truth_Pp"   << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << "," << "truth_Pp_theta" << ","<< "truth_Pp_phi" << ","
     
     // truth start/end points
     << "truth_startx_muCandidate" << ","
@@ -1930,9 +1938,10 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     
     // mathing genie interaction
     << "genie_distance" << ","
-    << "truth_Ev" << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
-    << "truth_Pt" << "," << "truth_theta_pq" << ","
+    << "truth_Ev"   << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
+    << "truth_Pt"   << "," << "truth_theta_pq" << ","
     << "genie_mode" << ","
+    << "truth_q"    << "," << "truth_omega" << ","
 
     
     // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
@@ -2097,9 +2106,18 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         // reconstructed kinematics
         vertices_file << v.GetRecoEv() << "," << v.GetRecoQ2() << "," <<  v.GetRecoXb() << "," << v.GetRecoY() << "," << v.GetRecoW2() << ","  ;
         vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
-        vertices_file << v.GetRecoPmu().P() << "," << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
-        vertices_file << v.GetRecoPp().P() << "," << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";
+        
+        vertices_file
+        << v.GetRecoPmu().E() << ","
+        << v.GetRecoPmu().P() << ","
+        << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
+        
+        vertices_file
+        << v.GetRecoPp().E() << ","
+        << v.GetRecoPp().P() << ","
+        << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";        
         vertices_file << v.GetTrack_muCandidate().GetPmuHypothesisCalc() << "," << v.GetTrack_pCandidate().GetPpHypothesisCalc() << ",";
+        vertices_file << v.GetReco_q() << "," << v.GetReco_omega() << ",";
         
         // missing momentum (reconstructed struck neutron)
         vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";
@@ -2109,10 +2127,12 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         vertices_file << v.GetTrack_muCandidate().GetTruthPurity() << "," << v.GetTrack_pCandidate().GetTruthPurity() << ",";
         
         vertices_file
+        << v.GetTrack_muCandidate().GetTruthMomentum().E() << ","
         << v.GetTrack_muCandidate().GetTruthMomentum().P() << ","
         << v.GetTrack_muCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Phi() << ",";
         
         vertices_file
+        << v.GetTrack_pCandidate().GetTruthMomentum().E() << ","
         << v.GetTrack_pCandidate().GetTruthMomentum().P() << ","
         << v.GetTrack_pCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Phi() << ",";
         
@@ -2137,8 +2157,9 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         // mathing genie interaction
         vertices_file << v.GetDistanceToGENIE() << ",";
         vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
-        vertices_file << v.GetGENIEinfo().GetPt() << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
+        vertices_file << v.GetGENIEinfo().GetPt()   << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
         vertices_file << v.GetGENIEinfo().GetMode() << ",";
+        vertices_file << v.GetGENIEinfo().Get_q()   << ","<< v.GetGENIEinfo().Get_omega() << ",";
         
         
         

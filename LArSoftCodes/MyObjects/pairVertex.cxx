@@ -623,8 +623,11 @@ void pairVertex::Print(bool DoPrintTracks,bool DoPrintFull,bool DoPrintGENIE) co
             }
             else SHOW( closest_genie_interaction.GetMCeventID() );
         }
+        SHOW3( genie_interaction.Get_omega(), genie_interaction.Get_q(), genie_interaction.GetQ2());
+        SHOW3( reco_omega, reco_q.P() , reco_Q2 );
         PrintLine();
     }
+    
 }
 
 

@@ -134,6 +134,8 @@ public:
     Float_t                                  GetPt () const {return (protons.size()) ? (muon+protons.at(0)).Pt() : -1;};
     Float_t                           Get_theta_pq () const {return theta_pq;};
     Float_t                                  GetEv () const {return nu.E();};
+    Float_t                                  Get_q () const {return q.P();};
+    Float_t                              Get_omega () const {return q.E();};
     Float_t                                  GetQ2 () const {return Q2;};
     Float_t                                  GetXb () const {return Xb;};
     Float_t                                   GetY () const {return y;};

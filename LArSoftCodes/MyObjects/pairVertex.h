@@ -142,6 +142,8 @@ public:
     float           GetAngleBetween2tracks () const; // return the angle between the muon and proton candidates, in degrees (!)
     float               GetClosestDistance () const {return reco_mu_p_distance;};
     float                        GetRecoEv () const {return reco_Pnu.E();};
+    float                        GetReco_q () const {return reco_q.P();};
+    float                    GetReco_omega () const {return reco_omega;};
     float                        GetRecoQ2 () const {return reco_Q2;};
     float                        GetRecoXb () const {return reco_Xb;};
     float                         GetRecoY () const {return reco_y;};
@@ -151,7 +153,12 @@ public:
     float                 GetTruthDeltaPhi () const;
     float               GetDistanceToGENIE () const {return (genie_interaction.GetVertexPosition()-position).Mag();};
     float        GetDistanceToClosestGENIE () const {return (closest_genie_interaction.GetVertexPosition()-position).Mag();};
+
     
+    float                       GetRecoEmu () const {return reco_Pmu.E();};
+    float                        GetRecoEp () const {return reco_Pp.E();};
+    float                        GetRecoTp () const {return reco_Pp.E()-reco_Pp.M();};
+
     // get the ratio of tracks-charge deposited to total-charge deposited
     // in a box of N(wires) x N(time-ticks) around the vertex in plane i=0,1,2
     // input: plane, N(wires) & N(time-ticks) for the box, hits in event

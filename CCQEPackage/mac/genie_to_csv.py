@@ -60,7 +60,7 @@ if flags.mA>0:#{
 
 # run on all files
 elif flags.mA==0:#{
-    for mA in [0.6,0.7,0.8,0.9,0.95,0.99,1.1,1.2,1.4]:#{
+    for mA in [0.6,0.7,0.8,0.9,0.95,0.99,1.05,1.1,1.2,1.3,1.4]:#{
         gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
                        ,"CC_100k_mA_%.2f"%float(mA) # RootFileName
                        ,"gst" # RootFileName

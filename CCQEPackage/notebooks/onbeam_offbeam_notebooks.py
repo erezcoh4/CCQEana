@@ -687,12 +687,12 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted June-22, 2018)
+# Nov-20,2017 (last editted July-04, 2018)
 def plot_stacked_MCsamples( OverlaySamples=None
                            , ax=None, debug=0,overlay_scaling=None
-                           , var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
+                           , var=None, weights_var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
                            , remove_ticks_x=False, remove_ticks_y=False
-                           , xlim=None
+                           , xlim=None,where='mid'
                            , do_add_legend=False
                            , do_individual_histograms=True
                            , stackColor='black',stackLabel='overlay'):
@@ -713,7 +713,8 @@ def plot_stacked_MCsamples( OverlaySamples=None
         labels[pair_type] = MClabels[i_pair_type]#+' (%.1f'%(100.*N[pair_type]/Noriginal)+'%)'
         colors[pair_type] = MCcolors[i_pair_type];
         x = sample[var]; x = x[x<1e5];
-        h[pair_type],edges = np.histogram(x,bins=bins)
+        weights = sample[weights_var] if weights_var!=None else None
+        h[pair_type],edges = np.histogram(x,bins=bins,weights=weights)
         h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
     if do_individual_histograms:#{
@@ -733,7 +734,8 @@ def plot_stacked_MCsamples( OverlaySamples=None
     #}
     # all
     h_stack = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
-    plt.step(mid+0.5*bin_width,h_stack ,color=stackColor,alpha=alpha, label=stackLabel)
+    plt.step(mid + (0 if where=='mid' else 0.5*bin_width if where =='pre' else -0.5*bin_width)
+             ,h_stack ,where=where ,color=stackColor,alpha=alpha, label=stackLabel)
 
     if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
     set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
