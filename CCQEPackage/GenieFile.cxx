@@ -9,7 +9,7 @@ GenieFile::GenieFile( TString fPath
                      ,TString fRootTreeName
                      ,int fdebug
                      ,TString fAccMapPath
-                     ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName):
+                     ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName,TString fQ2AccMapName):
 debug(fdebug),
 Path( fPath ),
 RootFileName( fRootFileName + ".root"),
@@ -19,6 +19,7 @@ OutputCSVname( fRootFileName + ".csv")
     SetInTree();
     SetPmuThetaAcceptanceMaps(fAccMapPath,fPmuThetaAccMapName);
     SetPpThetaAcceptanceMaps(fAccMapPath,fPpThetaAccMapName);
+    SetQ2AcceptanceMaps(fAccMapPath,fQ2AccMapName);
 }
 
 
@@ -116,6 +117,18 @@ void GenieFile::SetPpThetaAcceptanceMaps(TString fAccMapPath,TString fAccMapName
     Pp_theta_acceptance     = Read2dArrayFromFile(accfilename);
     Pp_theta_acc_err        = Read2dArrayFromFile(errfilename);
 }
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetQ2AcceptanceMaps(TString fAccMapPath,TString fAccMapName){
+    TString Q2binsfilename   = fAccMapPath + fAccMapName + "_bins.csv";
+    TString accfilename     = fAccMapPath + fAccMapName + "_acceptance.csv";
+    TString errfilename     = fAccMapPath + fAccMapName + "_acc_err.csv";
+    
+    Q2_bins           = Read1dArrayFromFile(Q2binsfilename);
+    Q2_acceptance     = Read1dArrayFromFile(accfilename);
+    Q2_acc_err        = Read1dArrayFromFile(errfilename);
+}
+
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -238,6 +251,7 @@ bool GenieFile::HeaderCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
+    << "MicroBooNEWeight_Q2" << ","
     << "MicroBooNEWeight_Pmu_theta" << ","
     << "MicroBooNEWeight_Pp_theta"  << ","
     << "MicroBooNEWeight_Pmu_theta_Pp_theta"
@@ -293,6 +307,7 @@ bool GenieFile::StreamToCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
+    << MicroBooNEWeight_Q2          << ","
     << MicroBooNEWeight_Pmu_theta   << ","
     << MicroBooNEWeight_Pp_theta    << ","
     << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta * 1.0e6) // the 1.0e6 is to avoid from very small weights...
@@ -451,7 +466,7 @@ void GenieFile::SetMicroBooNEWeight (){
     // with the mean being the acceptance from the overlay
     // and the sigma being the uncertainty in this acceptance
     
-    MicroBooNEWeight_Pmu_theta = MicroBooNEWeight_Pp_theta = 0;
+    MicroBooNEWeight_Q2 = MicroBooNEWeight_Pmu_theta = MicroBooNEWeight_Pp_theta = 0;
     
     // (1) find the xbin and ybin of the event
     int Pmu_bin = FindWhichBin( muon.P(), Pmu_xbins );
@@ -484,7 +499,26 @@ void GenieFile::SetMicroBooNEWeight (){
         MicroBooNEWeight_Pp_theta = rand.Gaus( mean , sigma );
     }
     
+    
+    
+    // (1) find the Q2-bin
+    int Q2_bin = FindWhichBin( Q2 , Q2_bins );
+    Debug(fDebug,"Q2_bin: %",Q2_bin);
+    
+    // (2) apply the weight
+    if ( Q2_bin<0 ) {
+        MicroBooNEWeight_Q2 = 0;
+    } else {
+        double mean  = Q2_acceptance.at(Q2_bin);
+        Debug(fDebug+1,"MicroBooNE Weight[Q2 bin %]: %",Q2_bin,mean);
+        double sigma = Q2_acc_err.at(Q2_bin);
+        MicroBooNEWeight_Q2 = rand.Gaus( mean , sigma );
+    }
+    
+
+    
     Debug(fDebug,"muon weight: %, proton weight: %",MicroBooNEWeight_Pmu_theta,MicroBooNEWeight_Pp_theta);
+    Debug(fDebug,"Q2 weight: %",MicroBooNEWeight_Q2);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

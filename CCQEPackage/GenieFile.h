@@ -43,15 +43,15 @@ public:
               ,TString fRootTreeName
               ,int fdebug
               ,TString fAccMapPath
-              ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName);
+              ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName,TString fQ2ThetaAccMapName);
     
 
     
     // SETters
     bool                         SetInTree ();
     void         SetPmuThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
-    void         SetPpThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
-    
+    void          SetPpThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
+    void               SetQ2AcceptanceMaps (TString fAccMapPath, TString fAccMapName);
     
     // GETters
     int                         GetNevents () const {return (int)GenieTree->GetEntries();};
@@ -128,7 +128,7 @@ private:
     Int_t   pdgi[NMAX]; //PDG code of kth 'primary' particle in hadronic system (before FSI)
     double  pxi[NMAX],pyi[NMAX],pzi[NMAX];
     // a weight to the event based on MicroBooNE acceptance
-    double  MicroBooNEWeight_Pmu_theta=0, MicroBooNEWeight_Pp_theta=0;
+    double  MicroBooNEWeight_Pmu_theta=0, MicroBooNEWeight_Pp_theta=0,MicroBooNEWeight_Q2=0;
     
     // my variables for CC 1p 0pi
     bool            CC1p0pi=false;
@@ -143,6 +143,8 @@ private:
     std::vector<std::vector<double>> Pmu_theta_acceptance, Pmu_theta_acc_err;
     std::vector<double>              Pp_xbins, Pp_theta_ybins;
     std::vector<std::vector<double>> Pp_theta_acceptance, Pp_theta_acc_err;
+    std::vector<double>              Q2_bins;
+    std::vector<double>              Q2_acceptance, Q2_acc_err;
     
     TRandom3  rand;
 };

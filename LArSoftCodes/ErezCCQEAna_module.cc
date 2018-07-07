@@ -1364,6 +1364,10 @@ void ub::ErezCCQEAna::RunFlashMatch(art::Event const & evt){
     }
     Debug(3,"nBeamFlashes: %",nBeamFlashes);
     // Emplace the 'best' flash to Flash Matching Manager
+    if (nBeamFlashes==0) {
+        Debug(4, "no beam flashes, returning...");
+        return;
+    }
     ::flashana::Flash_t f = beam_flashes[0];
     BeamFlashSpec.resize(f.pe_v.size());
     BeamFlashSpec = f.pe_v;

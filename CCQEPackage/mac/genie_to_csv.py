@@ -27,16 +27,19 @@ print flags
 acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
 Pmu_theta_acceptance_map_name = "Pmu_theta_5x5_bins"
 Pp_theta_acceptance_map_name = "Pp_theta_8x8_bins"
+Q2_acceptance_map_name = "Q2_11_bins"
 
 print "flags.mA:",flags.mA
 # run on a single files
 if flags.mA>0:#{
     print "flags.mA:",flags.mA
     gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
-               ,"CC_100k_mA_%.2f"%float(flags.mA) # RootFileName
-               ,"gst" # RootFileName
-               ,flags.verbose
-               ,acceptance_map_path,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name)
+                   ,"CC_100k_mA_%.2f"%float(flags.mA) # RootFileName
+                   ,"gst" # RootFileName
+                   ,flags.verbose
+                   ,acceptance_map_path
+                   ,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name
+                   ,Q2_acceptance_map_name)
     gf.HeaderCSV()
 
     Nevents = gf.GetNevents()
@@ -65,7 +68,8 @@ elif flags.mA==0:#{
                        ,"CC_100k_mA_%.2f"%float(mA) # RootFileName
                        ,"gst" # RootFileName
                        ,flags.verbose
-                       ,acceptance_map_path,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name)
+                       ,acceptance_map_path
+                       ,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name,Q2_acceptance_map_name)
         gf.HeaderCSV()
         Nevents = gf.GetNevents()
         ctr_CC1p0pi = 0
