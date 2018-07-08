@@ -687,8 +687,8 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted July-04, 2018)
-def plot_stacked_MCsamples( OverlaySamples=None
+# Nov-20,2017 (last editted July-08, 2018)
+def plot_stacked_MCsamples( OverlaySamples=None,norm=None
                            , ax=None, debug=0,overlay_scaling=None
                            , var=None, weights_var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
                            , remove_ticks_x=False, remove_ticks_y=False
@@ -704,18 +704,23 @@ def plot_stacked_MCsamples( OverlaySamples=None
         '''
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
-    h,labels,colors,N = dict(),dict(),dict(),dict()
+    h,h_err,labels,colors,N = dict(),dict(),dict(),dict(),dict()
+    
     
     for i_pair_type,pair_type in enumerate(pair_types):
         sample = OverlaySamples[pair_type] #reducedOverlay[cut_name][pair_type]
         N[pair_type] = float(len(sample))
-        #Noriginal = len(reducedOverlay['no cut'][pair_type])
         labels[pair_type] = MClabels[i_pair_type]#+' (%.1f'%(100.*N[pair_type]/Noriginal)+'%)'
         colors[pair_type] = MCcolors[i_pair_type];
         x = sample[var]; x = x[x<1e5];
         weights = sample[weights_var] if weights_var!=None else None
+        
         h[pair_type],edges = np.histogram(x,bins=bins,weights=weights)
         h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
+        h_err[pair_type] = np.sqrt(h[pair_type])
+        h_err[pair_type+' scaled'] = overlay_scaling[pair_type]*h_err[pair_type] if overlay_scaling else h_err[pair_type]
+
+
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
     if do_individual_histograms:#{
         
@@ -734,6 +739,12 @@ def plot_stacked_MCsamples( OverlaySamples=None
     #}
     # all
     h_stack = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
+    h_stack_err = np.sqrt(np.square(h_err['cosmic scaled'])+np.square(h_err['other pairs scaled'])+np.square(h_err['1mu-1p scaled']))
+    
+    if norm is not None:
+        h_stack = h_stack*norm/np.sum(h_stack)
+        h_stack_err = h_stack_err*norm/np.sum(h_stack)
+    
     plt.step(mid + (0 if where=='mid' else 0.5*bin_width if where =='pre' else -0.5*bin_width)
              ,h_stack ,where=where ,color=stackColor,alpha=alpha, label=stackLabel)
 
@@ -744,7 +755,7 @@ def plot_stacked_MCsamples( OverlaySamples=None
              ,remove_ticks_x=remove_ticks_x
              ,remove_ticks_y=remove_ticks_y
              )
-    return h_stack , bins
+    return h_stack , h_stack_err
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 

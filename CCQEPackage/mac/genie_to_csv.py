@@ -2,10 +2,10 @@
     usage:
     ------
     Afro files, June 2018:
-    python mac/genie_to_csv.py -mA=0.99 -evf=0.001
+    make && python mac/genie_to_csv.py -mA=0.99 -evf=0.001
     
     and to run on all files:
-    python mac/genie_to_csv.py -mA=0 -evf=0.001
+    python mac/genie_to_csv.py -mA=0 -evf=1
     
     My files, May 2018:
     python mac/genie_to_csv.py --DataType=40Ar_spline_CCinclMEC_muons_mA0.40 -evf=0.01
@@ -25,8 +25,8 @@ print flags
 
 #infilename = flags.DataType
 acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
-Pmu_theta_acceptance_map_name = "Pmu_theta_5x5_bins"
-Pp_theta_acceptance_map_name = "Pp_theta_8x8_bins"
+Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"
+Pp_theta_acceptance_map_name = "Pp_theta_12x12_bins"
 Q2_acceptance_map_name = "Q2_11_bins"
 
 print "flags.mA:",flags.mA
@@ -38,7 +38,8 @@ if flags.mA>0:#{
                    ,"gst" # RootFileName
                    ,flags.verbose
                    ,acceptance_map_path
-                   ,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name
+                   ,Pmu_theta_acceptance_map_name
+                   ,Pp_theta_acceptance_map_name
                    ,Q2_acceptance_map_name)
     gf.HeaderCSV()
 
@@ -69,7 +70,9 @@ elif flags.mA==0:#{
                        ,"gst" # RootFileName
                        ,flags.verbose
                        ,acceptance_map_path
-                       ,Pmu_theta_acceptance_map_name,Pp_theta_acceptance_map_name,Q2_acceptance_map_name)
+                       ,Pmu_theta_acceptance_map_name
+                       ,Pp_theta_acceptance_map_name
+                       ,Q2_acceptance_map_name)
         gf.HeaderCSV()
         Nevents = gf.GetNevents()
         ctr_CC1p0pi = 0
@@ -78,7 +81,6 @@ elif flags.mA==0:#{
             gf.ReadEvent(i_event)
             gf.SetTopology()
             gf.SetMicroBooNEWeight()
-            if flags.verbose>2: gf.Print()
             if gf.GetCC_1p_200MeVc_0pi() is True: ctr_CC1p0pi += 1
             gf.StreamToCSV()
         #}

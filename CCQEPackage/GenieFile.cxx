@@ -307,10 +307,10 @@ bool GenieFile::StreamToCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
-    << MicroBooNEWeight_Q2          << ","
-    << MicroBooNEWeight_Pmu_theta   << ","
-    << MicroBooNEWeight_Pp_theta    << ","
-    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta * 1.0e6) // the 1.0e6 is to avoid from very small weights...
+    << MicroBooNEWeight_Q2                  << ","
+    << MicroBooNEWeight_Pmu_theta           << ","
+    << MicroBooNEWeight_Pp_theta            << ","
+    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta )
     << endl;
     
 
@@ -320,7 +320,7 @@ bool GenieFile::StreamToCSV (){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::SetTopology (){
     nu.SetXYZM( pxv, pyv, pzv, 0 );
-    if (debug>2) {
+    if (debug>5) {
         SHOW4(cc,qel,nf,pdgf[0]);
         for (int i=0; i<nf; i++) {
             SHOW(pdgf[i]);
@@ -335,7 +335,7 @@ bool GenieFile::SetTopology (){
     muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
 
     for( int i_f=0; i_f < nf ; i_f++ ){
-        Debug(3,"pdgf[i_f]:%",pdgf[i_f]);
+        Debug(5,"pdgf[i_f]:%",pdgf[i_f]);
         switch (pdgf[i_f]) {
             case 2212:
                 pmomentum.SetXYZM(pxf[i_f], pyf[i_f], pzf[i_f], 0.9383);
@@ -438,25 +438,22 @@ bool GenieFile::SetTopology (){
     return true;
 }
 
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 int GenieFile::FindWhichBin( double x, std::vector<double> bins ){
     for (size_t i=0; i<bins.size()-1; i++) {
         if ( bins.at(i) < x && x < bins.at(i+1) ){
-            Debug(4,"GenieFile::FindWhichBin( %, std::vector<double> ): bin %",x,i);
+            Debug(5,"GenieFile::FindWhichBin( %, std::vector<double> ): bin %",x,i);
             return i;
         }
     }
     return -1;
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetMicroBooNEWeight (){
     int fDebug=3;
     Debug(fDebug,"GenieFile::SetMicroBooNEWeight");
-    Debug(fDebug,"p(mu): %, \\theta(mu): %,p(p): %, \\theta(p): %",muon.P(),muon.Theta(),proton.P(),proton.Theta());
+    Debug(fDebug,"p(mu): %, 𝜃(mu): %π,p(p): %, 𝜃(p): %π",muon.P(),muon.Theta()/3.1415,proton.P(),proton.Theta()/3.1415);
     
     // assign a weight to the event based on MicroBooNE acceptance
     // as a function of the muon momentum and scattering angle
@@ -465,6 +462,8 @@ void GenieFile::SetMicroBooNEWeight (){
     // weight generated from a Gaussian distribution fuction
     // with the mean being the acceptance from the overlay
     // and the sigma being the uncertainty in this acceptance
+    //
+    // multiple the weights by 1.0e3 is to avoid from very small weights...
     
     MicroBooNEWeight_Q2 = MicroBooNEWeight_Pmu_theta = MicroBooNEWeight_Pp_theta = 0;
     
@@ -479,7 +478,7 @@ void GenieFile::SetMicroBooNEWeight (){
         double mean  = Pmu_theta_acceptance.at(Pmu_theta_bin).at(Pmu_bin);
         Debug(fDebug+1,"MicroBooNE Weight[Pmu-theta bin %][Pmu bin %]: %",Pmu_theta_bin,Pmu_bin,mean);
         double sigma = Pmu_theta_acc_err.at(Pmu_theta_bin).at(Pmu_bin);
-        MicroBooNEWeight_Pmu_theta = rand.Gaus( mean , sigma );
+        MicroBooNEWeight_Pmu_theta = rand.Gaus( mean , sigma ) * 1.e3;
     }
 
     
@@ -496,7 +495,7 @@ void GenieFile::SetMicroBooNEWeight (){
         double mean  = Pp_theta_acceptance.at(Pp_theta_bin).at(Pp_bin);
         Debug(fDebug+1,"MicroBooNE Weight[Pp-theta bin %][Pp bin %]: %",Pp_theta_bin,Pp_bin,mean);
         double sigma = Pp_theta_acc_err.at(Pp_theta_bin).at(Pp_bin);
-        MicroBooNEWeight_Pp_theta = rand.Gaus( mean , sigma );
+        MicroBooNEWeight_Pp_theta = rand.Gaus( mean , sigma ) * 1.e3;
     }
     
     
@@ -512,7 +511,7 @@ void GenieFile::SetMicroBooNEWeight (){
         double mean  = Q2_acceptance.at(Q2_bin);
         Debug(fDebug+1,"MicroBooNE Weight[Q2 bin %]: %",Q2_bin,mean);
         double sigma = Q2_acc_err.at(Q2_bin);
-        MicroBooNEWeight_Q2 = rand.Gaus( mean , sigma );
+        MicroBooNEWeight_Q2 = rand.Gaus( mean , sigma ) * 1.e3;
     }
     
 
