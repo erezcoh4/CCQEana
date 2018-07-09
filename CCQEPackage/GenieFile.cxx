@@ -560,61 +560,69 @@ void GenieFile::ProjectMuonTrajectory(){
     
     
     
-    Debug(fDebug,"Pmu: % MeV/c, lmu: % cm",Pmu_MeVc,lmu_cm);
+    Debug(fDebug,"Pmu: % MeV/c, lmu: % cm",Pmu_MeVc,dmu_cm);
     Debug(fDebug,"muon trajectory: (%,%,%) -> (%,%,%)"
           ,vertex_position.X(),vertex_position.Y(),vertex_position.Z()
           ,muonTrajectory_end.X(),muonTrajectory_end.Y(),muonTrajectory_end.Z());
 }
 
-double d_LinePlaneIntersection(TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,float epsilon){
-    // epsilon is a cutoff for the case of trajectory parallel to either one of the detector sides
-    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
-    // where l is a vector in the direction of the line, l0 is a point on the line,
-    // n is the normal to the plane and p0 is a point on the plan
-    return ((p0 - l0).Dot(n))/(std::max(l.Dot(n),epsilon));
-}
+//double d_LinePlaneIntersection(TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,float epsilon){
+//    // epsilon is a cutoff for the case of trajectory parallel to either one of the detector sides
+//    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
+//    // where l is a vector in the direction of the line, l0 is a point on the line,
+//    // n is the normal to the plane and p0 is a point on the plan
+//    return ((p0 - l0).Dot(n))/(std::max(l.Dot(n),epsilon));
+//}
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void GenieFile::MuonIntersectionWithSides(){
-    // find the distance from the vertex position
-    // in which the track meets the upper side of the detector (with normal in direction y
-    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
-    // where l is a vector in the direction of the line, l0 is a point on the line,
-    // n is the normal to the plane and p0 is a point on the plan
-    TVector3 p0;
-    // left and right sides
-    if (muonTrajectory_dir.X() > 0){
-        p0 = TVector3( side_x_right , 0 , 0 );
-    }
-    else if (muonTrajectory_dir.X() <= 0){
-        p0 = TVector3( side_x_left , 0 , 0 );
-    }
-    dx = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 1 , 0 , 0 ));
-    
-    // upper and lower sides
-    if (muonTrajectory_dir.Y() > 0){
-        p0 = TVector3( 0 , side_y_up , 0 );
-    }
-    else if (muonTrajectory_dir.Y() <= 0){
-        p0 = TVector3( 0 , side_y_dw , 0 );
-    }
-    dy = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 1 , 0 ));
-    
-    // up and downstream sides
-    if (muonTrajectory_dir.Z() > 0){
-        p0 = TVector3( side_z_upstream , 0 , 0 );
-    }
-    else if (muonTrajectory_dir.Z() <= 0){
-        p0 = TVector3( side_z_downstream , 0 , 0 );
-    }
-    dz = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 0 , 1 ));
-}
+////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//void GenieFile::MuonIntersectionWithSides(){
+//    // find the distance from the vertex position
+//    // in which the track meets the upper side of the detector (with normal in direction y
+//    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
+//    // where l is a vector in the direction of the line, l0 is a point on the line,
+//    // n is the normal to the plane and p0 is a point on the plan
+//    TVector3 p0;
+//    // left and right sides
+//    if (muonTrajectory_dir.X() > 0){
+//        p0 = TVector3( side_x_right , 0 , 0 );
+//    }
+//    else if (muonTrajectory_dir.X() <= 0){
+//        p0 = TVector3( side_x_left , 0 , 0 );
+//    }
+//    dx = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 1 , 0 , 0 ));
+//    
+//    // upper and lower sides
+//    if (muonTrajectory_dir.Y() > 0){
+//        p0 = TVector3( 0 , side_y_up , 0 );
+//    }
+//    else if (muonTrajectory_dir.Y() <= 0){
+//        p0 = TVector3( 0 , side_y_dw , 0 );
+//    }
+//    dy = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 1 , 0 ));
+//    
+//    // up and downstream sides
+//    if (muonTrajectory_dir.Z() > 0){
+//        p0 = TVector3( side_z_upstream , 0 , 0 );
+//    }
+//    else if (muonTrajectory_dir.Z() <= 0){
+//        p0 = TVector3( side_z_downstream , 0 , 0 );
+//    }
+//    dz = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 0 , 1 ));
+//}
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::CutMuonTrajectory(){
     int fDebug=0;
+    double muonTrack_end_x=0, muonTrack_end_y=0, muonTrack_end_z=0;
     
+    
+    // CONTINUE HERE: IF THE MUON TRAJECTORY IS BROKEN -
+    // THEN THE END point in X,Y,Z should be computed altogether
+    // by the breaking point
+    // not separatly!
+    // (as is currently done...)
+    //
     if (muonTrajectory_dir.X()>0) {
         muonTrack_end_x = std::min( side_x_right , muonTrajectory_end.X() );
     }
