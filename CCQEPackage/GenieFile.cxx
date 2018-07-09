@@ -16,6 +16,7 @@ RootFileName( fRootFileName + ".root"),
 RootTreeName( fRootTreeName ),
 OutputCSVname( fRootFileName + ".csv")
 {
+    SetLArTools();
     SetInTree();
     SetPmuThetaAcceptanceMaps(fAccMapPath,fPmuThetaAccMapName);
     SetPpThetaAcceptanceMaps(fAccMapPath,fPpThetaAccMapName);
@@ -48,8 +49,6 @@ std::vector<double> GenieFile::Read1dArrayFromFile(TString filename){
     }
     return numbers;
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 std::vector<std::vector<double>> GenieFile::Read2dArrayFromFile(TString filename){
@@ -87,9 +86,6 @@ std::vector<std::vector<double>> GenieFile::Read2dArrayFromFile(TString filename
     return numbers;
 }
 
-
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetPmuThetaAcceptanceMaps(TString fAccMapPath,TString fAccMapName){
     TString xbinsfilename   = fAccMapPath + fAccMapName + "_xbins.csv";
@@ -102,8 +98,6 @@ void GenieFile::SetPmuThetaAcceptanceMaps(TString fAccMapPath,TString fAccMapNam
     Pmu_theta_acceptance    = Read2dArrayFromFile(accfilename);
     Pmu_theta_acc_err       = Read2dArrayFromFile(errfilename);
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetPpThetaAcceptanceMaps(TString fAccMapPath,TString fAccMapName){
@@ -128,7 +122,6 @@ void GenieFile::SetQ2AcceptanceMaps(TString fAccMapPath,TString fAccMapName){
     Q2_acceptance     = Read1dArrayFromFile(accfilename);
     Q2_acc_err        = Read1dArrayFromFile(errfilename);
 }
-
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -175,6 +168,10 @@ bool GenieFile::SetInTree(){
     GenieTree -> SetBranchAddress("pzi"            , &pzi);
     GenieTree -> SetBranchAddress("pdgi"           , &pdgi);
     
+    GenieTree -> SetBranchAddress("vtxx"           , &vtxx);
+    GenieTree -> SetBranchAddress("vtxy"           , &vtxy);
+    GenieTree -> SetBranchAddress("vtxz"           , &vtxz);
+
     return true;
 }
 
@@ -185,22 +182,24 @@ bool GenieFile::Initialize(){
         pdgf[i] = -9999;
         pxf[i] = pyf[i] = pzf[i] = -9999;
     }
-    //    CC1p0pi = false;
     IsCC_Np_200MeVc = IsCC_1p_200MeVc = IsCC_1p_200MeVc_0pi=false;
     Pmiss = muon  = proton = q = nu = proton_before_FSI = TLorentzVector();
     protons.clear();
     neutrons.clear();
+//    dx = dy = dz = 0;
+    reco_Q2 = reco_Ev = 0;
+    reco_Pnu = reco_Pp = reco_Pmu = reco_q = TLorentzVector();
+    
+    muonTrajectory_end = muonTrack_end = TVector3();
+    
     return true;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::ReadEvent (int fi_event){
     i_event = fi_event;
-    
     Initialize();
     GenieTree->GetEntry(i_event);
-    
-    
     return true;
 }
 
@@ -254,8 +253,22 @@ bool GenieFile::HeaderCSV (){
     << "MicroBooNEWeight_Q2" << ","
     << "MicroBooNEWeight_Pmu_theta" << ","
     << "MicroBooNEWeight_Pp_theta"  << ","
-    << "MicroBooNEWeight_Pmu_theta_Pp_theta"
-    << endl;
+    << "MicroBooNEWeight_Pmu_theta_Pp_theta" << ",";
+    
+    
+    
+    // mimic the detector volume
+    // and "ruin" the kinematical reconstruction of the muon momentum and Q2
+    csv_file
+    << "v_x"                << "," << "v_y"                 << "," << "v_z"                     << ","
+    << "muonTrajectory_endx"<< "," << "muonTrajectory_endy" << "," << "muonTrajectory_endz"     << ","
+    << "muonTrack_endx"     << "," << "muonTrack_endy"      << "," << "muonTrack_endz"          << ","
+    << "reco_Emu"           << "," << "reco_Pmu"            << ","
+    << "reco_Pmu_x"         << "," << "reco_Pmu_y"          << "," << "reco_Pmu_z"              << ","
+    << "reco_q"             << "," << "reco_omega"          << "," << "reco_Q2";
+
+    
+    csv_file << endl;
     
     return true;
 }
@@ -310,10 +323,23 @@ bool GenieFile::StreamToCSV (){
     << MicroBooNEWeight_Q2                  << ","
     << MicroBooNEWeight_Pmu_theta           << ","
     << MicroBooNEWeight_Pp_theta            << ","
-    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta )
-    << endl;
+    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta ) << ",";
     
+    
+    
+    // mimic the detector volume
+    // and "ruin" the kinematical reconstruction of the muon momentum and Q2
+    csv_file
+    << vertex_position.X()      << "," << vertex_position.Y()       << "," << vertex_position.Z()       << ","
+    << muonTrajectory_end.X()   << "," << muonTrajectory_end.Y()    << "," << muonTrajectory_end.Z()    << ","
+    << muonTrack_end.X()        << "," << muonTrack_end.Y()         << "," << muonTrack_end.Z()         << ","
+    << reco_Pmu.E()             << "," << reco_Pmu.P()              << ","
+    << reco_Pmu.Px()            << "," << reco_Pmu.Py()             << "," << reco_Pmu.Pz()             << ","
+    << reco_q.P()               << "," << reco_q.E()                << "," << reco_Q2;
 
+    
+    csv_file << endl;
+    
     return true;
 }
 
@@ -519,6 +545,135 @@ void GenieFile::SetMicroBooNEWeight (){
     Debug(fDebug,"muon weight: %, proton weight: %",MicroBooNEWeight_Pmu_theta,MicroBooNEWeight_Pp_theta);
     Debug(fDebug,"Q2 weight: %",MicroBooNEWeight_Q2);
 }
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::ProjectMuonTrajectory(){
+    int fDebug=0;
+    Debug(fDebug,"GenieFile::ProjectMuonTrajectory()");
+    
+    // the muon direction is given by its momentum...
+    muonTrajectory_dir = muon.Vect().Unit();
+    double Pmu_MeVc = 1000*muon.P();
+    double dmu_cm = Get_muonRangeFromMomentum( Pmu_MeVc );
+    muonTrajectory_end = vertex_position + muonTrajectory_dir * dmu_cm;
+    
+    
+    
+    Debug(fDebug,"Pmu: % MeV/c, lmu: % cm",Pmu_MeVc,lmu_cm);
+    Debug(fDebug,"muon trajectory: (%,%,%) -> (%,%,%)"
+          ,vertex_position.X(),vertex_position.Y(),vertex_position.Z()
+          ,muonTrajectory_end.X(),muonTrajectory_end.Y(),muonTrajectory_end.Z());
+}
+
+double d_LinePlaneIntersection(TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,float epsilon){
+    // epsilon is a cutoff for the case of trajectory parallel to either one of the detector sides
+    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
+    // where l is a vector in the direction of the line, l0 is a point on the line,
+    // n is the normal to the plane and p0 is a point on the plan
+    return ((p0 - l0).Dot(n))/(std::max(l.Dot(n),epsilon));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::MuonIntersectionWithSides(){
+    // find the distance from the vertex position
+    // in which the track meets the upper side of the detector (with normal in direction y
+    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
+    // where l is a vector in the direction of the line, l0 is a point on the line,
+    // n is the normal to the plane and p0 is a point on the plan
+    TVector3 p0;
+    // left and right sides
+    if (muonTrajectory_dir.X() > 0){
+        p0 = TVector3( side_x_right , 0 , 0 );
+    }
+    else if (muonTrajectory_dir.X() <= 0){
+        p0 = TVector3( side_x_left , 0 , 0 );
+    }
+    dx = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 1 , 0 , 0 ));
+    
+    // upper and lower sides
+    if (muonTrajectory_dir.Y() > 0){
+        p0 = TVector3( 0 , side_y_up , 0 );
+    }
+    else if (muonTrajectory_dir.Y() <= 0){
+        p0 = TVector3( 0 , side_y_dw , 0 );
+    }
+    dy = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 1 , 0 ));
+    
+    // up and downstream sides
+    if (muonTrajectory_dir.Z() > 0){
+        p0 = TVector3( side_z_upstream , 0 , 0 );
+    }
+    else if (muonTrajectory_dir.Z() <= 0){
+        p0 = TVector3( side_z_downstream , 0 , 0 );
+    }
+    dz = d_LinePlaneIntersection(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 0 , 1 ));
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::CutMuonTrajectory(){
+    int fDebug=0;
+    
+    if (muonTrajectory_dir.X()>0) {
+        muonTrack_end_x = std::min( side_x_right , muonTrajectory_end.X() );
+    }
+    else {
+        muonTrack_end_x = std::max( side_x_left , muonTrajectory_end.X() );
+    }
+
+    if (muonTrajectory_dir.Y()>0) {
+        muonTrack_end_y = std::min( side_y_up , muonTrajectory_end.Y() );
+    }
+    else {
+        muonTrack_end_y = std::max( side_y_dw , muonTrajectory_end.Y() );
+    }
+
+    if (muonTrajectory_dir.Z()>0) {
+        muonTrack_end_z = std::min( side_z_upstream , muonTrajectory_end.Z() );
+    }
+    else {
+        muonTrack_end_z = std::max( side_z_downstream , muonTrajectory_end.Z() );
+    }
+    
+    muonTrack_end = TVector3( muonTrack_end_x , muonTrack_end_y , muonTrack_end_z );
+    
+    Debug(fDebug,"muon track: (%,%,%) -> (%,%,%)"
+          ,vertex_position.X(),vertex_position.Y(),vertex_position.Z()
+          ,muonTrack_end.X(),muonTrack_end.Y(),muonTrack_end.Z());
+
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetRecoKinematics(){
+    reco_Pp  = proton;
+    reco_Pmu = muon * (muonTrack_end.Mag()/muonTrajectory_end.Mag());
+
+    reco_Ev  = reco_Pmu.E() + (reco_Pp.E() - reco_Pp.Mag()) + 0.040 ; // Eµ + Tp + Sn + T(A-1)
+    reco_Pnu = TLorentzVector( 0 , 0 , reco_Ev , reco_Ev );
+
+    reco_q   = reco_Pnu - reco_Pmu;
+    reco_Q2  = - reco_q.Mag2();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::MimicDetectorVolume(){
+    
+    // mimic the effect of the detector volume on the "reconstructed" kinematics
+    // by projecting the muon track length from range-based momentum in LAr
+    // and cutting it short if it touches the detector edges
+    
+    // vtxx is given between -1.282 and 1.282 m
+    // vtxy is given between -1.165 and 1.165 m
+    // vtxz is given between -5.184 and 5.184 m
+    // we want to vertex position in cm
+    SetVertexPosition( 100*(vtxx + 1.282) , 100*vtxy , 100*(vtxz + 5.184));
+    ProjectMuonTrajectory();
+    //    MuonIntersectionWithSides();
+    CutMuonTrajectory();
+    SetRecoKinematics();
+}
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::EndJob(){

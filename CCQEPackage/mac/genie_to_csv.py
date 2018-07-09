@@ -50,6 +50,7 @@ if flags.mA>0:#{
         gf.ReadEvent(i_event)
         gf.SetTopology()
         gf.SetMicroBooNEWeight()
+        gf.MimicDetectorVolume()
         if flags.verbose>2: gf.Print()
         if gf.GetCC_1p_200MeVc_0pi() is True:#{
         #        print 'CC1p0pi event!'

@@ -598,7 +598,10 @@ GenieFile.o: GenieFile.cxx GenieFile.h \
   /Users/erezcohen/root6/root-6.04.10/include/TLorentzVector.h \
   /Users/erezcohen/root6/root-6.04.10/include/TMath.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.3.0/include/float.h \
-  /Users/erezcohen/root6/root-6.04.10/include/TRotation.h box.h flash.h
+  /Users/erezcohen/root6/root-6.04.10/include/TRotation.h box.h flash.h \
+  /Users/erezcohen/root6/root-6.04.10/include/TGraph.h \
+  /Users/erezcohen/root6/root-6.04.10/include/TFitResultPtr.h \
+  /Users/erezcohen/root6/root-6.04.10/include/TSpline.h
 PandoraNuTrack.o: PandoraNuTrack.cxx PandoraNuTrack.h \
   /Users/erezcohen/root6/root-6.04.10/include/Rtypes.h \
   /Users/erezcohen/root6/root-6.04.10/include/RtypesCore.h \

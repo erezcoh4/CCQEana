@@ -290,7 +290,7 @@ namespace ROOT {
       ::GenieFile *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::GenieFile));
       static ::ROOT::TGenericClassInfo 
-         instance("GenieFile", "GenieFile.h", 36,
+         instance("GenieFile", "GenieFile.h", 38,
                   typeid(::GenieFile), DefineBehavior(ptr, ptr),
                   &GenieFile_Dictionary, isa_proxy, 4,
                   sizeof(::GenieFile) );
