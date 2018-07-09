@@ -76,7 +76,7 @@ public:
     void             ProjectMuonTrajectory ();
 //    void         MuonIntersectionWithSides ();
     void                 CutMuonTrajectory ();
-//    double         d_LinePlaneIntersection (TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,float epsilon=0.0001);
+    double         LinePlaneIntersectionDistance (TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon=0.0001);
     void                 SetRecoKinematics ();
     
     std::vector<double>              Read1dArrayFromFile (TString filename);

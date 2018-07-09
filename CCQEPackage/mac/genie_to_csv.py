@@ -29,7 +29,6 @@ Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"
 Pp_theta_acceptance_map_name = "Pp_theta_12x12_bins"
 Q2_acceptance_map_name = "Q2_11_bins"
 
-print "flags.mA:",flags.mA
 # run on a single files
 if flags.mA>0:#{
     print "flags.mA:",flags.mA
@@ -82,6 +81,7 @@ elif flags.mA==0:#{
             gf.ReadEvent(i_event)
             gf.SetTopology()
             gf.SetMicroBooNEWeight()
+            gf.MimicDetectorVolume()
             if gf.GetCC_1p_200MeVc_0pi() is True: ctr_CC1p0pi += 1
             gf.StreamToCSV()
         #}
