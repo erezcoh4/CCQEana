@@ -36,7 +36,7 @@ std::vector<double> GenieFile::Read1dArrayFromFile(TString filename){
     // 3.05
     // 5.2
     // ....
-    Debug(0,"GenieFile::Read1dArrayFromFile(%)",filename);
+    Debug(3,"GenieFile::Read1dArrayFromFile(%)",filename);
     ifstream fin;
     fin.open(filename);
     std::vector<double> numbers;
@@ -44,7 +44,7 @@ std::vector<double> GenieFile::Read1dArrayFromFile(TString filename){
     while(fin >> number) //  >> delim
         numbers.push_back(number);
     fin.close();
-    if(debug>0){
+    if(debug>4){
         SHOWstdVector(numbers);
     }
     return numbers;
@@ -60,7 +60,7 @@ std::vector<std::vector<double>> GenieFile::Read2dArrayFromFile(TString filename
     // 2.1,3.0,8.2,1
     // 3.05,1.1,29.2,3
     // ....
-    Debug(0,"GenieFile::Read2dArrayFromFile(%)",filename);
+    Debug(3,"GenieFile::Read2dArrayFromFile(%)",filename);
     ifstream fin;
     fin.open(filename);
     std::vector<std::vector<double>> numbers;
@@ -75,7 +75,7 @@ std::vector<std::vector<double>> GenieFile::Read2dArrayFromFile(TString filename
         }
     }
     fin.close();
-    if(debug>0){
+    if(debug>5){
         for (auto row : numbers) {
             for (auto number : row) {
                 cout << std::setprecision(5) << number << ' ';
@@ -186,7 +186,7 @@ bool GenieFile::Initialize(){
     Pmiss = muon  = proton = q = nu = proton_before_FSI = TLorentzVector();
     protons.clear();
     neutrons.clear();
-//    dx = dy = dz = 0;
+    reco_l_mu = reco_l_p = 0;
     reco_Q2 = reco_Ev = 0;
     reco_Pnu = reco_Pp = reco_Pmu = reco_q = TLorentzVector();
     
@@ -265,7 +265,16 @@ bool GenieFile::HeaderCSV (){
     << "muonTrack_endx"     << "," << "muonTrack_endy"      << "," << "muonTrack_endz"          << ","
     << "reco_Emu"           << "," << "reco_Pmu"            << ","
     << "reco_Pmu_x"         << "," << "reco_Pmu_y"          << "," << "reco_Pmu_z"              << ","
-    << "reco_q"             << "," << "reco_omega"          << "," << "reco_Q2";
+    << "reco_q"             << "," << "reco_omega"          << "," << "reco_Q2"                 << ","
+    << "reco_l_mu"          << "," << "reco_l_p"            << "," ;
+
+    
+    // start/end points, for FV cuts
+    csv_file
+    << "startx_muCandidate" << ","  << "starty_muCandidate" << ","  << "startz_muCandidate" << ","
+    << "startx_pCandidate"  << ","  << "starty_pCandidate"  << ","  << "startz_pCandidate"  << ","
+    << "endx_muCandidate"   << ","  << "endy_muCandidate"   << ","  << "endz_muCandidate"   << ","
+    << "endx_pCandidate"    << ","  << "endy_pCandidate"    << ","  << "endz_pCandidate"    ;
 
     
     csv_file << endl;
@@ -335,7 +344,17 @@ bool GenieFile::StreamToCSV (){
     << muonTrack_end.X()        << "," << muonTrack_end.Y()         << "," << muonTrack_end.Z()         << ","
     << reco_Pmu.E()             << "," << reco_Pmu.P()              << ","
     << reco_Pmu.Px()            << "," << reco_Pmu.Py()             << "," << reco_Pmu.Pz()             << ","
-    << reco_q.P()               << "," << reco_q.E()                << "," << reco_Q2;
+    << reco_q.P()               << "," << reco_q.E()                << "," << reco_Q2                   << ","
+    << reco_l_mu                << "," << reco_l_p                  << ",";
+    
+    
+    // start/end points, for FV cuts
+    csv_file
+    << vertex_position.x()  << ","  << vertex_position.y()  << ","  << vertex_position.z()  << ","
+    << vertex_position.x()  << ","  << vertex_position.y()  << ","  << vertex_position.z()  << ","
+    << muonTrack_end.x()    << ","  << muonTrack_end.y()    << ","  << muonTrack_end.z()    << ","
+    << protonTrack_end.x()  << ","  << protonTrack_end.y()  << ","  << protonTrack_end.z()   ;
+
 
     
     csv_file << endl;
@@ -548,14 +567,27 @@ void GenieFile::SetMicroBooNEWeight (){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+double GenieFile::LinePlaneIntersectionDistance(TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon){
+    // epsilon is a cutoff for the case of trajectory parallel to either one of the detector sides
+    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
+    // where l is a vector in the direction of the line, l0 is a point on the line,
+    // n is the normal to the plane and p0 is a point on the plan
+    Debug(4, "GenieFile::LinePlaneIntersectionDistance(), n: (%,%,%),  l.Dot(n): %" ,n.x(),n.y(),n.z(),l.Dot(n));
+    if (fabs(l.Dot(n)) < epsilon){
+        return ( ((p0 - l0).Dot(n))/epsilon );
+    }
+    return ( ((p0 - l0).Dot(n))/l.Dot(n) );
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::ProjectMuonTrajectory(){
-    int fDebug=0;
+    int fDebug=4;
     Debug(fDebug,"GenieFile::ProjectMuonTrajectory()");
     
     // the muon direction is given by its momentum...
     muonTrajectory_dir = muon.Vect().Unit();
     double Pmu_MeVc = 1000*muon.P();
-    double dmu_cm = Get_muonRangeFromMomentum( Pmu_MeVc );
+    dmu_cm = Get_muonRangeFromMomentum( Pmu_MeVc );
     muonTrajectory_end = vertex_position + muonTrajectory_dir * dmu_cm;
     
     
@@ -566,105 +598,50 @@ void GenieFile::ProjectMuonTrajectory(){
           ,muonTrajectory_end.X(),muonTrajectory_end.Y(),muonTrajectory_end.Z());
 }
 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-double GenieFile::LinePlaneIntersectionDistance(TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon){
-    // epsilon is a cutoff for the case of trajectory parallel to either one of the detector sides
-    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
-    // where l is a vector in the direction of the line, l0 is a point on the line,
-    // n is the normal to the plane and p0 is a point on the plan
-    Debug(0, "GenieFile::LinePlaneIntersectionDistance(), n: (%,%,%),  l.Dot(n): %" ,n.x(),n.y(),n.z(),l.Dot(n));
-    if (fabs(l.Dot(n)) < epsilon){
-        return ( ((p0 - l0).Dot(n))/epsilon );
-    }
-    return ( ((p0 - l0).Dot(n))/l.Dot(n) );
-}
-
-////....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//void GenieFile::MuonIntersectionWithSides(){
-//    // find the distance from the vertex position
-//    // in which the track meets the upper side of the detector (with normal in direction y
-//    // [https://en.wikipedia.org/wiki/Line–plane_intersection]
-//    // where l is a vector in the direction of the line, l0 is a point on the line,
-//    // n is the normal to the plane and p0 is a point on the plan
-//    TVector3 p0;
-//    // left and right sides
-//    if (muonTrajectory_dir.X() > 0){
-//        p0 = TVector3( side_x_right , 0 , 0 );
-//    }
-//    else if (muonTrajectory_dir.X() <= 0){
-//        p0 = TVector3( side_x_left , 0 , 0 );
-//    }
-//    dx = LinePlaneIntersectionDistance(muonTrajectory_dir,vertex_position,p0,TVector3( 1 , 0 , 0 ));
-//    
-//    // upper and lower sides
-//    if (muonTrajectory_dir.Y() > 0){
-//        p0 = TVector3( 0 , side_y_up , 0 );
-//    }
-//    else if (muonTrajectory_dir.Y() <= 0){
-//        p0 = TVector3( 0 , side_y_dw , 0 );
-//    }
-//    dy = LinePlaneIntersectionDistance(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 1 , 0 ));
-//    
-//    // up and downstream sides
-//    if (muonTrajectory_dir.Z() > 0){
-//        p0 = TVector3( side_z_upstream , 0 , 0 );
-//    }
-//    else if (muonTrajectory_dir.Z() <= 0){
-//        p0 = TVector3( side_z_downstream , 0 , 0 );
-//    }
-//    dz = LinePlaneIntersectionDistance(muonTrajectory_dir,vertex_position,p0,TVector3( 0 , 0 , 1 ));
-//}
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::CutMuonTrajectory(){
-    int fDebug=0;
+    int fDebug=3;
     
     muonTrack_end = muonTrajectory_end; // start with 'generated' end point
     
     double dx=1000,dy=1000,dz=1000,d_min=1000; // muon end = start + direction * d;
     while (
-           (side_x_left>muonTrack_end.X())      || (muonTrack_end.X()>side_x_right)
+           (side_x_left-1 > muonTrack_end.X())      || (muonTrack_end.X() > side_x_right+1)
            ||
-           (side_y_dw>muonTrack_end.Y())        || (muonTrack_end.Y()>side_y_up)
+           (side_y_dw-1 > muonTrack_end.Y())        || (muonTrack_end.Y() > side_y_up+1)
            ||
-           (side_z_downstream>muonTrack_end.Z())|| (muonTrack_end.Z()>side_z_upstream)
+           (side_z_downstream-1 > muonTrack_end.Z())|| (muonTrack_end.Z() > side_z_upstream+1)
            ) {
         
-        SHOW4(side_x_left,muonTrack_end.X(),muonTrack_end.X(),side_x_right);
-        SHOW4(side_y_dw,muonTrack_end.Y(),muonTrack_end.Y(),side_y_up);
-        SHOW4(side_z_downstream,muonTrack_end.Z(),muonTrack_end.Z(),side_z_upstream);
-
-        
-        if ( (muonTrajectory_dir.X()>0) && (side_x_right < muonTrack_end.X()) ) {
+        // check from which side does the track exit, add 1 cm for ~ "thickness"
+        if ( (muonTrajectory_dir.X()>0) && (side_x_right+1 < muonTrack_end.X()) ) {
             dx = LinePlaneIntersectionDistance( muonTrajectory_dir , vertex_position
                                         , TVector3( side_x_right , 0 , 0 ) , TVector3( 1 , 0 , 0 ));
             Debug(fDebug,"trajectory exited the detector from the right side, dx=%",dx);
         }
-        else if ( (muonTrajectory_dir.X()<0) && (side_x_left > muonTrack_end.X()) ){
+        else if ( (muonTrajectory_dir.X()<0) && (side_x_left-1 > muonTrack_end.X()) ){
             dx = LinePlaneIntersectionDistance( muonTrajectory_dir , vertex_position
                                         , TVector3( side_x_left , 0 , 0 ) , TVector3( 1 , 0 , 0 ));
             Debug(fDebug,"trajectory exited the detector from the left side, dx=%",dx);
         }
         
-        if ( (muonTrajectory_dir.Y()>0) && (side_y_up < muonTrack_end.Y()) ) {
+        if ( (muonTrajectory_dir.Y()>0) && (side_y_up+1 < muonTrack_end.Y()) ) {
             dy = LinePlaneIntersectionDistance( muonTrajectory_dir , vertex_position
                                         , TVector3( 0 , side_y_up , 0 ) , TVector3( 0 , 1 , 0 ));
             Debug(fDebug,"trajectory exited the detector from the top side, dy=%",dy);
         }
-        else if ( (muonTrajectory_dir.Y()<0) && (side_y_dw > muonTrack_end.Y()) ){
+        else if ( (muonTrajectory_dir.Y()<0) && (side_y_dw-1 > muonTrack_end.Y()) ){
             dy = LinePlaneIntersectionDistance( muonTrajectory_dir , vertex_position
                                         , TVector3( 0 , side_y_dw , 0 ) , TVector3( 0 , 1 , 0 ));
             Debug(fDebug,"trajectory exited the detector from the bottom side, dy=%",dy);
         }
         
-        if ( (muonTrajectory_dir.Z()>0) && (side_z_upstream < muonTrack_end.Z()) ) {
+        if ( (muonTrajectory_dir.Z()>0) && (side_z_upstream+1 < muonTrack_end.Z()) ) {
             dz = LinePlaneIntersectionDistance( muonTrajectory_dir , vertex_position
                                         , TVector3( 0 , 0 , side_z_upstream ) , TVector3( 0  , 0 , 1 ));
             Debug(fDebug,"trajectory exited the detector from the top side, dz=%",dz);
         }
-        else if ( (muonTrajectory_dir.Z()<0) && (side_z_downstream > muonTrack_end.Z()) ){
+        else if ( (muonTrajectory_dir.Z()<0) && (side_z_downstream-1 > muonTrack_end.Z()) ){
             dz = LinePlaneIntersectionDistance( muonTrajectory_dir , vertex_position
                                         , TVector3( 0 , 0 , side_z_downstream ) , TVector3( 0 , 0 , 1 ));
             Debug(fDebug,"trajectory exited the detector from the bottom side, dz=%",dz);
@@ -680,12 +657,8 @@ void GenieFile::CutMuonTrajectory(){
             d_min = dz;
         }
         Debug(fDebug,"d_min: %",d_min);
-        // CONTINUE HERE:
-        // IT DOESNT WORK SINCE IT ALWAYS RETURNS THE SAME POINT,
-        // and there is an event in which it is always stuck on
-        // changed muon track to: (255.56371 ,-31.78962 ,39.82487 ) -> (253.02564 ,-35.43581 ,38.49103 )
 
-        muonTrack_end = vertex_position + muonTrajectory_dir * (0.99 * d_min);
+        muonTrack_end = vertex_position + muonTrajectory_dir * (0.9999 * d_min);
         Debug(fDebug,"muon track direction: (%,%,%)",muonTrajectory_dir.x(),muonTrajectory_dir.y(),muonTrajectory_dir.z());
         
         Debug(fDebug,"changed muon track to: (%,%,%) -> (%,%,%)"
@@ -698,10 +671,104 @@ void GenieFile::CutMuonTrajectory(){
 
 }
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::ProjectProtonTrajectory(){
+    int fDebug=4;
+    Debug(fDebug,"GenieFile::ProjectProtonTrajectory()");
+    
+    // the muon direction is given by its momentum...
+    protonTrajectory_dir = proton.Vect().Unit();
+    double Pp_MeVc = 1000*proton.P();
+    dp_cm = Get_protonRangeFromMomentum( Pp_MeVc );
+    protonTrajectory_end = vertex_position + protonTrajectory_dir * dp_cm;
+    
+    Debug(fDebug,"Pp: % MeV/c, lp: % cm",Pp_MeVc,dp_cm);
+    Debug(fDebug,"proton trajectory: (%,%,%) -> (%,%,%)"
+          ,vertex_position.X(),vertex_position.Y(),vertex_position.Z()
+          ,protonTrajectory_end.X(),protonTrajectory_end.Y(),protonTrajectory_end.Z());
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::CutProtonTrajectory(){
+    int fDebug=3;
+    
+    protonTrack_end = protonTrajectory_end; // start with 'generated' end point
+    
+    double dx=1000,dy=1000,dz=1000,d_min=1000; // proton end = start + direction * d;
+    while (
+           (side_x_left-1 > protonTrack_end.X())      || (protonTrack_end.X() > side_x_right+1)
+           ||
+           (side_y_dw-1 > protonTrack_end.Y())        || (protonTrack_end.Y() > side_y_up+1)
+           ||
+           (side_z_downstream-1 > protonTrack_end.Z())|| (protonTrack_end.Z() > side_z_upstream+1)
+           ) {
+        
+        // check from which side does the track exit, add 1 cm for ~ "thickness"
+        if ( (protonTrajectory_dir.X()>0) && (side_x_right+1 < protonTrack_end.X()) ) {
+            dx = LinePlaneIntersectionDistance( protonTrajectory_dir , vertex_position
+                                               , TVector3( side_x_right , 0 , 0 ) , TVector3( 1 , 0 , 0 ));
+            Debug(fDebug,"trajectory exited the detector from the right side, dx=%",dx);
+        }
+        else if ( (protonTrajectory_dir.X()<0) && (side_x_left-1 > protonTrack_end.X()) ){
+            dx = LinePlaneIntersectionDistance( protonTrajectory_dir , vertex_position
+                                               , TVector3( side_x_left , 0 , 0 ) , TVector3( 1 , 0 , 0 ));
+            Debug(fDebug,"trajectory exited the detector from the left side, dx=%",dx);
+        }
+        
+        if ( (protonTrajectory_dir.Y()>0) && (side_y_up+1 < protonTrack_end.Y()) ) {
+            dy = LinePlaneIntersectionDistance( protonTrajectory_dir , vertex_position
+                                               , TVector3( 0 , side_y_up , 0 ) , TVector3( 0 , 1 , 0 ));
+            Debug(fDebug,"trajectory exited the detector from the top side, dy=%",dy);
+        }
+        else if ( (protonTrajectory_dir.Y()<0) && (side_y_dw-1 > protonTrack_end.Y()) ){
+            dy = LinePlaneIntersectionDistance( protonTrajectory_dir , vertex_position
+                                               , TVector3( 0 , side_y_dw , 0 ) , TVector3( 0 , 1 , 0 ));
+            Debug(fDebug,"trajectory exited the detector from the bottom side, dy=%",dy);
+        }
+        
+        if ( (protonTrajectory_dir.Z()>0) && (side_z_upstream+1 < protonTrack_end.Z()) ) {
+            dz = LinePlaneIntersectionDistance( protonTrajectory_dir , vertex_position
+                                               , TVector3( 0 , 0 , side_z_upstream ) , TVector3( 0  , 0 , 1 ));
+            Debug(fDebug,"trajectory exited the detector from the top side, dz=%",dz);
+        }
+        else if ( (protonTrajectory_dir.Z()<0) && (side_z_downstream-1 > protonTrack_end.Z()) ){
+            dz = LinePlaneIntersectionDistance( protonTrajectory_dir , vertex_position
+                                               , TVector3( 0 , 0 , side_z_downstream ) , TVector3( 0 , 0 , 1 ));
+            Debug(fDebug,"trajectory exited the detector from the bottom side, dz=%",dz);
+        }
+        
+        if (fabs(dx)<fabs(dy) && fabs(dx)<fabs(dz)) {
+            d_min = dx;
+        }
+        else if (fabs(dy)<fabs(dx) && fabs(dy)<fabs(dz)) {
+            d_min = dy;
+        }
+        else{
+            d_min = dz;
+        }
+        Debug(fDebug,"d_min: %",d_min);
+        protonTrack_end = vertex_position + protonTrajectory_dir * (0.9999 * d_min);
+        Debug(fDebug,"proton track direction: (%,%,%)",protonTrajectory_dir.x(),protonTrajectory_dir.y(),protonTrajectory_dir.z());
+        
+        Debug(fDebug,"changed proton track to: (%,%,%) -> (%,%,%)"
+              ,vertex_position.X(),vertex_position.Y(),vertex_position.Z()
+              ,protonTrack_end.X(),protonTrack_end.Y(),protonTrack_end.Z());
+    }
+    Debug(fDebug,"proton track: (%,%,%) -> (%,%,%)"
+          ,vertex_position.X(),vertex_position.Y(),vertex_position.Z()
+          ,protonTrack_end.X(),protonTrack_end.Y(),protonTrack_end.Z());
+    
+}
+
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetRecoKinematics(){
-    reco_Pp  = proton;
-    reco_Pmu = muon * (muonTrack_end.Mag()/muonTrajectory_end.Mag());
+    reco_l_mu   = (muonTrack_end-vertex_position).Mag();
+    reco_l_p    = (protonTrack_end-vertex_position).Mag();
+    
+    reco_Pmu = muon * (reco_l_mu/dmu_cm);
+    reco_Pp  = proton * (reco_l_p/dp_cm);
 
     reco_Ev  = reco_Pmu.E() + (reco_Pp.E() - reco_Pp.Mag()) + 0.040 ; // Eµ + Tp + Sn + T(A-1)
     reco_Pnu = TLorentzVector( 0 , 0 , reco_Ev , reco_Ev );
@@ -722,10 +789,14 @@ void GenieFile::MimicDetectorVolume(){
     // vtxz is given between -5.184 and 5.184 m
     // we want to vertex position in cm
     SetVertexPosition( 100*(vtxx + 1.282) , 100*vtxy , 100*(vtxz + 5.184));
+    
     ProjectMuonTrajectory();
-    //    MuonIntersectionWithSides();
     CutMuonTrajectory();
+    ProjectProtonTrajectory();
+    CutProtonTrajectory();
+    
     SetRecoKinematics();
+
 }
 
 

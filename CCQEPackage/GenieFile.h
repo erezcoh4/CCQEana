@@ -74,9 +74,10 @@ public:
     bool                            EndJob ();
     void               MimicDetectorVolume ();
     void             ProjectMuonTrajectory ();
-//    void         MuonIntersectionWithSides ();
     void                 CutMuonTrajectory ();
-    double         LinePlaneIntersectionDistance (TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon=0.0001);
+    void           ProjectProtonTrajectory ();
+    void               CutProtonTrajectory ();
+    double   LinePlaneIntersectionDistance (TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon=0.0001);
     void                 SetRecoKinematics ();
     
     std::vector<double>              Read1dArrayFromFile (TString filename);
@@ -110,9 +111,7 @@ public:
 
     
     // stopping range in LAr for muons and protons
-    
     //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-    
     void SetLArTools(){
         
         cout << "SetLArTools()..." << endl;
@@ -237,19 +236,21 @@ private:
     double  pxi[NMAX],pyi[NMAX],pzi[NMAX];
     // a weight to the event based on MicroBooNE acceptance
     double  MicroBooNEWeight_Pmu_theta=0, MicroBooNEWeight_Pp_theta=0,MicroBooNEWeight_Q2=0;
-    double  side_x_right = 253   ,side_x_left = 0;
+    double  side_x_right = 257   ,side_x_left = 0;
     double  side_y_up = 116.5    ,side_y_dw = -116.5;
     double  side_z_downstream = 0,side_z_upstream = 1037;
-//    double  dx=0,dy=0,dz=0;
+    double  dmu_cm, dp_cm;      // the stopping range of the muon and proton for their simulated "truth" momentum
+    double  reco_l_mu, reco_l_p;   // the length of the muon and proton "tracks"
     double  reco_Ev, reco_Q2;
 
     // my variables for CC 1p 0pi
-    bool            CC1p0pi=false;
     bool            IsCC_Np_200MeVc=false,IsCC_1p_200MeVc=false,IsCC_1p_200MeVc_0pi=false;
     
     TVector3        vertex_position;
-    TVector3        muonTrajectory_dir;             // direction of the muon trajectory
-    TVector3        muonTrajectory_end, muonTrack_end; // the "truth" trajectory vs. the track which might be "broken" by a virtual detector box
+    TVector3        muonTrajectory_dir;                 // direction of the muon trajectory
+    TVector3        muonTrajectory_end, muonTrack_end;  // the "truth" trajectory vs. the track which might be "broken" by a virtual detector box
+    TVector3        protonTrajectory_dir;
+    TVector3        protonTrajectory_end, protonTrack_end;
     
     TLorentzVector  pmomentum; //tmp...
     TLorentzVector  proton, muon, nu, q, Pmiss;

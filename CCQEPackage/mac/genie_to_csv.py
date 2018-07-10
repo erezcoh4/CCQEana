@@ -3,6 +3,8 @@
     ------
     Afro files, June 2018:
     make && python mac/genie_to_csv.py -mA=0.99 -evf=0.001
+    make && python mac/genie_to_csv.py -mA=0.80 -evf=1 --nskip=80000 -v6
+    
     
     and to run on all files:
     python mac/genie_to_csv.py -mA=0 -evf=1
@@ -44,13 +46,17 @@ if flags.mA>0:#{
 
     Nevents = gf.GetNevents()
     ctr_CC1p0pi = 0
-    for i_event in range(int(flags.evnts_frac*Nevents)): #{
+    print "stepping through events ",flags.nskip,"to",int(flags.evnts_frac*Nevents)
+    for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
         if i_event%(Nevents/10)==0: print 'reading event',i_event,'(%.0f'%(100*float(i_event)/Nevents),'%)'
         gf.ReadEvent(i_event)
         gf.SetTopology()
         gf.SetMicroBooNEWeight()
         gf.MimicDetectorVolume()
-        if flags.verbose>2: gf.Print()
+        if flags.verbose>2:#{
+            print 'XXXXXXXX \n event %d \nXXXXXXXX'%i_event
+            gf.Print()
+        #}
         if gf.GetCC_1p_200MeVc_0pi() is True:#{
         #        print 'CC1p0pi event!'
             ctr_CC1p0pi += 1
@@ -76,7 +82,7 @@ elif flags.mA==0:#{
         gf.HeaderCSV()
         Nevents = gf.GetNevents()
         ctr_CC1p0pi = 0
-        for i_event in range(int(flags.evnts_frac*Nevents)): #{
+        for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
             if i_event%(Nevents/10)==0: print 'reading event',i_event,'(%.0f'%(100*float(i_event)/Nevents),'%)'
             gf.ReadEvent(i_event)
             gf.SetTopology()

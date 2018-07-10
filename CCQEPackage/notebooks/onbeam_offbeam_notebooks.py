@@ -399,8 +399,8 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit June-28)
-def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
+# Dec-6,2017 (last edit July-10)
+def plot_OnBeam(OnBeamSample=None
                 , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
                 , bins=np.linspace(0,30,31),markersize=12
                 , ax=None, figsize=(14,6),fontsize=25                
@@ -415,11 +415,10 @@ def plot_OnBeam(OnBeamSample=None,OnBeamFV=None
     x = OnBeamSample[var]
     h_OnBeam,edges = np.histogram( x , bins=bins )
     h_OnBeam_err = np.array([np.max([1,np.sqrt(h_OnBeam[i])]) for i in range(len(h_OnBeam))])
-    
     plt.errorbar( x = mid, xerr=bin_width/2., markersize=markersize
                  , y=h_OnBeam , yerr=h_OnBeam_err
                  , fmt='o', color=color , ecolor=ecolor
-                 , label='BNB (%d=%.1f'%(len(OnBeamSample),100*float(len(OnBeamSample))/len(OnBeamFV))+'%)'
+                 , label='BNB (%d events)'%len(OnBeamSample)
                 )
     plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
     
