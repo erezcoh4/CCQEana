@@ -265,8 +265,14 @@ bool GenieFile::HeaderCSV (){
     << "muonTrack_endx"     << "," << "muonTrack_endy"      << "," << "muonTrack_endz"          << ","
     << "reco_Emu"           << "," << "reco_Pmu"            << ","
     << "reco_Pmu_x"         << "," << "reco_Pmu_y"          << "," << "reco_Pmu_z"              << ","
+    << "reco_Pmu_theta"     << "," << "reco_Pmu_phi"        << ","
+    << "reco_Ep"            << "," << "reco_Pp"             << ","
+    << "reco_Pp_x"          << "," << "reco_Pp_y"           << "," << "reco_Pp_z"               << ","
+    << "reco_Pp_theta"      << "," << "reco_Pp_phi"         << ","
     << "reco_q"             << "," << "reco_omega"          << "," << "reco_Q2"                 << ","
-    << "reco_l_mu"          << "," << "reco_l_p"            << "," ;
+    << "reco_l_mu"          << "," << "reco_l_p"            << ","
+    << "reco_delta_phi"     << "," << "reco_Pt"             << ",";
+
 
     
     // start/end points, for FV cuts
@@ -344,8 +350,13 @@ bool GenieFile::StreamToCSV (){
     << muonTrack_end.X()        << "," << muonTrack_end.Y()         << "," << muonTrack_end.Z()         << ","
     << reco_Pmu.E()             << "," << reco_Pmu.P()              << ","
     << reco_Pmu.Px()            << "," << reco_Pmu.Py()             << "," << reco_Pmu.Pz()             << ","
+    << reco_Pmu.Theta()         << "," << reco_Pmu.Phi()            << ","
+    << reco_Pp.E()              << "," << reco_Pp.P()               << ","
+    << reco_Pp.Px()             << "," << reco_Pp.Py()              << "," << reco_Pp.Pz()             << ","
+    << reco_Pp.Theta()          << "," << reco_Pp.Phi()             << ","
     << reco_q.P()               << "," << reco_q.E()                << "," << reco_Q2                   << ","
-    << reco_l_mu                << "," << reco_l_p                  << ",";
+    << reco_l_mu                << "," << reco_l_p                  << ","
+    << reco_delta_phi           << "," << reco_Pt                   << ",";
     
     
     // start/end points, for FV cuts
@@ -775,6 +786,8 @@ void GenieFile::SetRecoKinematics(){
 
     reco_q   = reco_Pnu - reco_Pmu;
     reco_Q2  = - reco_q.Mag2();
+    reco_delta_phi = r2d*fabs(reco_Pmu.Phi() - reco_Pp.Phi());
+    reco_Pt  = (reco_Pmu + reco_Pp).Pt();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

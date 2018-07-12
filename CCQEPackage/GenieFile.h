@@ -241,7 +241,7 @@ private:
     double  side_z_downstream = 0,side_z_upstream = 1037;
     double  dmu_cm, dp_cm;      // the stopping range of the muon and proton for their simulated "truth" momentum
     double  reco_l_mu, reco_l_p;   // the length of the muon and proton "tracks"
-    double  reco_Ev, reco_Q2;
+    double  reco_Ev, reco_Q2, reco_delta_phi, reco_Pt;
 
     // my variables for CC 1p 0pi
     bool            IsCC_Np_200MeVc=false,IsCC_1p_200MeVc=false,IsCC_1p_200MeVc_0pi=false;

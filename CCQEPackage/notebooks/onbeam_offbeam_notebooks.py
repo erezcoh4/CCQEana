@@ -686,8 +686,8 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted July-08, 2018)
-def plot_stacked_MCsamples( OverlaySamples=None,norm=None
+# Nov-20,2017 (last editted July-10, 2018)
+def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
                            , ax=None, debug=0,overlay_scaling=None
                            , var=None, weights_var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
                            , remove_ticks_x=False, remove_ticks_y=False
@@ -721,7 +721,7 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None
 
 
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
-    if do_individual_histograms:#{
+    if do_draw and do_individual_histograms:#{
         
         # mu-p
         plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
@@ -744,16 +744,18 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None
         h_stack = h_stack*norm/np.sum(h_stack)
         h_stack_err = h_stack_err*norm/np.sum(h_stack)
     
-    plt.step(mid + (0 if where=='mid' else 0.5*bin_width if where =='pre' else -0.5*bin_width)
+    if do_draw:#{
+        plt.step(mid + (0 if where=='mid' else 0.5*bin_width if where =='pre' else -0.5*bin_width)
              ,h_stack ,where=where ,color=stackColor,alpha=alpha, label=stackLabel)
 
-    if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
-    set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
+        if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
+        set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize
              ,do_add_legend=do_add_legend
              ,xlim=(np.min(bins)-0.5*bin_width,np.max(bins)+0.5*bin_width) if xlim is None else xlim
              ,remove_ticks_x=remove_ticks_x
              ,remove_ticks_y=remove_ticks_y
              )
+    #}
     return h_stack , h_stack_err
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
