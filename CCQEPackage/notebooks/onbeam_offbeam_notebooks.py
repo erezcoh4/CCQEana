@@ -21,7 +21,7 @@ pp.pprint(versions)
 debug = 0
 Nevents=dict()
 OffBeam_scaling = float(10947004)/15499027 # from note "Off Beam scaling factor (Ariana, Feb 2018)"
-summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/'+versions['date']+'/'+versions['Overlay']+'_'+versions['date']+'_summary.csv')
+summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/'+versions['overlay date']+'/'+versions['Overlay']+'_'+versions['overlay date']+'_summary.csv')
 
 Nevents['OnBeam POT'] = 4.908e+19
 Nevents['overlay']      = np.sum(summary.Nevents)
