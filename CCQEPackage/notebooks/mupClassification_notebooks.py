@@ -402,7 +402,7 @@ def load_MCbnbDATAcosmicSamples(date='2018_04_28',filename='ecohen_physical_file
         if pair_type=='CC 1p 0pi': print_line()
         print Ntype,'are '+pair_type+', %.1f'%(100.*float(Ntype)/len(MCbnbDATAcosmicPairsFV))+'%'
     #}
-    os.system('say "I finished loading overlay, MC BNB / data cosmic samples. We have in total %d pairs".'%len(pairs))
+    print "I finished loading overlay, MC BNB / data cosmic samples. We have in total %d pairs"%len(pairs)
     return MCbnbDATAcosmicPairsFV, MCbnbDATAcosmicSamples
 # ------------------------------------------------
 

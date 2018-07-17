@@ -228,7 +228,7 @@ bool GenieFile::HeaderCSV (){
     << "Pv_y" << ","
     << "Pv_z" << ","
     << "Pv_theta" << ","
-    << "Ev" << ","
+    << "truth_Ev" << ","
     ;
     
     // my variables for CC1p0pi
@@ -236,10 +236,10 @@ bool GenieFile::HeaderCSV (){
     << "IsCC_Np_200MeVc"    << ","
     << "IsCC_1p_200MeVc"    << ","
     << "IsCC_1p_200MeVc_0pi"<< ","
-    << "Pmu"        << "," << "Pmu_theta"   << ","
-    << "Pmu_x"      << "," << "Pmu_y"       << "," << "Pmu_z"   << ","
-    << "Pp"         << "," << "Pp_theta"    << ","
-    << "Pp_x"       << "," << "Pp_y"        << "," << "Pp_z"    << ","
+    << "truth_Pmu"        << "," << "truth_Pmu_theta"   << ","
+    << "truth_Pmu_x"      << "," << "truth_Pmu_y"       << "," << "truth_Pmu_z"   << ","
+    << "truth_Pp"         << "," << "truth_Pp_theta"    << ","
+    << "truth_Pp_x"       << "," << "truth_Pp_y"        << "," << "truth_Pp_z"    << ","
     << "Pmiss"      << ","
     << "Pmiss_x"    << "," << "Pmiss_y"     << "," << "Pmiss_z" << ","
     << "alpha_p"    << ","
@@ -250,10 +250,10 @@ bool GenieFile::HeaderCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
-    << "MicroBooNEWeight_Q2" << ","
-    << "MicroBooNEWeight_Pmu_theta" << ","
-    << "MicroBooNEWeight_Pp_theta"  << ","
-    << "MicroBooNEWeight_Pmu_theta_Pp_theta" << ",";
+    << "uBacc_truth_Q2"     << ","
+    << "uBacc_truth_muon"   << ","  << "uBacc_truth_proton"     << ","   << "uBacc_muon_truth_proton" << ","
+    << "uBacc_reco_Q2"      << ","
+    << "uBacc_reco_muon"    << ","  << "uBacc_reco_proton"      << ","   << "uBacc_muon_reco_proton" << ",";
     
     
     
@@ -335,10 +335,10 @@ bool GenieFile::StreamToCSV (){
     
     // weight to the event based on MicroBooNE acceptance
     csv_file
-    << MicroBooNEWeight_Q2                  << ","
-    << MicroBooNEWeight_Pmu_theta           << ","
-    << MicroBooNEWeight_Pp_theta            << ","
-    << (MicroBooNEWeight_Pmu_theta * MicroBooNEWeight_Pp_theta ) << ",";
+    << uBacc_truth_Q2           << ","
+    << uBacc_truth_muon         << "," << uBacc_truth_proton            << "," << uBacc_truth_muon * uBacc_truth_proton << ","
+    << uBacc_reco_Q2            << ","
+    << uBacc_reco_muon          << "," << uBacc_reco_proton            << "," << uBacc_truth_muon * uBacc_reco_proton << ",";
     
     
     
@@ -506,9 +506,9 @@ int GenieFile::FindWhichBin( double x, std::vector<double> bins ){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void GenieFile::SetMicroBooNEWeight (){
+void GenieFile::SetMicroBooNEWeights (){
     int fDebug=3;
-    Debug(fDebug,"GenieFile::SetMicroBooNEWeight");
+    Debug(fDebug,"GenieFile::SetMicroBooNEWeights");
     Debug(fDebug,"p(mu): %, 𝜃(mu): %π,p(p): %, 𝜃(p): %π",muon.P(),muon.Theta()/3.1415,proton.P(),proton.Theta()/3.1415);
     
     // assign a weight to the event based on MicroBooNE acceptance
@@ -521,59 +521,45 @@ void GenieFile::SetMicroBooNEWeight (){
     //
     // multiple the weights by 1.0e3 is to avoid from very small weights...
     
-    MicroBooNEWeight_Q2 = MicroBooNEWeight_Pmu_theta = MicroBooNEWeight_Pp_theta = 0;
+    // MicroBooNE weights as a function of the truth kinematics
+    uBacc_truth_Q2 = uBacc_truth_muon = uBacc_truth_proton = 0;
     
     // (1) find the xbin and ybin of the event
     int Pmu_bin = FindWhichBin( muon.P(), Pmu_xbins );
     int Pmu_theta_bin = FindWhichBin( muon.Theta(), Pmu_theta_ybins );
     Debug(fDebug,"Pmu_bin: %, Pmu_theta_bin: %",Pmu_bin,Pmu_theta_bin);
     // (2) apply the weight
-    if ( Pmu_bin<0 || Pmu_theta_bin<0 ) {
-        MicroBooNEWeight_Pmu_theta = 0;
-    } else {
+    if ( Pmu_bin<0 || Pmu_theta_bin<0 ) { uBacc_truth_muon = 0; } else {
         double mean  = Pmu_theta_acceptance.at(Pmu_theta_bin).at(Pmu_bin);
         Debug(fDebug+1,"MicroBooNE Weight[Pmu-theta bin %][Pmu bin %]: %",Pmu_theta_bin,Pmu_bin,mean);
         double sigma = Pmu_theta_acc_err.at(Pmu_theta_bin).at(Pmu_bin);
-        MicroBooNEWeight_Pmu_theta = rand.Gaus( mean , sigma ) * 1.e3;
+        uBacc_truth_muon = rand.Gaus( mean , sigma ) * 1.e3;
     }
 
     
     
-    // (1) find the xbin and ybin of the event
     int Pp_bin = FindWhichBin( proton.P(), Pp_xbins );
     int Pp_theta_bin = FindWhichBin( proton.Theta(), Pp_theta_ybins );
     Debug(fDebug,"Pp_bin: %, Pp_theta_bin: %",Pp_bin,Pp_theta_bin);
-    
-    // (2) apply the weight
-    if ( Pp_bin<0 || Pp_theta_bin<0 ) {
-        MicroBooNEWeight_Pp_theta = 0;
-    } else {
+    if ( Pp_bin<0 || Pp_theta_bin<0 ) { uBacc_truth_proton = 0; } else {
         double mean  = Pp_theta_acceptance.at(Pp_theta_bin).at(Pp_bin);
         Debug(fDebug+1,"MicroBooNE Weight[Pp-theta bin %][Pp bin %]: %",Pp_theta_bin,Pp_bin,mean);
         double sigma = Pp_theta_acc_err.at(Pp_theta_bin).at(Pp_bin);
-        MicroBooNEWeight_Pp_theta = rand.Gaus( mean , sigma ) * 1.e3;
+        uBacc_truth_proton = rand.Gaus( mean , sigma ) * 1.e3;
     }
     
     
     
-    // (1) find the Q2-bin
     int Q2_bin = FindWhichBin( Q2 , Q2_bins );
-    Debug(fDebug,"Q2_bin: %",Q2_bin);
-    
-    // (2) apply the weight
-    if ( Q2_bin<0 ) {
-        MicroBooNEWeight_Q2 = 0;
-    } else {
+    if ( Q2_bin<0 ) { uBacc_truth_Q2 = 0;    } else {
         double mean  = Q2_acceptance.at(Q2_bin);
         Debug(fDebug+1,"MicroBooNE Weight[Q2 bin %]: %",Q2_bin,mean);
         double sigma = Q2_acc_err.at(Q2_bin);
-        MicroBooNEWeight_Q2 = rand.Gaus( mean , sigma ) * 1.e3;
+        uBacc_truth_Q2 = rand.Gaus( mean , sigma ) * 1.e3;
     }
     
-
-    
-    Debug(fDebug,"muon weight: %, proton weight: %",MicroBooNEWeight_Pmu_theta,MicroBooNEWeight_Pp_theta);
-    Debug(fDebug,"Q2 weight: %",MicroBooNEWeight_Q2);
+    Debug(fDebug,"muon weight: %, proton weight: %",uBacc_truth_muon,uBacc_truth_proton);
+    Debug(fDebug,"Q2 weight: %",uBacc_truth_Q2);
 }
 
 

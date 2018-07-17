@@ -2,12 +2,12 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2">
-<!ENTITY file_type "data">
+<!ENTITY defname "prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev">
+<!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
-<!-- 18,536 files; 927k events <= 250 jobs x 50 files per job -->
-<!ENTITY number_of_jobs "500">
+<!-- 4000 files; 200k events <= 300 jobs x 14 files per job -->
+<!ENTITY number_of_jobs "300">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -17,7 +17,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>10000000</numevents>
-        <maxfilesperjob>40</maxfilesperjob>
+        <maxfilesperjob>14</maxfilesperjob>
 
         <!-- Operating System and Project Version -->
         <os>SL6</os>
@@ -38,7 +38,6 @@
         <stage name="ccqe_filter">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/filter/ccqe_filter.fcl</fcl>
             <inputdef>&defname;</inputdef>
-            <!--            <inputlist>/uboone/data/users/ecohen/Lists/ArtFilesLists/MCC8/overlay/&defname;_reco2.list</inputlist>-->
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_filter/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_filter/&name;</logdir>
@@ -48,7 +47,7 @@
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
             <jobsub> --expected-lifetime=6h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>800</memory>
+            <memory>2400</memory>
             <disk>20GB</disk> <!-- 1 event ~= 1.6M, 10 files ~= 500 events ~= 0.8 GB -->
         </stage>
         
@@ -67,14 +66,14 @@
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
             <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>2000</memory>
+            <memory>2800</memory>
             <disk>20GB</disk>
         </stage>
         
         
         
         <stage name="ccqe_ana">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/ana/ccqe_ana_overlay.fcl</fcl>
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/ana/ccqe_ana_mccosmic.fcl</fcl>
             <maxfilesperjob>1</maxfilesperjob>
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>

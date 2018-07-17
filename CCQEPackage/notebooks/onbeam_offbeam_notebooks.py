@@ -399,9 +399,9 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit July-10)
-def plot_OnBeam(OnBeamSample=None
-                , var='PIDa_assigned_proton' , x_label='$PID_a^p$'                 
+# Dec-6,2017 (last edit July-17,2018)
+def plot_OnBeam(OnBeamSample=None,do_draw=True
+                , var='PIDa_assigned_proton' , x_label='$PID_a^p$', label='BNB'
                 , bins=np.linspace(0,30,31),markersize=12
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OnBeamColor, ecolor='black'
@@ -410,30 +410,31 @@ def plot_OnBeam(OnBeamSample=None
                 , do_return_h=False):
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
-
-    if ax is None: fig,ax=plt.subplots(figsize=figsize)
+    
+    if ax is None and do_draw is True: fig,ax=plt.subplots(figsize=figsize)
     x = OnBeamSample[var]
     h_OnBeam,edges = np.histogram( x , bins=bins )
     h_OnBeam_err = np.array([np.max([1,np.sqrt(h_OnBeam[i])]) for i in range(len(h_OnBeam))])
-    plt.errorbar( x = mid, xerr=bin_width/2., markersize=markersize
+    if do_draw:
+        plt.errorbar( x = mid, xerr=bin_width/2., markersize=markersize
                  , y=h_OnBeam , yerr=h_OnBeam_err
                  , fmt='o', color=color , ecolor=ecolor
-                 , label='BNB (%d events)'%len(OnBeamSample)
+                 , label=label +'(%d events)'%len(OnBeamSample)
                 )
-    plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
+        plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
     
-    set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
+        set_axes(ax,x_label=x_label,y_label='counts',do_add_grid=True,fontsize=fontsize
              ,xlim=(np.min(bins)-bin_width,np.max(bins)+bin_width)
              ,remove_ticks_x=remove_ticks_x, remove_ticks_y=remove_ticks_y
             )
-    if do_add_legend: 
-        if legend_loc=='bbox':
-            leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
-        else:
-            leg=plt.legend(fontsize=fontsize,loc=legend_loc)
-    plt.tight_layout()
+        if do_add_legend:
+            if legend_loc=='bbox':
+                leg=plt.legend(bbox_to_anchor=(1.,1.05),fontsize=fontsize,loc=2)
+            else:
+                leg=plt.legend(fontsize=fontsize,loc=legend_loc)
+        plt.tight_layout()
     if do_return_h is True: return h_OnBeam,h_OnBeam_err
-    if do_add_legend is False: return ax,h_OnBeam
+    if do_draw is True and do_add_legend is False: return ax,h_OnBeam
     return ax,leg,h_OnBeam,h_OnBeam_err
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
@@ -686,7 +687,7 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted July-10, 2018)
+# Nov-20,2017 (last editted July-17, 2018)
 def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
                            , ax=None, debug=0,overlay_scaling=None
                            , var=None, weights_var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
@@ -694,7 +695,8 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
                            , xlim=None,where='mid'
                            , do_add_legend=False
                            , do_individual_histograms=True
-                           , stackColor='black',stackLabel='overlay'):
+                           , stackColor='black',stackLabel='overlay'
+                           , do_add_MEC_contribution=False ):
     '''
         return: h, bins
         stacked histogram values and bins,
@@ -703,26 +705,30 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
         '''
     bin_width = bins[1]-bins[0]
     mid = 0.5*(bins[:-1]+bins[1:])
-    h,h_err,labels,colors,N = dict(),dict(),dict(),dict(),dict()
+    h,h_err,labels,colors,N,h_MEC = dict(),dict(),dict(),dict(),dict(),dict()
     
-    
-    for i_pair_type,pair_type in enumerate(pair_types):
-        sample = OverlaySamples[pair_type] #reducedOverlay[cut_name][pair_type]
+    for i_pair_type,pair_type in enumerate(pair_types):#{
+        sample = OverlaySamples[pair_type]
         N[pair_type] = float(len(sample))
-        labels[pair_type] = MClabels[i_pair_type]#+' (%.1f'%(100.*N[pair_type]/Noriginal)+'%)'
+        labels[pair_type] = MClabels[i_pair_type]
         colors[pair_type] = MCcolors[i_pair_type];
         x = sample[var]; x = x[x<1e5];
         weights = sample[weights_var] if weights_var!=None else None
-        
         h[pair_type],edges = np.histogram(x,bins=bins,weights=weights)
         h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
         h_err[pair_type] = np.sqrt(h[pair_type])
         h_err[pair_type+' scaled'] = overlay_scaling[pair_type]*h_err[pair_type] if overlay_scaling else h_err[pair_type]
-
+        if do_add_MEC_contribution:#{
+            sample_MEC = sample[sample['genie_mode']==10]
+            x_MEC = sample_MEC[var]; x_MEC = x_MEC[x_MEC<1e5];
+            w_MEC = sample_MEC[weights_var] if weights_var!=None else None
+            h_MEC[pair_type],_ = np.histogram(x_MEC,bins=bins,weights=w_MEC)
+            h_MEC[pair_type+' scaled'] = overlay_scaling[pair_type]*h_MEC[pair_type] if overlay_scaling else h_MEC[pair_type]
+        #}
+    #}
 
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
     if do_draw and do_individual_histograms:#{
-        
         # mu-p
         plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
                 ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
@@ -739,14 +745,20 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
     # all
     h_stack = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
     h_stack_err = np.sqrt(np.square(h_err['cosmic scaled'])+np.square(h_err['other pairs scaled'])+np.square(h_err['1mu-1p scaled']))
+    if do_add_MEC_contribution: h_stack_MEC = h_MEC['cosmic scaled']+h_MEC['other pairs scaled']+h_MEC['1mu-1p scaled']
     
     if norm is not None:
         h_stack = h_stack*norm/np.sum(h_stack)
         h_stack_err = h_stack_err*norm/np.sum(h_stack)
+        if do_add_MEC_contribution: h_stack_MEC = h_stack_MEC*norm/np.sum(h_stack_MEC)
     
     if do_draw:#{
         plt.step(mid + (0 if where=='mid' else 0.5*bin_width if where =='pre' else -0.5*bin_width)
              ,h_stack ,where=where ,color=stackColor,alpha=alpha, label=stackLabel)
+        if do_add_MEC_contribution:#{
+            plt.step(mid + (0 if where=='mid' else 0.5*bin_width if where =='pre' else -0.5*bin_width)
+                     ,h_stack_MEC ,where=where ,color=stackColor,alpha=alpha, label='MEC contribution', linestyle='--')
+        #}
 
         if np.max(h_stack)>np.max(ax.get_ylim()): ax.set_ylim(np.min(ax.get_ylim()),1.05*np.max(h_stack))
         set_axes(ax,x_label=x_label,y_label=y_label,do_add_grid=True,fontsize=fontsize

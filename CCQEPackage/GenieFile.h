@@ -82,7 +82,7 @@ public:
     
     std::vector<double>              Read1dArrayFromFile (TString filename);
     std::vector<std::vector<double>> Read2dArrayFromFile (TString filename);
-    void                             SetMicroBooNEWeight ();
+    void                             SetMicroBooNEWeights ();
     int                                     FindWhichBin ( double x, std::vector<double> bins );
     float                                 LightConeAlpha ( TLorentzVector v ){ return (v.E() - v.Pz())/(mAr40/40.); };
     
@@ -235,7 +235,8 @@ private:
     Int_t   pdgi[NMAX]; //PDG code of kth 'primary' particle in hadronic system (before FSI)
     double  pxi[NMAX],pyi[NMAX],pzi[NMAX];
     // a weight to the event based on MicroBooNE acceptance
-    double  MicroBooNEWeight_Pmu_theta=0, MicroBooNEWeight_Pp_theta=0,MicroBooNEWeight_Q2=0;
+    double  uBacc_truth_muon=0      , uBacc_truth_proton=0  , uBacc_truth_Q2=0;
+    double  uBacc_reco_muon=0       , uBacc_reco_proton=0   , uBacc_reco_Q2=0;
     double  side_x_right = 257   ,side_x_left = 0;
     double  side_y_up = 116.5    ,side_y_dw = -116.5;
     double  side_z_downstream = 0,side_z_upstream = 1037;

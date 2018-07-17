@@ -49,10 +49,12 @@ if flags.mA>0:#{
     print "stepping through events ",flags.nskip,"to",int(flags.evnts_frac*Nevents)
     for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
         if i_event%(Nevents/10)==0: print 'reading event',i_event,'(%.0f'%(100*float(i_event)/Nevents),'%)'
+        
         gf.ReadEvent(i_event)
         gf.SetTopology()
-        gf.SetMicroBooNEWeight()
         gf.MimicDetectorVolume()
+        gf.SetMicroBooNEWeights()
+        
         if flags.verbose>2:#{
             print 'XXXXXXXX \n event %d \nXXXXXXXX'%i_event
             gf.Print()
@@ -84,10 +86,12 @@ elif flags.mA==0:#{
         ctr_CC1p0pi = 0
         for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
             if i_event%(Nevents/10)==0: print 'reading event',i_event,'(%.0f'%(100*float(i_event)/Nevents),'%)'
+            
             gf.ReadEvent(i_event)
             gf.SetTopology()
-            gf.SetMicroBooNEWeight()
             gf.MimicDetectorVolume()
+            gf.SetMicroBooNEWeights()
+            
             if gf.GetCC_1p_200MeVc_0pi() is True: ctr_CC1p0pi += 1
             gf.StreamToCSV()
         #}
