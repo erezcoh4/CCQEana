@@ -2,7 +2,7 @@
 <!DOCTYPE project [
 <!ENTITY user_id "ecohen">
 
-<!ENTITY defname "prodgenie_bnb_nu_cosmic_uboone_MCC8Tune3_mcc8.7_reco2">
+<!ENTITY defname "prodgenie_bnb_nu_cosmic_uboone_MCC8Tune3_mcc8.7_reco2_dev">
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
