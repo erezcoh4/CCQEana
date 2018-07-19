@@ -60,8 +60,8 @@ physics:
       DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8.11"
       VerbosityLevel:                   1
       MCmodeLabel:                      true
-      DoWriteTracksInfo:                true
-      DoAddTracksEdep:                  true
+      DoWriteTracksInfo:                false
+      DoAddTracksEdep:                  false
       DoWriteGENIEInfo:                 true
       DoWriteEventsInfo:                true
       DoOnlySwT:                        false
