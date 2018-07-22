@@ -123,6 +123,14 @@ void GenieFile::SetQ2AcceptanceMaps(TString fAccMapPath,TString fAccMapName){
     Q2_acc_err        = Read1dArrayFromFile(errfilename);
 }
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetQ2_gen_rec_map(TString fMapPath,TString fMapName){
+    TString Q2_gen_rec_bins_filename   = fAccMapPath + fAccMapName + "_bins.csv";
+    TString Q2_gen_rec_map_filename    = fAccMapPath + fAccMapName + "_map.csv";
+    
+    Q2_gen_rec_bins    = Read1dArrayFromFile(Q2_gen_rec_bins_filename);
+    Q2_gen_rec_map     = Read2dArrayFromFile(Q2_gen_rec_map_filename);
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GenieFile::SetInTree(){
@@ -774,6 +782,13 @@ void GenieFile::SetRecoKinematics(){
     reco_Q2  = - reco_q.Mag2();
     reco_delta_phi = r2d*fabs(reco_Pmu.Phi() - reco_Pp.Phi());
     reco_Pt  = (reco_Pmu + reco_Pp).Pt();
+    
+    
+    // reconstructed Q2 from the overlay map
+    i_gen_rec = FindWhichBin( Q2 , Q2_gen_rec_bins );
+    weights = Q2_gen_rec_map.at(i_gen_rec).
+    reco_Q2_gen_rec  = ;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

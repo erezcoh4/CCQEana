@@ -30,6 +30,7 @@ acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acc
 Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"
 Pp_theta_acceptance_map_name = "Pp_theta_12x12_bins"
 Q2_acceptance_map_name = "Q2_11_bins"
+Q2_gen_rec_map_name = "Q2_gen_rec"
 
 # run on a single files
 if flags.mA>0:#{
@@ -42,6 +43,7 @@ if flags.mA>0:#{
                    ,Pmu_theta_acceptance_map_name
                    ,Pp_theta_acceptance_map_name
                    ,Q2_acceptance_map_name)
+    gf.SetQ2_gen_rec_map( acceptance_map_path, Q2_gen_rec_map_name )
     gf.HeaderCSV()
 
     Nevents = gf.GetNevents()
@@ -81,6 +83,7 @@ elif flags.mA==0:#{
                        ,Pmu_theta_acceptance_map_name
                        ,Pp_theta_acceptance_map_name
                        ,Q2_acceptance_map_name)
+        gf.SetQ2_gen_rec_map( acceptance_map_path, Q2_gen_rec_map_name )
         gf.HeaderCSV()
         Nevents = gf.GetNevents()
         ctr_CC1p0pi = 0

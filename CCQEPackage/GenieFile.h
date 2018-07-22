@@ -54,6 +54,8 @@ public:
     void         SetPmuThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
     void          SetPpThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
     void               SetQ2AcceptanceMaps (TString fAccMapPath, TString fAccMapName);
+    void                 SetQ2_gen_rec_map (TString fMapPath,TString fMapName);
+
     void                 SetVertexPosition (double x,double y, double z)                    {vertex_position = TVector3(x,y,z);};
 
     // GETters
@@ -267,6 +269,8 @@ private:
     std::vector<std::vector<double>> Pp_theta_acceptance, Pp_theta_acc_err;
     std::vector<double>              Q2_bins;
     std::vector<double>              Q2_acceptance, Q2_acc_err;
+    std::vector<double>              Q2_gen_rec_bins;
+    std::vector<std::vector<double>> Q2_gen_rec_map;
     
     TRandom3  rand;
 };
