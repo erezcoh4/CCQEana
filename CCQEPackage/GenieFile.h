@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <random>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -55,7 +56,7 @@ public:
     void          SetPpThetaAcceptanceMaps (TString fAccMapPath, TString fAccMapName);
     void               SetQ2AcceptanceMaps (TString fAccMapPath, TString fAccMapName);
     void                 SetQ2_gen_rec_map (TString fMapPath,TString fMapName);
-
+    void        SetQ2_rec_1d_Probabilities ();
     void                 SetVertexPosition (double x,double y, double z)                    {vertex_position = TVector3(x,y,z);};
 
     // GETters
@@ -81,12 +82,19 @@ public:
     void               CutProtonTrajectory ();
     double   LinePlaneIntersectionDistance (TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon=0.0001);
     void                 SetRecoKinematics ();
-    
+    int             SampleFromDistribution ( std::vector<double> probabilities );
+
     std::vector<double>              Read1dArrayFromFile (TString filename);
     std::vector<std::vector<double>> Read2dArrayFromFile (TString filename);
     void                             SetMicroBooNEWeights ();
     int                                     FindWhichBin ( double x, std::vector<double> bins );
     float                                 LightConeAlpha ( TLorentzVector v ){ return (v.E() - v.Pz())/(mAr40/40.); };
+    
+    
+    
+    
+    
+    
     
     int     debug=0;
     void Debug(Int_t verobosity_level, const char* format) // base function
@@ -216,26 +224,29 @@ private:
     ofstream csv_file;
 
     
-    int     i_event=0;
-    int     counter=0;
-    
-    // GENIE variables
-    int     neu; //Neutrino PDG code.
     bool    cc, qel, res, dis, coh; // Is it a CC /  quasi-elastic / Resonance / DIS / Coherent scattering?
     bool    mec;
+    // my variables for CC 1p 0pi
+    bool            IsCC_Np_200MeVc=false,IsCC_1p_200MeVc=false,IsCC_1p_200MeVc_0pi=false;
+    
+    int     i_event=0;
+    int     counter=0;
+    int     ni; // Number of 'primary' particles in hadronic system.
+    int     neu; //Neutrino PDG code.
+    int     nf; // Number of final state particles in hadronic system.
+    int     i_gen,  i_rec;
+
+    Int_t   pdgi[NMAX]; //PDG code of kth 'primary' particle in hadronic system (before FSI)
+    Int_t   pdgf[NMAX]; //PDG code of kth final state particle in hadronic system
+    
     double  Q2, W, x;
     double  pxn, pyn, pzn; // Initial state hit nucleon px (in GeV).
     double  pxv, pyv, pzv; // Incoming neutrino px/y/z (in GeV).
     double  pxl, pyl, pzl; // Final state primary lepton px/py/pz (in GeV)
     double  vtxx, vtxy, vtxz; // vertex position
-    
-    int     nf; // Number of final state particles in hadronic system.
-    Int_t   pdgf[NMAX]; //PDG code of kth final state particle in hadronic system
     double  pxf[NMAX],pyf[NMAX],pzf[NMAX]; //Px/y/z of kth final state particle in hadronic system (in GeV).
-    
-    int     ni; // Number of 'primary' particles in hadronic system.
-    Int_t   pdgi[NMAX]; //PDG code of kth 'primary' particle in hadronic system (before FSI)
     double  pxi[NMAX],pyi[NMAX],pzi[NMAX];
+    
     // a weight to the event based on MicroBooNE acceptance
     double  uBacc_truth_muon=0      , uBacc_truth_proton=0  , uBacc_truth_Q2=0;
     double  uBacc_reco_muon=0       , uBacc_reco_proton=0   , uBacc_reco_Q2=0;
@@ -245,9 +256,8 @@ private:
     double  dmu_cm, dp_cm;      // the stopping range of the muon and proton for their simulated "truth" momentum
     double  reco_l_mu, reco_l_p;   // the length of the muon and proton "tracks"
     double  reco_Ev, reco_Q2, reco_delta_phi, reco_Pt;
+    double  gen_Q2_gen_rec, rec_Q2_gen_rec;
 
-    // my variables for CC 1p 0pi
-    bool            IsCC_Np_200MeVc=false,IsCC_1p_200MeVc=false,IsCC_1p_200MeVc_0pi=false;
     
     TVector3        vertex_position;
     TVector3        muonTrajectory_dir;                 // direction of the muon trajectory
@@ -271,6 +281,7 @@ private:
     std::vector<double>              Q2_acceptance, Q2_acc_err;
     std::vector<double>              Q2_gen_rec_bins;
     std::vector<std::vector<double>> Q2_gen_rec_map;
+    std::vector<std::vector<double>> h_Q2_rec;
     
     TRandom3  rand;
 };

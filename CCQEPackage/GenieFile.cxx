@@ -125,11 +125,60 @@ void GenieFile::SetQ2AcceptanceMaps(TString fAccMapPath,TString fAccMapName){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetQ2_gen_rec_map(TString fMapPath,TString fMapName){
-    TString Q2_gen_rec_bins_filename   = fAccMapPath + fAccMapName + "_bins.csv";
-    TString Q2_gen_rec_map_filename    = fAccMapPath + fAccMapName + "_map.csv";
+    TString Q2_gen_rec_bins_filename   = fMapPath + fMapName + "_bins.csv";
+    TString Q2_gen_rec_map_filename    = fMapPath + fMapName + "_map.csv";
     
     Q2_gen_rec_bins    = Read1dArrayFromFile(Q2_gen_rec_bins_filename);
     Q2_gen_rec_map     = Read2dArrayFromFile(Q2_gen_rec_map_filename);
+    SetQ2_rec_1d_Probabilities();
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void GenieFile::SetQ2_rec_1d_Probabilities(){
+    int fDebug = 0 ;
+    Debug(fDebug,"GenieFile::SetQ2_rec_1d_Probabilities()");
+    
+    std::default_random_engine generator;
+    std::discrete_distribution<int> distribution {2,2,1,1,2,2,1,1,2,2};
+    std::discrete_distribution<double> probabilities {2.2,1.02,0.02};
+    
+    int number = distribution(generator);
+    double number_d = probabilities(generator);
+    Debug(fDebug,"number,number_d: %,%",number,number_d);
+
+    number = distribution(generator);
+    number_d = probabilities(generator);
+    Debug(fDebug,"number,number_d: %,%",number,number_d);
+    
+    
+    number = distribution(generator);
+    number_d = probabilities(generator);
+    Debug(fDebug,"number,number_d: %,%",number,number_d);
+
+    
+    number = distribution(generator);
+    number_d = probabilities(generator);
+    Debug(fDebug,"number,number_d: %,%",number,number_d);
+
+    // CONTINUE HERE: USE THIS!
+    
+//    // use the Q2 gen/rec 2D map to create a set of 1D distributions
+//    // from which we generate "reco"-Q2 for each "gen"-Q2
+//    for ( size_t i_gen=0; i_gen < Q2_gen_rec_bins.size(); i_gen++ ) {
+//        // for each i_gen we build 1D distirbution from all i_rec
+//        h_Q2_rec.push_back(Q2_gen_rec_map.at(i_gen));
+//        // normalize the probabilities distribution
+//        double max_h = 0;
+//        for (auto& n : h_Q2_rec.at(i_gen)) {
+//            if (n > max_h){
+//                max_h = n;
+//            }
+//        }
+//        Debug(fDebug , "i_gen: %, max_h: %, Q2_gen: %",i_gen,max_h,Q2_gen_rec_bins.at(i_gen));
+//        for (auto& n : h_Q2_rec.at(i_gen)) n = n/max_h;
+//        if (debug>fDebug) SHOWstdVector(h_Q2_rec.at(i_gen));
+//    }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -197,7 +246,7 @@ bool GenieFile::Initialize(){
     reco_l_mu = reco_l_p = 0;
     reco_Q2 = reco_Ev = 0;
     reco_Pnu = reco_Pp = reco_Pmu = reco_q = TLorentzVector();
-    
+    i_rec = i_gen = gen_Q2_gen_rec = rec_Q2_gen_rec = 0;
     muonTrajectory_end = muonTrack_end = TVector3();
     
     return true;
@@ -279,7 +328,8 @@ bool GenieFile::HeaderCSV (){
     << "reco_Pp_theta"      << "," << "reco_Pp_phi"         << ","
     << "reco_q"             << "," << "reco_omega"          << "," << "reco_Q2"                 << ","
     << "reco_l_mu"          << "," << "reco_l_p"            << ","
-    << "reco_delta_phi"     << "," << "reco_Pt"             << ",";
+    << "reco_delta_phi"     << "," << "reco_Pt"             << ","
+    << "gen_Q2_gen_rec"     << "," << "rec_Q2_gen_rec"      << ",";
 
 
     
@@ -364,9 +414,9 @@ bool GenieFile::StreamToCSV (){
     << reco_Pp.Theta()          << "," << reco_Pp.Phi()             << ","
     << reco_q.P()               << "," << reco_q.E()                << "," << reco_Q2                   << ","
     << reco_l_mu                << "," << reco_l_p                  << ","
-    << reco_delta_phi           << "," << reco_Pt                   << ",";
-    
-    
+    << reco_delta_phi           << "," << reco_Pt                   << ","
+    << gen_Q2_gen_rec           << "," << rec_Q2_gen_rec            << ",";
+
     // start/end points, for FV cuts
     csv_file
     << vertex_position.x()  << ","  << vertex_position.y()  << ","  << vertex_position.z()  << ","
@@ -570,7 +620,6 @@ void GenieFile::SetMicroBooNEWeights (){
     Debug(fDebug,"Q2 weight: %",uBacc_truth_Q2);
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 double GenieFile::LinePlaneIntersectionDistance(TVector3 l,TVector3 l0,TVector3 p0,TVector3 n,double epsilon){
     // epsilon is a cutoff for the case of trajectory parallel to either one of the detector sides
@@ -768,6 +817,21 @@ void GenieFile::CutProtonTrajectory(){
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+int GenieFile::SampleFromDistribution( std::vector<double> probabilities ){
+    // sample from an array of probabilities
+    while (1) { // eternal loop until we find a good index and return it....
+        // (A) randomly sample an index from a uniform distribution
+        int i = rand.Uniform( 0 , probabilities.size() );
+        // (B) sample height from a uniform distribution funtion
+        // and if its lower or equal the probability keep the index
+        double height = rand.Uniform(0 , 1);
+        if ( height <= probabilities.at(i) ) {
+            return i;
+        }
+    }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetRecoKinematics(){
     reco_l_mu   = (muonTrack_end-vertex_position).Mag();
     reco_l_p    = (protonTrack_end-vertex_position).Mag();
@@ -785,11 +849,23 @@ void GenieFile::SetRecoKinematics(){
     
     
     // reconstructed Q2 from the overlay map
-    i_gen_rec = FindWhichBin( Q2 , Q2_gen_rec_bins );
-    weights = Q2_gen_rec_map.at(i_gen_rec).
-    reco_Q2_gen_rec  = ;
-
+    i_gen = FindWhichBin( Q2 , Q2_gen_rec_bins );
+    if ( Q2 < Q2_gen_rec_bins.at(0) ) { // under bin
+        gen_Q2_gen_rec = -1;
+        rec_Q2_gen_rec = -1;
+    }
+    else if ( Q2_gen_rec_bins.at( Q2_gen_rec_bins.size() - 1 ) < Q2 ) { // over bin
+        gen_Q2_gen_rec = 9999;
+        rec_Q2_gen_rec = 9999;
+    }
+    else{
+        gen_Q2_gen_rec = Q2_gen_rec_bins.at(i_gen);
+        i_rec = SampleFromDistribution( h_Q2_rec.at(i_gen) );
+        rec_Q2_gen_rec = Q2_gen_rec_bins.at(i_rec);
+    }
+    Debug(4,"Q2: %, i_gen: %, gen_Q2_gen_rec: %, i_rec=%, rec_Q2_gen_rec: %",Q2,i_gen,gen_Q2_gen_rec,i_rec,rec_Q2_gen_rec);
 }
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::MimicDetectorVolume(){
