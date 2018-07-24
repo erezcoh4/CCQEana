@@ -281,7 +281,10 @@ private:
     std::vector<double>              Q2_acceptance, Q2_acc_err;
     std::vector<double>              Q2_gen_rec_bins;
     std::vector<std::vector<double>> Q2_gen_rec_map;
-    std::vector<std::vector<double>> h_Q2_rec;
+//    std::vector<std::vector<double>> h_Q2_rec;
+    
+    std::default_random_engine generator;
+    std::vector<std::discrete_distribution<double>> Q2_rec_distributions;
     
     TRandom3  rand;
 };

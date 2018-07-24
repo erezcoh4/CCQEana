@@ -133,52 +133,19 @@ void GenieFile::SetQ2_gen_rec_map(TString fMapPath,TString fMapName){
     SetQ2_rec_1d_Probabilities();
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::SetQ2_rec_1d_Probabilities(){
-    int fDebug = 0 ;
+    int fDebug = 3;
     Debug(fDebug,"GenieFile::SetQ2_rec_1d_Probabilities()");
-    
-    std::default_random_engine generator;
-    std::discrete_distribution<int> distribution {2,2,1,1,2,2,1,1,2,2};
-    std::discrete_distribution<double> probabilities {2.2,1.02,0.02};
-    
-    int number = distribution(generator);
-    double number_d = probabilities(generator);
-    Debug(fDebug,"number,number_d: %,%",number,number_d);
-
-    number = distribution(generator);
-    number_d = probabilities(generator);
-    Debug(fDebug,"number,number_d: %,%",number,number_d);
-    
-    
-    number = distribution(generator);
-    number_d = probabilities(generator);
-    Debug(fDebug,"number,number_d: %,%",number,number_d);
-
-    
-    number = distribution(generator);
-    number_d = probabilities(generator);
-    Debug(fDebug,"number,number_d: %,%",number,number_d);
-
-    // CONTINUE HERE: USE THIS!
-    
-//    // use the Q2 gen/rec 2D map to create a set of 1D distributions
-//    // from which we generate "reco"-Q2 for each "gen"-Q2
-//    for ( size_t i_gen=0; i_gen < Q2_gen_rec_bins.size(); i_gen++ ) {
-//        // for each i_gen we build 1D distirbution from all i_rec
-//        h_Q2_rec.push_back(Q2_gen_rec_map.at(i_gen));
-//        // normalize the probabilities distribution
-//        double max_h = 0;
-//        for (auto& n : h_Q2_rec.at(i_gen)) {
-//            if (n > max_h){
-//                max_h = n;
-//            }
-//        }
-//        Debug(fDebug , "i_gen: %, max_h: %, Q2_gen: %",i_gen,max_h,Q2_gen_rec_bins.at(i_gen));
-//        for (auto& n : h_Q2_rec.at(i_gen)) n = n/max_h;
-//        if (debug>fDebug) SHOWstdVector(h_Q2_rec.at(i_gen));
-//    }
+    // use the Q2 gen/rec 2D map to create a set of 1D distributions
+    // from which we generate "reco"-Q2 for each "gen"-Q2
+    for ( size_t i_gen=0; i_gen < Q2_gen_rec_bins.size(); i_gen++ ) {
+        // for each i_gen we build 1D distirbution from all i_rec
+        std::vector<double> Q2_rec_vector = Q2_gen_rec_map.at(i_gen);
+        // std::discrete_distribution seems to have a constructor that takes an iterator range.
+        std::discrete_distribution<double> Q2_rec_distribution(Q2_rec_vector.begin(), Q2_rec_vector.end());
+        Q2_rec_distributions.push_back( Q2_rec_distribution );
+    }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -267,7 +234,7 @@ bool GenieFile::HeaderCSV (){
     csv_file
     << "cc"  << "," << "qel" <<  "," << "res" <<  "," << "dis" <<  "," << "coh" <<  ","
     << "mec" << ","
-    << "Q2"  << "," << "W" <<  "," << "x" <<  ","
+    << "truth_Q2"  << "," << "W" <<  "," << "x" <<  ","
     << "pxn" << "," << "pyn" <<  "," << "pzn" <<  "," // Initial state hit nucleon
     << "pxv" << "," << "pyv" <<  "," << "pzv" <<  ","
     << "pxl" << "," << "pyl" <<  "," << "pzl" << ","
@@ -308,7 +275,7 @@ bool GenieFile::HeaderCSV (){
     // weight to the event based on MicroBooNE acceptance
     csv_file
     << "uBacc_truth_Q2"     << ","
-    << "uBacc_truth_muon"   << ","  << "uBacc_truth_proton"     << ","   << "uBacc_muon_truth_proton" << ","
+    << "uBacc_truth_muon"   << ","  << "uBacc_truth_proton"     << ","   << "uBacc_truth_muon_proton" << ","
     << "uBacc_reco_Q2"      << ","
     << "uBacc_reco_muon"    << ","  << "uBacc_reco_proton"      << ","   << "uBacc_muon_reco_proton" << ",";
     
@@ -396,7 +363,7 @@ bool GenieFile::StreamToCSV (){
     << uBacc_truth_Q2           << ","
     << uBacc_truth_muon         << "," << uBacc_truth_proton            << "," << uBacc_truth_muon * uBacc_truth_proton << ","
     << uBacc_reco_Q2            << ","
-    << uBacc_reco_muon          << "," << uBacc_reco_proton            << "," << uBacc_truth_muon * uBacc_reco_proton << ",";
+    << uBacc_reco_muon          << "," << uBacc_reco_proton            << "," << uBacc_reco_muon * uBacc_reco_proton << ",";
     
     
     
@@ -725,7 +692,6 @@ void GenieFile::CutMuonTrajectory(){
 
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::ProjectProtonTrajectory(){
     int fDebug=4;
@@ -815,7 +781,6 @@ void GenieFile::CutProtonTrajectory(){
     
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 int GenieFile::SampleFromDistribution( std::vector<double> probabilities ){
     // sample from an array of probabilities
@@ -849,21 +814,30 @@ void GenieFile::SetRecoKinematics(){
     
     
     // reconstructed Q2 from the overlay map
+    Q2 = -q.Mag2();
     i_gen = FindWhichBin( Q2 , Q2_gen_rec_bins );
+    Debug(4,"Q2: %, i_gen: %",Q2,i_gen);
     if ( Q2 < Q2_gen_rec_bins.at(0) ) { // under bin
+        Debug(4,"Q2 < Q2_gen_rec_bins.at(0)!!");
         gen_Q2_gen_rec = -1;
         rec_Q2_gen_rec = -1;
     }
     else if ( Q2_gen_rec_bins.at( Q2_gen_rec_bins.size() - 1 ) < Q2 ) { // over bin
+        Debug(4,"Q2_gen_rec_bins.at( Q2_gen_rec_bins.size() - 1 ) < Q2!!");
         gen_Q2_gen_rec = 9999;
         rec_Q2_gen_rec = 9999;
     }
-    else{
-        gen_Q2_gen_rec = Q2_gen_rec_bins.at(i_gen);
-        i_rec = SampleFromDistribution( h_Q2_rec.at(i_gen) );
-        rec_Q2_gen_rec = Q2_gen_rec_bins.at(i_rec);
+    else if (i_gen == -1){
+        Debug(4,"i_gen == -1!!");
+        gen_Q2_gen_rec = -9999;
+        rec_Q2_gen_rec = -9999;
     }
-    Debug(4,"Q2: %, i_gen: %, gen_Q2_gen_rec: %, i_rec=%, rec_Q2_gen_rec: %",Q2,i_gen,gen_Q2_gen_rec,i_rec,rec_Q2_gen_rec);
+    else{
+        gen_Q2_gen_rec = 0.5*(Q2_gen_rec_bins.at(i_gen) + Q2_gen_rec_bins.at(i_gen+1));
+        i_rec = Q2_rec_distributions.at(i_gen)(generator);
+        rec_Q2_gen_rec = 0.5*(Q2_gen_rec_bins.at(i_rec) + Q2_gen_rec_bins.at(i_rec+1));
+    }
+    Debug(4,"gen_Q2_gen_rec: %, i_rec=%, rec_Q2_gen_rec: %",gen_Q2_gen_rec,i_rec,rec_Q2_gen_rec);
 }
 
 

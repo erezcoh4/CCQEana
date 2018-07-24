@@ -378,33 +378,58 @@ def get_Noverlay(reducedSamples=None,cut_name=''
 # ------------------------------------------------
 
 
-
-
 # ------------------------------------------------
-# last edit: Feb-12,2018 (last edit April 23)
-def load_MCbnbDATAcosmicSamples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
+# July-24, 2018
+def load_samples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
     '''
         return:
-        MCbnbDATAcosmicSamples:  pandas.DataFrame() of prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices in FV
-        samples: dict() of pairs broken into pair_types
+                samples: 
+                dict() of pairs, pd.DataFrame() of different into pair_types
         '''
-    global MCbnbDATAcosmicSamples
-    # old overlay: prodgenie_bnb_nu_uboone_overlay_mcc8_reco2
-    #pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
-    # new overlay: ccqe_ana_MCBNBCosmicDATA_2018_01_30
     pairs = pd.read_csv(vertices_files_path+'/'+date+'/'+filename+'.csv')
-    MCbnbDATAcosmicPairsFV = sample_in_FV(pairs)
-    print len(pairs),'pairs from MC-BNB + cosmic DATA overlay'
-    print len(MCbnbDATAcosmicPairsFV),'pairs in FV'
+    pairsFV = sample_in_FV(pairs)
+    print len(pairs),'ccqe candidate pairs,',len(pairsFV),'in FV'
+    samples = dict()
     for pair_type in pair_types:#{
-        MCbnbDATAcosmicSamples[pair_type] = MCbnbDATAcosmicPairsFV[MCbnbDATAcosmicPairsFV[pair_type]==True]
-        Ntype = len(MCbnbDATAcosmicSamples[pair_type])
+        samples[pair_type] = pairsFV[pairsFV[pair_type]==True]
         if pair_type=='CC 1p 0pi': print_line()
-        print Ntype,'are '+pair_type+', %.1f'%(100.*float(Ntype)/len(MCbnbDATAcosmicPairsFV))+'%'
+        print len(samples[pair_type]),'are '+pair_type+', %.1f'%(100.*float(len(samples[pair_type]))/len(pairsFV))+'%'
     #}
-    print "I finished loading overlay, MC BNB / data cosmic samples. We have in total %d pairs"%len(pairs)
-    return MCbnbDATAcosmicPairsFV, MCbnbDATAcosmicSamples
+    print "I finished loading overlay samples. We have in total %d pairs"%len(pairs)
+    return samples
 # ------------------------------------------------
+
+
+
+# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# obselete: outran by load_samples() above
+# delete by Aug-24, 2018
+# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+## ------------------------------------------------
+## last edit: Feb-12,2018 (last edit April 23)
+#def load_MCbnbDATAcosmicSamples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
+#    '''
+#        return:
+#        MCbnbDATAcosmicSamples:  pandas.DataFrame() of prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices in FV
+#        samples: dict() of pairs broken into pair_types
+#        '''
+#    global MCbnbDATAcosmicSamples
+#    # old overlay: prodgenie_bnb_nu_uboone_overlay_mcc8_reco2
+#    #pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
+#    # new overlay: ccqe_ana_MCBNBCosmicDATA_2018_01_30
+#    pairs = pd.read_csv(vertices_files_path+'/'+date+'/'+filename+'.csv')
+#    MCbnbDATAcosmicPairsFV = sample_in_FV(pairs)
+#    print len(pairs),'pairs from MC-BNB + cosmic DATA overlay'
+#    print len(MCbnbDATAcosmicPairsFV),'pairs in FV'
+#    for pair_type in pair_types:#{
+#        MCbnbDATAcosmicSamples[pair_type] = MCbnbDATAcosmicPairsFV[MCbnbDATAcosmicPairsFV[pair_type]==True]
+#        Ntype = len(MCbnbDATAcosmicSamples[pair_type])
+#        if pair_type=='CC 1p 0pi': print_line()
+#        print Ntype,'are '+pair_type+', %.1f'%(100.*float(Ntype)/len(MCbnbDATAcosmicPairsFV))+'%'
+#    #}
+#    print "I finished loading overlay, MC BNB / data cosmic samples. We have in total %d pairs"%len(pairs)
+#    return MCbnbDATAcosmicPairsFV, MCbnbDATAcosmicSamples
+## ------------------------------------------------
 
 
 # ------------------------------------------------

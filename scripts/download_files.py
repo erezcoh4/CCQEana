@@ -1,35 +1,38 @@
 '''
     usage:
     -----
+    xxxxxxxxxxxxxxxxxxxxxxxx
     * for MC-BNB/DATA-cosmic:
+    xxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2
-    
-    python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v9
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v9 --option=makeup --continue_makeup=7216920_63 --ctr=761
 
-
-    python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v4
-    
-    python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2
-    python scripts/download_files.py --name=ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2 --option=makeup --continue_makeup=3547582_592 --ctr=765
-
+    xxxxxxxxxxxxxxxxxxxxxxxx
     * for MC-BNB/MC-cosmic:
+    xxxxxxxxxxxxxxxxxxxxxxxx
 
     python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
+    python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_MCC8Tune3_mcc8.7_reco2_dev
 
 
+    xxxxxxxxxxxxxxxxxxxxxxxx
     * for On Beam:
+    xxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_05
     python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_04
     
+    xxxxxxxxxxxxxxxxxxxxxxxx
     * for Off Beam:
+    xxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_05
     python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_04
     
+    xxxxxxxxxxxxxxxxxxxxxxxx
     * for cosmic-pairs analysis:
+    xxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prodcosmics_corsika_cmc_uboone_mcc8.7_reco2 --tag=withPandoraCosmic_pass
     
