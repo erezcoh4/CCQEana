@@ -25,7 +25,11 @@ flags = input_flags.get_args()
 print flags
 
 
-#infilename = flags.DataType
+genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/100k_events_genie_samples/" # path
+prefix = "CC_100k"
+#genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/5e20POT_genie_samples/" # path
+#prefix = "CC_4_9E20_POT"
+
 acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
 Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"
 Pp_theta_acceptance_map_name = "Pp_theta_12x12_bins"
@@ -35,8 +39,8 @@ Q2_gen_rec_map_name = "Q2_gen_rec"
 # run on a single files
 if flags.mA>0:#{
     print "flags.mA:",flags.mA
-    gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
-                   ,"CC_100k_mA_%.2f"%float(flags.mA) # RootFileName
+    gf = GenieFile( genie_path
+                   ,prefix+"_mA_%.2f"%float(flags.mA) # RootFileName
                    ,"gst" # RootFileName
                    ,flags.verbose
                    ,acceptance_map_path
@@ -75,8 +79,8 @@ if flags.mA>0:#{
 # run on all files
 elif flags.mA==0:#{
     for mA in [0.6,0.7,0.8,0.9,0.95,0.99,1.05,1.1,1.2,1.3,1.4]:#{
-        gf = GenieFile( "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/afro_genie_samples/" # path
-                       ,"CC_100k_mA_%.2f"%float(mA) # RootFileName
+        gf = GenieFile( genie_path
+                       ,prefix+"_mA_%.2f"%float(mA) # RootFileName
                        ,"gst" # RootFileName
                        ,flags.verbose
                        ,acceptance_map_path
