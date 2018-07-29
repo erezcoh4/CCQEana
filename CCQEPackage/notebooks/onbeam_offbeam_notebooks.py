@@ -401,7 +401,7 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # Dec-6,2017 (last edit July-17,2018)
 def plot_OnBeam(OnBeamSample=None,do_draw=True
-                , var='PIDa_assigned_proton' , x_label='$PID_a^p$', label='BNB'
+                , var='PIDa_assigned_proton' , multiply=1, x_label='$PID_a^p$', label='BNB'
                 , bins=np.linspace(0,30,31),markersize=12
                 , ax=None, figsize=(14,6),fontsize=25                
                 , color=OnBeamColor, ecolor='black'
@@ -412,7 +412,7 @@ def plot_OnBeam(OnBeamSample=None,do_draw=True
     mid = 0.5*(bins[:-1]+bins[1:])
     
     if ax is None and do_draw is True: fig,ax=plt.subplots(figsize=figsize)
-    x = OnBeamSample[var]
+    x = multiply*OnBeamSample[var]
     h_OnBeam,edges = np.histogram( x , bins=bins )
     h_OnBeam_err = np.array([np.max([1,np.sqrt(h_OnBeam[i])]) for i in range(len(h_OnBeam))])
     if do_draw:
