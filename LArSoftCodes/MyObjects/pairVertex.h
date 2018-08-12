@@ -90,6 +90,7 @@ public:
     void                     SetRSE (Int_t r, Int_t s, Int_t e)                     {run=r; subrun=s; event=e;};
     void                SetPosition (TVector3 fposition)                            {position = fposition;};
     void                 SetAs1mu1p ();
+    void                  SetAsCC1p ();
     void               SetAsCC1p0pi ();
     void              SetAsNon1mu1p ();
     void                SetAsCosmic ();
@@ -119,6 +120,7 @@ public:
     TString         GetTruthTopologyString () const {return TruthTopologyString;}
     
     bool                        GetIs1mu1p () const {return Is1mu1p;};
+    bool           GetIsGENIECC_1p_200MeVc () const {return IsGENIECC_1p_200MeVc;};
     bool       GetIsGENIECC_1p_200MeVc_0pi () const {return IsGENIECC_1p_200MeVc_0pi;};
     bool                     GetIsNon1mu1p () const {return IsNon1mu1p;};
     bool                       GetIsCosmic () const {return IsCosmic;};
@@ -242,7 +244,9 @@ private:
     // variables
     TString             TruthTopologyString="unknown truth topology";
     
-    bool                Is1mu1p=false,    IsGENIECC_1p_200MeVc_0pi=false,   IsNon1mu1p=false,   IsCosmic=false;
+    bool                Is1mu1p=false,   IsNon1mu1p=false,   IsCosmic=false;
+    bool                IsGENIECC_1p_200MeVc=false; // CC event with a single proton above 200 MeV/c and no charged pions above 70 MeV/c
+    bool                IsGENIECC_1p_200MeVc_0pi=false; // CC with a single proton above 200 MeV/c and no pions or photons or electrons
     bool                IsVertexContained=false, Is_mu_TrackReconstructed=false, Is_p_TrackReconstructed=false;
     bool                IsVertexReconstructed=false, IsVertexReconstructable=false;
     bool                IsBrokenTrajectory=false, IsRecoVertexInTPC=false;

@@ -127,10 +127,10 @@ def plot_purity( OverlaySamples=None
 
 
 # ------------------------------------------------
-# March-6, 2018 (last edit May-14)
+# March-6, 2018 (last edit Aug-12, 2018)
 def get_Nreduced(OverlaySamples=None,reduced = dict(),OriginalOverlaySamples=None):
     Noriginal , Nreduced , freduced = dict() , dict() , dict()
-    for pair_type in pair_types:
+    for pair_type in pair_types[0:4]:
         sam = OverlaySamples[pair_type]
         Noriginal[pair_type] = len(OriginalOverlaySamples[pair_type])
         Nreduced[pair_type] = float(len(reduced[pair_type]))
@@ -156,7 +156,7 @@ def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PID
                               ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
                               , index=[cut_name]
                               )
-    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
+    for pair_type in pair_types[0:4]: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
     pureff = pureff.append(pureff_cut)
     return pureff
 # ------------------------------------------------
@@ -193,7 +193,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
     cut_name = 'no cut'
     reducedSamples['no cut'] = dict()
     reducedSamples[cut_name] = dict()
-    for pair_type in pair_types: reducedSamples['no cut'][pair_type] = OverlaySamples[pair_type]
+    for pair_type in pair_types[0:4]: reducedSamples['no cut'][pair_type] = OverlaySamples[pair_type]
     pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples,OriginalOverlaySamples=reducedSamples['no cut']
                                    ,pureff=pureffOverlay,cut_name=cut_name,reduced=reducedSamples[cut_name])
     Noverlay = get_Noverlay(reducedSamples=reducedSamples,cut_name=cut_name,debug=debug,overlay_scaling=overlay_scaling )
@@ -228,7 +228,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
         if debug: print 'grab reduced samples after (',cuts_order[i_cut-1],') and apply cut on (',cuts_order[i_cut],')'
         samples_previous_cut = reducedSamples[cuts_order[i_cut-1]]
         
-        for pair_type in pair_types:#{
+        for pair_type in pair_types[0:4]:#{
             sam = samples_previous_cut[pair_type]
             if debug: print 'sam('+pair_type+'):',len(sam)
                                     
@@ -340,14 +340,14 @@ def apply_cuts_to_overlay(OverlaySamples=None
 
 
 # ------------------------------------------------
-# April-4 (last edit May 26)
+# April-4 (last edit Aug-12,2018)
 def get_Noverlay(reducedSamples=None,cut_name=''
                  ,overlay_scaling=None
                  ,debug=0
                  ):
     # @return the number of events in each subsample of the overlay, POT-normalized
     N = dict()
-    for pair_type in pair_types: #{
+    for pair_type in pair_types[0:4]: #{
         N[pair_type+' original'] = float(len(reducedSamples['no cut'][pair_type]))
         N[pair_type] = float(len(reducedSamples[cut_name][pair_type]))
         N['eff '+pair_type] = N[pair_type]/N[pair_type+' original']
@@ -356,12 +356,12 @@ def get_Noverlay(reducedSamples=None,cut_name=''
     N['Overlay'] = N['cosmic'] + N['MC']
     N['MC original'] = N['1mu-1p original'] + N['other pairs original']
     N['Overlay original'] = N['cosmic original'] + N['MC original']
-    for pair_type in pair_types: N['pur '+pair_type] = N[pair_type]/N['Overlay']
+    for pair_type in pair_types[0:4]: N['pur '+pair_type] = N[pair_type]/N['Overlay']
     N['eff Overlay'] = N['Overlay']/N['Overlay original']
                                      
 
     # scaling and re-weighting
-    for pair_type in pair_types:#{
+    for pair_type in pair_types[0:4]:#{
         N[pair_type+' original scaled'] = overlay_scaling[pair_type]*N[pair_type+' original'] if overlay_scaling else N[pair_type+' original']
         N[pair_type+' scaled'] = overlay_scaling[pair_type]*N[pair_type] if overlay_scaling else N[pair_type]
         N['eff '+pair_type+' scaled'] = N[pair_type+' scaled']/N[pair_type+' original scaled']
@@ -370,7 +370,7 @@ def get_Noverlay(reducedSamples=None,cut_name=''
     N['Overlay scaled'] = N['cosmic scaled'] + N['MC scaled']
     N['MC original scaled'] = N['1mu-1p original scaled'] + N['other pairs original scaled']
     N['Overlay original scaled'] = N['cosmic original scaled'] + N['MC original scaled']
-    for pair_type in pair_types: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
+    for pair_type in pair_types[0:4]: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
     N['eff Overlay scaled'] = N['Overlay scaled']/N['Overlay original scaled']
 
     if debug: print 'Noverlay in',cut_name,'\n',N
@@ -390,9 +390,9 @@ def load_samples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie
     pairsFV = sample_in_FV(pairs)
     print len(pairs),'ccqe candidate pairs,',len(pairsFV),'in FV'
     samples = dict()
-    for pair_type in pair_types:#{
+    for pair_type in pair_types[0:4]:#{
         samples[pair_type] = pairsFV[pairsFV[pair_type]==True]
-        if pair_type=='CC 1p 0pi': print_line()
+        if 'CC 1p' in pair_type: print_line()
         print len(samples[pair_type]),'are '+pair_type+', %.1f'%(100.*float(len(samples[pair_type]))/len(pairsFV))+'%'
     #}
     print "I finished loading overlay samples. We have in total %d pairs"%len(pairs)

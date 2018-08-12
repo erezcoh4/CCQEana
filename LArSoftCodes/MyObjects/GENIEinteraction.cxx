@@ -90,11 +90,13 @@ bool GENIEinteraction::AddPrimary ( Int_t fpdg                  // pdg code
                 break;
                 
             case 211: // π+
+                pion3vect.push_back( momentum.Vect() ) ;
                 Npi++;
                 Npi_plus++;
                 break;
                 
             case -211: // π-
+                pion3vect.push_back( momentum.Vect() ) ;
                 Npi++;
                 Npi_minus++;
                 break;
@@ -172,7 +174,6 @@ void GENIEinteraction::AddTrack(PandoraNuTrack ftrack){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GENIEinteraction::SortNucleons(){
-    
     
     for (auto i: sort_by_momentum_magnitude( p3vect )){
         protons.push_back( TLorentzVector( p3vect.at(i) , sqrt( p3vect.at(i).Mag2() + 0.938*0.938 ) ) );
@@ -260,6 +261,10 @@ void GENIEinteraction::SetTruthTopology(){
     for (auto Pp : p3vect){
         if (Pp.Mag()>=0.2) Np_200MeVc++;
     }
+    Int_t Npi_70MeVc = 0;
+    for (auto Ppi : pion3vect){
+        if (Ppi.Mag()>=0.07) Npi_70MeVc++;
+    }
     
     // IsCC_Np_200MeVc
     if ( ccnc==0 && Nmu>=1 && Np_200MeVc>=1 ){
@@ -267,7 +272,7 @@ void GENIEinteraction::SetTruthTopology(){
         
         
         // IsCC_1p_200MeVc
-        if ( Np_200MeVc==1 ){
+        if ( Np_200MeVc==1 && Npi_70MeVc==0){
             IsCC_1p_200MeVc = true;
             
             // IsCC_1p_200MeVc_0pi

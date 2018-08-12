@@ -12,7 +12,6 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "photpropservices_microboone.fcl"
 #include "triggeralgo_service.fcl"
-
 #include "flashmatchalg.fcl"
 #include "flashmatchcalib.fcl"
 #include "fiducial_volume_settings.fcl"
@@ -21,13 +20,9 @@
 #include "neutrinoflashmatch.fcl"
 #include "photonactivity.fcl"
 #include "tpcneutrinoidfilter_microboone.fcl"
-
 #include "my_flashmatchcalib.fcl"
-
-process_name: RunErezCCQEana 
-
-services:
-{
+process_name: RunErezCCQEana
+services:{
   TFileService: { fileName: "prodgenie_bnb_nu_cosmic_uboone_MCC8Tune3_mcc8.7_reco2_dev" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
@@ -36,26 +31,16 @@ services:
                 @table::microboone_simulation_services
   @table::microboone_simulation_services
 }
-
-source:
-{
+source:{
     module_type: RootInput
     firstEvent : 1
     maxEvents:   -1
     inputCommands: ["keep *_*_*_*", "drop sumdata::RunData_*_*_*" ]
 }
-
-
 outputs:{}
-
-
-physics:
-{
-
-  analyzers:
-  {
-    EventsAnalyzer: 
-    {
+physics:{
+  analyzers:{
+    EventsAnalyzer: {
       module_type:                      "ErezCCQEAna"
       DataSampleLabel:                  "prodgenie_bnb_nu_cosmic_uboone_MCC8Tune3_mcc8.7_reco2_dev"
       VerbosityLevel:                   1
@@ -89,7 +74,5 @@ physics:
   analysis: [ EventsAnalyzer ] #Directory for histograms
   end_paths: [ analysis ]
 }
-
-
 services.DetectorClocksService.InheritClockConfig:                      false
 services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos

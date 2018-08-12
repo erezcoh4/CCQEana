@@ -1211,9 +1211,13 @@ void ub::ErezCCQEAna::TagVertices(){
             if (
                 (t1.GetTruthStartPos() - t2.GetTruthStartPos()).Mag() < 1.                  // distance between the true position of the two tracks is small
                 && (v.GetClosestGENIE().GetVertexPosition() - v.GetPosition()).Mag() < 10   // distance from the closest genie vertex
-                && (v.GetClosestGENIE().GetIsCC_1p_200MeVc_0pi()==true)                     // the closest GENIE is a CC1p0π
                 ){
-                v.SetAsCC1p0pi();
+                if (v.GetClosestGENIE().GetIsCC_1p_200MeVc()==true) {    // the closest GENIE is a CC1p
+                    v.SetAsCC1p();
+                    if (v.GetClosestGENIE().GetIsCC_1p_200MeVc_0pi()==true) {    // the closest GENIE is a CC1p0π
+                        v.SetAsCC1p0pi();
+                    }
+                }
             }
         }
         else if ( t1.GetMCpdgCode()!=-9999 && t2.GetMCpdgCode()!=-9999 ){
@@ -2015,7 +2019,7 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     
     // vertex truth-topology in MC
     vertices_file
-    << "1mu-1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
+    << "1mu-1p" << "," << "CC 1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
     
     
     << endl;
@@ -2232,7 +2236,12 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         }
         
         // vertex truth-topology in MC
-        vertices_file << v.GetIs1mu1p() << "," << v.GetIsGENIECC_1p_200MeVc_0pi() << "," << v.GetIsNon1mu1p() << "," << v.GetIsCosmic();
+        vertices_file
+        << v.GetIs1mu1p() << ","
+        << v.GetIsGENIECC_1p_200MeVc() << ","
+        << v.GetIsGENIECC_1p_200MeVc_0pi() << ","
+        << v.GetIsNon1mu1p() << ","
+        << v.GetIsCosmic();
         
         // finish
         vertices_file << endl;

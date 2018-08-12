@@ -26,6 +26,7 @@ void pairVertex::AddTrack (PandoraNuTrack ftrack){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetAs1mu1p(){
     Is1mu1p                     = true;
+    IsGENIECC_1p_200MeVc        = false;
     IsGENIECC_1p_200MeVc_0pi    = false;
     IsNon1mu1p                  = false;
     IsCosmic                    = false;
@@ -33,8 +34,19 @@ void pairVertex::SetAs1mu1p(){
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void pairVertex::SetAsCC1p(){
+    Is1mu1p                     = true;
+    IsGENIECC_1p_200MeVc        = true;
+    IsGENIECC_1p_200MeVc_0pi    = false;
+    IsNon1mu1p                  = false;
+    IsCosmic                    = false;
+    TruthTopologyString = "true CC 1p 0π";
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetAsCC1p0pi(){
     Is1mu1p                     = true;
+    IsGENIECC_1p_200MeVc        = true;
     IsGENIECC_1p_200MeVc_0pi    = true;
     IsNon1mu1p                  = false;
     IsCosmic                    = false;
@@ -44,6 +56,7 @@ void pairVertex::SetAsCC1p0pi(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetAsNon1mu1p(){
     Is1mu1p                     = false;
+    IsGENIECC_1p_200MeVc        = false;
     IsGENIECC_1p_200MeVc_0pi    = false;
     IsNon1mu1p                  = true;
     IsCosmic                    = false;
@@ -52,6 +65,7 @@ void pairVertex::SetAsNon1mu1p(){
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetAsCosmic(){
+    IsGENIECC_1p_200MeVc        = false;
     IsGENIECC_1p_200MeVc_0pi    = false;
     IsNon1mu1p                  = false;
     IsCosmic                    = true;
