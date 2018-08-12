@@ -170,8 +170,8 @@ private:
     // booleans on the genie interaction
     // TRUTH topology DEFINITIONs
     bool                    IsCC_Np_200MeVc=false; // an interaction with at least 1 muon and N protons > 200 MeV/c
-    bool                    IsCC_1p_200MeVc=false; // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c
-    bool                    IsCC_1p_200MeVc_0pi=false; // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions
+    bool                    IsCC_1p_200MeVc=false; // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c and no charged pions with momentum greater than 70 MeV/c
+    bool                    IsCC_1p_200MeVc_0pi=false; // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions, and no photons or electrons outside the nucleus
     bool                    IsCCQE=false; // is QE or not - genie's "mode" flag: QE=0
     // RECONSTRUCTED topology DEFINITIONs
     bool                    IsVertexContained=false, IsInActiveVolume=false; // should be practically the same
@@ -225,7 +225,7 @@ private:
     std::vector<Float_t>    P;             //Magnitude of the momentum vector of the GENIE particle in GeV
     std::vector<Float_t>    mass;          //mass of the GENIE particle in GeV
 
-    std::vector<TVector3>       p3vect  , n3vect;
+    std::vector<TVector3>       p3vect  , n3vect, pion3vect;
     std::vector<TLorentzVector> protons , neutrons;
 
     

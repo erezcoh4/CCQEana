@@ -228,7 +228,7 @@ def plot_before_after_cuts(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]'
 
 
 # ------------------------------------------------
-# April-26 (last edit May-31)
+# April-26 (last edit Aug-12, 2018)
 def get_samples_scaling( N_total=1 # total integral of all overlay
                         , f_Cosmic=None  # fraction of cosmic in the overlay, need to be in the range 0-1
                         , f_OverlayCosmic=None # by which factor should we increase the cosmic part in the overlay
@@ -238,7 +238,7 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     # return the total scaling factor of each of the overlay subsamples
     scaling,N,f = dict(),dict(),dict()
     
-    for pair_type in pair_types: N[pair_type] = float(len(OverlaySubsamples[pair_type]))
+    for pair_type in pair_types[0:4]: N[pair_type] = float(len(OverlaySubsamples[pair_type]))
     N['MC'] = N['1mu-1p']+N['other pairs']
     
     # option 1:
@@ -399,7 +399,7 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-6,2017 (last edit July-17,2018)
+# Dec-6,2017 (last edit Aug-11, 2018)
 def plot_OnBeam(OnBeamSample=None,do_draw=True
                 , var='PIDa_assigned_proton' , multiply=1, x_label='$PID_a^p$', label='BNB'
                 , bins=np.linspace(0,30,31),markersize=12
@@ -419,7 +419,7 @@ def plot_OnBeam(OnBeamSample=None,do_draw=True
         plt.errorbar( x = mid, xerr=bin_width/2., markersize=markersize
                  , y=h_OnBeam , yerr=h_OnBeam_err
                  , fmt='o', color=color , ecolor=ecolor
-                 , label=label +'(%d events)'%len(OnBeamSample)
+                 , label=(label +'(%d events)'%len(OnBeamSample)) if label is not None else label
                 )
         plt.plot([0,0],[0,0],'--',color='black',linewidth=2)
     
@@ -687,14 +687,14 @@ def OnBeam_minus_OffBeam_1d( OnBeamSample=None , OffBeamSample=None , debug=0
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Nov-20,2017 (last editted July-17, 2018)
+# Nov-20,2017 (last editted Aug-7, 2018)
 def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
                            , ax=None, debug=0,overlay_scaling=None
                            , var=None, weights_var=None, x_label='',y_label='', bins=None , alpha=0.8, fontsize=25
                            , remove_ticks_x=False, remove_ticks_y=False
                            , xlim=None,where='mid'
                            , do_add_legend=False
-                           , do_individual_histograms=True
+                           , do_individual_histograms=False
                            , stackColor='black',stackLabel='overlay'
                            , do_add_MEC_contribution=False ):
     '''
@@ -707,7 +707,7 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
     mid = 0.5*(bins[:-1]+bins[1:])
     h,h_err,labels,colors,N,h_MEC = dict(),dict(),dict(),dict(),dict(),dict()
     
-    for i_pair_type,pair_type in enumerate(pair_types):#{
+    for i_pair_type,pair_type in enumerate(pair_types[0:4]):#{
         sample = OverlaySamples[pair_type]
         N[pair_type] = float(len(sample))
         labels[pair_type] = MClabels[i_pair_type]
@@ -728,28 +728,14 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
     #}
 
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
-    if do_draw and do_individual_histograms:#{
-        # mu-p
-        plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
-                ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
-        # CC 1p 0pi
-        plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['CC 1p 0pi scaled'] , width=bin_width
-                        ,color=colors['CC 1p 0pi'],alpha=alpha, label=labels['CC 1p 0pi'])
-        # other pairs
-        plt.bar(mid,h['cosmic scaled']+h['other pairs scaled'] , width=bin_width
-                        ,color=colors['other pairs'],alpha=alpha , label=labels['other pairs'])
-        # cosmic
-        plt.bar(mid, h['cosmic scaled'] , width=bin_width
-                        ,color=colors['cosmic'],alpha=alpha, label=labels['cosmic'])
-    #}
-    # all
     h_stack = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
     h_stack_err = np.sqrt(np.square(h_err['cosmic scaled'])+np.square(h_err['other pairs scaled'])+np.square(h_err['1mu-1p scaled']))
     if do_add_MEC_contribution: h_stack_MEC = h_MEC['cosmic scaled']+h_MEC['other pairs scaled']+h_MEC['1mu-1p scaled']
-    
+
     if norm is not None:
-        h_stack = h_stack*norm/np.sum(h_stack)
-        h_stack_err = h_stack_err*norm/np.sum(h_stack)
+        norm_factor = norm/np.sum(h_stack)
+        h_stack = h_stack*norm_factor
+        h_stack_err = h_stack_err*norm_factor
         if do_add_MEC_contribution: h_stack_MEC = h_stack_MEC*norm/np.sum(h_stack_MEC)
     
     if do_draw:#{
@@ -767,6 +753,25 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
              ,remove_ticks_x=remove_ticks_x
              ,remove_ticks_y=remove_ticks_y
              )
+        if do_individual_histograms:#{
+            if norm is not None:#{
+                for i_pair_type,pair_type in enumerate(pair_types[0:4]):#{
+                    h[pair_type+' scaled'] = norm_factor*h[pair_type+' scaled']
+                #}
+            #}
+            # mu-p
+            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
+            ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
+            # CC 1p 0pi
+            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['CC 1p 0pi scaled'] , width=bin_width
+                ,color=colors['CC 1p 0pi'],alpha=alpha, label=labels['CC 1p 0pi'])
+            # other pairs
+            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled'] , width=bin_width
+                        ,color=colors['other pairs'],alpha=alpha , label=labels['other pairs'])
+            # cosmic
+            plt.bar(mid, h['cosmic scaled'] , width=bin_width
+                        ,color=colors['cosmic'],alpha=alpha, label=labels['cosmic'])
+            #}
     #}
     return h_stack , h_stack_err
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
