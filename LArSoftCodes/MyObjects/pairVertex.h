@@ -105,6 +105,7 @@ public:
     void          AssignProtonTrack (PandoraNuTrack ftrack)                         {Track_pCandidate = ftrack; };
     void    SetReconstructedMomenta (float PmuFromRange = 0, float PpFromRange = 0 );
     void   SetReconstructedFeatures (float PmuFromRange = 0, float PpFromRange = 0 );
+    void           SetMCSMuMomentum (float fMCSMuMomentum = 0);
     void         SetPlaneProjection (int plane , float _wire , float _time )        {vertex_wire[plane]=_wire; vertex_time[plane]=_time;};
     void            SetClosestFlash (flash _flash)                                  {ClosestFlash = _flash;};
     void SetIsVertexReconstructable (bool fIsRec)                                   {IsVertexReconstructable = fIsRec;};
@@ -114,6 +115,7 @@ public:
     void         SetClosestDistance (float fdistances_ij)                           {reco_mu_p_distance=fdistances_ij;};
 
     void            SetMatchedFlash ( flash _flash, float _fscore )                 {MatchedFlash = _flash; MatchedFlashScore = _fscore;};
+    
     
     
     // GETters
@@ -144,13 +146,17 @@ public:
     float           GetAngleBetween2tracks () const; // return the angle between the muon and proton candidates, in degrees (!)
     float               GetClosestDistance () const {return reco_mu_p_distance;};
     float                        GetRecoEv () const {return reco_Pnu.E();};
+    float                    GetRecoEv_mcs () const {return reco_Pnu_mcs.E();};
     float                        GetReco_q () const {return reco_q.P();};
+    float                    GetReco_q_mcs () const {return reco_q_mcs.P();};
     float                    GetReco_omega () const {return reco_omega;};
     float                        GetRecoQ2 () const {return reco_Q2;};
+    float                    GetRecoQ2_mcs () const {return reco_Q2_mcs;};
     float                        GetRecoXb () const {return reco_Xb;};
     float                         GetRecoY () const {return reco_y;};
     float                        GetRecoW2 () const {return reco_W2;};
     float                        GetRecoPt () const {return (reco_Pmu + reco_Pp).Pt();};
+    float                    GetRecoPt_mcs () const {return (reco_Pmu_mcs + reco_Pp).Pt();};
     float                 GetReco_theta_pq () const {return reco_theta_pq;};
     float                 GetTruthDeltaPhi () const;
     float               GetDistanceToGENIE () const {return (genie_interaction.GetVertexPosition()-position).Mag();};
@@ -195,6 +201,8 @@ public:
     
     TLorentzVector              GetRecoPnu () const {return reco_Pnu;};
     TLorentzVector              GetRecoPmu () const {return reco_Pmu;};
+    TLorentzVector          GetRecoPnu_mcs () const {return reco_Pnu_mcs;};
+    TLorentzVector          GetRecoPmu_mcs () const {return reco_Pmu_mcs;};
     TLorentzVector               GetRecoPp () const {return reco_Pp;};
     TLorentzVector            GetRecoPmiss () const {return (reco_Pp - reco_q);};
     
@@ -262,7 +270,7 @@ private:
     // Ev = Eµ + Tp + Sn + T(A-1)
     float               reco_mu_p_distance=-1;
     float               reco_BeamE=-1,   reco_theta_pq=-1, reco_Pp_3momentum=-1, reco_Pmu_3momentum=-1;
-    float               reco_p_over_q=-1, reco_Q2=-1;
+    float               reco_p_over_q=-1, reco_Q2=-1, reco_Q2_mcs=-1;
     float               reco_omega=-1;
     float               reco_Xb=-1, reco_y=-1, reco_W2=-1, reco_s=-1;
     float               reco_alpha_p=-1 , reco_alpha_q=-1 , reco_alpha_mu=-1, reco_alpha_miss=-1;
@@ -272,11 +280,12 @@ private:
     float               MatchedFlashScore=-1;   // score of flash-matchig by Marco
     
     TVector3            position=TVector3();
-    TVector3            reco_Pp_3vect=TVector3(), reco_Pmu_3vect=TVector3();
+    TVector3            reco_Pp_3vect=TVector3(), reco_Pmu_3vect=TVector3(), reco_Pmu_3vect_mcs=TVector3();
     
     // Tp + Eµ
     TLorentzVector      reco_Pnu=TLorentzVector(-1,-1,-1,-1),  reco_Pp=TLorentzVector(-1,-1,-1,-1);
     TLorentzVector      reco_Pmu=TLorentzVector(-1,-1,-1,-1),  reco_q=TLorentzVector(-1,-1,-1,-1);
+    TLorentzVector      reco_Pnu_mcs=TLorentzVector(-1,-1,-1,-1),   reco_Pmu_mcs=TLorentzVector(-1,-1,-1,-1), reco_q_mcs=TLorentzVector(-1,-1,-1,-1);
     TLorentzVector      reco_n_miss=TLorentzVector(-1,-1,-1,-1);
     
     PandoraNuTrack      muonTrueTrack,  protonTrueTrack;

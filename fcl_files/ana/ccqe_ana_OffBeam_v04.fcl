@@ -1,0 +1,92 @@
+#include "services_microboone.fcl"
+#include "singles_microboone.fcl"
+#include "largeantmodules_microboone.fcl"
+#include "mcreco.fcl"
+#include "detsimmodules_microboone.fcl"
+#include "triggersim_microboone.fcl"
+#include "opticaldetectorsim_microboone.fcl"
+#include "opticaldetectormodules_microboone.fcl"
+#include "photpropservices_microboone.fcl"
+#include "correct_saturation.fcl"
+#include "caldata_microboone.fcl"
+#include "time_memory_tracker_microboone.fcl"
+#include "photpropservices_microboone.fcl"
+#include "triggeralgo_service.fcl"
+
+#include "flashmatchalg.fcl"
+#include "flashmatchcalib.fcl"
+#include "fiducial_volume_settings.fcl"
+#include "ubflashfinder.fcl"
+#include "neutrinomcflash.fcl"
+#include "neutrinoflashmatch.fcl"
+#include "photonactivity.fcl"
+#include "tpcneutrinoidfilter_microboone.fcl"
+
+
+process_name: RunErezCCQEana
+
+services:
+{
+  TFileService: { fileName: "prod_reco_optfilter_extbnb_v12_mcc8_dev_04.root" closeFileFast: false}
+  TimeTracker:       {}
+  RandomNumberGenerator: {} 
+  message:      @local::standard_info
+                @table::microboone_services_reco
+                @table::microboone_simulation_services
+ inputCommands: ["keep *_*_*_*", "drop sumdata::RunData_*_*_*" ]
+}
+
+source:
+{
+  module_type: RootInput
+  firstEvent : 1
+  maxEvents:   -1
+}
+
+
+outputs:{}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    EventsAnalyzer: 
+    {
+      module_type:      	"ErezCCQEAna"
+      DataSampleLabel:		"prod_reco_optfilter_extbnb_v12_mcc8_dev_04"
+      MCmodeLabel:          false
+      VerbosityLevel:		1
+      DoWriteTracksInfo:    true
+      DoAddTracksEdep:      false
+      DoWriteGENIEInfo:     false
+      DoWriteEventsInfo:    true
+      DoOnlySwT:            false
+      SwTModuleLabel:       "swtrigger"
+      SwTAlgoModuleLabel:   "BNB_FEMBeamTriggerAlgo"
+      TrackModuleLabel: 	"pandoraNu"
+      HitsModuleLabel:      "pandoraCosmicHitRemoval"
+      MCTruthModuleLabel:	"generator"
+      GenieGenModuleLabel:	"generator"
+      CalorimetryModuleLabel:"pandoraNucalo"
+      POTModuleLabel:       "generator"
+      FlashModuleLabel:     "simpleFlashBeam"
+      HitParticleAssnsModuleLabel: "crHitRemovalTruthMatch"
+      CalibratedCalorimetryModuleLabel: "pandoraNucali"
+      TruncMeanRadLabel:     1.0
+      PIDModuleLabel:        "pandoraNupid"
+      CaliPIDModuleLabel:    "pandoraNucalipid"
+      TPCObjectModule:                  "TPCObjectMaker"
+      DoOpDetSwap:                      false
+      OpDetSwapMap:                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 31, 26, 28, 29, 30, 25, 27]
+      FlashMatchConfig:                 @local::flashmatch_config
+    EventWeightModuleLabel:           genieeventweight
+    }
+  }
+  analysis: [ EventsAnalyzer ] #Directory for histograms
+  end_paths: [ analysis ]
+}
+
+services.DetectorClocksService.InheritClockConfig:                      false
+services.DetectorClocksService.TriggerOffsetTPC:                       -400 # MC bnb neutrinos
