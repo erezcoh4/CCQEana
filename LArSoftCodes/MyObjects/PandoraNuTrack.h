@@ -99,6 +99,13 @@ public:
     
     
     void            SetLength (Float_t l)                   {length = l;};
+    void      SetPandoraTheta (Float_t ftheta)              {pandora_theta = ftheta;};
+    void        SetPandoraPhi (Float_t fphi)                {pandora_phi = fphi;};
+    void   SetMomentumMCS_fwd (Float_t fmomentum)           {momentum_MSCMu_fwd = fmomentum; momentum_MSCMu=fmomentum;};
+    void   SetMomentumMCS_bwd (Float_t fmomentum)           {momentum_MSCMu_bwd = fmomentum;};
+
+    
+    
     void       SetTruthLength ()                            {truth_length = (truth_start_pos-truth_end_pos).Mag();};
     void       SetTruthPurity (Float_t fpur)                {truth_purity = fpur;};
 
@@ -206,7 +213,12 @@ public:
     Float_t               GetLength () const {return length;};
     Float_t                GetTheta () const {return rec_dir.Theta();};
     Float_t                  GetPhi () const {return rec_dir.Phi();};
-    
+    Float_t         GetPandoraTheta () const {return pandora_theta;};
+    Float_t           GetPandoraPhi () const {return pandora_phi;};
+    Float_t      GetMomentumMCS_fwd () const {return momentum_MSCMu_fwd;};
+    Float_t      GetMomentumMCS_bwd () const {return momentum_MSCMu_bwd;};
+    Float_t          GetMomentumMCS () const {return momentum_MSCMu;};
+
     Float_t          GetTruthLength () const {return truth_length;};
     Float_t           GetTruthTheta () const {return truth_dir.Theta();};
     Float_t             GetTruthPhi () const {return truth_dir.Phi();};
@@ -338,13 +350,14 @@ private:
     Int_t       truth_mcparticle=-1;
     
     // Float_t
-    Float_t     length=0;
+    Float_t     length=0, pandora_theta=0, pandora_phi=0;
     Float_t     CaloKEPerPlane[3]={0,0,0};
     Float_t     PIDaPerPlane[3]={0,0,0};
     Float_t     PIDa=-1;
     Float_t     PIDaCaliPerPlane[3]={0,0,0};
     Float_t     PIDaCali=-1;
-    
+    Float_t     momentum_MSCMu_fwd=0, momentum_MSCMu_bwd=0, momentum_MSCMu=0;
+
     // pandoraNu objects
     Float_t     PandoraNuPID_Pdg[3]={-9999,-9999,-9999};
     Float_t     PandoraNuPID_MinChi2[3]={-9999,-9999,-9999};

@@ -23,6 +23,8 @@
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
+
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Vertex.h"
@@ -506,21 +508,27 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
 
     
     // MCParticle from largeant
-    Debug(2,"// * MCParticle information");
+    int Nparticles=0;
     art::Handle< std::vector<simb::MCParticle> > MCParticleListHandle;
     std::vector<art::Ptr<simb::MCParticle> > mcparticlelist;
-    if (evt.getByLabel("largeant",MCParticleListHandle))
-        art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
-    auto Nparticles = (int)mcparticlelist.size();
-    Debug(2,"Nparticles: %",Nparticles);
-    evt.getByLabel(fG4ModuleLabel, pHandle);
-    art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+    if (MCmode){
+        Debug(2,"// * MCParticle information");
+        if (evt.getByLabel("largeant",MCParticleListHandle))
+            art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
+        Nparticles = (int)mcparticlelist.size();
+        Debug(2,"Nparticles: %",Nparticles);
+        evt.getByLabel(fG4ModuleLabel, pHandle);
+        art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
+        
+        if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
+            art::fill_ptr_vector(mclist, mctruthListHandle);
+        
+        if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
+            art::fill_ptr_vector(fluxlist, mcfluxListHandle);
+    }
     
-    if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
-        art::fill_ptr_vector(mclist, mctruthListHandle);
-    
-    if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
-        art::fill_ptr_vector(fluxlist, mcfluxListHandle);
+    // MCS fit
+    art::ValidHandle< std::vector <recob::MCSFitResult> > MCSMuHandle = evt.getValidHandle < std::vector <recob::MCSFitResult> > ("pandoraNuMCSMu");
 
     
     // ----------------------------------------
@@ -538,6 +546,13 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
                              ,TVector3(start_pos.X(),start_pos.Y(),start_pos.Z())   // start position
                              ,TVector3(end_pos.X(),end_pos.Y(),end_pos.Z())         // end position
                              );
+        
+        track.SetPandoraTheta( tracklist[i]->Theta() );
+        track.SetPandoraPhi( tracklist[i]->Phi() );
+        const recob::MCSFitResult& mcsMu = MCSMuHandle->at(i);
+        Debug(4 , "particle ID hypothesis used for MCS fit: %",mcsMu.particleIdHyp());
+        track.SetMomentumMCS_fwd( mcsMu.fwdMomentum() );
+        track.SetMomentumMCS_bwd( mcsMu.bwdMomentum() );
         
         double StartLoc[3] = {start_pos.X(), start_pos.Y(), start_pos.Z()};
         
@@ -1153,12 +1168,15 @@ void ub::ErezCCQEAna::FilterGoodPairVertices(){
             Debug(4,"set muon and proton candidates: track % is muon and track % is proton candidate",Track_muCandidate.GetTrackID(),Track_pCandidate.GetTrackID());
             
             v.FixTracksDirections ();
+            // after fixing the direction of the muon track we set its MCS momentum.
+            // (the direction fixation is needed in order to determine
+            // forward or backward MCS fit.)
+            v.SetMCSMuMomentum ( Track_muCandidate.GetMomentumMCS() );
+            // now we can set the reco. kinematics
+            // which also include mcs-based kinematics
             v.SetReconstructedFeatures ( PmuFromRange , PpFromRange );
             
             // set vertex position in the three wire planes
-            //             // version for v06_42_00
-            //            geo::TPCID tpcID = geom->FindTPCAtPosition( v.GetPosition() );
-            // version for v06_26_01
             double const v_position[3] = {v.GetPosition().X(),v.GetPosition().Y(),v.GetPosition().Z()};
             geo::TPCID tpcID = geom->FindTPCAtPosition( v_position );
             if (tpcID.isValid) {
@@ -1906,8 +1924,14 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     // reconstructed kinematics
     << "reco_Ev"    << ","  << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
     << "reco_Pt"    << ","  << "reco_theta_pq" << ","
+    << "reco_Ev_mcs"<< ","  << "reco_Q2_mcs"<< "," << "reco_Pt_mcs"<< ","
+    
     << "reco_Emu"   << ","
     << "reco_Pmu"   << ","  << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
+    
+    << "reco_Emu_mcs" << ","
+    << "reco_Pmu_mcs" << ","<< "reco_Pmu_mcs_x" << ","<< "reco_Pmu_mcs_y" << ","<< "reco_Pmu_mcs_z" << ","<< "reco_Pmu_mcs_theta" << ","<< "reco_Pmu_mcs_phi" << ","
+    
     << "reco_Ep"    << ","
     << "reco_Pp"    << ","  << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
     << "PmuHypothesisCalc"  << "," << "PpHypothesisCalc" << ","
@@ -1979,13 +2003,13 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
         }
     }
     // charge deposition around the vertex in a sphere of r [cm]
-    for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
-        for (int plane=0; plane<3; plane++) {
-            vertices_file
-            << Form( "RdQaroundVertex[plane %d][r=%.1fcm]"
-                    , plane , r_around_vertex[i_r_around_vertex] ) << ",";
-        }
-    }
+    //    for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
+    //        for (int plane=0; plane<3; plane++) {
+    //            vertices_file
+    //            << Form( "RdQaroundVertex[plane %d][r=%.1fcm]"
+    //                    , plane , r_around_vertex[i_r_around_vertex] ) << ",";
+    //        }
+    //    }
 
     
     // flash matching of vertex
@@ -2114,12 +2138,17 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         // reconstructed kinematics
         vertices_file << v.GetRecoEv() << "," << v.GetRecoQ2() << "," <<  v.GetRecoXb() << "," << v.GetRecoY() << "," << v.GetRecoW2() << ","  ;
         vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
+        vertices_file << v.GetRecoEv_mcs() << "," << v.GetRecoQ2_mcs() << "," << v.GetRecoPt_mcs() << ",";
         
         vertices_file
         << v.GetRecoPmu().E() << ","
         << v.GetRecoPmu().P() << ","
-        << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ",";
-        
+        << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ","
+        << v.GetRecoPmu_mcs().E() << ","
+        << v.GetRecoPmu_mcs().P() << ","
+        << v.GetRecoPmu_mcs().Px() << "," << v.GetRecoPmu_mcs().Py() << "," << v.GetRecoPmu_mcs().Pz() << "," << v.GetRecoPmu_mcs().Theta() << "," << v.GetRecoPmu_mcs().Phi() << ",";
+
+
         vertices_file
         << v.GetRecoPp().E() << ","
         << v.GetRecoPp().P() << ","
@@ -2200,12 +2229,12 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         }
         
         // charge deposition around the vertex in a sphere of r [cm]
-        for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
-            for (int plane=0; plane<3; plane++) {
-                vertices_file
-                << GetRdQInSphereAroundVertex( v, plane, r_around_vertex[i_r_around_vertex] ) << ",";
-            }
-        }
+        //        for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
+        //            for (int plane=0; plane<3; plane++) {
+        //                vertices_file
+        //                << GetRdQInSphereAroundVertex( v, plane, r_around_vertex[i_r_around_vertex] ) << ",";
+        //            }
+        //        }
         
         
         // flash matching of vertex
@@ -2619,3 +2648,15 @@ void ub::ErezCCQEAna::CollectEventWeights (art::Event const & evt){
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
 DEFINE_ART_MODULE(ub::ErezCCQEAna)
 // - -- - -- - - --- -- - - --- -- - -- - -- -- -- -- - ---- -- - -- -- -- -- -
+
+
+
+
+
+
+
+
+
+
+
+

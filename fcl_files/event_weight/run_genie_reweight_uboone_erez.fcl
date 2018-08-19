@@ -44,12 +44,13 @@ genie_microboone_eventweight:
     # mA + 1.4545\sigma = 0.99 + 1.4545*0.2475 = 1.35
     # mA - 1.952\sigma = 0.99 - 1.952*0.1485 = 0.7
     
-    weight_functions: [ evwgh_mA99
-                       , evwgh_mA40, evwgh_mA55, evwgh_mA65, evwgh_mA70, evwgh_mA75
-                       , evwgh_mA80, evwgh_mA85, evwgh_mA90, evwgh_mA95, evwgh_mA100
-                       , evwgh_mA105, evwgh_mA110, evwgh_mA115, evwgh_mA120, evwgh_mA130
-                       , evwgh_mA135, evwgh_mA150, evwgh_mA160, evwgh_mA170
-                       , evwgh_mA200, evwgh_mA250, evwgh_mA300
+    weight_functions: [
+                         evwgh_mA55, evwgh_mA65, evwgh_mA75
+                       , evwgh_mA85, evwgh_mA95
+                       , evwgh_mA99
+                       , evwgh_mA105, evwgh_mA115
+                       , evwgh_mA120, evwgh_mA130, evwgh_mA150
+                       , evwgh_mA170, evwgh_mA200
                        ]
 
     # throw exception if weight outside limits
@@ -254,23 +255,6 @@ genie_microboone_eventweight:
     number_of_multisims:    1
     }
 
-    evwgh_mA250 : {
-    type: Genie
-    random_seed: 1
-    parameter_list:        ["QEMA"]
-    parameter_sigma:       [6.101] # corresponds to Ma = 2.5 GeV
-    mode: reweight
-    number_of_multisims:    1
-    }
-    
-    evwgh_mA300 : {
-    type: Genie
-    random_seed: 1
-    parameter_list:        ["QEMA"]
-    parameter_sigma:       [8.121212] # corresponds to Ma = 3.0 GeV
-    mode: reweight
-    number_of_multisims:    1
-    }
     
     
 

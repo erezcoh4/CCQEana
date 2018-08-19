@@ -20,15 +20,15 @@
     * for On Beam:
     xxxxxxxxxxxxxxxxxxxxxxxx
     
-    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_05
     python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_04
+    python scripts/download_files.py --name=prod_reco_optfilter_bnb_v12_unblind_mcc8_05
     
     xxxxxxxxxxxxxxxxxxxxxxxx
     * for Off Beam:
     xxxxxxxxxxxxxxxxxxxxxxxx
     
-    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_05
     python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_04
+    python scripts/download_files.py --name=prod_reco_optfilter_extbnb_v12_mcc8_dev_05
     
     xxxxxxxxxxxxxxxxxxxxxxxx
     * for cosmic-pairs analysis:

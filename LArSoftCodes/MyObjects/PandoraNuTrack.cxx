@@ -20,46 +20,6 @@ end_pos(fend_pos)
 }
 
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures , bool DoPrintAllPIDa ) const{
-    
-    cout << "\033[31m" << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
-    << "track " << track_id << endl << "-------------------"    << "\033[0m" << endl;
-    
-    SHOWTVector3(start_pos);
-    SHOWTVector3(end_pos);
-    SHOWTVector3(rec_dir);
-
-    if (DoPrintPandoraNuFeatures){
-        
-        SHOW3( PandoraNuCaliPID_PIDA[0] , PandoraNuCaliPID_PIDA[1]  , PandoraNuCaliPID_PIDA[2]  );
-        PrintPhys(length,"cm");
-        Printf("rec theta=%.1f, phi=%.1f deg.", r2d*rec_dir.Theta(), r2d*rec_dir.Phi() );
-        SHOW(IsFlipped);
-        
-    }
-    if (MCpdgCode!=-9999){
-        cout << "........................" << endl << "track MC information " << endl ;
-        SHOW(MCpdgCode);
-        SHOW(mcevent_id);
-        SHOWTVector3(truth_start_pos);
-        SHOWTVector3(truth_end_pos);
-        SHOWTVector3(truth_dir);
-        SHOWTLorentzVector(truth_momentum);
-        SHOW3(truth_mother, truth_process, truth_origin);
-        SHOW(truth_mcparticle);
-        SHOW(truth_purity);
-        Printf("truth theta=%.1f, phi=%.1f deg.", r2d*truth_dir.Theta(), r2d*truth_dir.Phi() );
-        if ( r2d*fabs(truth_dir.Theta()-rec_dir.Theta()) > 90 ) {
-            Printf("theta - truth-theta = %.1f(!)",r2d*fabs(truth_dir.Theta()-rec_dir.Theta()));
-        }
-        cout << "........................" << endl;
-    }
-    cout << "closest-flash:" << endl;
-    ClosestFlash.Print();
-    cout << "\033[31m" << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << "\033[0m" << endl;
-}
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void PandoraNuTrack::SetStartEndPlane(Int_t plane ,
@@ -210,10 +170,11 @@ void PandoraNuTrack::FlipTrack(){
     
     // change angles
     rec_dir = -rec_dir;
-//    theta       = 3.1416 - theta;
-//    phi         = (phi > 0 ? phi-3.1416 : phi+3.1416);
+    pandora_theta   = PI - pandora_theta;
+    pandora_phi     = (pandora_phi > 0 ? pandora_phi - PI : pandora_phi + PI );
     
     IsFlipped  = !IsFlipped;
+    momentum_MSCMu = momentum_MSCMu_bwd;
     
 }
 
@@ -271,6 +232,46 @@ Float_t PandoraNuTrack::ClosestLine2PointDistance ( TVector3 x0 ){
             / ( this->GetStartPos()-this->GetEndPos()).Mag() );
 }
 
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void PandoraNuTrack::Print( bool DoPrintPandoraNuFeatures , bool DoPrintAllPIDa ) const{
+    
+    cout << "\033[31m" << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl
+    << "track " << track_id << endl << "-------------------"    << "\033[0m" << endl;
+    
+    SHOWTVector3(start_pos);
+    SHOWTVector3(end_pos);
+    SHOWTVector3(rec_dir);
+    
+    if (DoPrintPandoraNuFeatures){
+        SHOW3( PandoraNuCaliPID_PIDA[0] , PandoraNuCaliPID_PIDA[1]  , PandoraNuCaliPID_PIDA[2]  );
+        PrintPhys(length,"cm");
+        Printf("rec theta=%.1f, phi=%.1f deg.", r2d*rec_dir.Theta(), r2d*rec_dir.Phi() );
+        Printf("pandora theta=%.1f, pandora phi=%.1f deg.", r2d*pandora_theta, r2d*pandora_phi );
+        SHOW(IsFlipped);
+    }
+    SHOW3( momentum_MSCMu_fwd, momentum_MSCMu_bwd , momentum_MSCMu );
+    if (MCpdgCode!=-9999){
+        cout << "........................" << endl << "track MC information " << endl ;
+        SHOW(MCpdgCode);
+        SHOW(mcevent_id);
+        SHOWTVector3(truth_start_pos);
+        SHOWTVector3(truth_end_pos);
+        SHOWTVector3(truth_dir);
+        SHOWTLorentzVector(truth_momentum);
+        SHOW3(truth_mother, truth_process, truth_origin);
+        SHOW(truth_mcparticle);
+        SHOW(truth_purity);
+        Printf("truth theta=%.1f, phi=%.1f deg.", r2d*truth_dir.Theta(), r2d*truth_dir.Phi() );
+        if ( r2d*fabs(truth_dir.Theta()-rec_dir.Theta()) > 90 ) {
+            Printf("theta - truth-theta = %.1f(!)",r2d*fabs(truth_dir.Theta()-rec_dir.Theta()));
+        }
+        cout << "........................" << endl;
+    }
+    // cout << "closest-flash:" << endl;
+    // ClosestFlash.Print();
+    cout << "\033[31m" << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << "\033[0m" << endl;
+}
 
 
 

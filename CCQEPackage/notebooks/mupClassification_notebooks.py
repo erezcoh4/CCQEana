@@ -130,7 +130,7 @@ def plot_purity( OverlaySamples=None
 # March-6, 2018 (last edit Aug-12, 2018)
 def get_Nreduced(OverlaySamples=None,reduced = dict(),OriginalOverlaySamples=None):
     Noriginal , Nreduced , freduced = dict() , dict() , dict()
-    for pair_type in pair_types[0:4]:
+    for pair_type in pair_types:
         sam = OverlaySamples[pair_type]
         Noriginal[pair_type] = len(OriginalOverlaySamples[pair_type])
         Nreduced[pair_type] = float(len(reduced[pair_type]))
@@ -140,7 +140,7 @@ def get_Nreduced(OverlaySamples=None,reduced = dict(),OriginalOverlaySamples=Non
 
 
 # ------------------------------------------------
-# March 5, 2018 (last edit May-14)
+# March 5, 2018 (last edit Aug-15, 2018)
 def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PIDa',OriginalOverlaySamples=None):
     eff,pur = dict(),dict()
     Nreduced , freduced = get_Nreduced(OverlaySamples=OverlaySamples,reduced=reduced,OriginalOverlaySamples=OriginalOverlaySamples)
@@ -149,14 +149,18 @@ def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PID
     pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
     eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
     pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    eff['CC 1p'] = freduced['CC 1p']
+    pur['CC 1p'] = 100.*Nreduced['CC 1p']/Ntot if Ntot>0 else 0
     pureff_cut = pd.DataFrame({'label':cut_name
                               ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
                               ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
                               ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
-                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
+                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'
+                              ,'CC$1 p$ eff.':'%.1f'%freduced['CC 1p']+'%'
+                              ,'CC$1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p']/Ntot if Ntot>0 else 0)+'%'}
                               , index=[cut_name]
                               )
-    for pair_type in pair_types[0:4]: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
+    for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
     pureff = pureff.append(pureff_cut)
     return pureff
 # ------------------------------------------------
@@ -166,14 +170,14 @@ def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PID
 
 
 # ------------------------------------------------
-# March-6, 2018 (last edit May 26)
+# March-6, 2018 (last edit Aug-15,2018)
 def apply_cuts_to_overlay(OverlaySamples=None
                           ,PIDa_p_min=13,do_PIDaCali=True
                           ,minPEcut = 150
                           ,maxdYZcut = 200
                           ,delta_theta_12=55  # deg.
                           ,opt_box=(50,100) # [Nwires x Nticks]
-                          ,r_max_RdQ_CC1p0pi = 0.39 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                          ,r_max_RdQ_CC1p = 0.42 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                           ,delta_Delta_phi=35 # deg.
                           ,Pt_max=0.35        # GeV/c
                           ,theta_pq_max=25    # deg.
@@ -193,7 +197,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
     cut_name = 'no cut'
     reducedSamples['no cut'] = dict()
     reducedSamples[cut_name] = dict()
-    for pair_type in pair_types[0:4]: reducedSamples['no cut'][pair_type] = OverlaySamples[pair_type]
+    for pair_type in pair_types: reducedSamples['no cut'][pair_type] = OverlaySamples[pair_type]
     pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples,OriginalOverlaySamples=reducedSamples['no cut']
                                    ,pureff=pureffOverlay,cut_name=cut_name,reduced=reducedSamples[cut_name])
     Noverlay = get_Noverlay(reducedSamples=reducedSamples,cut_name=cut_name,debug=debug,overlay_scaling=overlay_scaling )
@@ -204,14 +208,17 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'$N_{other pairs}$':Noverlay['other pairs']
                                           ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
                                           ,r'$N_{CC 1p 0pi}$':Noverlay['CC 1p 0pi']
+                                          ,r'$N_{CC 1p}$':Noverlay['CC 1p']
 
                                           ,r'${\epsilon}_{cosmic}$ [%]':100
                                           ,r'${\epsilon}_{CC 1p 0pi}$ [%]':100
+                                          ,r'${\epsilon}_{CC 1p}$ [%]':100
                                           ,r'${\epsilon}_{1mu-1p}$ [%]':100
                                           ,r'${\epsilon}_{other pairs}$ [%]':100
                                            
                                           ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
                                           ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
+                                          ,r'${\mathcal{p}}_{CC 1p}$ [%]':100.*Noverlay['pur CC 1p']
                                           
                                           # scaling and re-weighting
                                           ,r'$N_{Overlay scaled}$':Noverlay['Overlay scaled']
@@ -221,6 +228,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
                                           ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
                                           ,r'$N_{CC 1p 0pi scaled}$':Noverlay['CC 1p 0pi scaled']
+                                          ,r'$N_{CC 1p scaled}$':Noverlay['CC 1p scaled']
                                            },index=['preselection']))
                                           
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
@@ -228,7 +236,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
         if debug: print 'grab reduced samples after (',cuts_order[i_cut-1],') and apply cut on (',cuts_order[i_cut],')'
         samples_previous_cut = reducedSamples[cuts_order[i_cut-1]]
         
-        for pair_type in pair_types[0:4]:#{
+        for pair_type in pair_types:#{
             sam = samples_previous_cut[pair_type]
             if debug: print 'sam('+pair_type+'):',len(sam)
                                     
@@ -276,7 +284,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                 reduced[pair_type] = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
                                          |
                                          (np.sqrt( np.square(sam[Ru]-1) + np.square(sam[Rv]-1) + np.square(sam[Ry]-1) )
-                                          <= r_max_RdQ_CC1p0pi) ]
+                                          <= r_max_RdQ_CC1p) ]
             #}
             elif cut == 'delta phi':#{
                 reduced[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
@@ -310,14 +318,17 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'$N_{other pairs}$':Noverlay['other pairs']
                                               ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
                                               ,r'$N_{CC 1p 0pi}$':Noverlay['CC 1p 0pi']
+                                              ,r'$N_{CC 1p}$':Noverlay['CC 1p']
 
                                               ,r'${\epsilon}_{cosmic}$ [%]':100*Noverlay['eff cosmic']
                                               ,r'${\epsilon}_{CC 1p 0pi}$ [%]':100*Noverlay['eff CC 1p 0pi']
+                                              ,r'${\epsilon}_{CC 1p}$ [%]':100*Noverlay['eff CC 1p']
                                               ,r'${\epsilon}_{1mu-1p}$ [%]':100*Noverlay['eff 1mu-1p']
                                               ,r'${\epsilon}_{other pairs}$ [%]':100*Noverlay['eff other pairs']
                                            
                                               ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
                                               ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
+                                              ,r'${\mathcal{p}}_{CC 1p}$ [%]':100.*Noverlay['pur CC 1p']
 
                                               # scaling and re-weighting
                                               ,r'$N_{Overlay scaled}$':Noverlay['Overlay scaled']
@@ -327,6 +338,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
                                               ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
                                               ,r'$N_{CC 1p 0pi scaled}$':Noverlay['CC 1p 0pi scaled']
+                                              ,r'$N_{CC 1p scaled}$':Noverlay['CC 1p scaled']
 
                                           },index=[cut]))
     #}
@@ -347,7 +359,7 @@ def get_Noverlay(reducedSamples=None,cut_name=''
                  ):
     # @return the number of events in each subsample of the overlay, POT-normalized
     N = dict()
-    for pair_type in pair_types[0:4]: #{
+    for pair_type in pair_types: #{
         N[pair_type+' original'] = float(len(reducedSamples['no cut'][pair_type]))
         N[pair_type] = float(len(reducedSamples[cut_name][pair_type]))
         N['eff '+pair_type] = N[pair_type]/N[pair_type+' original']
@@ -356,12 +368,12 @@ def get_Noverlay(reducedSamples=None,cut_name=''
     N['Overlay'] = N['cosmic'] + N['MC']
     N['MC original'] = N['1mu-1p original'] + N['other pairs original']
     N['Overlay original'] = N['cosmic original'] + N['MC original']
-    for pair_type in pair_types[0:4]: N['pur '+pair_type] = N[pair_type]/N['Overlay']
+    for pair_type in pair_types: N['pur '+pair_type] = N[pair_type]/N['Overlay']
     N['eff Overlay'] = N['Overlay']/N['Overlay original']
                                      
 
     # scaling and re-weighting
-    for pair_type in pair_types[0:4]:#{
+    for pair_type in pair_types:#{
         N[pair_type+' original scaled'] = overlay_scaling[pair_type]*N[pair_type+' original'] if overlay_scaling else N[pair_type+' original']
         N[pair_type+' scaled'] = overlay_scaling[pair_type]*N[pair_type] if overlay_scaling else N[pair_type]
         N['eff '+pair_type+' scaled'] = N[pair_type+' scaled']/N[pair_type+' original scaled']
@@ -370,7 +382,7 @@ def get_Noverlay(reducedSamples=None,cut_name=''
     N['Overlay scaled'] = N['cosmic scaled'] + N['MC scaled']
     N['MC original scaled'] = N['1mu-1p original scaled'] + N['other pairs original scaled']
     N['Overlay original scaled'] = N['cosmic original scaled'] + N['MC original scaled']
-    for pair_type in pair_types[0:4]: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
+    for pair_type in pair_types: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
     N['eff Overlay scaled'] = N['Overlay scaled']/N['Overlay original scaled']
 
     if debug: print 'Noverlay in',cut_name,'\n',N
@@ -379,8 +391,10 @@ def get_Noverlay(reducedSamples=None,cut_name=''
 
 
 # ------------------------------------------------
-# July-24, 2018
-def load_samples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
+# July-24, 2018 (last edit Aug-16,2018)
+def load_samples(date='2018_04_28'
+                 ,filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'
+                 ,only_in_FV=True):
     '''
         return:
                 samples: 
@@ -390,8 +404,9 @@ def load_samples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie
     pairsFV = sample_in_FV(pairs)
     print len(pairs),'ccqe candidate pairs,',len(pairsFV),'in FV'
     samples = dict()
-    for pair_type in pair_types[0:4]:#{
-        samples[pair_type] = pairsFV[pairsFV[pair_type]==True]
+    for pair_type in pair_types:#{
+        if only_in_FV: samples[pair_type] = pairsFV[pairsFV[pair_type]==True]
+        else: samples[pair_type] = pairs[pairs[pair_type]==True]
         if 'CC 1p' in pair_type: print_line()
         print len(samples[pair_type]),'are '+pair_type+', %.1f'%(100.*float(len(samples[pair_type]))/len(pairsFV))+'%'
     #}
@@ -790,7 +805,7 @@ def get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic = dict()):
 
       
 # ------------------------------------------------
-# Oct. 13, 2017
+# Oct. 13, 2017 (last edit Aug-15,2018)
 def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCbnbDATAcosmic = dict()):
     ''' 
         return
@@ -807,19 +822,25 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     
     eff['CC 1p 0pi'] = freduced_MCbnbDATAcosmic['CC 1p 0pi']
     pur['CC 1p 0pi'] = 100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0
-    
+
+    eff['CC 1p'] = freduced_MCbnbDATAcosmic['CC 1p']
+    pur['CC 1p'] = 100.*Nreduced_MCbnbDATAcosmic['CC 1p']/Ntot if Ntot>0 else 0
+
     pureff_MCbnbDATAcosmic_cut = pd.DataFrame({'label':cut_label
                                ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
                                ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
                                ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced_MCbnbDATAcosmic['CC 1p 0pi']+'%'
-                               ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
+                               ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'
+                               ,'CC$1 p$ eff.':'%.1f'%freduced_MCbnbDATAcosmic['CC 1p']+'%'
+                               ,'CC$1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC 1p']/Ntot if Ntot>0 else 0)+'%'
+                                              }
                                , index=[cut_name]
                               )
     for pair_type in pair_types: pureff_MCbnbDATAcosmic_cut[pair_type] = '%.1f'%freduced_MCbnbDATAcosmic[pair_type]+'%' +' (%.0f)'%Nreduced_MCbnbDATAcosmic[pair_type]
     pureff_MCbnbDATAcosmic = pureff_MCbnbDATAcosmic.append(pureff_MCbnbDATAcosmic_cut)
     reduced_MCbnbDATAcosmicSamples[cut_name] = reduced_MCbnbDATAcosmic  
     Ntot = Nreduced_MCbnbDATAcosmic['1mu-1p']+Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other pairs']
-    return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC 1p 0pi'],(100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)
+    return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC 1p'],(100.*Nreduced_MCbnbDATAcosmic['CC 1p']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
 # ------------------------------------------------

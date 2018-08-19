@@ -226,11 +226,6 @@ void pairVertex::SetTracksRelations(){
     
 }
 
-
-
-
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 std::vector<PandoraNuTrack> pairVertex::RemoveTrackFromVector( vector<PandoraNuTrack> TracksVector , PandoraNuTrack TrackToBeRemoved ){
     std::vector<PandoraNuTrack> tmp_tracks = TracksVector;
@@ -243,8 +238,6 @@ std::vector<PandoraNuTrack> pairVertex::RemoveTrackFromVector( vector<PandoraNuT
     return TracksVector;
 }
 
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 std::vector<PandoraNuTrack> pairVertex::RemoveTracksFromVector( vector<PandoraNuTrack> TracksVector , vector<PandoraNuTrack> TracksToBeRemoved ){
     // loop over tracks to be removed
@@ -252,8 +245,6 @@ std::vector<PandoraNuTrack> pairVertex::RemoveTracksFromVector( vector<PandoraNu
     for (auto t:TracksToBeRemoved) TracksVector = RemoveTrackFromVector( TracksVector , t );
     return TracksVector;
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 vector<PandoraNuTrack> pairVertex::CloseSemiContainedTracks( vector<PandoraNuTrack> AllTracksInTheEvent , float fMaxDistance ){
@@ -267,8 +258,6 @@ vector<PandoraNuTrack> pairVertex::CloseSemiContainedTracks( vector<PandoraNuTra
     }
     return CloseTracks;
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetTrueMuonProtonTracks( PandoraNuTrack track_a , PandoraNuTrack track_b ){
@@ -287,7 +276,6 @@ void pairVertex::SetTrueMuonProton( PandoraNuTrack t1 , PandoraNuTrack t2 ){
     }
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 float pairVertex::GetAngleBetween2tracks() const{
     // July-30 2017
@@ -297,8 +285,6 @@ float pairVertex::GetAngleBetween2tracks() const{
     t2_dir.SetMagThetaPhi ( 1 , Track_pCandidate.GetTheta(), Track_pCandidate.GetPhi() );
     return r2d*(t1_dir.Angle( t2_dir ));
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::FixTracksDirections(){
@@ -346,13 +332,12 @@ void pairVertex::FixTracksDirections(){
     // the MC correlation is a band around
     // 𝜽(p) = -𝜽(µ)/𝛑 + 1
     // so if 𝜽(p) is too far from this correlation we can flip the p-track
-    if (fabs( Track_pCandidate.GetTheta() - (-Track_muCandidate.GetTheta()/PI + 1.)) > 1.){
+    if (fabs( Track_pCandidate.GetTheta() - ( 1. - Track_muCandidate.GetTheta()/PI )) > 1.){
         Debug(1,"re-flipping proton track");
         Track_pCandidate.FlipTrack();
     }
     // -- - --- -- -- --- - - -- -- -- - -- - -- -- -- - -- -- - - -- - - -- - -- - -- - - - -- - - -- - - -
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetReconstructedMomenta( float PmuFromRange, float PpFromRange ){
@@ -370,17 +355,16 @@ void pairVertex::SetReconstructedMomenta( float PmuFromRange, float PpFromRange 
     reco_Pmu_3vect.SetMagThetaPhi( reco_Pmu_3momentum , Track_muCandidate.GetTheta() , Track_muCandidate.GetPhi() );
     reco_Pmu.SetVectMag ( reco_Pmu_3vect , 0.1056 );
     
-    //    reco_Pmu_3vect_mcsllhd.SetMagThetaPhi( Track_muCandidate.mommsllhd , Track_muCandidate.theta , Track_muCandidate.phi );
-    //    reco_Pmu_mcsllhd.SetVectMag ( reco_Pmu_3vect_mcsllhd , 0.1056 );
-    
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::ReconstructBeam(){
     // reconstruct the beam by using the reconstructed Pµ and Pp
     reco_BeamE = reco_Pmu.E() + (reco_Pp.E() - reco_Pp.Mag()) + 0.040 ; // Eµ + Tp + Sn + T(A-1)
     reco_Pnu = TLorentzVector( 0 , 0 , reco_BeamE , reco_BeamE );
+    // mcs
+    reco_BeamE = reco_Pmu_mcs.E() + (reco_Pp.E() - reco_Pp.Mag()) + 0.040 ; // Eµ + Tp + Sn + T(A-1)
+    reco_Pnu_mcs = TLorentzVector( 0 , 0 , reco_BeamE , reco_BeamE );
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -426,8 +410,11 @@ void pairVertex::ReconstructKinematics(){
     truth_alpha_q = (truth_q.E() - truth_q.Pz())/0.931;
     truth_alpha_miss = truth_alpha_p - truth_alpha_q;
 
+    
+    // mcs
+    reco_q_mcs = reco_Pnu_mcs - reco_Pmu_mcs;
+    reco_Q2_mcs = - reco_q_mcs.Mag2();
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::SetReconstructedFeatures( float PmuFromRange, float PpFromRange ){
@@ -441,6 +428,12 @@ void pairVertex::SetReconstructedFeatures( float PmuFromRange, float PpFromRange
 
 }
 
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void pairVertex::SetMCSMuMomentum( float fMCSMuMomentum ){
+    // µ
+    reco_Pmu_3vect_mcs.SetMagThetaPhi( fMCSMuMomentum , Track_muCandidate.GetPandoraTheta() , Track_muCandidate.GetPandoraPhi() );
+    reco_Pmu_mcs.SetVectMag ( reco_Pmu_3vect_mcs , 0.1056 );
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 float pairVertex::GetTruthDeltaPhi () const {
@@ -449,9 +442,6 @@ float pairVertex::GetTruthDeltaPhi () const {
     float proton_truth_phi = Track_pCandidate.GetTruthMomentum().Phi();
     return r2d*fabs( muon_truth_phi - proton_truth_phi );
 }
-
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::AssociateHitsToTracks (std::vector<hit> hits) {
@@ -470,8 +460,6 @@ void pairVertex::AssociateHitsToTracks (std::vector<hit> hits) {
         }
     }
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 float pairVertex::GetChargeInBox(int plane, std::vector<hit> hits, box VertexBox) const {
@@ -505,9 +493,6 @@ float pairVertex::GetRdQaroundVertex (int plane, int Nwires, int Nticks , std::v
     else return -9999;
 }
 
-
-
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t pairVertex::GetZDis2Flash (flash Flash) const {
     float vZ = position.z();
@@ -515,7 +500,6 @@ Float_t pairVertex::GetZDis2Flash (flash Flash) const {
     float Zdis = vZ - FlashZcenter;
     return Zdis;
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t pairVertex::GetYDis2Flash (flash Flash) const {
@@ -525,7 +509,6 @@ Float_t pairVertex::GetYDis2Flash (flash Flash) const {
     return Ydis;
 }
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 Float_t pairVertex::GetDis2Flash (flash Flash) const {
     float Zdis = GetZDis2Flash (Flash);
@@ -533,8 +516,6 @@ Float_t pairVertex::GetDis2Flash (flash Flash) const {
     float YZdistance = sqrt( Zdis*Zdis + Ydis*Ydis );
     return YZdistance;
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void pairVertex::BuildVertexIDFromTracks () {
@@ -563,7 +544,6 @@ void pairVertex::Print(bool DoPrintTracks,bool DoPrintFull,bool DoPrintGENIE) co
     cout << endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< "\033[0m" << endl;
     
     if (Is1mu1p) Printf("1mu-1p vertex!");
-    // SHOW3( run , subrun , event );
     SHOWTVector3( position );
     
     for (auto t: tracks) {
@@ -603,6 +583,7 @@ void pairVertex::Print(bool DoPrintTracks,bool DoPrintFull,bool DoPrintGENIE) co
         // muon
         SHOWTLorentzVector( genie_interaction.GetLeptonMomentum() );
         if (!tracks.empty()) SHOWTLorentzVector( reco_Pmu );
+        if (!tracks.empty()) SHOWTLorentzVector( reco_Pmu_mcs );
         
         // proton
         if (genie_interaction.GetNprotons()) SHOWTLorentzVector( genie_interaction.GetProtonsMomenta().at(0) );
