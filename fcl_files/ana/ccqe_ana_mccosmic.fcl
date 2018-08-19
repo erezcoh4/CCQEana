@@ -65,6 +65,7 @@ physics:
       DoWriteGENIEInfo:                 true
       DoWriteEventsInfo:                true
       DoOnlySwT:                        false
+      DoWriteVerticesInfo:              true
       SwTModuleLabel:                   "swtrigger"
       SwTAlgoModuleLabel:               "BNB_FEMBeamTriggerAlgo"
       TrackModuleLabel:                 "pandoraNu"
