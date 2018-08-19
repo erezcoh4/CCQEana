@@ -209,6 +209,7 @@ private:
     bool    CSVfilesAlreadyOpened=false;
     bool    DoAnalyze=true;
     bool    MCmode=false;
+    bool    DoWriteVerticesInformation=false; // save also all the vertices information to a csv file
     bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
     bool    DoAddTracksEdep=false; // add tracks dE/dx information
     bool    DoWriteGENIEInformation=false; // save also all the genie information to a csv file
@@ -1495,9 +1496,12 @@ void ub::ErezCCQEAna::OpenCSVFiles(){
         HeaderTracksInCSV();
     }
     //    vertices_file.open("/uboone/data/users/ecohen/CCQEanalysis/csvFiles/ccqe_candidates/"+fDataSampleLabel+"_vertices.csv");
-    vertices_file.open(fDataSampleLabel+"_vertices.csv");
-    cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
-    HeaderVerticesInCSV();
+    Debug( 2, Form( "DoWriteVerticesInformation: %d",DoWriteVerticesInformation) );
+    if (DoWriteVerticesInformation) {
+        vertices_file.open(fDataSampleLabel+"_vertices.csv");
+        cout << "opened vertices file: "+fDataSampleLabel+"_vertices.csv" << endl;
+        HeaderVerticesInCSV();
+    }
     CSVfilesAlreadyOpened = true;
 }
 
@@ -1528,7 +1532,10 @@ void ub::ErezCCQEAna::StreamToCSV(){
     // ----------------------------------------
     // write ccqe-candidate pairs to CSV files
     // ----------------------------------------
-    StreamVerticesToCSV();
+    if (DoWriteVerticesInformation){
+        StreamVerticesToCSV();
+        Debug(5,"StreamVerticesToCSV();");
+    }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -2584,6 +2591,7 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
     DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
+    DoWriteTracksInformation= p.get< bool >("DoWriteVerticesInfo",true);
     DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
     DoWriteGENIEInformation = p.get< bool >("DoWriteGENIEInfo",true);
     DoWriteEventsInformation= p.get< bool >("DoWriteEventsInfo",true);
