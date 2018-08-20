@@ -288,8 +288,8 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
 
 
 # ------------------------------------------------
-# March-6, 2018 (last edit May-15)
-def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
+# March-6, 2018 (last edit Aug-20, 2018)
+def apply_cuts_to_data(OnBeam=None,OffBeam=None
                        ,PIDa_p_min=13,do_PIDaCali=True
                        ,minPEcut = 150
                        ,maxdYZcut = 200
@@ -312,18 +312,20 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
     reducedOnBeam = dict()
     numbers = pd.DataFrame()
     
-    reducedOnBeam['no cut'] = OnBeamFV
+    reducedOnBeam['no cut'] = OnBeam
     reducedOffBeam = None
 
-    if OffBeamFV is not None:
+    do_return_off_beam = False
+    if OffBeam is not None:
         reducedOffBeam = dict()
-        reducedOffBeam['no cut'] = OffBeamFV
-    numbers = numbers.append(pd.DataFrame({'$N_{On}$':len(OnBeamFV),r'${\epsilon}_{On}$ [%]':100.
-                                           ,'$N_{Off}$':len(OffBeamFV) if OffBeamFV is not None else -1
+        reducedOffBeam['no cut'] = OffBeam
+        do_return_off_beam=True
+    numbers = numbers.append(pd.DataFrame({'$N_{On}$':len(OnBeam),r'${\epsilon}_{On}$ [%]':100.
+                                           ,'$N_{Off}$':len(OffBeam) if OffBeam is not None else -1
                                           ,r'${\epsilon}_{Off}$ [%]':100.
-                                           ,'$N_{On-Off}$':(len(OnBeamFV)-OffBeam_scaling*len(OffBeamFV)) if OffBeamFV is not None else -1
+                                           ,'$N_{On-Off}$':(len(OnBeam)-OffBeam_scaling*len(OffBeam)) if OffBeam is not None else -1
                                           ,r'${\epsilon}_{On-Off}$ [%]':100
-                                           ,'$N_{Off}^{scaled}$':OffBeam_scaling*len(OffBeamFV) if OffBeamFV is not None else -1
+                                           ,'$N_{Off}^{scaled}$':OffBeam_scaling*len(OffBeam) if OffBeam is not None else -1
                                          },index=['preselection']))
 
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
@@ -332,7 +334,7 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
         if reducedOffBeam is not None: OffBeam_previous_cut = reducedOffBeam[cuts_order[i_cut-1]]
         else: OffBeam_previous_cut = None
         
-        for sam,sam_name in zip([OnBeam_previous_cut,OffBeam_previous_cut] if OffBeamFV is not None else [OnBeam_previous_cut]
+        for sam,sam_name in zip([OnBeam_previous_cut,OffBeam_previous_cut] if OffBeam is not None else [OnBeam_previous_cut]
                                 ,['OnBeam','OffBeam']):#{
             if debug: print 'len('+sam_name+'):',len(sam)
             if sam is None: continue
@@ -384,16 +386,16 @@ def apply_cuts_to_data(OnBeamFV=None,OffBeamFV=None
             if sam_name=='OnBeam': reducedOnBeam[cut] = sam
             if sam_name=='OffBeam': reducedOffBeam[cut] = sam
         #}
-        numbers = numbers.append(pd.DataFrame({'$N_{On}$':len(reducedOnBeam[cut]),r'${\epsilon}_{On}$ [%]':(100.*float(len(reducedOnBeam[cut]))/len(OnBeamFV))
-                                               ,'$N_{Off}$':len(reducedOffBeam[cut]) if OffBeamFV is not None else -1
-                                              ,r'${\epsilon}_{Off}$ [%]':(100.*float(len(reducedOffBeam[cut]))/len(OffBeamFV)) if OffBeamFV is not None else -1
-                                              ,'$N_{On-Off}$':(len(reducedOnBeam[cut])-OffBeam_scaling*len(reducedOffBeam[cut])) if OffBeamFV is not None else -1
+        numbers = numbers.append(pd.DataFrame({'$N_{On}$':len(reducedOnBeam[cut]),r'${\epsilon}_{On}$ [%]':(100.*float(len(reducedOnBeam[cut]))/len(OnBeam))
+                                               ,'$N_{Off}$':len(reducedOffBeam[cut]) if OffBeam is not None else -1
+                                              ,r'${\epsilon}_{Off}$ [%]':(100.*float(len(reducedOffBeam[cut]))/len(OffBeam)) if OffBeam is not None else -1
+                                              ,'$N_{On-Off}$':(len(reducedOnBeam[cut])-OffBeam_scaling*len(reducedOffBeam[cut])) if OffBeam is not None else -1
                                               ,r'${\epsilon}_{On-Off}$ [%]':(100*(len(reducedOnBeam[cut])-OffBeam_scaling*len(reducedOffBeam[cut]))                                                           
-                                                                      /(len(OnBeamFV)-OffBeam_scaling*len(OffBeamFV))) if OffBeamFV is not None else -1
-                                               ,'$N_{Off}^{scaled}$':OffBeam_scaling*len(reducedOffBeam[cut]) if OffBeamFV is not None else -1
+                                                                      /(len(OnBeam)-OffBeam_scaling*len(OffBeam))) if OffBeam is not None else -1
+                                               ,'$N_{Off}^{scaled}$':OffBeam_scaling*len(reducedOffBeam[cut]) if OffBeam is not None else -1
                                               },index=[cut]))
     #}
-    if OffBeamFV is not None: reducedOnBeam,reducedOffBeam,numbers
+    if do_return_off_beam: return reducedOnBeam,reducedOffBeam,numbers
     return reducedOnBeam,numbers
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 

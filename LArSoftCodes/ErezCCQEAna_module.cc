@@ -209,6 +209,7 @@ private:
     bool    CSVfilesAlreadyOpened=false;
     bool    DoAnalyze=true;
     bool    MCmode=false;
+    bool    DoFillOutputTree=false; // fill output-tree with all the events (consumes time and resources)
     bool    DoWriteVerticesInformation=false; // save also all the vertices information to a csv file
     bool    DoWriteTracksInformation=false; // save also all the tracks information to a csv file
     bool    DoAddTracksEdep=false; // add tracks dE/dx information
@@ -351,13 +352,13 @@ void ub::ErezCCQEAna::analyze(art::Event const & evt){
         CollectMCinformation( evt );
         CollectEventWeights(evt);
     }
-    ConstructVertices();
-    RunFlashMatch(evt);
+    if (DoWriteVerticesInformation) {
+        ConstructVertices();
+        RunFlashMatch(evt);
+    }
     StreamToCSV();
     PrintAndFill();
 }
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void ub::ErezCCQEAna::CollectGlobals(art::Event const & evt){
@@ -2293,7 +2294,9 @@ void ub::ErezCCQEAna::PrintAndFill(){
     // ----------------------------------------
     // print and finish
     // ----------------------------------------
-    fTree -> Fill();
+    if(DoFillOutputTree){
+        fTree -> Fill();
+    }
     if (debug>0) {
         PrintInformation( (debug>0) ? true : false );
     }
@@ -2492,6 +2495,20 @@ void ub::ErezCCQEAna::ResetVars(){
     tracklist.clear();
     hitlist.clear();
     
+    NumcFlashSpec.clear();
+    BeamFlashSpec.clear();
+    HypothesisFlashSpec.clear();
+    FlashMatch_score.clear();
+    FlashMatch_t0.clear();
+    FlashMatch_qll_xmin.clear();
+    FlashMatch_tpc_xmin.clear();
+    FlashMatch_xfixed_hypo_spec.clear();
+    flashMatchTrackVector.clear();
+    FlashMatch_result.clear();
+    event_weight_values.clear();
+    DebugRSEarray.clear();
+    
+
     // time-stamp
     start_ana_time = std::chrono::system_clock::now();
 }
@@ -2593,6 +2610,7 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     MCmode                  = p.get< bool >("MCmodeLabel",false);
     fHitParticleAssnsModuleLabel = p.get< std::string >("HitParticleAssnsModuleLabel");
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
+    DoFillOutputTree        = p.get< bool >("DoFillOutputTree",false);
     DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
     DoWriteTracksInformation= p.get< bool >("DoWriteVerticesInfo",true);
     DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
