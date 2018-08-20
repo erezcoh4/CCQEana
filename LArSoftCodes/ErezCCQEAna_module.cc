@@ -514,6 +514,7 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
     std::vector<art::Ptr<simb::MCParticle> > mcparticlelist;
     if (MCmode){
         Debug(2,"// * MCParticle information");
+        mcparticlelist.clear();
         if (evt.getByLabel("largeant",MCParticleListHandle))
             art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
         Nparticles = (int)mcparticlelist.size();
@@ -521,6 +522,7 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
         evt.getByLabel(fG4ModuleLabel, pHandle);
         art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
         
+        mclist.clear();
         if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
             art::fill_ptr_vector(mclist, mctruthListHandle);
         
@@ -816,14 +818,15 @@ void ub::ErezCCQEAna::CollectMCinformation(art::Event const & evt){
     // MCParticle from largeant
     Debug(2,"// * MCParticle information");
     art::Handle< std::vector<simb::MCParticle> > MCParticleListHandle;
-    std::vector<art::Ptr<simb::MCParticle> > mcparticlelist;
+    std::vector<art::Ptr<simb::MCParticle> > mcparticlelist;    
     if (evt.getByLabel("largeant",MCParticleListHandle))
         art::fill_ptr_vector(mcparticlelist, MCParticleListHandle);
     auto Nparticles = (int)mcparticlelist.size();
     Debug(2,"Nparticles: %",Nparticles);
     evt.getByLabel(fG4ModuleLabel, pHandle);
     art::FindOneP<simb::MCTruth> fo(pHandle, evt, fG4ModuleLabel);
-        
+    
+    mclist.clear();
     if (evt.getByLabel(fGenieGenModuleLabel,mctruthListHandle))
             art::fill_ptr_vector(mclist, mctruthListHandle);
         
@@ -860,14 +863,14 @@ void ub::ErezCCQEAna::CollectMCinformation(art::Event const & evt){
     // MC truth information
     // ----------------------------------------
     mcevts_truth = mclist.size();
-    Debug(4,"before if (mcevts_truth)");
+    Debug(4,"before if (mcevts_truth), mclist.size(): %",mclist.size());
     if (mcevts_truth){
         MCmode = true;
         Debug(4,"MCmode = true;");
         
         for( int mc_evend_id = 0; (mc_evend_id < mcevts_truth) && (mc_evend_id < kMaxTruth) ; mc_evend_id++ ){
             art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];
-            Debug(5,"art::Ptr<simb::MCTruth> mctruth = mclist[mc_evend_id];");
+            Debug(5,"art::Ptr<simb::MCTruth> mctruth = mclist[%];",mc_evend_id);
             if (mctruth->Origin() == simb::kBeamNeutrino){
                 Debug(5,"mctruth->Origin() == simb::kBeamNeutrino");
                 

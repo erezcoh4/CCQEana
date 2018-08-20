@@ -394,7 +394,7 @@ def get_Noverlay(reducedSamples=None,cut_name=''
 # July-24, 2018 (last edit Aug-16,2018)
 def load_samples(date='2018_04_28'
                  ,filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'
-                 ,only_in_FV=True):
+                 ,only_in_FV=False):
     '''
         return:
                 samples: 
