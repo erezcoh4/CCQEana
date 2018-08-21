@@ -6,6 +6,7 @@
     xxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2
+    python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2 --option=genie
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v9 --option=makeup --continue_makeup=7216920_63 --ctr=761
 
     xxxxxxxxxxxxxxxxxxxxxxxx
@@ -68,6 +69,12 @@ if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" or "prod
     default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_outdirname = csv_path+"ccqe_candidates/"
+    if "genie" in option:
+#        default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_genie/"+name+"_CCQE"
+#        default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_genie/"+name+"_CCQE"
+        default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_filter/"+name+"_CCQE"
+        default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_filter/"+name+"_CCQE"
+        default_outdirname = csv_path+"genie/"
 
 
 # pandora pairs
@@ -179,15 +186,19 @@ for file in list_files:#{
     except IOError:
         pass
 #}
-vertices_all = pd.concat(vertices_df_array)
-print len(vertices_all),'total pair-vertices'
-vertices_all.to_csv(outfilename)
-print 'concatenated %d'%len(vertices_all),'vertices to\n',outfilename,'\ndone.'
+if (len(vertices_df_array)>0):#{
+    vertices_all = pd.concat(vertices_df_array)
+    print len(vertices_all),'total pair-vertices'
+    vertices_all.to_csv(outfilename)
+    print 'concatenated %d'%len(vertices_all),'vertices to\n',outfilename,'\ndone.'
+#}
 print
-summary_all = pd.concat(summary_df_array)
-print len(summary_all),'is the length summary of all events'
-summary_all.to_csv(summaryfilename)
-print 'concatenated %d'%len(summary_all),'summary files to\n',summaryfilename,'\ndone.'
+if (len(summary_df_array)>0):#{
+    summary_all = pd.concat(summary_df_array)
+    print len(summary_all),'is the length summary of all events'
+    summary_all.to_csv(summaryfilename)
+    print 'concatenated %d'%len(summary_all),'summary files to\n',summaryfilename,'\ndone.'
+#}
 print
 if (len(tracks_df_array)>0):#{
     tracks_all = pd.concat(tracks_df_array)
@@ -215,5 +226,4 @@ if (len(events_df_array)>0):#{
 print
 
 os.system('say "download files from grid has completed"')
-os.system('say "concatenated %d vertices to outputfile from %d events".'%(len(vertices_all),len(events_all)))
 

@@ -39,10 +39,10 @@
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/ana/ccqe_genie.fcl</fcl>
             <inputdef>&defname;</inputdef>
             <schema>root</schema>
-            <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_filter/&name;</workdir>
-            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_filter/&name;</logdir>
-            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_filter/&name;</outdir>
-            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/ccqe_filter/&name;</bookdir>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_genie/&name;</workdir>
+            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_genie/&name;</logdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_genie/&name;</outdir>
+            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/ccqe_genie/&name;</bookdir>
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
