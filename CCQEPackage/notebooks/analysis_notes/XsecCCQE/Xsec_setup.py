@@ -20,7 +20,10 @@ from onbeam_offbeam_notebooks import *
     cosmic in the overlay (which are correlated with the beam)
     cosmic not in the overlay (off-beam data)
 '''
-
+flux = 3.601e10 # cm^-2
+flux_err = 0
+Ntargets = 5.00e31
+Ntargets_err = 0
 
 Bins = dict({
             'Pmu':linspace(0.1,1.5,7)
@@ -33,13 +36,27 @@ Bins = dict({
 
 
 
-Labels = dict({
-            'Pmu':r"$p_{\mu}$ [GeV/c]"
-            ,'theta(mu)':r"$\theta_{\mu}$ [deg.]"
-            ,'Pp':r"$p_{p}$ [GeV/c]"
-            ,'theta(p)':r"$\theta_{p}$ [deg.]"
-            })
+vlabels = dict({
+               'Pmu':"p_{\mu}"
+               ,'theta(mu)':"\theta_{\mu}"
+               ,'Pp':"p_{p}"
+               ,'theta(p)':"\theta_{p}"
+               })
 
+
+Vlabels = dict({
+              'Pmu':r"$p_{\mu}$"
+              ,'theta(mu)':r"$\theta_{\mu}$"
+              ,'Pp':r"$p_{p}$"
+              ,'theta(p)':r"$\theta_{p}$"
+              })
+
+Units = dict({
+             'Pmu':r"GeV/c"
+             ,'theta(mu)':r"deg."
+             ,'Pp':r"GeV/c"
+             ,'theta(p)':r"deg."
+               })
 
 
 
@@ -49,3 +66,14 @@ Colors = dict({
               ,'beam off':'black'
               ,'beam on':'tomato'
               })
+
+
+Xsec_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/Xsec/'
+Paths = dict({'migration maps':Xsec_path+'migration_maps/'
+             ,'background maps':Xsec_path+'background_maps/'
+             ,'efficiency maps':Xsec_path+'efficeincy_maps/'})
+
+
+
+
+
