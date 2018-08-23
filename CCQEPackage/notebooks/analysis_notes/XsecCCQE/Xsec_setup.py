@@ -28,8 +28,10 @@ Ntargets_err = 0
 Bins = dict({
             'Pmu':linspace(0.1,1.5,7)
             ,'theta(mu)':linspace(0,120,7)
+            ,'cos(theta(mu))':linspace(-0.5,1,7)
             ,'Pp':linspace(0.2,1.2,7)
             ,'theta(p)':linspace(0,90,7)
+            ,'cos(theta(p))':linspace(-0.2,1,7)
             })
 
 
@@ -39,23 +41,29 @@ Bins = dict({
 vlabels = dict({
                'Pmu':"p_{\mu}"
                ,'theta(mu)':"\theta_{\mu}"
+               ,'cos(theta(mu))':"\cos(\theta_{\mu})"
                ,'Pp':"p_{p}"
                ,'theta(p)':"\theta_{p}"
+               ,'cos(theta(p))':"\cos(\theta_{p})"
                })
 
 
 Vlabels = dict({
               'Pmu':r"$p_{\mu}$"
-              ,'theta(mu)':r"$\theta_{\mu}$"
-              ,'Pp':r"$p_{p}$"
-              ,'theta(p)':r"$\theta_{p}$"
+               ,'theta(mu)':r"$\theta_{\mu}$"
+               ,'cos(theta(mu))':r"$\cos(\theta_{\mu})$"
+               ,'Pp':r"$p_{p}$"
+               ,'theta(p)':r"$\theta_{p}$"
+               ,'cos(theta(p))':r"$\cos(\theta_{p})$"
               })
 
 Units = dict({
              'Pmu':r"GeV/c"
              ,'theta(mu)':r"deg."
+             ,'cos(theta(mu))':None
              ,'Pp':r"GeV/c"
              ,'theta(p)':r"deg."
+             ,'cos(theta(p))':None
                })
 
 
