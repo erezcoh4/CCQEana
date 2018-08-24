@@ -89,8 +89,8 @@ def find_a_straight_line( x_array , y_array ):
 # ------------------------------------------------
 # April-23, 2018
 def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collection
-                 min_FV_z = 5, max_FV_z = 1037,
-                 min_FV_x = 3, max_FV_x = 250): # 257
+                 min_FV_z = 5, max_FV_z = 1032,
+                 min_FV_x = 3, max_FV_x = 253): # 257
     sample_in_FV = sample[
                           (np.abs(sample['starty_muCandidate']) < max_FV_y)
                           & (np.abs(sample['starty_pCandidate']) < max_FV_y)

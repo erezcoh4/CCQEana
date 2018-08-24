@@ -15,6 +15,7 @@
 
     python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev
     python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_MCC8Tune3_mcc8.7_reco2_dev
+    python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev --option=genie
 
 
     xxxxxxxxxxxxxxxxxxxxxxxx
@@ -70,10 +71,8 @@ if "prodgenie_bnb_nu_uboone_overlay_cosmic_data" in name or "prod_reco" or "prod
     default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_ana/"+name+"_CCQE"
     default_outdirname = csv_path+"ccqe_candidates/"
     if "genie" in option:
-#        default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_genie/"+name+"_CCQE"
-#        default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_genie/"+name+"_CCQE"
-        default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_filter/"+name+"_CCQE"
-        default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_filter/"+name+"_CCQE"
+        default_book = "/uboone/data/users/ecohen/book/mcc8/06_26_01_09/ccqe_genie/"+name+"_CCQE"
+        default_pnfsjob = "/pnfs/uboone/scratch/users/ecohen/mcc8/06_26_01_09/ccqe_genie/"+name+"_CCQE"
         default_outdirname = csv_path+"genie/"
 
 
