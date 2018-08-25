@@ -2300,7 +2300,7 @@ void ub::ErezCCQEAna::PrintAndFill(){
     if (debug>0) {
         PrintInformation( (debug>0) ? true : false );
     }
-    if (debug>-1) PrintXLine();
+    if (debug>0) PrintXLine();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
