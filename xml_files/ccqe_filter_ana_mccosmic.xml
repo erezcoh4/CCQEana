@@ -7,7 +7,7 @@
 <!ENTITY run_type "physics">
 <!ENTITY tag "mcc8">
 <!-- 4000 files; 200k events <= 300 jobs x 14 files per job -->
-<!ENTITY number_of_jobs "300">
+<!ENTITY number_of_jobs "600">
 <!ENTITY name "&defname;_CCQE">
 <!ENTITY LArSoft_release "06_26_01_09">
 <!ENTITY prod_mode "test">
@@ -17,7 +17,7 @@
     <project name="&name;_analysis">
         <!-- Project size -->
         <numevents>10000000</numevents>
-        <maxfilesperjob>14</maxfilesperjob>
+        <maxfilesperjob>7</maxfilesperjob>
 
         <!-- Operating System and Project Version -->
         <os>SL6</os>
@@ -47,29 +47,9 @@
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
             <jobsub> --expected-lifetime=6h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>2400</memory>
+            <memory>3200</memory>
             <disk>20GB</disk> <!-- 1 event ~= 1.6M, 10 files ~= 500 events ~= 0.8 GB -->
         </stage>
-        
-        
-        
-        <!-- Project stages -->
-        <stage name="event_weight">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/event_weight/run_genie_reweight_uboone_erez.fcl</fcl>
-            <maxfilesperjob>1</maxfilesperjob>
-            <schema>root</schema>
-            <workdir>/pnfs/uboone/resilient/users/&user_id;/event_weight/&name;</workdir>
-            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</logdir>
-            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</outdir>
-            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/event_weight/&name;</bookdir>
-            <numjobs>&number_of_jobs;</numjobs>
-            <datatier>reconstructed</datatier>
-            <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>2800</memory>
-            <disk>20GB</disk>
-        </stage>
-        
         
         
         <stage name="ccqe_ana">

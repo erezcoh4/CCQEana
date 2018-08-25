@@ -508,7 +508,6 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
     auto const * detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
     trkf::TrackMomentumCalculator TrackMomCalc;
 
-    
     // MCParticle from largeant
     int Nparticles=0;
     art::Handle< std::vector<simb::MCParticle> > MCParticleListHandle;
@@ -530,7 +529,7 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
         if (evt.getByLabel(fGenieGenModuleLabel,mcfluxListHandle))
             art::fill_ptr_vector(fluxlist, mcfluxListHandle);
     }
-    
+
     // MCS fit
     art::ValidHandle< std::vector <recob::MCSFitResult> > MCSMuHandle = evt.getValidHandle < std::vector <recob::MCSFitResult> > ("pandoraNuMCSMu");
 
@@ -802,6 +801,7 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
         }//MC
         tracks.push_back( track );
     }
+    return;
 
 }
 

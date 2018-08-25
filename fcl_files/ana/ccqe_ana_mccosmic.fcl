@@ -58,7 +58,7 @@ physics:
     {
       module_type:                      "ErezCCQEAna"
       DataSampleLabel:                  "prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev"
-      VerbosityLevel:                   1
+      VerbosityLevel:                   10
       MCmodeLabel:                      true
       DoWriteTracksInfo:                false
       DoAddTracksEdep:                  false
