@@ -40,11 +40,11 @@ Bins = dict({
 
 vlabels = dict({
                'Pmu':"p_{\mu}"
-               ,'theta(mu)':"\theta_{\mu}"
-               ,'cos(theta(mu))':"\cos(\theta_{\mu})"
+               ,'theta(mu)':r"\theta_{\mu}"
+               ,'cos(theta(mu))':r"\cos(\theta_{\mu})"
                ,'Pp':"p_{p}"
-               ,'theta(p)':"\theta_{p}"
-               ,'cos(theta(p))':"\cos(\theta_{p})"
+               ,'theta(p)':r"\theta_{p}"
+               ,'cos(theta(p))':r"\cos(\theta_{p})"
                })
 
 
@@ -79,7 +79,8 @@ Colors = dict({
 Xsec_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/Xsec/'
 Paths = dict({'migration maps':Xsec_path+'migration_maps/'
              ,'background maps':Xsec_path+'background_maps/'
-             ,'efficiency maps':Xsec_path+'efficeincy_maps/'})
+             ,'efficiency maps':Xsec_path+'efficeincy_maps/'
+              ,'1d Xsec':Xsec_path+'1d_Xsec/'})
 
 
 

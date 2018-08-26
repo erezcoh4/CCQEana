@@ -2054,7 +2054,7 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     
     // vertex truth-topology in MC
     vertices_file
-    << "1mu-1p" << "," << "CC 1p" << "," << "CC 1p 0pi" << "," << "other pairs" << "," << "cosmic"
+    << "1mu-1p" << "," << "CC1p" << "," << "CC1p0pi" << "," << "other-pairs" << "," << "cosmic"
     
     
     << endl;
@@ -2612,7 +2612,7 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     fG4ModuleLabel          = p.get< std::string >("G4ModuleLabel","largeant");
     DoFillOutputTree        = p.get< bool >("DoFillOutputTree",false);
     DoWriteTracksInformation= p.get< bool >("DoWriteTracksInfo",false);
-    DoWriteTracksInformation= p.get< bool >("DoWriteVerticesInfo",true);
+    DoWriteVerticesInformation = p.get< bool >("DoWriteVerticesInfo",true);
     DoAddTracksEdep         = p.get< bool >("DoAddTracksEdep",false);
     DoWriteGENIEInformation = p.get< bool >("DoWriteGENIEInfo",true);
     DoWriteEventsInformation= p.get< bool >("DoWriteEventsInfo",true);

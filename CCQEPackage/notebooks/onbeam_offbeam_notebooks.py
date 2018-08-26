@@ -295,7 +295,7 @@ def apply_cuts_to_data(OnBeam=None,OffBeam=None
                        ,maxdYZcut = 200
                        ,delta_theta_12=55  # deg.
                        ,opt_box=(50,100) # [Nwires x Nticks]
-                       ,r_max_RdQ_CC1p0pi = 0.39 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                       ,r_max_RdQ_CC1p = 0.43 # sphere in U,V,Y space, apply a cut only to CC1p0pi
                        ,delta_Delta_phi=35 # deg.
                        ,Pt_max=0.35        # GeV/c
                        ,theta_pq_max=25    # deg.
@@ -376,7 +376,7 @@ def apply_cuts_to_data(OnBeam=None,OffBeam=None
                 sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1)
                           |
                           (sqrt( np.square(sam[Ru]-1) + square(sam[Rv]-1) + square(sam[Ry]-1) )
-                           <= r_max_RdQ_CC1p0pi) ]
+                           <= r_max_RdQ_CC1p) ]
             elif cut == 'delta phi':
                 sam = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
                                       
