@@ -25,37 +25,29 @@ flux_err = 0
 Ntargets = 5.00e31
 Ntargets_err = 0
 
-Bins = dict({
-            'Pmu':linspace(0.1,1.5,7)
-            ,'theta(mu)':linspace(0,120,7)
-            ,'cos(theta(mu))':linspace(-0.5,1,7)
-            ,'Pp':linspace(0.2,1.2,7)
-            ,'theta(p)':linspace(0,90,7)
-            ,'cos(theta(p))':linspace(-0.2,1,7)
+Limits=dict({
+            'Pmu':(0.2,1.4)
+            ,'cos(theta(mu))':(-0.5,0.95)
+            ,'Pp':(0.3,1.0)
+            ,'cos(theta(p))':(0.25,0.9)
             })
-
-
-
+NBins=7
+Bins = dict()
+for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins)
 
 
 vlabels = dict({
-               'Pmu':"p_{\mu}"
+               'Pmu':r"p_{\mu}"
                ,'theta(mu)':r"\theta_{\mu}"
                ,'cos(theta(mu))':r"\cos(\theta_{\mu})"
-               ,'Pp':"p_{p}"
+               ,'Pp':r"p_{p}"
                ,'theta(p)':r"\theta_{p}"
                ,'cos(theta(p))':r"\cos(\theta_{p})"
                })
 
+Vlabels = dict()
+for key in vlabels.keys(): Vlabels[key] = r"$"+vlabels[key]+"$"
 
-Vlabels = dict({
-              'Pmu':r"$p_{\mu}$"
-               ,'theta(mu)':r"$\theta_{\mu}$"
-               ,'cos(theta(mu))':r"$\cos(\theta_{\mu})$"
-               ,'Pp':r"$p_{p}$"
-               ,'theta(p)':r"$\theta_{p}$"
-               ,'cos(theta(p))':r"$\cos(\theta_{p})$"
-              })
 
 Units = dict({
              'Pmu':r"GeV/c"
@@ -65,7 +57,6 @@ Units = dict({
              ,'theta(p)':r"deg."
              ,'cos(theta(p))':None
                })
-
 
 
 Colors = dict({
@@ -85,4 +76,20 @@ Paths = dict({'migration maps':Xsec_path+'migration_maps/'
 
 
 
+
+#            'Pmu':linspace(0.2,1.4,7)
+#            ,'theta(mu)':linspace(0,120,7)
+#            ,'cos(theta(mu))':linspace(-0.5,0.95,7)
+#            ,'Pp':linspace(0.3,1.0,7)
+#            ,'theta(p)':linspace(0,90,7)
+#            ,'cos(theta(p))':linspace(0.25,0.9,7)
+
+#Vlabels = dict({
+#              'Pmu':r"$p_{\mu}$"
+#               ,'theta(mu)':r"$\theta_{\mu}$"
+#               ,'cos(theta(mu))':r"$\cos(\theta_{\mu})$"
+#               ,'Pp':r"$p_{p}$"
+#               ,'theta(p)':r"$\theta_{p}$"
+#               ,'cos(theta(p))':r"$\cos(\theta_{p})$"
+#              })
 
