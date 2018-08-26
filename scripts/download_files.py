@@ -6,6 +6,7 @@
     xxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2
+    python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2 --option=genie
     python scripts/download_files.py --name=prodgenie_bnb_nu_uboone_overlay_mcc8_v9 --option=makeup --continue_makeup=7216920_63 --ctr=761
 
