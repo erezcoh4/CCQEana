@@ -75,7 +75,7 @@ def Gaussian_relative_resolution(df=None,vgen='',vrec=''
 # May-29, 2018
 def plot_purity( OverlaySamples=None
                 , ax=None, debug=0,overlay_scaling=None
-                , purity_pair_type='CC 1p 0pi'
+                , purity_pair_type='CC1p0pi'
                 , var=None, bins=None
                 , x_label=''
                 , y_label='purity [%]'
@@ -147,17 +147,17 @@ def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PID
     Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
     eff['1mu-1p'] = freduced['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
-    eff['CC 1p 0pi'] = freduced['CC 1p 0pi']
-    pur['CC 1p 0pi'] = 100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0
-    eff['CC 1p'] = freduced['CC 1p']
-    pur['CC 1p'] = 100.*Nreduced['CC 1p']/Ntot if Ntot>0 else 0
+    eff['CC1p0pi'] = freduced['CC1p0pi']
+    pur['CC1p0pi'] = 100.*Nreduced['CC1p0pi']/Ntot if Ntot>0 else 0
+    eff['CC1p'] = freduced['CC1p']
+    pur['CC1p'] = 100.*Nreduced['CC1p']/Ntot if Ntot>0 else 0
     pureff_cut = pd.DataFrame({'label':cut_name
                               ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
                               ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
-                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC 1p 0pi']+'%'
-                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'
-                              ,'CC$1 p$ eff.':'%.1f'%freduced['CC 1p']+'%'
-                              ,'CC$1 p$ pur.':'%.1f'%(100.*Nreduced['CC 1p']/Ntot if Ntot>0 else 0)+'%'}
+                              ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced['CC1p0pi']+'%'
+                              ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced['CC1p0pi']/Ntot if Ntot>0 else 0)+'%'
+                              ,'CC$1 p$ eff.':'%.1f'%freduced['CC1p']+'%'
+                              ,'CC$1 p$ pur.':'%.1f'%(100.*Nreduced['CC1p']/Ntot if Ntot>0 else 0)+'%'}
                               , index=[cut_name]
                               )
     for pair_type in pair_types: pureff_cut[pair_type] = '%.1f'%freduced[pair_type]+'%' +' (%.0f)'%Nreduced[pair_type]
@@ -207,18 +207,18 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'$N_{cosmic}$':Noverlay['cosmic']
                                           ,r'$N_{other pairs}$':Noverlay['other pairs']
                                           ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
-                                          ,r'$N_{CC 1p 0pi}$':Noverlay['CC 1p 0pi']
-                                          ,r'$N_{CC 1p}$':Noverlay['CC 1p']
+                                          ,r'$N_{CC1p0pi}$':Noverlay['CC1p0pi']
+                                          ,r'$N_{CC1p}$':Noverlay['CC1p']
 
                                           ,r'${\epsilon}_{cosmic}$ [%]':100
-                                          ,r'${\epsilon}_{CC 1p 0pi}$ [%]':100
-                                          ,r'${\epsilon}_{CC 1p}$ [%]':100
+                                          ,r'${\epsilon}_{CC1p0pi}$ [%]':100
+                                          ,r'${\epsilon}_{CC1p}$ [%]':100
                                           ,r'${\epsilon}_{1mu-1p}$ [%]':100
                                           ,r'${\epsilon}_{other pairs}$ [%]':100
                                            
                                           ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
-                                          ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
-                                          ,r'${\mathcal{p}}_{CC 1p}$ [%]':100.*Noverlay['pur CC 1p']
+                                          ,r'${\mathcal{p}}_{CC1p0pi}$ [%]':100.*Noverlay['pur CC1p0pi']
+                                          ,r'${\mathcal{p}}_{CC1p}$ [%]':100.*Noverlay['pur CC1p']
                                           
                                           # scaling and re-weighting
                                           ,r'$N_{Overlay scaled}$':Noverlay['Overlay scaled']
@@ -227,8 +227,8 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
                                           ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
                                           ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
-                                          ,r'$N_{CC 1p 0pi scaled}$':Noverlay['CC 1p 0pi scaled']
-                                          ,r'$N_{CC 1p scaled}$':Noverlay['CC 1p scaled']
+                                          ,r'$N_{CC1p0pi scaled}$':Noverlay['CC1p0pi scaled']
+                                          ,r'$N_{CC1p scaled}$':Noverlay['CC1p scaled']
                                            },index=['preselection']))
                                           
     for i_cut,cut in zip(range(1,len(cuts_order)),cuts_order[1:]):#{
@@ -317,18 +317,18 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'$N_{cosmic}$':Noverlay['cosmic']
                                               ,r'$N_{other pairs}$':Noverlay['other pairs']
                                               ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
-                                              ,r'$N_{CC 1p 0pi}$':Noverlay['CC 1p 0pi']
-                                              ,r'$N_{CC 1p}$':Noverlay['CC 1p']
+                                              ,r'$N_{CC1p0pi}$':Noverlay['CC1p0pi']
+                                              ,r'$N_{CC1p}$':Noverlay['CC1p']
 
                                               ,r'${\epsilon}_{cosmic}$ [%]':100*Noverlay['eff cosmic']
-                                              ,r'${\epsilon}_{CC 1p 0pi}$ [%]':100*Noverlay['eff CC 1p 0pi']
-                                              ,r'${\epsilon}_{CC 1p}$ [%]':100*Noverlay['eff CC 1p']
+                                              ,r'${\epsilon}_{CC1p0pi}$ [%]':100*Noverlay['eff CC1p0pi']
+                                              ,r'${\epsilon}_{CC1p}$ [%]':100*Noverlay['eff CC1p']
                                               ,r'${\epsilon}_{1mu-1p}$ [%]':100*Noverlay['eff 1mu-1p']
                                               ,r'${\epsilon}_{other pairs}$ [%]':100*Noverlay['eff other pairs']
                                            
                                               ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
-                                              ,r'${\mathcal{p}}_{CC 1p 0pi}$ [%]':100.*Noverlay['pur CC 1p 0pi']
-                                              ,r'${\mathcal{p}}_{CC 1p}$ [%]':100.*Noverlay['pur CC 1p']
+                                              ,r'${\mathcal{p}}_{CC1p0pi}$ [%]':100.*Noverlay['pur CC1p0pi']
+                                              ,r'${\mathcal{p}}_{CC1p}$ [%]':100.*Noverlay['pur CC1p']
 
                                               # scaling and re-weighting
                                               ,r'$N_{Overlay scaled}$':Noverlay['Overlay scaled']
@@ -337,8 +337,8 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
                                               ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
                                               ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
-                                              ,r'$N_{CC 1p 0pi scaled}$':Noverlay['CC 1p 0pi scaled']
-                                              ,r'$N_{CC 1p scaled}$':Noverlay['CC 1p scaled']
+                                              ,r'$N_{CC1p0pi scaled}$':Noverlay['CC1p0pi scaled']
+                                              ,r'$N_{CC1p scaled}$':Noverlay['CC1p scaled']
 
                                           },index=[cut]))
     #}
@@ -407,44 +407,12 @@ def load_samples(date='2018_04_28'
     for pair_type in pair_types:#{
         if only_in_FV: samples[pair_type] = pairsFV[pairsFV[pair_type]==True]
         else: samples[pair_type] = pairs[pairs[pair_type]==True]
-        if 'CC 1p' in pair_type: print_line()
+        if 'CC1p' in pair_type: print_line()
         print len(samples[pair_type]),'are '+pair_type+', %.1f'%(100.*float(len(samples[pair_type]))/len(pairsFV))+'%'
     #}
     print "I finished loading overlay samples. We have in total %d pairs"%len(pairs)
     return samples
 # ------------------------------------------------
-
-
-
-# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# obselete: outran by load_samples() above
-# delete by Aug-24, 2018
-# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-## ------------------------------------------------
-## last edit: Feb-12,2018 (last edit April 23)
-#def load_MCbnbDATAcosmicSamples(date='2018_04_28',filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'):
-#    '''
-#        return:
-#        MCbnbDATAcosmicSamples:  pandas.DataFrame() of prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices in FV
-#        samples: dict() of pairs broken into pair_types
-#        '''
-#    global MCbnbDATAcosmicSamples
-#    # old overlay: prodgenie_bnb_nu_uboone_overlay_mcc8_reco2
-#    #pairs = pd.read_csv(vertices_files_path+'prodgenie_bnb_nu_uboone_overlay_mcc8_reco2_vertices.csv')
-#    # new overlay: ccqe_ana_MCBNBCosmicDATA_2018_01_30
-#    pairs = pd.read_csv(vertices_files_path+'/'+date+'/'+filename+'.csv')
-#    MCbnbDATAcosmicPairsFV = sample_in_FV(pairs)
-#    print len(pairs),'pairs from MC-BNB + cosmic DATA overlay'
-#    print len(MCbnbDATAcosmicPairsFV),'pairs in FV'
-#    for pair_type in pair_types:#{
-#        MCbnbDATAcosmicSamples[pair_type] = MCbnbDATAcosmicPairsFV[MCbnbDATAcosmicPairsFV[pair_type]==True]
-#        Ntype = len(MCbnbDATAcosmicSamples[pair_type])
-#        if pair_type=='CC 1p 0pi': print_line()
-#        print Ntype,'are '+pair_type+', %.1f'%(100.*float(Ntype)/len(MCbnbDATAcosmicPairsFV))+'%'
-#    #}
-#    print "I finished loading overlay, MC BNB / data cosmic samples. We have in total %d pairs"%len(pairs)
-#    return MCbnbDATAcosmicPairsFV, MCbnbDATAcosmicSamples
-## ------------------------------------------------
 
 
 # ------------------------------------------------
@@ -458,336 +426,6 @@ def get_pair_hpars(index):#{
 #}
 # ------------------------------------------------
 
-
-
-## ------------------------------------------------
-# deprecated by apply_cuts_to_overaly()
-## last edit:
-## Feb. 12, 2018
-#def apply_cuts_MCbnbDATAcosmic( OverlaySamples=None
-#                               , PIDa_p_min=13
-#                               , delta_theta_12=55  # deg.
-#                               , delta_Delta_phi=35 # deg.
-#                               , theta_pq_max=25    # deg.
-#                               , Pt_max=0.35        # GeV/c
-#                               , Pmiss_max=0.3      # GeV/c
-#                               , opt_box=(50,100) # [Nwires x Nticks]
-#                               , r_max_RdQ_CC1p0pi = 0.35 # sphere in U,V,Y space, apply a cut only to CC1p0pi
-#                               , minPEcut = 100
-#                               , maxdYZcut = 200                              
-#
-#                               
-#                               # cuts sensitivity
-#                               , PIDa_p_min_minus = 11
-#                               , PIDa_p_min_plus = 13
-#                               , delta_theta_12_minus = 50 
-#                               , delta_theta_12_plus = 60
-#                               , r_max_RdQ_CC1p0pi_minus = 0.25
-#                               , r_max_RdQ_CC1p0pi_plus = 0.4                               
-#                               , delta_Delta_phi_minus = 35
-#                               , delta_Delta_phi_plus = 45
-#                               , Pt_max_minus=0.3
-#                               , Pt_max_plus=0.4
-#                               , theta_pq_max_minus=15
-#                               , theta_pq_max_plus=35 
-#                               ):#{
-#    '''
-#        return:      
-#            pureff_MCbnbDATAcosmic
-#            pureff_MCbnbDATAcosmic_numbers
-#    '''
-#    # --- -- --- - -- -- --- --
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        # for overlay version v2
-#        # reduced_MCbnbDATAcosmic[pair_type] = MCbnbDATAcosmicSamples[pair_type]
-#        # for overlay version v4 and up
-#        reduced_MCbnbDATAcosmic[pair_type] = OverlaySamples[pair_type]
-#    #}
-#    reduced_MCbnbDATAcosmicSamples['no cut'] = reduced_MCbnbDATAcosmic
-#
-#    # before cuts
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'no cut', cut_label='no cut', reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#    # cut 1: PIDa
-#    cut_name , cut_label = 'PIDa',r'${PID}_a>%.0f$'%PIDa_p_min
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
-#        #        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#    
-#    # -- -- -- -- -- ---- - ---- 
-#    # cut 2: Optical filtering
-#    # -- -- -- -- -- ---- - ---- 
-#    cut_name , cut_label = 'flashes', r'$N_{flashes}>0$'
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['PIDa'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[(sam['Nflashes']>0)]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name,cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#    cut_name , cut_label = 'flash', 'optical filter'
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['flashes'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[(sam['ClosestFlash_TotalPE'] > minPEcut)
-#                                                 &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name,cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#
-#    
-#    # cut 3: require that the longer track is the one with larger PIDa
-#    cut_name , cut_label = 'length', r'$l_{\mu}>l_{p}$'
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['flash'][pair_type]
-#        # for overlay v2
-#        # reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_long'] < sam['PIDa_short']]
-#        # for overlay v4 and up
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    
-#    # cut 4: |\theta_{1,2}-90^0|<60^0$
-#    cut_name, cut_label='non-collinearity' ,r'$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['length'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#    # -- - -- -- - -- -- - - -- --- 
-#    # VERTEX ACTIVITY 
-#    # -- - -- -- - -- -- - - -- --- 
-#    # cut 5: vertex activity (RdQ)
-#    # for the 1mu-1p sample we do not apply a cut, which means that we stop here for 1mu-1p
-#    # for the CC 1p 0pi we apply a cut:
-#    # a sphere around RdQ=1 of radius r_min_RdQ_CC1p0pi
-#    # where r_min_RdQ_CC1p0pi is taken from analysis_notes/RdQ/RdQaroundVertex_cut_selection
-#    cut_name , cut_label = 'vertex activity' , r'$\sqrt{\sum_{p=0,1,2}(R_{\Delta Q}^{p}-1)^2}<%.2f$'%r_max_RdQ_CC1p0pi
-#    box_str='[%d wires x %d ticks]'%(opt_box[0],opt_box[1])
-#    Ru = 'RdQaroundVertex[plane 0]'+box_str
-#    Rv = 'RdQaroundVertex[plane 1]'+box_str
-#    Ry = 'RdQaroundVertex[plane 2]'+box_str
-#    
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{         
-#        sam = reduced_MCbnbDATAcosmicSamples['non-collinearity'][pair_type]
-#        sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1) 
-#                  | 
-#                  (np.sqrt( np.square(sam[Ru]-1) + np.square(sam[Rv]-1) + np.square(sam[Ry]-1) ) <= r_max_RdQ_CC1p0pi) ]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam        
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#    # cut 6: delta phi
-#    cut_name , cut_label = 'delta phi' , r'$|\Delta \phi - \pi|<%.0f^0$'%delta_Delta_phi
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['vertex activity'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#    # cut 6.5: Pt<0.35 without application of the $\Delta phi$ cut
-#    cut_name , cut_label ='Pt no Delta phi', r'$p_{t}<%.2f$ GeV/c'%Pt_max
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['vertex activity'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pt']<Pt_max]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#
-#    # cut 7: $p_{t}<0.35$
-#    cut_name , cut_label = 'soft Pt', r'$p_{t}<%.2f$ GeV/c'%Pt_max
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pt']<Pt_max]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#    
-#    # tight Pt cut for good Ev reconstruction
-#    cut_name , cut_label ='tight Pt', '$p_{t}<0.15$ GeV/c'
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['soft Pt'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pt']<0.15]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#
-#
-#    # -- -- - -- - -- - -- - -- - -- - -- - -- - --
-#    # modified cuts
-#    # -- -- - -- - -- - -- - -- - -- - -- - -- - --
-#
-#    # cut 3 before everything: theta_12
-#    cut_name, cut_label='non-collinearity first' ,'$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#    # modified cut: theta_pq
-#    cut_name,cut_label ='theta_pq' , '$\\theta_{pq}<%.0f^0$'%theta_pq_max
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_theta_pq']<theta_pq_max]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#    
-#
-#    # cut on l_p>10 cm
-#    cut_name,cut_label='l_p_min_10',r'$l_p>10$ cm'
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['soft Pt'][pair_type]
-#        # for overlay v2
-#        # reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_assigned_proton']>10]
-#        # for overlay v4 and up
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['l_pCandidate']>10]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#    # another modified cut 6: p_{miss}<0.3
-#    cut_name,cut_label = 'soft Pmiss','$p_{miss}<%.2f$ GeV/c'%Pmiss_max
-#    reduced_MCbnbDATAcosmic = dict()
-#    for pair_type in pair_types:#{
-#        sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
-#        reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pmiss']<Pmiss_max]
-#    #}
-#    get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#    get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#
-#
-#
-#
-#    # -- -- - -- - -- - -- - -- - -- - -- - -- - --
-#    # cut-sensitivity
-#    # -- -- - -- - -- - -- - -- - -- - -- - -- - -- 
-#    # cut 1: PIDa    
-#    for cut_name,PIDa_p_min_cut in zip(['PIDa-','PIDa+'],[PIDa_p_min_minus,PIDa_p_min_plus]):#{
-#        cut_label = '${PID}_a>%.0f$'%PIDa_p_min_cut
-#        reduced_MCbnbDATAcosmic = dict()
-#        for pair_type in pair_types:#{
-#            sam = reduced_MCbnbDATAcosmicSamples['no cut'][pair_type]
-#            # for overlay v2
-#            #            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['PIDa_assigned_proton']>PIDa_p_min_cut]
-#            # for overlay v4 and up
-#            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min_cut]
-#        #}
-#        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#    #}
-#    
-#    # cut 3: collinearity
-#    for cut_name,delta_theta_12_cut in zip(['theta12-','theta12+'],[delta_theta_12_minus,delta_theta_12_plus]):#{
-#        cut_label='$|\theta_{1,2}-90^0|<%.0f^0$'%delta_theta_12_cut
-#        reduced_MCbnbDATAcosmic = dict()
-#        for pair_type in pair_types:#{
-#            sam = reduced_MCbnbDATAcosmicSamples['length'][pair_type]
-#            reduced_MCbnbDATAcosmic[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12_cut]
-#        #}
-#        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#    #}
-#
-#    # cut 6: vertex activity (RdQ)
-#    for cut_name,r_max_RdQ_CC1p0pi_cut in zip(['RdQ-','RdQ+'],[r_max_RdQ_CC1p0pi_minus,r_max_RdQ_CC1p0pi_plus]):#{
-#        cut_label = '$\sqrt{\sum_{p=0,1,2}(R_{\Delta Q}^{p}-1)^2}<%.2f$'%r_max_RdQ_CC1p0pi
-#        reduced_MCbnbDATAcosmic = dict()
-#        for pair_type in pair_types:#{         
-#            sam = reduced_MCbnbDATAcosmicSamples['non-collinearity'][pair_type]
-#            sam = sam[(sam[Ru]==1) | (sam[Rv]==1) | (sam[Ry]==1) 
-#                      | 
-#                      (np.sqrt( np.square(sam[Ru]-1) + np.square(sam[Rv]-1) + np.square(sam[Ry]-1) ) <= r_max_RdQ_CC1p0pi_cut) ]
-#            reduced_MCbnbDATAcosmic[pair_type] = sam        
-#        #}
-#        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name ,cut_label=cut_label , reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#    #}
-#
-#    # cut 5: $\Delta phi$
-#    for cut_name,delta_Delta_phi_cut in zip(['delta_phi-','delta_phi+'],[delta_Delta_phi_minus,delta_Delta_phi_plus]):#{
-#        cut_label ='$|\Delta \phi - \pi|<%.0f^0$'%delta_Delta_phi_cut
-#        reduced_MCbnbDATAcosmic = dict()
-#        for pair_type in pair_types:#{
-#            sam = reduced_MCbnbDATAcosmicSamples['vertex activity'][pair_type]
-#            reduced_MCbnbDATAcosmic[pair_type] = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi_cut]
-#        #}
-#        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#    #}
-#
-#    # cut 6: Pt
-#    for cut_name,Pt_max_cut in zip(['Pt-','Pt+'],[Pt_max_minus,Pt_max_plus]):#{
-#        cut_label='$p_{t}<%.2f$ GeV/c'%Pt_max_cut
-#        reduced_MCbnbDATAcosmic = dict()
-#        for pair_type in pair_types:#{
-#            sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
-#            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_Pt']<Pt_max_cut]
-#        #}
-#        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#    #}
-#   
-#    # cut 6: \theta_pq
-#    for cut_name,theta_pq_max_cut in zip(['theta_pq-','theta_pq+'],[theta_pq_max_minus,theta_pq_max_plus]):#{
-#        cut_label=r'$\theta_{pq}<%.0f^0$ deg.'%theta_pq_max_cut
-#        reduced_MCbnbDATAcosmic = dict()
-#        for pair_type in pair_types:#{
-#            sam = reduced_MCbnbDATAcosmicSamples['delta phi'][pair_type]
-#            reduced_MCbnbDATAcosmic[pair_type] = sam[sam['reco_theta_pq']<theta_pq_max_cut]
-#        #}
-#        get_pureff_MCbnbDATAcosmic_cut(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic)
-#        get_pureff_MCbnbDATAcosmic_numbers(cut_name=cut_name, cut_label=cut_label, reduced_MCbnbDATAcosmic = reduced_MCbnbDATAcosmic);
-#    #}
-#
-#    os.system('say "I have completed applying cuts to the overlay samples".')
-#    return pureff_MCbnbDATAcosmic,pureff_MCbnbDATAcosmic_numbers
-##}
-## ------------------------------------------------
 
 
 # ------------------------------------------------
@@ -809,7 +447,7 @@ def get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic = dict()):
 def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCbnbDATAcosmic = dict()):
     ''' 
         return
-        eff (mu-p) , pur (mu-p), eff (CC 1p 0pi) , pur (CC 1p 0pi)
+        eff (mu-p) , pur (mu-p), eff (CC1p0pi) , pur (CC1p0pi)
     '''
     global pureff_MCbnbDATAcosmic
     eff = dict()
@@ -820,19 +458,19 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     eff['1mu-1p'] = freduced_MCbnbDATAcosmic['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0
     
-    eff['CC 1p 0pi'] = freduced_MCbnbDATAcosmic['CC 1p 0pi']
-    pur['CC 1p 0pi'] = 100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    eff['CC1p0pi'] = freduced_MCbnbDATAcosmic['CC1p0pi']
+    pur['CC1p0pi'] = 100.*Nreduced_MCbnbDATAcosmic['CC1p0pi']/Ntot if Ntot>0 else 0
 
-    eff['CC 1p'] = freduced_MCbnbDATAcosmic['CC 1p']
-    pur['CC 1p'] = 100.*Nreduced_MCbnbDATAcosmic['CC 1p']/Ntot if Ntot>0 else 0
+    eff['CC1p'] = freduced_MCbnbDATAcosmic['CC1p']
+    pur['CC1p'] = 100.*Nreduced_MCbnbDATAcosmic['CC1p']/Ntot if Ntot>0 else 0
 
     pureff_MCbnbDATAcosmic_cut = pd.DataFrame({'label':cut_label
                                ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
                                ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
-                               ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced_MCbnbDATAcosmic['CC 1p 0pi']+'%'
-                               ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'
-                               ,'CC$1 p$ eff.':'%.1f'%freduced_MCbnbDATAcosmic['CC 1p']+'%'
-                               ,'CC$1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC 1p']/Ntot if Ntot>0 else 0)+'%'
+                               ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced_MCbnbDATAcosmic['CC1p0pi']+'%'
+                               ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC1p0pi']/Ntot if Ntot>0 else 0)+'%'
+                               ,'CC$1 p$ eff.':'%.1f'%freduced_MCbnbDATAcosmic['CC1p']+'%'
+                               ,'CC$1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbDATAcosmic['CC1p']/Ntot if Ntot>0 else 0)+'%'
                                               }
                                , index=[cut_name]
                               )
@@ -840,7 +478,7 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     pureff_MCbnbDATAcosmic = pureff_MCbnbDATAcosmic.append(pureff_MCbnbDATAcosmic_cut)
     reduced_MCbnbDATAcosmicSamples[cut_name] = reduced_MCbnbDATAcosmic  
     Ntot = Nreduced_MCbnbDATAcosmic['1mu-1p']+Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other pairs']
-    return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC 1p'],(100.*Nreduced_MCbnbDATAcosmic['CC 1p']/Ntot if Ntot>0 else 0)
+    return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC1p'],(100.*Nreduced_MCbnbDATAcosmic['CC1p']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
 # ------------------------------------------------
@@ -854,11 +492,11 @@ def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduc
                                                       'cosmic':Nreduced_MCbnbDATAcosmic['cosmic'],
                                                       'other pairs':Nreduced_MCbnbDATAcosmic['other pairs'],
                                                       '\mup':Nreduced_MCbnbDATAcosmic['1mu-1p'],
-                                                      '\CCIpOpi':Nreduced_MCbnbDATAcosmic['CC 1p 0pi'],
+                                                      '\CCIpOpi':Nreduced_MCbnbDATAcosmic['CC1p0pi'],
                                                       'eff \mup':freduced_MCbnbDATAcosmic['1mu-1p'],
-                                                      'eff \CCIpOpi':freduced_MCbnbDATAcosmic['CC 1p 0pi'],
+                                                      'eff \CCIpOpi':freduced_MCbnbDATAcosmic['CC1p0pi'],
                                                       'pur \mup':float(100*Nreduced_MCbnbDATAcosmic['1mu-1p'])/Ntot if Ntot>0 else 0,
-                                                      'pur \CCIpOpi':float(100*Nreduced_MCbnbDATAcosmic['CC 1p 0pi'])/Ntot if Ntot>0 else 0}
+                                                      'pur \CCIpOpi':float(100*Nreduced_MCbnbDATAcosmic['CC1p0pi'])/Ntot if Ntot>0 else 0}
                                                       , index=[cut_name]
                                                       )
     pureff_MCbnbDATAcosmic_numbers = pureff_MCbnbDATAcosmic_numbers.append(pureff_MCbnbDATAcosmic_numbers_cut)
@@ -953,7 +591,7 @@ def load_MCbnbMCcosmicSamples(filename='prodgenie_bnb_nu_cosmic_uboone_mcc8.2_re
     for pair_type in pair_types:#{
         MCbnbMCcosmicSamples[pair_type] = MCbnbMCcosmicPairsFV[MCbnbMCcosmicPairsFV[pair_type]==True]
         Ntype = len(MCbnbMCcosmicSamples[pair_type])
-        if pair_type=='CC 1p 0pi': print_line()
+        if pair_type=='CC1p0pi': print_line()
         print Ntype,'are '+pair_type+', %.1f'%(100.*float(Ntype)/len(MCbnbMCcosmicPairsFV))+'%'
     #}
     return MCbnbMCcosmicPairsFV, MCbnbMCcosmicSamples
@@ -981,7 +619,7 @@ def get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic = dict()):
 def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCbnbMCcosmic = dict()):
     '''
         return
-        eff (mu-p) , pur (mu-p), eff (CC 1p 0pi) , pur (CC 1p 0pi)
+        eff (mu-p) , pur (mu-p), eff (CC1p0pi) , pur (CC1p0pi)
         '''
     global pureff_MCbnbMCcosmic
     eff = dict()
@@ -992,14 +630,14 @@ def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCb
     eff['1mu-1p'] = freduced_MCbnbMCcosmic['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0
     
-    eff['CC 1p 0pi'] = freduced_MCbnbMCcosmic['CC 1p 0pi']
-    pur['CC 1p 0pi'] = 100.*Nreduced_MCbnbMCcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0
+    eff['CC1p0pi'] = freduced_MCbnbMCcosmic['CC1p0pi']
+    pur['CC1p0pi'] = 100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0
     
     pureff_MCbnbMCcosmic_cut = pd.DataFrame({'label':cut_label
                                             ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
                                             ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
-                                            ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced_MCbnbMCcosmic['CC 1p 0pi']+'%'
-                                            ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbMCcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)+'%'}
+                                            ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced_MCbnbMCcosmic['CC1p0pi']+'%'
+                                            ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0)+'%'}
                                             , index=[cut_name]
                                             )
 
@@ -1008,7 +646,7 @@ def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCb
     reduced_MCbnbMCcosmicSamples[cut_name] = reduced_MCbnbMCcosmic
     Ntot = Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other pairs']
     
-    return freduced_MCbnbMCcosmic['1mu-1p'],(100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbMCcosmic['CC 1p 0pi'],(100.*Nreduced_MCbnbMCcosmic['CC 1p 0pi']/Ntot if Ntot>0 else 0)
+    return freduced_MCbnbMCcosmic['1mu-1p'],(100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbMCcosmic['CC1p0pi'],(100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
 
@@ -1023,11 +661,11 @@ def get_pureff_MCbnbMCcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced
                                                       'cosmic':Nreduced_MCbnbMCcosmic['cosmic'],
                                                       'other pairs':Nreduced_MCbnbMCcosmic['other pairs'],
                                                       '\mup':Nreduced_MCbnbMCcosmic['1mu-1p'],
-                                                      '\CCIpOpi':Nreduced_MCbnbMCcosmic['CC 1p 0pi'],
+                                                      '\CCIpOpi':Nreduced_MCbnbMCcosmic['CC1p0pi'],
                                                       'eff \mup':freduced_MCbnbMCcosmic['1mu-1p'],
-                                                      'eff \CCIpOpi':freduced_MCbnbMCcosmic['CC 1p 0pi'],
+                                                      'eff \CCIpOpi':freduced_MCbnbMCcosmic['CC1p0pi'],
                                                       'pur \mup':float(100*Nreduced_MCbnbMCcosmic['1mu-1p'])/Ntot if Ntot>0 else 0,
-                                                      'pur \CCIpOpi':float(100*Nreduced_MCbnbMCcosmic['CC 1p 0pi'])/Ntot if Ntot>0 else 0}
+                                                      'pur \CCIpOpi':float(100*Nreduced_MCbnbMCcosmic['CC1p0pi'])/Ntot if Ntot>0 else 0}
                                                       , index=[cut_name]
                                                       )
     pureff_MCbnbMCcosmic_numbers = pureff_MCbnbMCcosmic_numbers.append(pureff_MCbnbMCcosmic_numbers_cut)

@@ -263,14 +263,14 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     f['MC'] = 1-f['Cosmic']
     
     f['1mu-1p in MC'] = N['1mu-1p']/N['MC']
-    f['CC 1p 0pi in MC'] = N['CC 1p 0pi']/N['MC']
+    f['CC1p0pi in MC'] = N['CC1p0pi']/N['MC']
     f['other pairs in MC'] = N['other pairs']/N['MC']
     
     # f_Cosmic = fraction of cosmic in the overlay
     scaling['cosmic']     = N['total']*f['Cosmic']/N['cosmic']
     scaling['other pairs']= N['total']*f['MC']*f['other pairs in MC']/N['other pairs']
     scaling['1mu-1p']     = N['total']*f['MC']*f['1mu-1p in MC']/N['1mu-1p']
-    scaling['CC 1p 0pi']  = N['total']*f['MC']*f['CC 1p 0pi in MC']/N['CC 1p 0pi']
+    scaling['CC1p0pi']  = N['total']*f['MC']*f['CC1p0pi in MC']/N['CC1p0pi']
     scaling['N(Ovelay)/N(On)'] = (N['MC']+N['cosmic'])/N['total']
     
     # option 3:
@@ -764,9 +764,9 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
             # mu-p
             plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
             ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
-            # CC 1p 0pi
-            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['CC 1p 0pi scaled'] , width=bin_width
-                ,color=colors['CC 1p 0pi'],alpha=alpha, label=labels['CC 1p 0pi'])
+            # CC1p0pi
+            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['CC1p0pi scaled'] , width=bin_width
+                ,color=colors['CC1p0pi'],alpha=alpha, label=labels['CC1p0pi'])
             # other pairs
             plt.bar(mid,h['cosmic scaled']+h['other pairs scaled'] , width=bin_width
                         ,color=colors['other pairs'],alpha=alpha , label=labels['other pairs'])

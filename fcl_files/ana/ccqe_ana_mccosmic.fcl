@@ -62,7 +62,7 @@ physics:
       MCmodeLabel:                      true
       DoWriteTracksInfo:                false
       DoAddTracksEdep:                  false
-      DoWriteGENIEInfo:                 true
+      DoWriteGENIEInfo:                 false
       DoWriteEventsInfo:                true
       DoOnlySwT:                        false
       DoWriteVerticesInfo:              true

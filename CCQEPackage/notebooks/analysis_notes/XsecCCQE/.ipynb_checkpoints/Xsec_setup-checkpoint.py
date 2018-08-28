@@ -68,9 +68,10 @@ Colors = dict({
 
 
 Xsec_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/Xsec/'
-Paths = dict({'migration maps':Xsec_path+'migration_maps/'
-             ,'background maps':Xsec_path+'background_maps/'
-             ,'efficiency maps':Xsec_path+'efficeincy_maps/'
+Paths = dict({'selected events':Xsec_path+'selected_events/'
+              ,'migration maps':Xsec_path+'migration_maps/' 
+              ,'background maps':Xsec_path+'background_maps/'             
+              ,'efficiency maps':Xsec_path+'efficeincy_maps/'
               ,'1d Xsec':Xsec_path+'1d_Xsec/'})
 
 
