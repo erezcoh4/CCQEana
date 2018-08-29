@@ -239,7 +239,7 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     scaling,N,f = dict(),dict(),dict()
     
     for pair_type in pair_types[0:4]: N[pair_type] = float(len(OverlaySubsamples[pair_type]))
-    N['MC'] = N['1mu-1p']+N['other pairs']
+    N['MC'] = N['1mu-1p']+N['other-pairs']
     
     # option 1:
     # scale the total integral of the overlay to the number of POT in the BeamOn data
@@ -264,11 +264,11 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     
     f['1mu-1p in MC'] = N['1mu-1p']/N['MC']
     f['CC1p0pi in MC'] = N['CC1p0pi']/N['MC']
-    f['other pairs in MC'] = N['other pairs']/N['MC']
+    f['other-pairs in MC'] = N['other-pairs']/N['MC']
     
     # f_Cosmic = fraction of cosmic in the overlay
     scaling['cosmic']     = N['total']*f['Cosmic']/N['cosmic']
-    scaling['other pairs']= N['total']*f['MC']*f['other pairs in MC']/N['other pairs']
+    scaling['other-pairs']= N['total']*f['MC']*f['other-pairs in MC']/N['other-pairs']
     scaling['1mu-1p']     = N['total']*f['MC']*f['1mu-1p in MC']/N['1mu-1p']
     scaling['CC1p0pi']  = N['total']*f['MC']*f['CC1p0pi in MC']/N['CC1p0pi']
     scaling['N(Ovelay)/N(On)'] = (N['MC']+N['cosmic'])/N['total']
@@ -730,9 +730,9 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
     #}
 
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
-    h_stack = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
-    h_stack_err = np.sqrt(np.square(h_err['cosmic scaled'])+np.square(h_err['other pairs scaled'])+np.square(h_err['1mu-1p scaled']))
-    if do_add_MEC_contribution: h_stack_MEC = h_MEC['cosmic scaled']+h_MEC['other pairs scaled']+h_MEC['1mu-1p scaled']
+    h_stack = h['cosmic scaled']+h['other-pairs scaled']+h['1mu-1p scaled']
+    h_stack_err = np.sqrt(np.square(h_err['cosmic scaled'])+np.square(h_err['other-pairs scaled'])+np.square(h_err['1mu-1p scaled']))
+    if do_add_MEC_contribution: h_stack_MEC = h_MEC['cosmic scaled']+h_MEC['other-pairs scaled']+h_MEC['1mu-1p scaled']
 
     if norm is not None:
         norm_factor = norm/np.sum(h_stack)
@@ -762,14 +762,14 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
                 #}
             #}
             # mu-p
-            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled'] , width=bin_width
+            plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled']+h['1mu-1p scaled'] , width=bin_width
             ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
             # CC1p0pi
-            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled']+h['CC1p0pi scaled'] , width=bin_width
+            plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled']+h['CC1p0pi scaled'] , width=bin_width
                 ,color=colors['CC1p0pi'],alpha=alpha, label=labels['CC1p0pi'])
-            # other pairs
-            plt.bar(mid,h['cosmic scaled']+h['other pairs scaled'] , width=bin_width
-                        ,color=colors['other pairs'],alpha=alpha , label=labels['other pairs'])
+            # other-pairs
+            plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled'] , width=bin_width
+                        ,color=colors['other-pairs'],alpha=alpha , label=labels['other-pairs'])
             # cosmic
             plt.bar(mid, h['cosmic scaled'] , width=bin_width
                         ,color=colors['cosmic'],alpha=alpha, label=labels['cosmic'])

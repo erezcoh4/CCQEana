@@ -3,15 +3,16 @@ from ccqe_notebook_tools import *
 
 vertices_files_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/ccqe_candidates/'
 
-MCbnbDATAcosmicSamples=dict()
-reduced_MCbnbDATAcosmicSamples=dict(dict())
-pureff_MCbnbDATAcosmic = pd.DataFrame()
-pureff_MCbnbDATAcosmic_numbers = pd.DataFrame()
 
-MCbnbMCcosmicSamples=dict()
-reduced_MCbnbMCcosmicSamples=dict(dict())
-pureff_MCbnbMCcosmic = pd.DataFrame()
-pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
+# deprecated - delete by Sep 14, 2018
+#MCbnbDATAcosmicSamples=dict()
+#reduced_MCbnbDATAcosmicSamples=dict(dict())
+#pureff_MCbnbDATAcosmic = pd.DataFrame()
+#pureff_MCbnbDATAcosmic_numbers = pd.DataFrame()
+#MCbnbMCcosmicSamples=dict()
+#reduced_MCbnbMCcosmicSamples=dict(dict())
+#pureff_MCbnbMCcosmic = pd.DataFrame()
+#pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
@@ -94,7 +95,7 @@ def plot_purity( OverlaySamples=None
         h[pair_type],edges = np.histogram(OverlaySamples[pair_type][var],bins=bins)
         h[pair_type+' scaled'] = overlay_scaling[pair_type]*h[pair_type] if overlay_scaling else h[pair_type]
     # -- - - - --------- - - -- ---- -  - --- -- -- -- --
-    h_ovrelay = h['cosmic scaled']+h['other pairs scaled']+h['1mu-1p scaled']
+    h_ovrelay = h['cosmic scaled']+h['other-pairs scaled']+h['1mu-1p scaled']
     # for the statistical uncertainty of the purity to really decrease with increasing statistics
     # in the overlay,
     # we need to bring back the "real" statistics in the overlay,
@@ -144,7 +145,7 @@ def get_Nreduced(OverlaySamples=None,reduced = dict(),OriginalOverlaySamples=Non
 def get_pureff_cut(OverlaySamples=None,reduced=None,pureff=None, cut_name = 'PIDa',OriginalOverlaySamples=None):
     eff,pur = dict(),dict()
     Nreduced , freduced = get_Nreduced(OverlaySamples=OverlaySamples,reduced=reduced,OriginalOverlaySamples=OriginalOverlaySamples)
-    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other pairs'])
+    Ntot = (Nreduced['1mu-1p']+Nreduced['cosmic']+Nreduced['other-pairs'])
     eff['1mu-1p'] = freduced['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced['1mu-1p']/Ntot if Ntot>0 else 0
     eff['CC1p0pi'] = freduced['CC1p0pi']
@@ -205,7 +206,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'${\epsilon}_{Overlay}$ [%]':100
                                           
                                           ,r'$N_{cosmic}$':Noverlay['cosmic']
-                                          ,r'$N_{other pairs}$':Noverlay['other pairs']
+                                          ,r'$N_{other-pairs}$':Noverlay['other-pairs']
                                           ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
                                           ,r'$N_{CC1p0pi}$':Noverlay['CC1p0pi']
                                           ,r'$N_{CC1p}$':Noverlay['CC1p']
@@ -214,7 +215,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'${\epsilon}_{CC1p0pi}$ [%]':100
                                           ,r'${\epsilon}_{CC1p}$ [%]':100
                                           ,r'${\epsilon}_{1mu-1p}$ [%]':100
-                                          ,r'${\epsilon}_{other pairs}$ [%]':100
+                                          ,r'${\epsilon}_{other-pairs}$ [%]':100
                                            
                                           ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
                                           ,r'${\mathcal{p}}_{CC1p0pi}$ [%]':100.*Noverlay['pur CC1p0pi']
@@ -225,7 +226,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'${\epsilon}_{Overlay scaled}$ [%]':100
                                           
                                           ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
-                                          ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
+                                          ,r'$N_{other-pairs scaled}$':Noverlay['other-pairs scaled']
                                           ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
                                           ,r'$N_{CC1p0pi scaled}$':Noverlay['CC1p0pi scaled']
                                           ,r'$N_{CC1p scaled}$':Noverlay['CC1p scaled']
@@ -315,7 +316,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'${\epsilon}_{Overlay}$ [%]':100.*Noverlay['eff Overlay']
                                               
                                               ,r'$N_{cosmic}$':Noverlay['cosmic']
-                                              ,r'$N_{other pairs}$':Noverlay['other pairs']
+                                              ,r'$N_{other-pairs}$':Noverlay['other-pairs']
                                               ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
                                               ,r'$N_{CC1p0pi}$':Noverlay['CC1p0pi']
                                               ,r'$N_{CC1p}$':Noverlay['CC1p']
@@ -324,7 +325,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'${\epsilon}_{CC1p0pi}$ [%]':100*Noverlay['eff CC1p0pi']
                                               ,r'${\epsilon}_{CC1p}$ [%]':100*Noverlay['eff CC1p']
                                               ,r'${\epsilon}_{1mu-1p}$ [%]':100*Noverlay['eff 1mu-1p']
-                                              ,r'${\epsilon}_{other pairs}$ [%]':100*Noverlay['eff other pairs']
+                                              ,r'${\epsilon}_{other-pairs}$ [%]':100*Noverlay['eff other-pairs']
                                            
                                               ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
                                               ,r'${\mathcal{p}}_{CC1p0pi}$ [%]':100.*Noverlay['pur CC1p0pi']
@@ -335,7 +336,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'${\epsilon}_{Overlay scaled}$ [%]':100*Noverlay['eff Overlay scaled']
                                               
                                               ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
-                                              ,r'$N_{other pairs scaled}$':Noverlay['other pairs scaled']
+                                              ,r'$N_{other-pairs scaled}$':Noverlay['other-pairs scaled']
                                               ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
                                               ,r'$N_{CC1p0pi scaled}$':Noverlay['CC1p0pi scaled']
                                               ,r'$N_{CC1p scaled}$':Noverlay['CC1p scaled']
@@ -364,9 +365,9 @@ def get_Noverlay(reducedSamples=None,cut_name=''
         N[pair_type] = float(len(reducedSamples[cut_name][pair_type]))
         N['eff '+pair_type] = N[pair_type]/N[pair_type+' original']
     #}
-    N['MC'] = N['1mu-1p'] + N['other pairs']
+    N['MC'] = N['1mu-1p'] + N['other-pairs']
     N['Overlay'] = N['cosmic'] + N['MC']
-    N['MC original'] = N['1mu-1p original'] + N['other pairs original']
+    N['MC original'] = N['1mu-1p original'] + N['other-pairs original']
     N['Overlay original'] = N['cosmic original'] + N['MC original']
     for pair_type in pair_types: N['pur '+pair_type] = N[pair_type]/N['Overlay']
     N['eff Overlay'] = N['Overlay']/N['Overlay original']
@@ -378,9 +379,9 @@ def get_Noverlay(reducedSamples=None,cut_name=''
         N[pair_type+' scaled'] = overlay_scaling[pair_type]*N[pair_type] if overlay_scaling else N[pair_type]
         N['eff '+pair_type+' scaled'] = N[pair_type+' scaled']/N[pair_type+' original scaled']
     #}
-    N['MC scaled'] = N['1mu-1p scaled'] + N['other pairs scaled']
+    N['MC scaled'] = N['1mu-1p scaled'] + N['other-pairs scaled']
     N['Overlay scaled'] = N['cosmic scaled'] + N['MC scaled']
-    N['MC original scaled'] = N['1mu-1p original scaled'] + N['other pairs original scaled']
+    N['MC original scaled'] = N['1mu-1p original scaled'] + N['other-pairs original scaled']
     N['Overlay original scaled'] = N['cosmic original scaled'] + N['MC original scaled']
     for pair_type in pair_types: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
     N['eff Overlay scaled'] = N['Overlay scaled']/N['Overlay original scaled']
@@ -453,7 +454,7 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     eff = dict()
     pur = dict()
     Nreduced_MCbnbDATAcosmic , freduced_MCbnbDATAcosmic = get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic=reduced_MCbnbDATAcosmic)
-    Ntot = (Nreduced_MCbnbDATAcosmic['1mu-1p']+Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other pairs'])
+    Ntot = (Nreduced_MCbnbDATAcosmic['1mu-1p']+Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other-pairs'])
     
     eff['1mu-1p'] = freduced_MCbnbDATAcosmic['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0
@@ -477,7 +478,7 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     for pair_type in pair_types: pureff_MCbnbDATAcosmic_cut[pair_type] = '%.1f'%freduced_MCbnbDATAcosmic[pair_type]+'%' +' (%.0f)'%Nreduced_MCbnbDATAcosmic[pair_type]
     pureff_MCbnbDATAcosmic = pureff_MCbnbDATAcosmic.append(pureff_MCbnbDATAcosmic_cut)
     reduced_MCbnbDATAcosmicSamples[cut_name] = reduced_MCbnbDATAcosmic  
-    Ntot = Nreduced_MCbnbDATAcosmic['1mu-1p']+Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other pairs']
+    Ntot = Nreduced_MCbnbDATAcosmic['1mu-1p']+Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other-pairs']
     return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC1p'],(100.*Nreduced_MCbnbDATAcosmic['CC1p']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
@@ -486,11 +487,11 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
 def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced_MCbnbDATAcosmic = dict()):
     global pureff_MCbnbDATAcosmic_numbers
     Nreduced_MCbnbDATAcosmic , freduced_MCbnbDATAcosmic = get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic=reduced_MCbnbDATAcosmic)
-    Ntot = Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other pairs']+Nreduced_MCbnbDATAcosmic['1mu-1p']
+    Ntot = Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other-pairs']+Nreduced_MCbnbDATAcosmic['1mu-1p']
     pureff_MCbnbDATAcosmic_numbers_cut = pd.DataFrame({'cut name':cut_name,
                                                       'cut label':cut_label,
                                                       'cosmic':Nreduced_MCbnbDATAcosmic['cosmic'],
-                                                      'other pairs':Nreduced_MCbnbDATAcosmic['other pairs'],
+                                                      'other-pairs':Nreduced_MCbnbDATAcosmic['other-pairs'],
                                                       '\mup':Nreduced_MCbnbDATAcosmic['1mu-1p'],
                                                       '\CCIpOpi':Nreduced_MCbnbDATAcosmic['CC1p0pi'],
                                                       'eff \mup':freduced_MCbnbDATAcosmic['1mu-1p'],
@@ -625,7 +626,7 @@ def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCb
     eff = dict()
     pur = dict()
     Nreduced_MCbnbMCcosmic , freduced_MCbnbMCcosmic = get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic=reduced_MCbnbMCcosmic)
-    Ntot = (Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other pairs'])
+    Ntot = (Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other-pairs'])
     
     eff['1mu-1p'] = freduced_MCbnbMCcosmic['1mu-1p']
     pur['1mu-1p'] = 100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0
@@ -644,7 +645,7 @@ def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCb
     for pair_type in pair_types: pureff_MCbnbMCcosmic_cut[pair_type] = '%.1f'%freduced_MCbnbMCcosmic[pair_type]+'%' +' (%.0f)'%Nreduced_MCbnbMCcosmic[pair_type]
     pureff_MCbnbMCcosmic = pureff_MCbnbMCcosmic.append(pureff_MCbnbMCcosmic_cut)
     reduced_MCbnbMCcosmicSamples[cut_name] = reduced_MCbnbMCcosmic
-    Ntot = Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other pairs']
+    Ntot = Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other-pairs']
     
     return freduced_MCbnbMCcosmic['1mu-1p'],(100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbMCcosmic['CC1p0pi'],(100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
@@ -655,11 +656,11 @@ def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCb
 def get_pureff_MCbnbMCcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced_MCbnbMCcosmic = dict()):
     global pureff_MCbnbMCcosmic_numbers
     Nreduced_MCbnbMCcosmic , freduced_MCbnbMCcosmic = get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic=reduced_MCbnbMCcosmic)
-    Ntot = Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other pairs']+Nreduced_MCbnbMCcosmic['1mu-1p']
+    Ntot = Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other-pairs']+Nreduced_MCbnbMCcosmic['1mu-1p']
     pureff_MCbnbMCcosmic_numbers_cut = pd.DataFrame({'cut name':cut_name,
                                                       'cut label':cut_label,
                                                       'cosmic':Nreduced_MCbnbMCcosmic['cosmic'],
-                                                      'other pairs':Nreduced_MCbnbMCcosmic['other pairs'],
+                                                      'other-pairs':Nreduced_MCbnbMCcosmic['other-pairs'],
                                                       '\mup':Nreduced_MCbnbMCcosmic['1mu-1p'],
                                                       '\CCIpOpi':Nreduced_MCbnbMCcosmic['CC1p0pi'],
                                                       'eff \mup':freduced_MCbnbMCcosmic['1mu-1p'],

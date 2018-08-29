@@ -1646,10 +1646,10 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     // general for CC events
     genie_file
     << "truth_Pmu" << ","
-    << "truth_Pmu_theta" << ","
+    << "truth_Pmu_theta" << "," << "truth_Pmu_phi" << ","
     << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
     << "truth_Pp" << ","
-    << "truth_Pp_theta" << ","
+    << "truth_Pp_theta" << "," << "truth_Pp_phi" << ","
     << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ",";
     
     // relevant truth-information
@@ -1726,10 +1726,10 @@ void ub::ErezCCQEAna::StreamGENIEToCSV(){
         // general for CC events
         genie_file
         << g.GetPmu().P() << ","
-        << g.GetPmu().Theta() << ","
+        << g.GetPmu().Theta() << "," << g.GetPmu().Phi() << ","
         << g.GetPmu().Px() << "," << g.GetPmu().Py() << "," << g.GetPmu().Pz() << ","
         << g.GetPp().P() << ","
-        << g.GetPp().Theta() << ","
+        << g.GetPp().Theta() << "," << g.GetPp().Phi() << ","
         << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ",";
         
         // relevant truth-information

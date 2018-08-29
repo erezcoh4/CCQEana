@@ -20,7 +20,7 @@ from onbeam_offbeam_notebooks import *
     Background:
     -----------
     1mu-1p which are not CC1p
-    other pairs
+    other-pairs
     cosmic in the overlay (which are correlated with the beam)
     cosmic not in the overlay (off-beam data)
     '''
@@ -80,6 +80,41 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
              ,'background maps':Xsec_path+'background_maps/'
              ,'efficiency maps':Xsec_path+'efficeincy_maps/'
              ,'1d Xsec':Xsec_path+'1d_Xsec/'})
+
+
+# ----------------------------------------------------------
+# Aug-29, 2018
+def compute_Xsec(Non=1, Noff=0, B=0, eff=1, bin_width=1,
+                 Non_err=1, Noff_err=0, B_err=0, eff_err=1):
+    '''
+        input:
+        ------
+        Non         number of beam on events
+        Noff        number of beam off events
+        B           background estimation from overlay
+        eff         efficiency (built-in cut-off above 0.1%)
+        [err]       uncertainties
+        
+        return:
+        ------
+        Xsec        cross-section in units of (10^-39) cm2 / bin_units
+        Xsec_err    cross-section uncertainty in units of (10^-39) cm2 / bin_units
+        '''
+    
+    if eff<0.001:  eff=0.001
+    
+
+    num = Non - Noff - B
+    den = eff * Ntargets * flux * bin_width
+    Xsec = num/den
+
+    num_err = np.sqrt( np.square(Non_err) + np.square(Noff_err) + np.square(B_err) )
+    den_err = den * np.sqrt( np.square(eff_err/eff) + np.square(Ntargets_err/Ntargets) + np.square(flux_err/flux) )
+    Xsec_err = Xsec * np.sqrt(  np.square(num_err/num) + np.square(den_err/den) )
+    
+    return Xsec*1e39, Xsec_err*1e39
+# ----------------------------------------------------------
+
 
 
 # ----------------------------------------------------------
@@ -474,7 +509,15 @@ def sample_in_limits(sam=None):#{
 
 # ----------------------------------------------------------
 # Aug-27, 2018
-def load_mc_and_data(extra_name=''):#{
+def load_mc_and_data(extra_name=''
+                     ,minPEcut = 150
+                     ,maxdYZcut = 200
+                     ,delta_theta_12 = 55
+                     ,r_max_RdQ_CC1p = 0.43
+                     ,delta_Delta_phi = 35
+                     ,Pt_max = 0.35
+                     ,Chi2Proton_muCandidate_min = 80
+                     ,Chi2Proton_pCandidate_max = 30):#{
     # ----------------------------------------------------------
     ## (1) MC
     prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_' + extra_name
@@ -490,7 +533,7 @@ def load_mc_and_data(extra_name=''):#{
         for pair_type in pair_types:#{
             selected_overlay[pair_type]=pd.read_csv(prefix+'selected_'+pair_type+'.csv')
         #}
-        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other pairs']])
+        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
     #}
     else:#{
         print 'did not find '+selected_cosmic_filename+', so creating it...'
@@ -520,7 +563,7 @@ def load_mc_and_data(extra_name=''):#{
         Nevents['overlay POT']  = np.sum(summary.POT)
         Nevents['f(POT)']       = Nevents['OnBeam POT']/Nevents['overlay POT']
         print "Nevents['f(POT)']:",Nevents['f(POT)']
-        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other pairs']])
+        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
         print len(selected_overlay_concat),'events in the overlay'
     #}
     # ----------------------------------------------------------
