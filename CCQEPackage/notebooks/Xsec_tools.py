@@ -7,6 +7,8 @@ from ccqe_notebook_tools import *
 from mupClassification_notebooks import *
 from onbeam_offbeam_notebooks import *
 
+from mpl_toolkits.mplot3d import Axes3D
+
 
 '''
     Setup for CCQE-like cross-section extraction
@@ -30,7 +32,7 @@ Ntargets = 1.25e31
 Ntargets_err = 0
 
 Limits=dict({
-            'Pmu':(0.2,1.4)
+            'Pmu':(0.2,1.405)
             ,'cos(theta(mu))':(-0.5,0.95)
             ,'phi(mu)':(-180,180)
             ,'Pp':(0.3,1.0)
@@ -40,6 +42,8 @@ Limits=dict({
 NBins=5
 Bins = dict()
 for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins)
+Centers = dict()
+for key in Limits.keys(): Centers[key] = 0.5*(Bins[key][1:] + Bins[key][:-1])
 
 
 vlabels = dict({
@@ -85,14 +89,14 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 # ----------------------------------------------------------
 # Aug-29, 2018
 def compute_Xsec(Non=1, Noff=0, B=0, eff=1, bin_width=1,
-                 Non_err=1, Noff_err=0, B_err=0, eff_err=1):
+                 Non_err=1, Noff_err=0, B_err=0, eff_err=0, eff_cutoff=0.05):
     '''
         input:
         ------
         Non         number of beam on events
         Noff        number of beam off events
         B           background estimation from overlay
-        eff         efficiency (built-in cut-off above 0.1%)
+        eff         efficiency (built-in cut-off <eff_cutoff=5%>: if eff<eff_cutoff return 0 +/- 0 )
         [err]       uncertainties
         
         return:
@@ -101,16 +105,16 @@ def compute_Xsec(Non=1, Noff=0, B=0, eff=1, bin_width=1,
         Xsec_err    cross-section uncertainty in units of (10^-39) cm2 / bin_units
         '''
     
-    if eff<0.001:  eff=0.001
+    if eff<eff_cutoff:  return 0,0
     
 
     num = Non - Noff - B
     den = eff * Ntargets * flux * bin_width
-    Xsec = num/den
+    Xsec = np.max( [0, num/den] )
 
     num_err = np.sqrt( np.square(Non_err) + np.square(Noff_err) + np.square(B_err) )
     den_err = den * np.sqrt( np.square(eff_err/eff) + np.square(Ntargets_err/Ntargets) + np.square(flux_err/flux) )
-    Xsec_err = Xsec * np.sqrt(  np.square(num_err/num) + np.square(den_err/den) )
+    Xsec_err = Xsec * np.max( [0 , np.sqrt(  (np.square(num_err/num) if num>0 else 0) + (np.square(den_err/den) if den>0 else 0) ) ] )
     
     return Xsec*1e39, Xsec_err*1e39
 # ----------------------------------------------------------
@@ -421,13 +425,13 @@ def smear_MC(in_sample=None,migration_maps=None,debug=0,name='smeared_mc_tmp'
 # ----------------------------------------------------------
 
 # ----------------------------------------------------------
-# Aug-27, 2018
+# Aug-27, 2018 (last edit Aug-31,2018)
 def get_eff(Ngen=1,Nsel=1,debug=0):#{
     '''
         return: eff, eff_err
         '''
-    eff = float(Nsel)/Ngen if Ngen>0 else 0
-    eff_err = eff*np.sqrt((1./Nsel if Nsel>0 else 0) + (1./Ngen if Ngen>0 else 0))
+    eff = np.min( [1 , float(Nsel)/Ngen if Ngen>0 else 0] )
+    eff_err = eff * np.min( [1 , np.sqrt((1./Nsel if Nsel>0 else 0) + (1./Ngen if Ngen>0 else 0))] )
     if debug: print 'eff = %.4f +/ %.4f'%(eff,eff_err)
     return eff,eff_err
 #}
@@ -491,16 +495,15 @@ def compute_effiency(genie_CC1p=None
 
 
 # ----------------------------------------------------------
-# Aug-27, 2018
-def sample_in_limits(sam=None):#{
-    return sam[ (Limits['Pmu'][0] < sam['reco_Pmu_mcs'])
-               & (sam['reco_Pmu_mcs']<Limits['Pmu'][1])
-               & (Limits['cos(theta(mu))'][0] < sam['reco_Pmu_cos_theta'])
-               & (sam['reco_Pmu_cos_theta']<Limits['cos(theta(mu))'][1])
-               & (Limits['Pp'][0] < sam['reco_Pp'])
-               & (sam['reco_Pp']<Limits['Pp'][1])
-               & (Limits['cos(theta(p))'][0] < sam['reco_Pp_cos_theta'])
-               & (sam['reco_Pp_cos_theta']<Limits['cos(theta(p))'][1])
+# Aug-27, 2018 (last edit Aug-31, 2018)
+def sample_in_limits(sam=None
+                     ,varPmu='reco_Pmu_mcs',varPmu_cos_theta='reco_Pmu_cos_theta',varPmu_phi='reco_Pmu_mcs_phi'
+                     ,varPp='reco_Pp',varPp_cos_theta='reco_Pp_cos_theta',varPp_phi='reco_Pp_phi'
+                     ):#{
+    return sam[ (Limits['Pmu'][0] <= sam[varPmu]) & (sam[varPmu]<=Limits['Pmu'][1])
+               & (Limits['cos(theta(mu))'][0] <= sam[varPmu_cos_theta]) & (sam[varPmu_cos_theta]<=Limits['cos(theta(mu))'][1])
+               & (Limits['Pp'][0] <= sam[varPp])  & (sam[varPp] <= Limits['Pp'][1])
+               & (Limits['cos(theta(p))'][0] <= sam[varPp_cos_theta]) & (sam[varPp_cos_theta] <= Limits['cos(theta(p))'][1])
                ]
 #}
 #---------------------------------------------------------------------------------------------
@@ -508,7 +511,7 @@ def sample_in_limits(sam=None):#{
 
 
 # ----------------------------------------------------------
-# Aug-27, 2018
+# Aug-27, 2018 (last edit Aug-31, 2018)
 def load_mc_and_data(extra_name=''
                      ,minPEcut = 150
                      ,maxdYZcut = 200
@@ -612,11 +615,14 @@ def load_mc_and_data(extra_name=''
                                     +versions['Overlay']+'_'+versions['overlay date']+'_genie.csv')
 
         print len(genie),'events in genie'
-        genie_CC1p = genie[(genie.IsCC_1p_200MeVc==True)
-                                           & ((genie.truth_x>3) & (genie.truth_x<256))
-                                           & ((genie.truth_y>-115) & (genie.truth_y<115))
-                                           & ((genie.truth_z>5) & (genie.truth_y<1037))
-                                           ]
+        genie_CC1p = sample_in_limits(sam=genie[(genie.IsCC_1p_200MeVc==True)
+                                                & ((genie.truth_x>3) & (genie.truth_x<256))
+                                                & ((genie.truth_y>-115) & (genie.truth_y<115))
+                                                & ((genie.truth_z>5) & (genie.truth_y<1037))
+                                                ]
+                                      ,varPmu='truth_Pmu',varPmu_cos_theta='truth_Pmu_cos_theta',varPmu_phi='truth_Pmu_mcs_phi'
+                                      ,varPp='truth_Pp',varPp_cos_theta='truth_Pp_cos_theta',varPp_phi='truth_Pp_phi'
+                                      )
         outcsvname = prefix+'selected_genie_CC1p.csv'
         genie_CC1p.to_csv(outcsvname)
         print 'saved %d'%len(genie_CC1p),'CC1p events in genie_CC1p to',outcsvname
