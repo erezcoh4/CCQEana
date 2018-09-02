@@ -41,7 +41,7 @@ Limits=dict({
             })
 NBins=5
 Bins = dict()
-for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins)
+for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
 Centers = dict()
 for key in Limits.keys(): Centers[key] = 0.5*(Bins[key][1:] + Bins[key][:-1])
 
@@ -84,6 +84,22 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
              ,'background maps':Xsec_path+'background_maps/'
              ,'efficiency maps':Xsec_path+'efficeincy_maps/'
              ,'1d Xsec':Xsec_path+'1d_Xsec/'})
+
+
+# ----------------------------------------------------------
+# Sep-02, 2018
+def sam_in_3d_bin(sam,
+                  Pvar,Pmin,Pmax,
+                  cos_theta_var,cos_theta_min,cos_theta_max,
+                  phi_var,phi_min,phi_max):
+    
+    return sam[(Pmin<=sam[Pvar])&(sam[Pvar] < Pmax)
+               &
+               (cos_theta_min<=sam[cos_theta_var])&(sam[cos_theta_var] < cos_theta_max)
+               &
+               (phi_min <= 180./np.pi*sam[phi_var])&(180./np.pi*sam[phi_var] < phi_max)
+               ]
+# ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
