@@ -462,7 +462,7 @@ def get_eff_samples(generated=None,selected=None,debug=0):#{
 #---------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------
-# Aug-27, 2018
+# Aug-27, 2018 (last edit Sep-3, 2018)
 def compute_effiency(genie_CC1p=None
                      ,selected_CC1p=None
                      ,bins=Bins['Pmu']
@@ -475,6 +475,8 @@ def compute_effiency(genie_CC1p=None
                      ):#{
     mid = 0.5*(bins[1:]+bins[:-1]); bin_width=0.5*(mid[1]-mid[0])
     h = dict()
+    h['mid'] = mid
+    h['bin width'] = bin_width
     h['generated'],_ = np.histogram(mul*genie_CC1p[xvar],bins=bins)
     h['selected'],_ = np.histogram(mul*selected_CC1p[xvar],bins=bins)
     
@@ -504,7 +506,7 @@ def compute_effiency(genie_CC1p=None
     np.savetxt(Paths['efficiency maps'] + extra_name + "eff_%s_%d_bins.csv"%(xvar,len(bins)-1), h['eff'], delimiter=",")
     np.savetxt(Paths['efficiency maps'] + extra_name + "eff_err_%s_%d_bins.csv"%(xvar,len(bins)-1), h['eff err'], delimiter=",")
     if debug: print 'saved efficiency into',Paths['efficiency maps'] + extra_name + "eff_%s_%d_bins.csv"%(xvar,len(bins)-1),'\n and uncertainty'
-    return h['eff'],h['eff err']
+    return h
 #}
 # ----------------------------------------------------------
 
