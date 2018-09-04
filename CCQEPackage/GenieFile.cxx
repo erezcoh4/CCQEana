@@ -411,7 +411,7 @@ bool GenieFile::SetTopology (){
     
     
     int Nmu=0, Npi=0, Nel=0, Ngamma=0;
-    int Np_200MeVc=0, Nn_200MeVc=0;
+    int Np_200MeVc=0, Nn_200MeVc=0, Npi_70MeVc=0;
     
     muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
 
@@ -438,7 +438,17 @@ bool GenieFile::SetTopology (){
                 break;
                 
             case 211:
+                Npi++;
+                if (pmomentum.P() >= 0.07){
+                    Npi_70MeVc++;
+                }
+                break;
             case -211:
+                Npi++;
+                if (pmomentum.P() >= 0.07){
+                    Npi_70MeVc++;
+                }
+                break;
             case 111:
                 Npi++;
                 break;
@@ -469,10 +479,12 @@ bool GenieFile::SetTopology (){
         IsCC_Np_200MeVc = true;
         
         // IsCC_1p_200MeVc
-        if ( Np_200MeVc==1 ){
+        // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c and no charged pions with momentum greater than 70 MeV/c
+        if ( Np_200MeVc==1 && Npi_70MeVc==0){
             IsCC_1p_200MeVc = true;
             
             // IsCC_1p_200MeVc_0pi
+            // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions, and no photons or electrons outside the nucleus
             // which means that the final state includes
             // 1 protons with momentum >= 200 MeV/c
             // any number of neutrons

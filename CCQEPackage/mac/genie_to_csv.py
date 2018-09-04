@@ -25,10 +25,10 @@ flags = input_flags.get_args()
 print flags
 
 
-genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/100k_events_genie_samples/" # path
-prefix = "CC_100k"
-#genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/5e20POT_genie_samples/" # path
-#prefix = "CC_4_9E20_POT"
+#genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/mA/100k_events_genie_samples/" # path
+#prefix = "CC_100k"
+genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/afro_genie_samples/" # path
+prefix = "CC_4_9E20_POT"
 
 acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
 Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"
