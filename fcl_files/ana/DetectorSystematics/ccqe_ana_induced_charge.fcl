@@ -28,7 +28,7 @@ process_name: RunErezCCQEana
 
 services:
 {
-  TFileService: { fileName: "prodgenie_bnb_nu_cosmic_uboone_detsyst_withDIC_mcc8.11_reco" closeFileFast: false}
+  TFileService: { fileName: "prodgenie_bnb_nu_cosmic_uboone_detsyst_withDIC_mcc8.11_reco.root" closeFileFast: false}
   TimeTracker:       {}
   RandomNumberGenerator: {} 
   message:      @local::standard_info
@@ -62,8 +62,8 @@ physics:
       MCmodeLabel:                      true
       DoWriteTracksInfo:                false
       DoAddTracksEdep:                  false
-      DoWriteGENIEInfo:                 false
-      DoWriteEventsInfo:                true
+      DoWriteGENIEInfo:                 true
+      DoWriteEventsInfo:                false
       DoOnlySwT:                        false
       DoWriteVerticesInfo:              true
       SwTModuleLabel:                   "swtrigger"

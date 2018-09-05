@@ -51,7 +51,7 @@ if flags.mA>0:#{
     gf.HeaderCSV()
 
     Nevents = gf.GetNevents()
-    ctr_CC1p0pi = 0
+    ctr_CC1p = 0
     print "stepping through events ",flags.nskip,"to",int(flags.evnts_frac*Nevents)
     for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
         if i_event%(Nevents/10)==0: print 'reading event',i_event,'(%.0f'%(100*float(i_event)/Nevents),'%)'
@@ -65,14 +65,14 @@ if flags.mA>0:#{
             print 'XXXXXXXX \n event %d \nXXXXXXXX'%i_event
             gf.Print()
         #}
-        if gf.GetCC_1p_200MeVc_0pi() is True:#{
+        if gf.GetCC_1p_200MeVc() is True:#{
         #        print 'CC1p0pi event!'
-            ctr_CC1p0pi += 1
+            ctr_CC1p += 1
         #}
         gf.StreamToCSV()
     #}
     gf.EndJob()
-    print 'done stepping through %d CC1p0pi events with mA=%.2f'%(ctr_CC1p0pi,flags.mA)
+    print 'done stepping through %d CC1p events with mA=%.2f'%(ctr_CC1p,flags.mA)
 #}
 
 

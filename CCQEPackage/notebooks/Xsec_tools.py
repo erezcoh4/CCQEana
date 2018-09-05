@@ -85,6 +85,14 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
              ,'efficiency maps':Xsec_path+'efficeincy_maps/'
              ,'1d Xsec':Xsec_path+'1d_Xsec/'})
 
+# ----------------------------------------------------------
+# Sep-04, 2018
+def get_labels(observable=''):
+    bins=Bins[observable]; vlabel=vlabels[observable]; Vlabel=Vlabels[observable]; units=Units[observable]
+    xlabel=Vlabel+' ['+units+']' if units is not None else Vlabel
+    mid = 0.5*(bins[1:]+bins[:-1]); bin_width=(mid[1]-mid[0])
+    return bins,mid,bin_width,vlabel,xlabel,units
+# ----------------------------------------------------------
 
 # ----------------------------------------------------------
 # Sep-02, 2018
@@ -628,19 +636,22 @@ def load_mc_and_data(extra_name=''
         genie_CC1p = pd.read_csv(prefix+'selected_genie_CC1p.csv')
     #}
     else:#{
-        genie = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/genie/'
+        overlay_genie = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/genie/'
                                     +versions['overlay date']+'/'
                                     +versions['Overlay']+'_'+versions['overlay date']+'_genie.csv')
 
-        print len(genie),'events in genie'
-        genie_CC1p = sample_in_limits(sam=genie[(genie.IsCC_1p_200MeVc==True)
-                                                & ((genie.truth_x>3) & (genie.truth_x<256))
-                                                & ((genie.truth_y>-115) & (genie.truth_y<115))
-                                                & ((genie.truth_z>5) & (genie.truth_y<1037))
-                                                ]
-                                      ,varPmu='truth_Pmu',varPmu_cos_theta='truth_Pmu_cos_theta',varPmu_phi='truth_Pmu_mcs_phi'
-                                      ,varPp='truth_Pp',varPp_cos_theta='truth_Pp_cos_theta',varPp_phi='truth_Pp_phi'
-                                      )
+        print len(overlay_genie),'events in genie from overlay'
+        overlay_genie_CC1p = overlay_genie[(overlay_genie.IsCC_1p_200MeVc==True)
+                                           & ((overlay_genie.truth_x>3) & (overlay_genie.truth_x<256))
+                                           & ((overlay_genie.truth_y>-115) & (overlay_genie.truth_y<115))
+                                           & ((overlay_genie.truth_z>5) & (overlay_genie.truth_z<1037))
+                                           ]
+                                           
+        overlay_genie_CC1p_in_limits = sample_in_limits(sam=overlay_genie_CC1p
+                                                ,varPmu='truth_Pmu',varPmu_cos_theta='truth_Pmu_cos_theta'
+                                                ,varPp='truth_Pp',varPp_cos_theta='truth_Pp_cos_theta'
+                                                )
+        genie_CC1p = overlay_genie_CC1p_in_limits
         outcsvname = prefix+'selected_genie_CC1p.csv'
         genie_CC1p.to_csv(outcsvname)
         print 'saved %d'%len(genie_CC1p),'CC1p events in genie_CC1p to',outcsvname

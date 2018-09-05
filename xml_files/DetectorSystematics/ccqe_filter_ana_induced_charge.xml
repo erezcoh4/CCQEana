@@ -34,27 +34,9 @@
         <filetype>&file_type;</filetype>
         <runtype>&run_type;</runtype>
         
-        <!-- Project stages -->
-        <stage name="ccqe_filter">
-            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/filter/ccqe_filter.fcl</fcl>
-            <inputdef>&defname;</inputdef>
-            <schema>root</schema>
-            <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_filter/&name;</workdir>
-            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_filter/&name;</logdir>
-            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_filter/&name;</outdir>
-            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/ccqe_filter/&name;</bookdir>
-            <numjobs>&number_of_jobs;</numjobs>
-            <datatier>reconstructed</datatier>
-            <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=6h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>3200</memory>
-            <disk>20GB</disk> <!-- 1 event ~= 1.6M, 10 files ~= 500 events ~= 0.8 GB -->
-        </stage>
-        
-        
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/ana/DetectorSystematics/ccqe_ana_induced_charge.fcl</fcl>
-            <maxfilesperjob>1</maxfilesperjob>
+            <inputdef>&defname;</inputdef>
             <schema>root</schema>
             <workdir>/pnfs/uboone/resilient/users/&user_id;/ccqe_ana/&name;</workdir>
             <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/ccqe_ana/&name;</logdir>
@@ -63,7 +45,7 @@
             <numjobs>&number_of_jobs;</numjobs>
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
-            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <jobsub> --expected-lifetime=6h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
             <memory>2000</memory>
         </stage>
     </project>

@@ -39,6 +39,12 @@
     
     python scripts/download_files.py --name=prodcosmics_corsika_cmc_uboone_mcc8.7_reco2 --tag=withPandoraCosmic_pass
     
+    
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    * Detector systematics samples:
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    
+    python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_detsyst_withDIC_mcc8.11_reco
 '''
 
 import sys, os, time, argparse
