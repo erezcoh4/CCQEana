@@ -46,7 +46,7 @@
             <datatier>reconstructed</datatier>
             <anadatatier>root-tuple</anadatatier>
             <jobsub> --expected-lifetime=6h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-            <memory>2000</memory>
+            <memory>2400</memory>
         </stage>
     </project>
 </job>
