@@ -85,6 +85,120 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
              ,'efficiency maps':Xsec_path+'efficeincy_maps/'
              ,'1d Xsec':Xsec_path+'1d_Xsec/'})
 
+
+#
+#
+## ----------------------------------------------------------
+## Sep-08, 2018
+#def compute_Xsec_in_3d(beam_on=None,beam_off=None
+#                       ,generated_CC1p=None,selected_CC1p=None,overlay=None
+#                       ,NBins=5):
+#    # the return is a dictionary of results
+#    for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
+#    global bins1,bins2,bins3,N1,N2,N3
+#    bins1,bins2,bins3 = Bins['Pmu'], Bins['cos(theta(mu))'] , Bins['phi(mu)']
+#    N1,N2,N3 = len(bins1)-1,len(bins2)-1,len(bins3)-1
+#    
+#    h = dict()
+#    keys = ['on','off scaled','generated','CC1p','CC1p scaled','B','eff','eff err'
+#            ,'Xsec','Xsec err','mc-Xsec','mc-Xsec err','generated-Xsec','generated-Xsec err']
+#    for key in keys: h[key] = np.zeros((N1,N2,N3))
+#    N = dict()
+#    for i_P in range(N1):#{
+#        Pmin,Pmax = bins1[i_P],bins1[i_P+1]
+#        P_bin_width = Pmax - Pmin
+#                        
+#        for i_cos_theta in range(N2):#{
+#            cos_theta_min,cos_theta_max = bins2[i_cos_theta],bins2[i_cos_theta+1]
+#            cos_theta_bin_width = cos_theta_max - cos_theta_min
+#                    
+#            for i_phi in range(N3):#{
+#                phi_min,phi_max = bins3[i_phi],bins3[i_phi+1]
+#                phi_bin_width = phi_max - phi_min
+#                
+#                bin_width = P_bin_width * cos_theta_bin_width * phi_bin_width
+#                                                    
+#
+#    beam_on_in_bin = sam_in_3d_bin(beam_on,
+#                               'reco_Pmu_mcs',Pmin,Pmax,
+#                               'reco_Pmu_cos_theta',cos_theta_min,cos_theta_max,
+#                               'reco_Pmu_mcs_phi',phi_min,phi_max)
+#    N['on'] = len(beam_on_in_bin)
+#        h['on'][i_P][i_cos_theta][i_phi] = N['on']
+#            
+#            Xsec_in_bin , Xsec_err_in_bin = 0 , 0
+#                mc_Xsec_in_bin , mc_Xsec_err_in_bin = 0 , 0
+#                    gen_Xsec_in_bin , gen_Xsec_err_in_bin = 0 , 0
+#                        
+#                        N['off'] = len(sam_in_3d_bin(beam_off,
+#                                                     'reco_Pmu_mcs',Pmin,Pmax,
+#                                                     'reco_Pmu_cos_theta',cos_theta_min,cos_theta_max,
+#                                                     'reco_Pmu_mcs_phi',phi_min,phi_max))
+#                            N['off scaled'] = N['off']*OffBeam_scaling
+#                                h['off scaled'][i_P][i_cos_theta][i_phi] = N['off scaled']
+#                                    
+#                                    N['generated'] = len(sam_in_3d_bin(generated_CC1p,
+#                                                                       'truth_Pmu',Pmin,Pmax,
+#                                                                       'truth_Pmu_cos_theta',cos_theta_min,cos_theta_max,
+#                                                                       'truth_Pmu_phi',phi_min,phi_max) )
+#                                        N['generated scaled'] = N['generated']*Nevents['f(POT)']
+#                                            h['generated'][i_P][i_cos_theta][i_phi] = N['generated']
+#                                                
+#                                                N['CC1p'] = len(sam_in_3d_bin(selected_CC1p,
+#                                                                              'reco_Pmu_mcs',Pmin,Pmax,
+#                                                                              'reco_Pmu_cos_theta',cos_theta_min,cos_theta_max,
+#                                                                              'reco_Pmu_mcs_phi',phi_min,phi_max) )
+#                                                    h['CC1p'][i_P][i_cos_theta][i_phi] = N['CC1p']
+#                                                        
+#                                                        N['CC1p scaled'] = N['CC1p']*Nevents['f(POT)']
+#                                                            h['CC1p scaled'][i_P][i_cos_theta][i_phi] = N['CC1p scaled']
+#                                                                
+#                                                                
+#                                                                N['ovrelay'] = len(sam_in_3d_bin(overlay,
+#                                                                                                 'reco_Pmu_mcs',Pmin,Pmax,
+#                                                                                                 'reco_Pmu_cos_theta',cos_theta_min,cos_theta_max,
+#                                                                                                 'reco_Pmu_mcs_phi',phi_min,phi_max) )
+#                                                                    N['ovrelay scaled'] = N['ovrelay']*Nevents['f(POT)']
+#                                                                        
+#                                                                        B, B_err = N['ovrelay scaled'] - N['CC1p scaled'] , np.sqrt(N['ovrelay scaled'] - N['CC1p scaled'])
+#                                                                            h['B'][i_P][i_cos_theta][i_phi] = B
+#                                                                                
+#                                                                                eff, eff_err = get_eff(Ngen=N['generated'] , Nsel=N['CC1p'])
+#                                                                                    h['eff'][i_P][i_cos_theta][i_phi] = eff
+#                                                                                        h['eff err'][i_P][i_cos_theta][i_phi] = eff_err
+#                                                                                            
+#                                                                                            Xsec_in_bin,Xsec_err_in_bin = compute_Xsec(Non=N['on'], Noff=N['off'], B=B, eff=eff,
+#                                                                                                                                       bin_width = bin_width,
+#                                                                                                                                       Non_err = np.sqrt(N['on']),
+#                                                                                                                                       Noff_err= np.sqrt(N['off']),
+#                                                                                                                                       B_err   = B_err, eff_err = eff_err)
+#                                                                                                
+#                                                                                                mc_Xsec_in_bin,mc_Xsec_err_in_bin = compute_Xsec(Non=N['CC1p scaled'], eff=eff,
+#                                                                                                                                                 bin_width = bin_width,
+#                                                                                                                                                 Non_err = np.sqrt(N['CC1p'])*Nevents['f(POT)'],
+#                                                                                                                                                 eff_err = eff_err)
+#                                                                                                    
+#                                                                                                    gen_Xsec_in_bin,gen_Xsec_err_in_bin = compute_Xsec(Non=N['generated scaled'], eff=1,
+#                                                                                                                                                       bin_width = bin_width,
+#                                                                                                                                                       Non_err = np.sqrt(N['generated'])*Nevents['f(POT)'])
+#                                                                                                        h['Xsec'][i_P][i_cos_theta][i_phi] = Xsec_in_bin
+#                                                                                                            h['Xsec err'][i_P][i_cos_theta][i_phi] = Xsec_err_in_bin
+#                                                                                                                h['mc-Xsec'][i_P][i_cos_theta][i_phi] = mc_Xsec_in_bin
+#                                                                                                                    h['mc-Xsec err'][i_P][i_cos_theta][i_phi] = mc_Xsec_err_in_bin
+#                                                                                                                        h['generated-Xsec'][i_P][i_cos_theta][i_phi] = gen_Xsec_in_bin
+#                                                                                                                            h['generated-Xsec err'][i_P][i_cos_theta][i_phi] = gen_Xsec_err_in_bin
+## if N['on']>0:#{#} if N['on'] > 0
+##} i_Pmu_phi
+##} i_Pmu_cos_theta
+##} i_Pmu
+#print 'done.'
+#    return h
+## ----------------------------------------------------------
+## Sep-08, 2018
+#
+
+
+
 # ----------------------------------------------------------
 # Sep-04, 2018
 def get_labels(observable=''):
