@@ -1995,6 +1995,7 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "closest_genie_Nprotons" << ","
     << "closest_genie_Nneutrons" << ","
     << "closest_genie_Npions" << ","
+    << "closest_genie_Npi0" << ","
     << "closest_genie_CCNC" << ","
     
     
@@ -2219,6 +2220,7 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         vertices_file << v.GetClosestGENIE().GetNprotons() << ",";
         vertices_file << v.GetClosestGENIE().GetNneutrons() << ",";
         vertices_file << v.GetClosestGENIE().GetNpions() << ",";
+        vertices_file << v.GetClosestGENIE().GetNpi0() << ",";
         vertices_file << v.GetClosestGENIE().GetCCNC() << ",";
         
 

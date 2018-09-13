@@ -32,14 +32,14 @@ Ntargets = 1.25e31
 Ntargets_err = 0
 
 Limits=dict({
-            'Pmu':(0.2,1.405)
-            ,'cos(theta(mu))':(-0.5,0.95)
+            'Pmu':(0.1,1.5)
+            ,'cos(theta(mu))':(-0.65,0.95)
             ,'phi(mu)':(-180,180)
-            ,'Pp':(0.3,1.0)
-            ,'cos(theta(p))':(0.25,0.9)
+            ,'Pp':(0.26,1.0)
+            ,'cos(theta(p))':(0.15,1.0)
             ,'phi(p)':(-180,180)
             })
-NBins=5
+NBins=7
 Bins = dict()
 for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
 Centers = dict()

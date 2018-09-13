@@ -15,6 +15,8 @@ vertices_files_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/ccq
 #pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
 
 
+
+
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # May-29,2018
 def Gaussian_resolution(df=None,vgen='',vrec=''
@@ -295,7 +297,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
                 reduced[pair_type] = sam[sam['reco_Pt']<Pt_max]
             #}
             elif cut == 'Pt & delta phi':#{
-                reduced[pair_type] = sam[(sam['reco_Pt']<Pt_max)
+                reduced[pair_type] = sam[(sam['reco_Pt_mcs']<Pt_max)
                                          &(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
             #}
             elif cut == 'theta_pq & delta phi':#{
@@ -304,7 +306,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
             #}
             elif cut == 'tight Pt':#{
                 sam = reducedSamples['Pt & delta phi'][pair_type]
-                reduced[pair_type] = sam[(sam['reco_Pt']<0.15)
+                reduced[pair_type] = sam[(sam['reco_Pt_mcs']<0.15)
                                          &(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
             #}
         #}

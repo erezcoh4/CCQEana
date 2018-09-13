@@ -381,7 +381,7 @@ def apply_cuts_to_data(OnBeam=None,OffBeam=None
                 sam = sam[np.abs(sam['delta_phi']-180.)<delta_Delta_phi]
                                       
             elif cut == 'Pt & delta phi':
-                sam = sam[(sam['reco_Pt']<Pt_max)&(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
+                sam = sam[(sam['reco_Pt_mcs']<Pt_max)&(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
                                               
             if sam_name=='OnBeam': reducedOnBeam[cut] = sam
             if sam_name=='OffBeam': reducedOffBeam[cut] = sam

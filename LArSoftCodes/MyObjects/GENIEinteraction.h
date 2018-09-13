@@ -130,6 +130,7 @@ public:
     Int_t                              GetNprotons () const {return protons.size();};
     Int_t                             GetNneutrons () const {return neutrons.size();};
     Int_t                                GetNpions () const {return Npi;};
+    Int_t                                  GetNpi0 () const {return Npi_0;};
 
     Float_t                                  GetPt () const {return (protons.size()) ? (muon+protons.at(0)).Pt() : -1;};
     Float_t                           Get_theta_pq () const {return theta_pq;};

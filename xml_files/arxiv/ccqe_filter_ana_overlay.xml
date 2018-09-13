@@ -54,6 +54,25 @@
         
         
         
+        <!-- Project stages -->
+        <stage name="event_weight">
+            <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/event_weight/run_genie_reweight_uboone_erez.fcl</fcl>
+            <maxfilesperjob>1</maxfilesperjob>
+            <schema>root</schema>
+            <workdir>/pnfs/uboone/resilient/users/&user_id;/event_weight/&name;</workdir>
+            <logdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</logdir>
+            <outdir>/pnfs/uboone/scratch/users/&user_id;/&tag;/&LArSoft_release;/event_weight/&name;</outdir>
+            <bookdir>/uboone/data/users/&user_id;/book/&tag;/&LArSoft_release;/event_weight/&name;</bookdir>
+            <numjobs>&number_of_jobs;</numjobs>
+            <datatier>reconstructed</datatier>
+            <anadatatier>root-tuple</anadatatier>
+            <jobsub> --expected-lifetime=4h --site=Hyak_CE,Manchester,Lancaster,Clemson,FermiGrid --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <memory>2000</memory>
+            <disk>30GB</disk>
+        </stage>
+        
+        
+        
         <stage name="ccqe_ana">
             <fcl>/uboone/app/users/ecohen/ErezCCQE/fcl_files/ana/ccqe_ana_overlay.fcl</fcl>
             <maxfilesperjob>1</maxfilesperjob>

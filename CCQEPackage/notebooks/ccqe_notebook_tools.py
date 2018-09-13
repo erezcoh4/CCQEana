@@ -9,6 +9,11 @@ from scipy.optimize import leastsq
 from scipy.stats import norm
 from scipy.optimize import curve_fit
 
+# ----------------------------------------------------------
+def mystep(x,y,dx,y_width, ax=None, **kwargs):
+    for x_,y_,y_width_ in zip(x,y,y_width):
+        plt.plot([x_-dx/2,x_+dx/2],[y_,y_] , **kwargs)
+# ----------------------------------------------------------
 
 # ----------------------------------------------------------
 def find_x_poly(poly,y0,xmin=0,xmax=2):

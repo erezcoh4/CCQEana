@@ -307,8 +307,11 @@ bool GenieFile::HeaderCSV (){
     << "startx_muCandidate" << ","  << "starty_muCandidate" << ","  << "startz_muCandidate" << ","
     << "startx_pCandidate"  << ","  << "starty_pCandidate"  << ","  << "startz_pCandidate"  << ","
     << "endx_muCandidate"   << ","  << "endy_muCandidate"   << ","  << "endz_muCandidate"   << ","
-    << "endx_pCandidate"    << ","  << "endy_pCandidate"    << ","  << "endz_pCandidate"    ;
+    << "endx_pCandidate"    << ","  << "endy_pCandidate"    << ","  << "endz_pCandidate"    << ",";
 
+    // kinematical cuts
+    csv_file
+    << "delta_phi"          << ","  << "p_t"                ;
     
     csv_file << endl;
     
@@ -393,7 +396,11 @@ bool GenieFile::StreamToCSV (){
     << vertex_position.x()  << ","  << vertex_position.y()  << ","  << vertex_position.z()  << ","
     << vertex_position.x()  << ","  << vertex_position.y()  << ","  << vertex_position.z()  << ","
     << muonTrack_end.x()    << ","  << muonTrack_end.y()    << ","  << muonTrack_end.z()    << ","
-    << protonTrack_end.x()  << ","  << protonTrack_end.y()  << ","  << protonTrack_end.z()   ;
+    << protonTrack_end.x()  << ","  << protonTrack_end.y()  << ","  << protonTrack_end.z()  << ",";
+    
+    // kinematical cuts
+    csv_file
+    << r2d*fabs(proton.Phi() - muon.Phi())                  << ","  << (proton.Vect() + muon.Vect()).Pt()  ;
 
 
     
