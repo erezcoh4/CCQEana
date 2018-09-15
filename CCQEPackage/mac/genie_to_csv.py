@@ -25,7 +25,7 @@ print flags
 
 genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/afro_genie_samples/" # path
 filename = flags.option
-if filename == '': filename = "CC_4_9E20_POT_mA_0.99"
+if filename == '': filename = "CC_4_9E20_POT_mA_0_99"
 
 acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
 Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"

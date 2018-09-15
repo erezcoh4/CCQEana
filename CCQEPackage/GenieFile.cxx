@@ -311,7 +311,7 @@ bool GenieFile::HeaderCSV (){
 
     // kinematical cuts
     csv_file
-    << "delta_phi"          << ","  << "p_t"                ;
+    << "delta_phi"          << ","  << "Pt"                 << ","  << "theta_12";
     
     csv_file << endl;
     
@@ -400,8 +400,7 @@ bool GenieFile::StreamToCSV (){
     
     // kinematical cuts
     csv_file
-    << r2d*fabs(proton.Phi() - muon.Phi())                  << ","  << (proton.Vect() + muon.Vect()).Pt()  ;
-
+    << r2d*fabs(proton.Phi() - muon.Phi())                  << ","  << (proton.Vect() + muon.Vect()).Pt()  << "," <<     r2d*(proton.Vect().Angle( muon.Vect() ));
 
     
     csv_file << endl;
@@ -862,7 +861,6 @@ void GenieFile::SetRecoKinematics(){
     }
     Debug(4,"gen_Q2_gen_rec: %, i_rec=%, rec_Q2_gen_rec: %",gen_Q2_gen_rec,i_rec,rec_Q2_gen_rec);
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void GenieFile::MimicDetectorVolume(){

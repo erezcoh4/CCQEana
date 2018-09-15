@@ -35,7 +35,7 @@ Limits=dict({
             'Pmu':(0.1,1.5)
             ,'cos(theta(mu))':(-0.65,0.95)
             ,'phi(mu)':(-180,180)
-            ,'Pp':(0.26,1.0)
+            ,'Pp':(0.3,1.0)
             ,'cos(theta(p))':(0.15,1.0)
             ,'phi(p)':(-180,180)
             })
@@ -87,6 +87,32 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 
 
 
+
+# ----------------------------------------------------------
+# Sep-14, 2018
+# integrated cross-section
+def get_integrated_Xsec(h,bins1,bins2,bins3,N1,N2,N3):
+    Xsec_integrated,Xsec_integrated_err_sq_sum = 0,0
+    mc_Xsec_integrated,mc_Xsec_integrated_err_sq_sum = 0,0
+    for i_P in range(N1):#{
+        P_bin_width = bins1[i_P+1] - bins1[i_P]
+        for i_cos_theta in range(N2):#{
+            cos_theta_bin_width = bins2[i_cos_theta+1] - bins2[i_cos_theta]
+            for i_phi in range(N3):#{
+                phi_bin_width = bins3[i_phi+1] - bins3[i_phi]
+                
+                bin_width = P_bin_width * cos_theta_bin_width * phi_bin_width
+                Xsec_integrated += h['Xsec'][i_P][i_cos_theta][i_phi]*bin_width
+                Xsec_integrated_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi]*bin_width)
+                mc_Xsec_integrated += h['mc-Xsec'][i_P][i_cos_theta][i_phi]*bin_width
+                mc_Xsec_integrated_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi]*bin_width)
+
+    Xsec_integrated_err = np.sqrt(Xsec_integrated_err_sq_sum)
+    print 'Xsec_integrated: %.2f +/- %.2f'%(Xsec_integrated,Xsec_integrated_err),'e-39 cm2'
+    mc_Xsec_integrated_err = np.sqrt(mc_Xsec_integrated_err_sq_sum)
+    print 'mc_Xsec_integrated: %.2f +/- %.2f'%(mc_Xsec_integrated,mc_Xsec_integrated_err),'e-39 cm2'
+    return Xsec_integrated,Xsec_integrated_err,mc_Xsec_integrated,mc_Xsec_integrated_err
+# ----------------------------------------------------------
 
 
 # ----------------------------------------------------------

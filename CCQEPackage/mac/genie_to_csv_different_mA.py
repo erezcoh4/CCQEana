@@ -18,8 +18,6 @@
 import ROOT , time , os ,  sys
 from ROOT import GenieFile
 sys.path.insert(0, '/Users/erezcohen/larlite/UserDev/mySoftware/MySoftwarePackage/mac')
-#import matplotlib as mpl, pandas as pd , numpy as np, input_flags
-#from matplotlib import pyplot as plt
 import input_flags
 from my_tools import *
 from calc_tools import *

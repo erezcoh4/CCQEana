@@ -355,7 +355,7 @@ def apply_cuts_to_overlay(OverlaySamples=None
 
 
 # ------------------------------------------------
-# April-4 (last edit Aug-12,2018)
+# April-4 (last edit Sep-14,2018)
 def get_Noverlay(reducedSamples=None,cut_name=''
                  ,overlay_scaling=None
                  ,debug=0
@@ -371,7 +371,9 @@ def get_Noverlay(reducedSamples=None,cut_name=''
     N['Overlay'] = N['cosmic'] + N['MC']
     N['MC original'] = N['1mu-1p original'] + N['other-pairs original']
     N['Overlay original'] = N['cosmic original'] + N['MC original']
-    for pair_type in pair_types: N['pur '+pair_type] = N[pair_type]/N['Overlay']
+    for pair_type in pair_types:
+        if N['Overlay']>0: N['pur '+pair_type] = N[pair_type]/N['Overlay']
+        else:  N['pur '+pair_type] = 0
     N['eff Overlay'] = N['Overlay']/N['Overlay original']
                                      
 
@@ -385,7 +387,9 @@ def get_Noverlay(reducedSamples=None,cut_name=''
     N['Overlay scaled'] = N['cosmic scaled'] + N['MC scaled']
     N['MC original scaled'] = N['1mu-1p original scaled'] + N['other-pairs original scaled']
     N['Overlay original scaled'] = N['cosmic original scaled'] + N['MC original scaled']
-    for pair_type in pair_types: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay scaled']
+    for pair_type in pair_types:
+        if N['Overlay']>0: N['pur '+pair_type+' scaled'] = N[pair_type+' scaled']/N['Overlay']
+        else:  N['pur '+pair_type+' scaled'] = 0
     N['eff Overlay scaled'] = N['Overlay scaled']/N['Overlay original scaled']
 
     if debug: print 'Noverlay in',cut_name,'\n',N
