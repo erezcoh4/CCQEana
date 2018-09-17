@@ -171,7 +171,7 @@ private:
     // booleans on the genie interaction
     // TRUTH topology DEFINITIONs
     bool                    IsCC_Np_200MeVc=false; // an interaction with at least 1 muon and N protons > 200 MeV/c
-    bool                    IsCC_1p_200MeVc=false; // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c and no charged pions with momentum greater than 70 MeV/c
+    bool                    IsCC_1p_200MeVc=false; // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c and no charged pions with momentum greater than 70 MeV/c, and no neutral pions in the final state
     bool                    IsCC_1p_200MeVc_0pi=false; // an interaction with at least 1 muon and 1 proton > 200 MeV/c and no pions, and no photons or electrons outside the nucleus
     bool                    IsCCQE=false; // is QE or not - genie's "mode" flag: QE=0
     // RECONSTRUCTED topology DEFINITIONs

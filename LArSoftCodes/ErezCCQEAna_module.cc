@@ -485,17 +485,18 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
     // * associations
     Debug(4,"// * hits-tracks association");
     art::FindManyP<recob::Hit>          fmth(trackListHandle, evt, fTrackModuleLabel);
-    // uncalibrated calorimetry
-    Debug(4,"// * uncalibrated calorimetry");
-    art::FindMany<anab::Calorimetry>    fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
+    // delete by Sep-30
+    //    // uncalibrated calorimetry
+    //    Debug(4,"// * uncalibrated calorimetry");
+    //    art::FindMany<anab::Calorimetry>    fmcal(trackListHandle, evt, fCalorimetryModuleLabel);
     // calibrated calorimetry
-    Debug(4,"// * calibrated calorimetry");
-    art::FindMany<anab::Calorimetry>    fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);
+    //    Debug(4,"// * calibrated calorimetry");
+    //    art::FindMany<anab::Calorimetry>    fmcalical(trackListHandle, evt, fCalibCaloModuleLabel);
     // PIDa from PandoraNu
-    Debug(4,"// * PIDa from PandoraNu");
-    art::FindMany<anab::ParticleID>     fmpid(trackListHandle, evt, fPIDModuleLabel );
-    // PIDaCali from PandoraNu
-    Debug(4,"// * PIDaCali from PandoraNu");
+    //    Debug(4,"// * PIDa from PandoraNu");
+    //    art::FindMany<anab::ParticleID>     fmpid(trackListHandle, evt, fPIDModuleLabel );
+    //    // PIDaCali from PandoraNu
+    Debug(4,"// * calibrated PID");
     art::FindMany<anab::ParticleID>     fmcalipid(trackListHandle, evt, fCaliPIDModuleLabel );
     
     
@@ -591,27 +592,27 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
             }
         }
         
-        // calorimetric KE from calibrated calorimetery
-        if (fmcalical.isValid()){
-            unsigned maxnumhits = 0;
-            std::vector<const anab::Calorimetry*> calicalos = fmcalical.at(i);
-            for (auto const& calicalo : calicalos){
-                if (calicalo->PlaneID().isValid){
-                    int plane = calicalo->PlaneID().Plane;
-                    if (plane<0||plane>2) continue;
-                    
-                    // get the calorimetric kinetic energy of the track
-                    track.SetCaloKEPerPlane( plane , calicalo->KineticEnergy() );
-                    
-                    // select the best plane as the one with the maximal number of charge deposition points
-                    if (calicalo->dEdx().size() > maxnumhits){
-                        maxnumhits = calicalo->dEdx().size();
-                        track.SetBestPlaneCali ( plane );
-                        track.SetMaxNHitsCali ( maxnumhits );
-                    }
-                }
-            }
-        }
+        //        // calorimetric KE from calibrated calorimetery
+        //        if (fmcalical.isValid()){
+        //            unsigned maxnumhits = 0;
+        //            std::vector<const anab::Calorimetry*> calicalos = fmcalical.at(i);
+        //            for (auto const& calicalo : calicalos){
+        //                if (calicalo->PlaneID().isValid){
+        //                    int plane = calicalo->PlaneID().Plane;
+        //                    if (plane<0||plane>2) continue;
+        //
+        //                    // get the calorimetric kinetic energy of the track
+        //                    track.SetCaloKEPerPlane( plane , calicalo->KineticEnergy() );
+        //
+        //                    // select the best plane as the one with the maximal number of charge deposition points
+        //                    if (calicalo->dEdx().size() > maxnumhits){
+        //                        maxnumhits = calicalo->dEdx().size();
+        //                        track.SetBestPlaneCali ( plane );
+        //                        track.SetMaxNHitsCali ( maxnumhits );
+        //                    }
+        //                }
+        //            }
+        //        }
         
         // PIDaCali and chi2 for particles hypotheses from PandoraNuCali
         if (fmcalipid.isValid()) {
@@ -635,26 +636,26 @@ void ub::ErezCCQEAna::CollectTracks(art::Event const & evt){
             }
         }
         
-        // Truncated Mean dE/dx
-        if (fmcal.isValid()){
-            TruncMean truncmean( debug , TruncMeanRad );
-            Debug(3, "TruncMean (radius=%)",TruncMeanRad);
-            for (int plane=0; plane<3; plane++){
-                std::vector<float> trkdedx = track.GetdEdx(plane);
-                std::vector<float> trkresrg = track.GetResRange(plane);
-                std::vector<float> trkdedx_truncated;
-                
-                Debug(3, "TruncMean (dE/dx) for track % plane % (radius=%), track.GetdEdx(%).size(): % \n -----------------"
-                      , track.GetTrackID(), plane, TruncMeanRad ,plane,track.GetdEdx(plane).size());
-                
-                truncmean.CalcTruncMean( trkresrg , trkdedx , trkdedx_truncated );
-                track.SetdEdxTrunc( plane , trkdedx_truncated );
-                if (debug>5) {
-                    SHOWstdVector( track.GetdEdx(plane) );
-                    SHOWstdVector( track.GetdEdxTrunc(plane) );
-                }
-            }
-        }
+//        // Truncated Mean dE/dx
+//        if (fmcal.isValid()){
+//            TruncMean truncmean( debug , TruncMeanRad );
+//            Debug(3, "TruncMean (radius=%)",TruncMeanRad);
+//            for (int plane=0; plane<3; plane++){
+//                std::vector<float> trkdedx = track.GetdEdx(plane);
+//                std::vector<float> trkresrg = track.GetResRange(plane);
+//                std::vector<float> trkdedx_truncated;
+//                
+//                Debug(3, "TruncMean (dE/dx) for track % plane % (radius=%), track.GetdEdx(%).size(): % \n -----------------"
+//                      , track.GetTrackID(), plane, TruncMeanRad ,plane,track.GetdEdx(plane).size());
+//                
+//                truncmean.CalcTruncMean( trkresrg , trkdedx , trkdedx_truncated );
+//                track.SetdEdxTrunc( plane , trkdedx_truncated );
+//                if (debug>5) {
+//                    SHOWstdVector( track.GetdEdx(plane) );
+//                    SHOWstdVector( track.GetdEdxTrunc(plane) );
+//                }
+//            }
+//        }
         
         // momentum from momentum calculator
         track.SetMomCalc(
@@ -1684,8 +1685,12 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     genie_file
     << "truth_x_beamCoordinates" << ","
     << "truth_y_beamCoordinates" << ","
-    << "truth_z_beamCoordinates";
+    << "truth_z_beamCoordinates" << ",";
     
+    
+    // application of phase-space and kinematical cuts
+    genie_file
+    << "delta_phi"              << "," << "Pt" << "," << "theta_12";
     
     // finish
     genie_file << endl;
@@ -1763,10 +1768,15 @@ void ub::ErezCCQEAna::StreamGENIEToCSV(){
         genie_file
         << g.GetNuIntInBeam().x() << ","
         << g.GetNuIntInBeam().y() << ","
-        << g.GetNuIntInBeam().z();
+        << g.GetNuIntInBeam().z() << ",";
         
 
-        
+        // application of phase-space and kinematical cuts
+        genie_file
+        << r2d*(g.GetPp().Phi()-g.GetPmu().Phi())       << ","
+        << (g.GetPp().Vect() + g.GetPmu().Vect()).Pt()  << ","
+        << r2d*(g.GetPp().Vect().Angle(g.GetPmu().Vect()));
+
         // finish
         genie_file << endl;
     }
@@ -1809,8 +1819,8 @@ void ub::ErezCCQEAna::HeaderTracksInCSV(){
     if (DoAddTracksEdep) {
         tracks_file
         << "ResRange_Y" << ","
-        << "dEdx_Y" << ","
-        << "Truncated_dEdx_Y";
+        << "dEdx_Y" ; //  << ","
+        //        << "Truncated_dEdx_Y";
     }
     
     // finish header
@@ -1873,13 +1883,13 @@ void ub::ErezCCQEAna::StreamTracksToCSV(){
             }
             tracks_file << "]\"" << ",";
             
-            // trunctated dE/dx
-            std::vector<float> dEdxTrunc_Y = t.GetdEdxTrunc( 2 ); // collection plane (Y) = 2
-            tracks_file << "\"[";
-            for (auto dEdx_Y_hit:dEdxTrunc_Y) {
-                tracks_file << dEdx_Y_hit << ",";
-            }
-            tracks_file << "]\"";
+//            // trunctated dE/dx
+//            std::vector<float> dEdxTrunc_Y = t.GetdEdxTrunc( 2 ); // collection plane (Y) = 2
+//            tracks_file << "\"[";
+//            for (auto dEdx_Y_hit:dEdxTrunc_Y) {
+//                tracks_file << dEdx_Y_hit << ",";
+//            }
+//            tracks_file << "]\"";
         }
         
         // finish track features
@@ -1898,14 +1908,14 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "track_id" << ","
     
     // µ/p assigned tracks
-    << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
+    //    << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
     << "l_muCandidate"<< "," << "l_pCandidate" << "," << "l_mu-l_p"<< ","
     
     // pandoraNu pid object
-    << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
-    << "pid_PIDaYplane_muCandidate"<< "," << "pid_PIDaYplane_pCandidate" << ","
-    << "pidcali_PIDa_muCandidate"<< "," << "pidcali_PIDa_pCandidate" << ","
-    << "pidcali_PIDaYplane_muCandidate"<< "," << "pidcali_PIDaYplane_pCandidate" << ","
+    //    << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
+    //    << "pid_PIDaYplane_muCandidate"<< "," << "pid_PIDaYplane_pCandidate" << ","
+    //    << "pidcali_PIDa_muCandidate"<< "," << "pidcali_PIDa_pCandidate" << ","
+    //    << "pidcali_PIDaYplane_muCandidate"<< "," << "pidcali_PIDaYplane_pCandidate" << ","
     << "pidcali_Chi2ProtonYplane_muCandidate"<< "," << "pidcali_Chi2ProtonYplane_pCandidate" << ","
     << "pidcali_Chi2MuonYplane_muCandidate"<< "," << "pidcali_Chi2MuonYplane_pCandidate" << ","
     
@@ -1941,7 +1951,8 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "reco_Pmu"   << ","  << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
     
     << "reco_Emu_mcs" << ","
-    << "reco_Pmu_mcs" << ","<< "reco_Pmu_mcs_x" << ","<< "reco_Pmu_mcs_y" << ","<< "reco_Pmu_mcs_z" << ","<< "reco_Pmu_mcs_theta" << ","<< "reco_Pmu_mcs_phi" << ","
+    << "reco_Pmu_mcs" << ","<< "reco_Pmu_mcs_x" << ","<< "reco_Pmu_mcs_y" << ","<< "reco_Pmu_mcs_z" << ","
+    << "reco_Pmu_mcs_theta" << ","<< "reco_Pmu_mcs_phi" << ","
     
     << "reco_Ep"    << ","
     << "reco_Pp"    << ","  << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
@@ -2026,9 +2037,9 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     
     // flash matching of vertex
     vertices_file
-    << "ClosestFlash_YZdistance" << ","
-    << "ClosestFlash_TotalPE" << ","
-    << "ClosestFlash_Time" << ","
+    //    << "ClosestFlash_YZdistance" << ","
+    //    << "ClosestFlash_TotalPE" << ","
+    //    << "ClosestFlash_Time" << ","
     << "Nflashes" << ",";
 
     // flash matching by Marco' method
@@ -2088,14 +2099,14 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         
         // µ/p assigned tracks
         vertices_file
-        << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
+        //        << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
         << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << "," <<v.GetTrack_muCandidate().GetLength() - v.GetTrack_pCandidate().GetLength() << ","
         
         // pandoraNu pid object
-        << v.GetTrack_muCandidate().GetPID_PIDA()               << ","  << v.GetTrack_pCandidate().GetPID_PIDA() << ","
-        << v.GetTrack_muCandidate().GetPID_PIDA(2)              << ","  << v.GetTrack_pCandidate().GetPID_PIDA(2) << ","
-        << v.GetTrack_muCandidate().GetCaliPID_PIDA()           << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA() << ","
-        << v.GetTrack_muCandidate().GetCaliPID_PIDA(2)          << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA(2) << ","
+        //        << v.GetTrack_muCandidate().GetPID_PIDA()               << ","  << v.GetTrack_pCandidate().GetPID_PIDA() << ","
+        //        << v.GetTrack_muCandidate().GetPID_PIDA(2)              << ","  << v.GetTrack_pCandidate().GetPID_PIDA(2) << ","
+        //        << v.GetTrack_muCandidate().GetCaliPID_PIDA()           << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA() << ","
+        //        << v.GetTrack_muCandidate().GetCaliPID_PIDA(2)          << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA(2) << ","
         << v.GetTrack_muCandidate().GetCaliPID_Chi2Proton(2)    << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Proton(2) << ","
         << v.GetTrack_muCandidate().GetCaliPID_Chi2Muon(2)      << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Muon(2) << ",";
 
@@ -2252,9 +2263,9 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         
         // flash matching of vertex
         vertices_file
-        << v.GetDis2ClosestFlash() << ","
-        << v.GetClosestFlash().GetTotalPE() << ","
-        << v.GetClosestFlash().GetTime() << ","
+        //        << v.GetDis2ClosestFlash() << ","
+        //        << v.GetClosestFlash().GetTotalPE() << ","
+        //        << v.GetClosestFlash().GetTime() << ","
         << flashes.size() << "," ;
         
         // flash matching by Marco' method

@@ -43,12 +43,12 @@ physics:{
     EventsAnalyzer: {
       module_type:                      "ErezCCQEAna"
       DataSampleLabel:                  "prodgenie_bnb_nu_uboone_overlay_mcc8.11"
-      VerbosityLevel:                   1
+      VerbosityLevel:                   0
       MCmodeLabel:                      true
       DoWriteTracksInfo:                false
       DoAddTracksEdep:                  false
       DoWriteGENIEInfo:                 true
-      DoWriteEventsInfo:                true
+      DoWriteEventsInfo:                false
       DoOnlySwT:                        false
       DoWriteVerticesInfo:              true
       SwTModuleLabel:                   "swtrigger"

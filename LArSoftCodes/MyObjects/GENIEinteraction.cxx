@@ -171,7 +171,6 @@ void GENIEinteraction::AddTrack(PandoraNuTrack ftrack){
 }
 
 
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool GENIEinteraction::SortNucleons(){
     
@@ -193,7 +192,6 @@ vector<size_t> GENIEinteraction::sort_by_momentum_magnitude(const vector<TVector
     std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1].Mag() > v[i2].Mag();});
     return idx;
 }
-
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -272,7 +270,7 @@ void GENIEinteraction::SetTruthTopology(){
         
         
         // IsCC_1p_200MeVc
-        if ( Np_200MeVc==1 && Npi_70MeVc==0){
+        if ( Np_200MeVc==1 && Npi_70MeVc==0 && Npi_0){
             IsCC_1p_200MeVc = true;
             
             // IsCC_1p_200MeVc_0pi

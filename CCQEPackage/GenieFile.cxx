@@ -420,7 +420,7 @@ bool GenieFile::SetTopology (){
     
     
     
-    int Nmu=0, Npi=0, Nel=0, Ngamma=0;
+    int Nmu=0, Npi=0, Nel=0, Ngamma=0, Npi_0=0;
     int Np_200MeVc=0, Nn_200MeVc=0, Npi_70MeVc=0;
     
     muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
@@ -461,6 +461,7 @@ bool GenieFile::SetTopology (){
                 break;
             case 111:
                 Npi++;
+                Npi_0++;
                 break;
 
             case 22:
@@ -484,13 +485,12 @@ bool GenieFile::SetTopology (){
           ,cc,qel,Nmu,Np_200MeVc,Npi,Nn_200MeVc,Nel,Ngamma);
     // IsCC_Np_200MeVc
     if ( cc==true
-        //        && ( Nmu>=1 ) // if cc==0 then we have a muon!
         && Np_200MeVc>=1 ){
         IsCC_Np_200MeVc = true;
         
         // IsCC_1p_200MeVc
-        // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c and no charged pions with momentum greater than 70 MeV/c
-        if ( Np_200MeVc==1 && Npi_70MeVc==0){
+        // an interaction with at least 1 muon and exactly 1 proton > 200 MeV/c and no charged pions with momentum greater than 70 MeV/c, and no neutral pions in the final state
+        if ( Np_200MeVc==1 && Npi_70MeVc==0 && Npi_0==0){
             IsCC_1p_200MeVc = true;
             
             // IsCC_1p_200MeVc_0pi
@@ -505,38 +505,10 @@ bool GenieFile::SetTopology (){
                 IsCC_1p_200MeVc_0pi = true;
                 q = nu - muon;
                 Pmiss = proton - q;
-//                // Delete this!
-//                CC1p0pi = true;
             }
         }
     }
 
-    
-//    
-//    if ((cc==true)
-//        && ( Np_200MeVc==1 )
-//        //        && ( Nmu>=1 ) // if cc==0 then we have a muon!
-//        && ( Npi==0 && Nel==0 && Ngamma==0 )
-//        && Nn_200MeVc==0
-//        //        && ((nf == 1) && (pdgf[0]==2212) )
-//        )
-//    {
-//        CC1p0pi = true;
-//        q = nu - muon;
-//        Pmiss = proton - q;
-//        // proton_before_FSI.SetXYZM( pxi[0],pyi[0],pzi[0], 0.9382720813 ); // correct this!
-//    }
-    
-//    // CCQE with no FSI
-//    else if ((cc==true)
-//             && (nf == 2) && (pdgf[0]==1000180390) && (pdgf[1]==2212) ){
-//        CC1p0pi = true;
-//        muon.SetXYZM( pxl, pyl, pzl, 0.1056583745 );
-//        q = nu - muon;
-//        proton.SetXYZM( pxf[1], pyf[1], pzf[1], 0.9382720813 );
-//        Pmiss = proton - q;
-//        proton_before_FSI.SetXYZM( pxi[1],pyi[1],pzi[1], 0.9382720813 );
-//    }
     
     return true;
 }

@@ -7,6 +7,7 @@
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hA2015 -evf=1
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hN2015 -evf=1
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hA_SRC -evf=1
+    python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hA_Tune3 -evf=1
     
     make && python mac/genie_to_csv.py -evf=1 --nskip=80000 -v6
     
