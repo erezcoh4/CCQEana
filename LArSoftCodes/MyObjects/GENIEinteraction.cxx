@@ -270,7 +270,7 @@ void GENIEinteraction::SetTruthTopology(){
         
         
         // IsCC_1p_200MeVc
-        if ( Np_200MeVc==1 && Npi_70MeVc==0 && Npi_0){
+        if ( Np_200MeVc==1 && Npi_70MeVc==0 && Npi_0==0){
             IsCC_1p_200MeVc = true;
             
             // IsCC_1p_200MeVc_0pi

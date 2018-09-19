@@ -45,6 +45,7 @@
     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     
     python scripts/download_files.py --name=prodgenie_bnb_nu_cosmic_uboone_detsyst_withDIC_mcc8.11_reco
+    python scripts/download_files.py --name=prodgenie_bnb_dirt_nu_cosmic_uboone_mcc8_reco
 '''
 
 import sys, os, time, argparse

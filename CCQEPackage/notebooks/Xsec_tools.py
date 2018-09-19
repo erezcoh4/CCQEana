@@ -51,6 +51,8 @@ Limits=dict({
 NBins=7
 Bins = dict()
 for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
+Bins['cos(theta(mu))'] = [-0.65,-0.4,-0.15,0.1,0.35,0.6,0.9,0.95]
+
 Centers = dict()
 for key in Limits.keys(): Centers[key] = 0.5*(Bins[key][1:] + Bins[key][:-1])
 
