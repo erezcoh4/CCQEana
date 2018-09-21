@@ -263,14 +263,14 @@ def get_samples_scaling( N_total=1 # total integral of all overlay
     f['MC'] = 1-f['Cosmic']
     
     f['1mu-1p in MC'] = N['1mu-1p']/N['MC']
-    f['CC1p0pi in MC'] = N['CC1p0pi']/N['MC']
+    f['CC1p in MC'] = N['CC1p']/N['MC']
     f['other-pairs in MC'] = N['other-pairs']/N['MC']
     
     # f_Cosmic = fraction of cosmic in the overlay
     scaling['cosmic']     = N['total']*f['Cosmic']/N['cosmic']
     scaling['other-pairs']= N['total']*f['MC']*f['other-pairs in MC']/N['other-pairs']
     scaling['1mu-1p']     = N['total']*f['MC']*f['1mu-1p in MC']/N['1mu-1p']
-    scaling['CC1p0pi']  = N['total']*f['MC']*f['CC1p0pi in MC']/N['CC1p0pi']
+    scaling['CC1p']       = N['total']*f['MC']*f['CC1p in MC']/N['CC1p']
     scaling['N(Ovelay)/N(On)'] = (N['MC']+N['cosmic'])/N['total']
     
     # option 3:
@@ -295,7 +295,7 @@ def apply_cuts_to_data(OnBeam=None,OffBeam=None
                        ,maxdYZcut = 200
                        ,delta_theta_12=55  # deg.
                        ,opt_box=(50,100) # [Nwires x Nticks]
-                       ,r_max_RdQ_CC1p = 0.43 # sphere in U,V,Y space, apply a cut only to CC1p0pi
+                       ,r_max_RdQ_CC1p = 0.43 # sphere in U,V,Y space, apply a cut only to CC1p
                        ,delta_Delta_phi=35 # deg.
                        ,Pt_max=0.35        # GeV/c
                        ,theta_pq_max=25    # deg.
@@ -765,8 +765,8 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
             plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled']+h['1mu-1p scaled'] , width=bin_width
             ,color=colors['1mu-1p'],alpha=alpha, label=labels['1mu-1p'])
             # CC1p0pi
-            plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled']+h['CC1p0pi scaled'] , width=bin_width
-                ,color=colors['CC1p0pi'],alpha=alpha, label=labels['CC1p0pi'])
+            plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled']+h['CC1p scaled'] , width=bin_width
+                ,color=colors['CC1p'],alpha=alpha, label=labels['CC1p'])
             # other-pairs
             plt.bar(mid,h['cosmic scaled']+h['other-pairs scaled'] , width=bin_width
                         ,color=colors['other-pairs'],alpha=alpha , label=labels['other-pairs'])

@@ -224,7 +224,7 @@ private:
     int     Nflashes;
     int     Nvertices;
     int     vertices_ctr=0, tracks_ctr=0, genie_interactions_ctr=0,events_ctr=0;
-    int     CC1p0piVertices_ctr=0 , CosmicVertices_ctr=0;
+    int     CC1pVertices_ctr=0 , CosmicVertices_ctr=0;
     int     NwiresBox[N_box_sizes], NticksBox[N_box_sizes];
     float   r_around_vertex[N_r_around_vertex];
     float   TruncMeanRad;
@@ -1649,9 +1649,11 @@ void ub::ErezCCQEAna::HeaderGENIEInCSV(){
     << "truth_Pmu" << ","
     << "truth_Pmu_theta" << "," << "truth_Pmu_phi" << ","
     << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << ","
+    << "truth_Pmu_cos_theta" << ","
     << "truth_Pp" << ","
     << "truth_Pp_theta" << "," << "truth_Pp_phi" << ","
-    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ",";
+    << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
+    << "truth_Pp_cos_theta" << ",";
     
     // relevant truth-information
     genie_file
@@ -1733,9 +1735,11 @@ void ub::ErezCCQEAna::StreamGENIEToCSV(){
         << g.GetPmu().P() << ","
         << g.GetPmu().Theta() << "," << g.GetPmu().Phi() << ","
         << g.GetPmu().Px() << "," << g.GetPmu().Py() << "," << g.GetPmu().Pz() << ","
+        << TMath::Cos(g.GetPmu().Theta()) << ","
         << g.GetPp().P() << ","
         << g.GetPp().Theta() << "," << g.GetPp().Phi() << ","
-        << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ",";
+        << g.GetPp().Px() << "," << g.GetPp().Py() << "," << g.GetPp().Pz() << ","
+        << TMath::Cos(g.GetPp().Theta()) << ",";
         
         // relevant truth-information
         genie_file
@@ -1903,111 +1907,126 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     vertices_ctr = 0;
     
     vertices_file
-    << "run" << "," << "subrun" << "," << "event" << "," << "vertex_id" << ","
-    << "x" << "," << "y" << "," << "z" << ","
+    << "run"    << "," << "subrun"  << "," << "event"   << "," << "vertex_id" << ","
+    << "x"      << "," << "y"       << "," << "z"       << ","
     << "track_id" << ","
     
     // µ/p assigned tracks
     //    << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
-    << "l_muCandidate"<< "," << "l_pCandidate" << "," << "l_mu-l_p"<< ","
+    << "l_muCandidate"  << ","
+    << "l_pCandidate"   << ","
+    << "l_mu-l_p"       << ","
     
     // pandoraNu pid object
     //    << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
     //    << "pid_PIDaYplane_muCandidate"<< "," << "pid_PIDaYplane_pCandidate" << ","
     //    << "pidcali_PIDa_muCandidate"<< "," << "pidcali_PIDa_pCandidate" << ","
     //    << "pidcali_PIDaYplane_muCandidate"<< "," << "pidcali_PIDaYplane_pCandidate" << ","
-    << "pidcali_Chi2ProtonYplane_muCandidate"<< "," << "pidcali_Chi2ProtonYplane_pCandidate" << ","
-    << "pidcali_Chi2MuonYplane_muCandidate"<< "," << "pidcali_Chi2MuonYplane_pCandidate" << ","
+    << "pidcali_Chi2ProtonYplane_muCandidate"   << ","
+    << "pidcali_Chi2ProtonYplane_pCandidate"    << ","
+    << "pidcali_Chi2MuonYplane_muCandidate"     << ","
+    << "pidcali_Chi2MuonYplane_pCandidate"      << ","
     
     // flash matching of tracks
-    << "ClosestFlash_YZdistance_muCandidate"<< "," << "ClosestFlash_YZdistance_pCandidate" << ","
-    << "ClosestFlash_TotalPE_muCandidate"<< "," << "ClosestFlash_TotalPE_pCandidate" << ","
+    //    << "ClosestFlash_YZdistance_muCandidate"<< "," << "ClosestFlash_YZdistance_pCandidate" << ","
+    //    << "ClosestFlash_TotalPE_muCandidate"<< "," << "ClosestFlash_TotalPE_pCandidate" << ","
     
     // start/end points, for FV cuts
-    << "startx_muCandidate" << ","
-    << "starty_muCandidate" << ","
-    << "startz_muCandidate" << ","
-    << "startx_pCandidate" << ","
-    << "starty_pCandidate" << ","
-    << "startz_pCandidate" << ","
-    << "endx_muCandidate" << ","
-    << "endy_muCandidate" << ","
-    << "endz_muCandidate" << ","
-    << "endx_pCandidate" << ","
-    << "endy_pCandidate" << ","
-    << "endz_pCandidate" << ","
+    << "startx_muCandidate" << ","  << "truth_startx_muCandidate"   << ","
+    << "starty_muCandidate" << ","  << "truth_starty_muCandidate"   << ","
+    << "startz_muCandidate" << ","  << "truth_startz_muCandidate"   << ","
+    << "startx_pCandidate"  << ","  << "truth_startx_pCandidate"    << ","
+    << "starty_pCandidate"  << ","  << "truth_starty_pCandidate"    << ","
+    << "startz_pCandidate"  << ","  << "truth_startz_pCandidate"    << ","
+    << "endx_muCandidate"   << ","  << "truth_endx_muCandidate"     << ","
+    << "endy_muCandidate"   << ","  << "truth_endy_muCandidate"     << ","
+    << "endz_muCandidate"   << ","  << "truth_endz_muCandidate"     << ","
+    << "endx_pCandidate"    << ","  << "truth_endx_pCandidate"      << ","
+    << "endy_pCandidate"    << ","  << "truth_endy_pCandidate"      << ","
+    << "endz_pCandidate"    << ","  << "truth_endz_pCandidate"      << ",";
     
     
+    
+
     // CC1p0π reconstructed featues
+    vertices_file
     << "distance" << "," << "delta_phi" << "," << "delta_theta" << ","
     << "theta_12" << ","
     
     // reconstructed kinematics
-    << "reco_Ev"    << ","  << "reco_Q2" << "," << "reco_Xb" << "," << "reco_y" << "," << "reco_W2" << ","
+    << "reco_Ev"    << ","  << "reco_Q2" << ","
+    << "reco_Xb"    << ","  << "reco_y" << ","
+    << "reco_W2"    << ","
     << "reco_Pt"    << ","  << "reco_theta_pq" << ","
     << "reco_Ev_mcs"<< ","  << "reco_Q2_mcs"<< "," << "reco_Pt_mcs"<< ","
-    
-    << "reco_Emu"   << ","
-    << "reco_Pmu"   << ","  << "reco_Pmu_x" << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << "," << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
-    
-    << "reco_Emu_mcs" << ","
-    << "reco_Pmu_mcs" << ","<< "reco_Pmu_mcs_x" << ","<< "reco_Pmu_mcs_y" << ","<< "reco_Pmu_mcs_z" << ","
+    // muon from range
+    << "reco_Emu"       << ","
+    << "reco_Pmu"       << ","
+    << "reco_Pmu_x"     << "," << "reco_Pmu_y" << "," << "reco_Pmu_z" << ","
+    << "reco_Pmu_theta" << "," << "reco_Pmu_phi" << ","
+    // muon from mcs
+    << "reco_Emu_mcs"       << ","
+    << "reco_Pmu_mcs"       << ","
+    << "reco_Pmu_mcs_x"     << ","<< "reco_Pmu_mcs_y"   << "," << "reco_Pmu_mcs_z" << ","
     << "reco_Pmu_mcs_theta" << ","<< "reco_Pmu_mcs_phi" << ","
-    
-    << "reco_Ep"    << ","
-    << "reco_Pp"    << ","  << "reco_Pp_x" << "," << "reco_Pp_y" << "," << "reco_Pp_z" << "," << "reco_Pp_theta" << "," << "reco_Pp_phi" << ","
-    << "PmuHypothesisCalc"  << "," << "PpHypothesisCalc" << ","
-    << "reco_q"     << ","  << "reco_omega"   << ","
+    << "reco_Pmu_cos_theta" << ","
+    // proton
+    << "reco_Ep"            << ","
+    << "reco_Pp"            << ","
+    << "reco_Pp_x"          << "," << "reco_Pp_y"   << "," << "reco_Pp_z" << ","
+    << "reco_Pp_theta"      << "," << "reco_Pp_phi" << ","
+    << "reco_Pp_cos_theta"  << ","
+    //    << "PmuHypothesisCalc"  << "," << "PpHypothesisCalc" << ","
+    // virtual boson
+    << "reco_q"         << ","  << "reco_omega"   << ","
     
     
     // missing momentum (reconstructed struck neutron)
-    << "reco_Pmiss" << ","  << "reco_Pmiss_x" << ","  << "reco_Pmiss_y" << ","  << "reco_Pmiss_z" << "," << "reco_Pmiss_t" << ","
-    
+    << "reco_Pmiss"     << ","
+    << "reco_Pmiss_x"   << ","  << "reco_Pmiss_y" << ","  << "reco_Pmiss_z" << ","
+    << "reco_Pmiss_t"   << ","
     
     
     
     // truth MC information
-    << "truth_l_muCandidate"<< "," << "truth_l_pCandidate" << ","
-    << "truth_purity_muCandidate"<< "," << "truth_purity_pCandidate" << ","
+    << "truth_l_muCandidate"        << "," << "truth_l_pCandidate" << ","
+    << "truth_purity_muCandidate"   << "," << "truth_purity_pCandidate" << ","
     
-    << "truth_Emu"  << ","
-    << "truth_Pmu"  << "," << "truth_Pmu_x" << "," << "truth_Pmu_y" << "," << "truth_Pmu_z" << "," << "truth_Pmu_theta" << ","<< "truth_Pmu_phi" << ","
-    << "truth_Ep"  << ","
-    << "truth_Pp"   << "," << "truth_Pp_x" << "," << "truth_Pp_y" << "," << "truth_Pp_z" << "," << "truth_Pp_theta" << ","<< "truth_Pp_phi" << ","
+    << "truth_Emu"          << ","
+    << "truth_Pmu"          << ","
+    << "truth_Pmu_x"        << "," << "truth_Pmu_y"     << "," << "truth_Pmu_z" << ","
+    << "truth_Pmu_theta"    << "," << "truth_Pmu_phi"   << ","
+    << "truth_Pmu_cos_theta"<< ","
+    << "truth_Ep"       << ","
+    << "truth_Pp"       << ","
+    << "truth_Pp_x"     << "," << "truth_Pp_y" << "," << "truth_Pp_z" << ","
+    << "truth_Pp_theta" << "," << "truth_Pp_phi" << ","
+    << "truth_Pp_cos_theta" << ","
     
-    // truth start/end points
-    << "truth_startx_muCandidate" << ","
-    << "truth_starty_muCandidate" << ","
-    << "truth_startz_muCandidate" << ","
-    << "truth_startx_pCandidate" << ","
-    << "truth_starty_pCandidate" << ","
-    << "truth_startz_pCandidate" << ","
-    << "truth_endx_muCandidate" << ","
-    << "truth_endy_muCandidate" << ","
-    << "truth_endz_muCandidate" << ","
-    << "truth_endx_pCandidate" << ","
-    << "truth_endy_pCandidate" << ","
-    << "truth_endz_pCandidate" << ","
 
     
     // mathing genie interaction
     << "genie_distance" << ","
-    << "truth_Ev"   << "," << "truth_Q2" << "," << "truth_Xb" << "," << "truth_y" << "," << "truth_W2" << ","
-    << "truth_Pt"   << "," << "truth_theta_pq" << ","
-    << "genie_mode" << ","
-    << "truth_q"    << "," << "truth_omega" << ","
+    << "truth_Ev"       << "," << "truth_Q2"    << ","
+    << "truth_Xb"       << "," << "truth_y"     << ","
+    << "truth_W2"       << ","
+    << "truth_Pt"       << "," << "truth_theta_pq" << ","
+    << "genie_mode"     << ","
+    << "truth_q"        << "," << "truth_omega" << ","
 
     
     // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
     << "closest_genie_distance" << ","
-    << "closest_genie_Ev" << "," << "closest_genie_Q2" << "," << "closest_genie_Xb" << "," << "closest_genie_y" << "," << "closest_genie_W2" << ","
-    << "closest_genie_Pt" << "," << "closest_genie_theta_pq" << ","
-    << "closest_genie_mode" << ","
+    << "closest_genie_Ev"       << "," << "closest_genie_Q2"    << ","
+    << "closest_genie_Xb"       << "," << "closest_genie_y"     << ","
+    << "closest_genie_W2"       << ","
+    << "closest_genie_Pt"       << "," << "closest_genie_theta_pq" << ","
+    << "closest_genie_mode"     << ","
     << "closest_genie_Nprotons" << ","
-    << "closest_genie_Nneutrons" << ","
-    << "closest_genie_Npions" << ","
-    << "closest_genie_Npi0" << ","
-    << "closest_genie_CCNC" << ","
+    << "closest_genie_Nneutrons"<< ","
+    << "closest_genie_Npions"   << ","
+    << "closest_genie_Npi0"     << ","
+    << "closest_genie_CCNC"     << ","
     
     
     // truth delta-phi
@@ -2058,18 +2077,20 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "isBrokenTrajectory" << ",";
 
     
-    // event weight
-    for (auto name: event_weight_names) {
-        vertices_file << name << ",";
-    }
+    //    // event weight
+    //    for (auto name: event_weight_names) {
+    //        vertices_file << name << ",";
+    //    }
 
     
     // vertex truth-topology in MC
     vertices_file
-    << "1mu-1p" << "," << "CC1p" << "," << "CC1p0pi" << "," << "other-pairs" << "," << "cosmic"
+    << "1mu-1p" << "," << "CC1p" << "," << "other-pairs" << "," << "cosmic";
     
+    //  << "," << "CC1p0pi"
     
-    << endl;
+    // finish
+    vertices_file << endl;
     
 }
 
@@ -2078,17 +2099,19 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
     // July-25, 2017
     // whatever you add here - must add also in header - ub::ErezCCQEAna::HeaderVerticesInCSV()
     for (auto v:vertices){
+        auto trk_mu = v.GetTrack_muCandidate();
+        auto trk_p = v.GetTrack_muCandidate();
         
         vertices_ctr++;
-        if (v.GetIsGENIECC_1p_200MeVc_0pi()) {
-            CC1p0piVertices_ctr++;
+        if (v.GetIsGENIECC_1p_200MeVc()) {
+            CC1pVertices_ctr++;
         } else if (v.GetIsCosmic()){
             CosmicVertices_ctr++;
         }
         
         vertices_file
-        << v.GetRun() << "," << v.GetSubrun() << "," << v.GetEvent() << "," << v.GetVertexID() << ","
-        << v.GetPosition().x() << "," << v.GetPosition().y() << "," << v.GetPosition().z() << ",";
+        << v.GetRun()           << "," << v.GetSubrun() << "," << v.GetEvent() << "," << v.GetVertexID() << ","
+        << v.GetPosition().x()  << "," << v.GetPosition().y() << "," << v.GetPosition().z() << ",";
         
         // tracks id
         for ( auto track : v.GetTracks()){
@@ -2099,140 +2122,155 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         
         // µ/p assigned tracks
         vertices_file
-        //        << v.GetTrack_muCandidate().GetPIDa() << "," << v.GetTrack_pCandidate().GetPIDa() << ","
-        << v.GetTrack_muCandidate().GetLength() << "," << v.GetTrack_pCandidate().GetLength() << "," <<v.GetTrack_muCandidate().GetLength() - v.GetTrack_pCandidate().GetLength() << ","
+        //        << trk_mu.GetPIDa() << "," << trk_p.GetPIDa() << ","
+        << trk_mu.GetLength() << ","
+        << trk_p.GetLength()  << ","
+        << trk_mu.GetLength() - trk_p.GetLength() << ","
         
         // pandoraNu pid object
-        //        << v.GetTrack_muCandidate().GetPID_PIDA()               << ","  << v.GetTrack_pCandidate().GetPID_PIDA() << ","
-        //        << v.GetTrack_muCandidate().GetPID_PIDA(2)              << ","  << v.GetTrack_pCandidate().GetPID_PIDA(2) << ","
-        //        << v.GetTrack_muCandidate().GetCaliPID_PIDA()           << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA() << ","
-        //        << v.GetTrack_muCandidate().GetCaliPID_PIDA(2)          << ","  << v.GetTrack_pCandidate().GetCaliPID_PIDA(2) << ","
-        << v.GetTrack_muCandidate().GetCaliPID_Chi2Proton(2)    << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Proton(2) << ","
-        << v.GetTrack_muCandidate().GetCaliPID_Chi2Muon(2)      << ","  << v.GetTrack_pCandidate().GetCaliPID_Chi2Muon(2) << ",";
+        //        << trk_mu.GetPID_PIDA()               << ","  << trk_p.GetPID_PIDA() << ","
+        //        << trk_mu.GetPID_PIDA(2)              << ","  << trk_p.GetPID_PIDA(2) << ","
+        //        << trk_mu.GetCaliPID_PIDA()           << ","  << trk_p.GetCaliPID_PIDA() << ","
+        //        << trk_mu.GetCaliPID_PIDA(2)          << ","  << trk_p.GetCaliPID_PIDA(2) << ","
+        << trk_mu.GetCaliPID_Chi2Proton(2)    << ","
+        << trk_p.GetCaliPID_Chi2Proton(2)     << ","
+        << trk_mu.GetCaliPID_Chi2Muon(2)      << ","
+        << trk_p.GetCaliPID_Chi2Muon(2)       << ",";
 
         
 
 
         
         // flash matching of tracks
-        vertices_file
-        << v.GetTrack_muCandidate().GetDis2ClosestFlash() << "," << v.GetTrack_pCandidate().GetDis2ClosestFlash() << ","
-        << v.GetTrack_muCandidate().GetClosestFlash().GetTotalPE() << "," << v.GetTrack_pCandidate().GetClosestFlash().GetTotalPE() << "," ;
+        //        vertices_file
+        //        << trk_mu.GetDis2ClosestFlash() << "," << trk_p.GetDis2ClosestFlash() << ","
+        //        << trk_mu.GetClosestFlash().GetTotalPE() << "," << trk_p.GetClosestFlash().GetTotalPE() << "," ;
         
         // start/end points, for FV cuts
         vertices_file
-        << v.GetTrack_muCandidate().GetStartPos().x() << ","
-        << v.GetTrack_muCandidate().GetStartPos().y() << ","
-        << v.GetTrack_muCandidate().GetStartPos().z() << ","
-        << v.GetTrack_pCandidate().GetStartPos().x() << ","
-        << v.GetTrack_pCandidate().GetStartPos().y() << ","
-        << v.GetTrack_pCandidate().GetStartPos().z() << ","
-        << v.GetTrack_muCandidate().GetEndPos().x() << ","
-        << v.GetTrack_muCandidate().GetEndPos().y() << ","
-        << v.GetTrack_muCandidate().GetEndPos().z() << ","
-        << v.GetTrack_pCandidate().GetEndPos().x() << ","
-        << v.GetTrack_pCandidate().GetEndPos().y() << ","
-        << v.GetTrack_pCandidate().GetEndPos().z() << ",";
+        << trk_mu.GetStartPos().x() << ","  << trk_mu.GetTruthStartPos().x()  << ","
+        << trk_mu.GetStartPos().y() << ","  << trk_mu.GetTruthStartPos().y()  << ","
+        << trk_mu.GetStartPos().z() << ","  << trk_mu.GetTruthStartPos().z()  << ","
+        << trk_p.GetStartPos().x()  << ","  << trk_p.GetTruthStartPos().x()   << ","
+        << trk_p.GetStartPos().y()  << ","  << trk_p.GetTruthStartPos().y()   << ","
+        << trk_p.GetStartPos().z()  << ","  << trk_p.GetTruthStartPos().z()   << ","
+        << trk_mu.GetEndPos().x()   << ","  << trk_mu.GetTruthEndPos().x()    << ","
+        << trk_mu.GetEndPos().y()   << ","  << trk_mu.GetTruthEndPos().y()    << ","
+        << trk_mu.GetEndPos().z()   << ","  << trk_mu.GetTruthEndPos().z()    << ","
+        << trk_p.GetEndPos().x()    << ","  << trk_p.GetTruthEndPos().x()     << ","
+        << trk_p.GetEndPos().y()    << ","  << trk_p.GetTruthEndPos().y()     << ","
+        << trk_p.GetEndPos().z()    << ","  << trk_p.GetTruthEndPos().z()     << ",";
         
+        
+        
+        
+
         
         // CC1p0π reconstructed featues
         // distances between the tracks
-        for ( auto d : v.Get_distances_ij()){
-            vertices_file << d ; //  for more than 2 tracks add << ";" ;
-        }
+        for ( auto d : v.Get_distances_ij()) vertices_file << d ; //  for more than 2 tracks add << ";" ;
         vertices_file << ",";
-        
         // delta_phi
-        for ( auto delta_phi : v.Get_delta_phi_ij()){
-            // in degrees
-            vertices_file << delta_phi ; //  for more than 2 tracks add << ";" ;
-        }
+        for ( auto delta_phi : v.Get_delta_phi_ij()) vertices_file << delta_phi ; // in degrees
         vertices_file << ",";
-        
         // delta_theta
-        for ( auto delta_theta : v.Get_delta_theta_ij()){
-            // in degrees
-            vertices_file << delta_theta ; //  for more than 2 tracks add << ";" ;
-        }
+        for ( auto delta_theta : v.Get_delta_theta_ij()) vertices_file << delta_theta ; // in degrees
         vertices_file << ",";
         // theta_12 (the 3D angle between the two tracks)
         vertices_file << v.GetAngleBetween2tracks() << ","; // in degrees
         
         // reconstructed kinematics
-        vertices_file << v.GetRecoEv() << "," << v.GetRecoQ2() << "," <<  v.GetRecoXb() << "," << v.GetRecoY() << "," << v.GetRecoW2() << ","  ;
-        vertices_file << v.GetRecoPt() << "," << v.GetReco_theta_pq() << ",";
-        vertices_file << v.GetRecoEv_mcs() << "," << v.GetRecoQ2_mcs() << "," << v.GetRecoPt_mcs() << ",";
+        vertices_file
+        << v.GetRecoEv()    << "," << v.GetRecoQ2()    << ","
+        << v.GetRecoXb()    << "," << v.GetRecoY()     << ","
+        << v.GetRecoW2()    << ","
+        << v.GetRecoPt()    << "," << v.GetReco_theta_pq()  << ","
+        << v.GetRecoEv_mcs()<< "," << v.GetRecoQ2_mcs()     << "," << v.GetRecoPt_mcs() << ",";
+        // muon from range
+        vertices_file
+        << v.GetRecoPmu().E()       << ","
+        << v.GetRecoPmu().P()       << ","
+        << v.GetRecoPmu().Px()      << "," << v.GetRecoPmu().Py()   << "," << v.GetRecoPmu().Pz() << ","
+        << v.GetRecoPmu().Theta()   << "," << v.GetRecoPmu().Phi()  << ","
+        // muon from mcs
+        << v.GetRecoPmu_mcs().E()       << ","
+        << v.GetRecoPmu_mcs().P()       << ","
+        << v.GetRecoPmu_mcs().Px()      << "," << v.GetRecoPmu_mcs().Py()   << "," << v.GetRecoPmu_mcs().Pz() << ","
+        << v.GetRecoPmu_mcs().Theta()   << "," << v.GetRecoPmu_mcs().Phi()  << ","
+        << TMath::Cos(v.GetRecoPmu_mcs().Theta()) << ",";
         
+        // proton
         vertices_file
-        << v.GetRecoPmu().E() << ","
-        << v.GetRecoPmu().P() << ","
-        << v.GetRecoPmu().Px() << "," << v.GetRecoPmu().Py() << "," << v.GetRecoPmu().Pz() << "," << v.GetRecoPmu().Theta() << "," << v.GetRecoPmu().Phi() << ","
-        << v.GetRecoPmu_mcs().E() << ","
-        << v.GetRecoPmu_mcs().P() << ","
-        << v.GetRecoPmu_mcs().Px() << "," << v.GetRecoPmu_mcs().Py() << "," << v.GetRecoPmu_mcs().Pz() << "," << v.GetRecoPmu_mcs().Theta() << "," << v.GetRecoPmu_mcs().Phi() << ",";
-
-
+        << v.GetRecoPp().E()    << ","
+        << v.GetRecoPp().P()    << ","
+        << v.GetRecoPp().Px()   << "," << v.GetRecoPp().Py()    << "," << v.GetRecoPp().Pz() << ","
+        << v.GetRecoPp().Theta()<< "," << v.GetRecoPp().Phi()   << ","
+        << TMath::Cos(v.GetRecoPp().Theta()) << ",";
+        
+        //        vertices_file << trk_mu.GetPmuHypothesisCalc() << "," << trk_p.GetPpHypothesisCalc() << ",";
+        // virtual boson
         vertices_file
-        << v.GetRecoPp().E() << ","
-        << v.GetRecoPp().P() << ","
-        << v.GetRecoPp().Px() << "," << v.GetRecoPp().Py() << "," << v.GetRecoPp().Pz() << "," << v.GetRecoPp().Theta() << "," << v.GetRecoPp().Phi() << ",";        
-        vertices_file << v.GetTrack_muCandidate().GetPmuHypothesisCalc() << "," << v.GetTrack_pCandidate().GetPpHypothesisCalc() << ",";
-        vertices_file << v.GetReco_q() << "," << v.GetReco_omega() << ",";
+        << v.GetReco_q()        << "," << v.GetReco_omega() << ",";
         
         // missing momentum (reconstructed struck neutron)
-        vertices_file << v.GetRecoPmiss().P() << ","  << v.GetRecoPmiss().Px() << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << "," << v.GetRecoPmiss().Pt() << ",";
+        vertices_file
+        << v.GetRecoPmiss().P()     << ","
+        << v.GetRecoPmiss().Px()    << ","  << v.GetRecoPmiss().Py() << ","  << v.GetRecoPmiss().Pz() << ","
+        << v.GetRecoPmiss().Pt()    << ",";
         
         // truth MC information
-        vertices_file << v.GetTrack_muCandidate().GetTruthLength() << "," << v.GetTrack_pCandidate().GetTruthLength() << ",";
-        vertices_file << v.GetTrack_muCandidate().GetTruthPurity() << "," << v.GetTrack_pCandidate().GetTruthPurity() << ",";
+        vertices_file << trk_mu.GetTruthLength() << "," << trk_p.GetTruthLength() << ",";
+        vertices_file << trk_mu.GetTruthPurity() << "," << trk_p.GetTruthPurity() << ",";
         
         vertices_file
-        << v.GetTrack_muCandidate().GetTruthMomentum().E() << ","
-        << v.GetTrack_muCandidate().GetTruthMomentum().P() << ","
-        << v.GetTrack_muCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_muCandidate().GetTruthMomentum().Phi() << ",";
+        << trk_mu.GetTruthMomentum().E()    << ","
+        << trk_mu.GetTruthMomentum().P()    << ","
+        << trk_mu.GetTruthMomentum().Px()   << ","
+        << trk_mu.GetTruthMomentum().Py()   << ","
+        << trk_mu.GetTruthMomentum().Pz()   << ","
+        << trk_mu.GetTruthMomentum().Theta()<< ","
+        << trk_mu.GetTruthMomentum().Phi()  << ","
+        << TMath::Cos(trk_mu.GetTruthMomentum().Theta())  << ",";
         
         vertices_file
-        << v.GetTrack_pCandidate().GetTruthMomentum().E() << ","
-        << v.GetTrack_pCandidate().GetTruthMomentum().P() << ","
-        << v.GetTrack_pCandidate().GetTruthMomentum().Px() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Py() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Pz() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Theta() << "," << v.GetTrack_pCandidate().GetTruthMomentum().Phi() << ",";
+        << trk_p.GetTruthMomentum().E()     << ","
+        << trk_p.GetTruthMomentum().P()     << ","
+        << trk_p.GetTruthMomentum().Px()    << ","
+        << trk_p.GetTruthMomentum().Py()    << ","
+        << trk_p.GetTruthMomentum().Pz()    << ","
+        << trk_p.GetTruthMomentum().Theta() << ","
+        << trk_p.GetTruthMomentum().Phi()   << ","
+        << TMath::Cos(trk_p.GetTruthMomentum().Theta())  << ",";
         
         
-        // truth start/end points
-        vertices_file
-        << v.GetTrack_muCandidate().GetTruthStartPos().x()  << ","
-        << v.GetTrack_muCandidate().GetTruthStartPos().y()  << ","
-        << v.GetTrack_muCandidate().GetTruthStartPos().z()  << ","
-        << v.GetTrack_pCandidate().GetTruthStartPos().x()   << ","
-        << v.GetTrack_pCandidate().GetTruthStartPos().y()   << ","
-        << v.GetTrack_pCandidate().GetTruthStartPos().z()   << ","
-        << v.GetTrack_muCandidate().GetTruthEndPos().x()    << ","
-        << v.GetTrack_muCandidate().GetTruthEndPos().y()    << ","
-        << v.GetTrack_muCandidate().GetTruthEndPos().z()    << ","
-        << v.GetTrack_pCandidate().GetTruthEndPos().x()     << ","
-        << v.GetTrack_pCandidate().GetTruthEndPos().y()     << ","
-        << v.GetTrack_pCandidate().GetTruthEndPos().z()     << ",";
         
 
         
         // mathing genie interaction
-        vertices_file << v.GetDistanceToGENIE() << ",";
-        vertices_file << v.GetGENIEinfo().GetEv() << "," << v.GetGENIEinfo().GetQ2() << "," << v.GetGENIEinfo().GetXb() << "," << v.GetGENIEinfo().GetY() << "," << v.GetGENIEinfo().GetW2() << ",";
-        vertices_file << v.GetGENIEinfo().GetPt()   << "," << v.GetGENIEinfo().Get_theta_pq() << ",";
-        vertices_file << v.GetGENIEinfo().GetMode() << ",";
-        vertices_file << v.GetGENIEinfo().Get_q()   << ","<< v.GetGENIEinfo().Get_omega() << ",";
+        vertices_file
+        << v.GetDistanceToGENIE()       << ","
+        << v.GetGENIEinfo().GetEv()     << "," << v.GetGENIEinfo().GetQ2()  << ","
+        << v.GetGENIEinfo().GetXb()     << "," << v.GetGENIEinfo().GetY()   << ","
+        << v.GetGENIEinfo().GetW2()     << ","
+        << v.GetGENIEinfo().GetPt()     << "," << v.GetGENIEinfo().Get_theta_pq() << ","
+        << v.GetGENIEinfo().GetMode()   << ","
+        << v.GetGENIEinfo().Get_q()     << ","  << v.GetGENIEinfo().Get_omega() << ",";
         
         
         
         // closest genie (e.g. a proton was detected in a µp event, which is not the original proton in a CC interaction, since the real proton rescattered)
-        vertices_file << v.GetDistanceToClosestGENIE() << ",";
-        vertices_file << v.GetClosestGENIE().GetEv() << "," << v.GetClosestGENIE().GetQ2() << "," << v.GetClosestGENIE().GetXb() << "," << v.GetClosestGENIE().GetY() << "," << v.GetClosestGENIE().GetW2() << ",";
-        vertices_file << v.GetClosestGENIE().GetPt() << "," << v.GetClosestGENIE().Get_theta_pq() << ",";
-        vertices_file << v.GetClosestGENIE().GetMode() << ",";
-        vertices_file << v.GetClosestGENIE().GetNprotons() << ",";
-        vertices_file << v.GetClosestGENIE().GetNneutrons() << ",";
-        vertices_file << v.GetClosestGENIE().GetNpions() << ",";
-        vertices_file << v.GetClosestGENIE().GetNpi0() << ",";
-        vertices_file << v.GetClosestGENIE().GetCCNC() << ",";
+        vertices_file
+        << v.GetDistanceToClosestGENIE()        << ","
+        << v.GetClosestGENIE().GetEv()          << "," << v.GetClosestGENIE().GetQ2()       << ","
+        << v.GetClosestGENIE().GetXb()          << "," << v.GetClosestGENIE().GetY()        << ","
+        << v.GetClosestGENIE().GetW2()          << ","
+        << v.GetClosestGENIE().GetPt()          << "," << v.GetClosestGENIE().Get_theta_pq()<< ","
+        << v.GetClosestGENIE().GetMode()        << ","
+        << v.GetClosestGENIE().GetNprotons()    << ","
+        << v.GetClosestGENIE().GetNneutrons()   << ","
+        << v.GetClosestGENIE().GetNpions()      << ","
+        << v.GetClosestGENIE().GetNpi0()        << ","
+        << v.GetClosestGENIE().GetCCNC()        << ",";
         
 
         
@@ -2283,17 +2321,17 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         << v.GetIsBrokenTrajectory() << ",";
 
         
-        // event weight
-        for (auto weight: event_weight_values) {
-            vertices_file << weight << ",";
-        }
+        //        // event weight
+        //        for (auto weight: event_weight_values) {
+        //            vertices_file << weight << ",";
+        //        }
         
         // vertex truth-topology in MC
         vertices_file
-        << v.GetIs1mu1p() << ","
-        << v.GetIsGENIECC_1p_200MeVc() << ","
-        << v.GetIsGENIECC_1p_200MeVc_0pi() << ","
-        << v.GetIsNon1mu1p() << ","
+        << v.GetIs1mu1p()               << ","
+        << v.GetIsGENIECC_1p_200MeVc()  << ","
+        //        << v.GetIsGENIECC_1p_200MeVc_0pi() << ","
+        << v.GetIsNon1mu1p()            << ","
         << v.GetIsCosmic();
         
         // finish
@@ -2429,7 +2467,7 @@ void ub::ErezCCQEAna::endJob(){
     << "Ngenie_interactions" << ","
     << "Nvertices" << ","
     << "NCosmicVertices" << ","
-    << "NCC1p0piVertices"
+    << "NCC1pVertices"
     << endl;
     
     std::string sTimeS = std::ctime(&now_time);
@@ -2441,7 +2479,7 @@ void ub::ErezCCQEAna::endJob(){
     << genie_interactions_ctr << ","
     << vertices_ctr << ","
     << CosmicVertices_ctr << ","
-    << CC1p0piVertices_ctr
+    << CC1pVertices_ctr
     << endl;
     
     summary_file.close();

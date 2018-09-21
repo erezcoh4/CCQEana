@@ -45,10 +45,10 @@ def print_and_say(string=''):#{
 
 #---------------------------------------------------------------------------------------------
 # Aug-2, 2018
-pair_types   = ['1mu-1p'   ,'other-pairs','cosmic' ,'CC1p0pi'      ,'CC1p'     ]
-MClabels     = [r'1$\mu$1p','other-pairs','cosmic' ,r'CC1p 0$\pi$' ,'CC1p'     ]
-MCcolors     = ['teal'     ,'red'        ,'orange' ,'blue'         ,'royalblue' ]
-MCcmaps      = ['Greens'   ,'Reds'       ,'Oranges','Blues'        ,'Blues'     ]
+pair_types   = ['1mu-1p'   ,'other-pairs','cosmic'  ,'CC1p'     ] #,'CC1p0pi'
+MClabels     = [r'1$\mu$1p','other-pairs','cosmic'  ,'CC1p'     ]   # ,r'CC1p 0$\pi$'
+MCcolors     = ['teal'     ,'red'        ,'orange'  ,'blue'     ] #,'royalblue'
+MCcmaps      = ['Greens'   ,'Reds'       ,'Oranges' ,'Blues'    ] #     ,'Blues'
 #---------------------------------------------------------------------------------------------
 
 

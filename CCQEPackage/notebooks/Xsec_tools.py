@@ -51,7 +51,7 @@ Limits=dict({
 NBins=7
 Bins = dict()
 for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
-Bins['cos(theta(mu))'] = [-0.65,-0.4,-0.15,0.1,0.35,0.6,0.9,0.95]
+Bins['cos(theta(mu))'] = np.array([-0.65,-0.4,-0.15,0.1,0.35,0.6,0.9,0.95])
 
 Centers = dict()
 for key in Limits.keys(): Centers[key] = 0.5*(Bins[key][1:] + Bins[key][:-1])
@@ -836,15 +836,14 @@ def load_mc_and_data(extra_name=''
                                                 ,varPmu='truth_Pmu',varPmu_cos_theta='truth_Pmu_cos_theta'
                                                 ,varPp='truth_Pp',varPp_cos_theta='truth_Pp_cos_theta'
                                                 )
-        genie_CC1p = overlay_genie_CC1p_in_limits
-        
-        genie_CC1p['theta_12'] = 180./np.pi*np.arccos((genie_CC1p['truth_Pp_x']*genie_CC1p['truth_Pmu_x']
-                                                       +genie_CC1p['truth_Pp_y']*genie_CC1p['truth_Pmu_y']
-                                                       +genie_CC1p['truth_Pp_z']*genie_CC1p['truth_Pmu_z'])
-                                                      /(genie_CC1p['truth_Pp']*genie_CC1p['truth_Pmu']))
-        genie_CC1p['Pt'] = np.sqrt(np.square(genie_CC1p['truth_Pp_x']+genie_CC1p['truth_Pmu_x'])
-                           +np.square(genie_CC1p['truth_Pp_y']+genie_CC1p['truth_Pmu_y']))
-        genie_CC1p['delta_phi'] = 180./np.pi*np.abs(genie_CC1p['truth_Pp_phi']-genie_CC1p['truth_Pmu_phi'])
+        genie_CC1p = overlay_genie_CC1p_in_limits        
+#        genie_CC1p['theta_12'] = 180./np.pi*np.arccos((genie_CC1p['truth_Pp_x']*genie_CC1p['truth_Pmu_x']
+#                                                       +genie_CC1p['truth_Pp_y']*genie_CC1p['truth_Pmu_y']
+#                                                       +genie_CC1p['truth_Pp_z']*genie_CC1p['truth_Pmu_z'])
+#                                                      /(genie_CC1p['truth_Pp']*genie_CC1p['truth_Pmu']))
+#        genie_CC1p['Pt'] = np.sqrt(np.square(genie_CC1p['truth_Pp_x']+genie_CC1p['truth_Pmu_x'])
+#                           +np.square(genie_CC1p['truth_Pp_y']+genie_CC1p['truth_Pmu_y']))
+#        genie_CC1p['delta_phi'] = 180./np.pi*np.abs(genie_CC1p['truth_Pp_phi']-genie_CC1p['truth_Pmu_phi'])
         outcsvname = prefix+'selected_genie_CC1p.csv'
         genie_CC1p.to_csv(outcsvname)
         print 'saved %d'%len(genie_CC1p),'CC1p events in genie_CC1p to',outcsvname
