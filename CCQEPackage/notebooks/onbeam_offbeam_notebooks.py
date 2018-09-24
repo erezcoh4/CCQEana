@@ -781,7 +781,7 @@ def plot_stacked_MCsamples( OverlaySamples=None,norm=None, do_draw=True
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Dec-3, 2017 (last edit June-10)
+# Dec-3, 2017 (last edit Sep-23)
 def chi2_two_histograms( bins=None, chi2_xrange=None
                         , h1=None , h2=None 
                         , h1err=None, h2err=None 
@@ -801,9 +801,9 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
             Nbins_compares += 1
             
             if debug:
-                print 'comparing in bin:',bins[i_bin],'h1: %.1f+/-%.1f,'%(h1[i_bin],h1err[i_bin]),'h2: %.1f+/-%.1f'%(h2[i_bin],h2err[i_bin])
-                print 'num = %.1f'%num, 'den = %.1f'%den
-                print 'chi2 this bin: num/den = %.1f'%chi2_bin
+                print 'comparing in bin:',bins[i_bin],'h1: %f+/-%f,'%(h1[i_bin],h1err[i_bin]),'h2: %f+/-%f'%(h2[i_bin],h2err[i_bin])
+                print 'num = %f'%num, 'den = %f'%den
+                print 'chi2 this bin: num/den = %f'%chi2_bin
                 print 'chi2 : %.1f'%chi2_bin
 
     ndf = Nbins_compares - 1
@@ -811,6 +811,36 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
     return chi2,ndf
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
+
+
+
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
+# Sep-23, 2018
+def chi2_two_data_curves( bins=None, chi2_xrange=None
+                        , h1=None , h2=None
+                        , h1err=None, h2err=None
+                         , cutoff=1.e-8
+                        , debug=0):
+    '''
+        compare the two histograms using a chi2 test.
+        return: chi2, ndf
+        '''
+    chi2 = 0
+    ndf = -1
+    for i_bin in range(len(bins)-1):
+        num = np.square( h1[i_bin] - h2[i_bin] )
+        den = np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),cutoff])
+        chi2_bin = num / den
+        chi2 += chi2_bin
+        ndf += 1
+        if debug:
+            print 'comparing in bin:',bins[i_bin],'h1: %f+/-%f,'%(h1[i_bin],h1err[i_bin]),'h2: %f+/-%f'%(h2[i_bin],h2err[i_bin])
+            print 'num = %f'%num, 'den = %f'%den
+            print 'chi2 this bin: num/den = %f'%chi2_bin
+            print 'chi2 : %.1f'%chi2_bin
+    if debug: print 'chi2,ndf:',chi2,ndf
+    return chi2,ndf
+# -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 
 
 

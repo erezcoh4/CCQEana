@@ -2100,7 +2100,7 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
     // whatever you add here - must add also in header - ub::ErezCCQEAna::HeaderVerticesInCSV()
     for (auto v:vertices){
         auto trk_mu = v.GetTrack_muCandidate();
-        auto trk_p = v.GetTrack_muCandidate();
+        auto trk_p = v.GetTrack_pCandidate();
         
         vertices_ctr++;
         if (v.GetIsGENIECC_1p_200MeVc()) {

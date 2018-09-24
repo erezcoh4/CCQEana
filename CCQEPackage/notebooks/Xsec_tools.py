@@ -251,12 +251,14 @@ def get_integrated_Xsec(h,bins1,bins2,bins3,N1,N2,N3):
 
 
 # ----------------------------------------------------------
-# Sep-04, 2018 (edited Sep-18)
+# Sep-04, 2018 (edited Sep-22)
 def get_labels(observable=''):
     var = Vars[observable]
     bins=Bins[observable]; vlabel=vlabels[observable]; Vlabel=Vlabels[observable]; units=Units[observable]
     xlabel=Vlabel+' ['+units+']' if units is not None else Vlabel
-    mid = 0.5*(bins[1:]+bins[:-1]); bin_width=(mid[1]-mid[0])
+    mid = 0.5*(bins[1:]+bins[:-1]);
+#    bin_width = (mid[1]-mid[0])
+    bin_width = bins[1:] - bins[:-1]
     return var,bins,mid,bin_width,vlabel,xlabel,units
 # ----------------------------------------------------------
 

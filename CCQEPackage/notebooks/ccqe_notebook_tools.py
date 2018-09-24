@@ -1,4 +1,11 @@
-import sys, pandas as pd, numpy as np, matplotlib.pyplot as plt, ast, matplotlib as mpl
+import sys, pandas as pd, numpy as np
+import matplotlib
+matplotlib.use('ps')
+from matplotlib import rc
+rc('text',usetex=True)
+rc('text.latex', preamble='\usepackage{color}')
+import matplotlib.pyplot as plt, ast, matplotlib as mpl
+
 sys.path.insert(0, '/Users/erezcohen/larlite/UserDev/mySoftware/MySoftwarePackage/mac')
 from numpy import sqrt,square
 from plot_tools import *
@@ -10,8 +17,8 @@ from scipy.stats import norm
 from scipy.optimize import curve_fit
 
 # ----------------------------------------------------------
-def mystep(x,y,dx,y_width, ax=None, **kwargs):
-    for x_,y_,y_width_ in zip(x,y,y_width):
+def mystep(x,y,x_width,y_width, ax=None, **kwargs):
+    for x_,dx,y_,y_width_ in zip(x,x_width,y,y_width):
         plt.plot([x_-dx/2,x_+dx/2],[y_,y_] , **kwargs)
 # ----------------------------------------------------------
 
