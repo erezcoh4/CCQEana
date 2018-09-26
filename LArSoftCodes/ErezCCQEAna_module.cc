@@ -1157,16 +1157,11 @@ void ub::ErezCCQEAna::FilterGoodPairVertices(){
             &&  v.CloseSemiContainedTracks( tracks , kMaxInterTrackDistance ).size() == 0
             ){
             
-            // assign muon and proton tracks by PID-A
-            //            auto Track_muCandidate = v.GetSmallPIDaTrack();
             // assign muon and proton tracks by chi2-proton
             auto Track_muCandidate = v.GetLargeChi2ProtonTrack();
             auto PmuFromRange = trkm.GetTrackMomentum( Track_muCandidate.GetLength()  , 13  );
             v.AssignMuonTrack( Track_muCandidate  );
             
-            
-            // assign muon and proton tracks by PID-A
-            //            auto Track_pCandidate = v.GetLargePIDaTrack();
             auto Track_pCandidate = v.GetSmallChi2ProtonTrack();
             auto PpFromRange = trkm.GetTrackMomentum( Track_pCandidate.GetLength() , 2212);
             v.AssignProtonTrack( Track_pCandidate );

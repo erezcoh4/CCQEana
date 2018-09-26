@@ -172,11 +172,11 @@ vector<size_t> pairVertex::sort_chi2proton(const vector<PandoraNuTrack> &v) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 bool pairVertex::SortTracksByChi2Proton(){
     std::vector<PandoraNuTrack> tmp_tracks = tracks;
-    for (auto i:sort_pida( tmp_tracks )){
+    for (auto i:sort_chi2proton( tmp_tracks )){
         tracks_chi2protonsorted.push_back( tmp_tracks.at(i) );
     }
-    LargeChi2ProtonTrack = tracks_chi2protonsorted.at( tmp_tracks.size() - 1 );
-    SmallChi2ProtonTrack = tracks_chi2protonsorted.at( 0 );
+    SmallChi2ProtonTrack = tracks_chi2protonsorted.at( tmp_tracks.size() - 1 );
+    LargeChi2ProtonTrack = tracks_chi2protonsorted.at( 0 );
     return true;
 }
 

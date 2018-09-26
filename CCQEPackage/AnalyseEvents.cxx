@@ -38,41 +38,41 @@ void AnalyseEvents::GetEntry (int entry){
     
     InitEvent();
     
-    std::vector <PandoraNuTrack> * fmcparticles = 0;
-    InTree -> SetBranchAddress("truth_trajectories" , &fmcparticles);
+    //    std::vector <PandoraNuTrack> * fmcparticles = 0;
+    //    InTree -> SetBranchAddress("truth_trajectories" , &fmcparticles);
     
     std::vector <PandoraNuTrack> * ftracks = 0;
     InTree -> SetBranchAddress("tracks" , &ftracks);
     
-    std::vector <PandoraNuTrack> * fcosmic_tracks = 0;
-    InTree -> SetBranchAddress("cosmic_tracks" , &fcosmic_tracks);
-
+    //    std::vector <PandoraNuTrack> * fcosmic_tracks = 0;
+    //    InTree -> SetBranchAddress("cosmic_tracks" , &fcosmic_tracks);
+    
     std::vector <hit> * fhits = 0;
     InTree -> SetBranchAddress("hits" , &fhits);
     
     
-
+    
     std::vector <pairVertex> * fvertices = 0;
     InTree -> SetBranchAddress("vertices" , &fvertices);
-
-    std::vector <pairVertex> * fcosmic_vertices = 0;
-    InTree -> SetBranchAddress("cosmic_vertices" , &fcosmic_vertices);
+    
+    //    std::vector <pairVertex> * fcosmic_vertices = 0;
+    //    InTree -> SetBranchAddress("cosmic_vertices" , &fcosmic_vertices);
     
     InTree -> GetEntry(entry);
     
     hits = *fhits;
-    mcparticles = *fmcparticles;
+    //    mcparticles = *fmcparticles;
     tracks = *ftracks;
-    cosmic_tracks = *fcosmic_tracks;
+    //    cosmic_tracks = *fcosmic_tracks;
     vertices = *fvertices;
-    cosmic_vertices = *fcosmic_vertices;
-
+    //    cosmic_vertices = *fcosmic_vertices;
+    
     delete ftracks;
-    delete fmcparticles;
-    delete fcosmic_tracks;
+    //    delete fmcparticles;
+    //    delete fcosmic_tracks;
     delete fhits;
     delete fvertices;
-    delete fcosmic_vertices;
+    //    delete fcosmic_vertices;
 }
 
 
