@@ -1,9 +1,5 @@
 import sys, pandas as pd, numpy as np
 import matplotlib
-#matplotlib.use('ps')
-#from matplotlib import rc
-#rc('text',usetex=True)
-#rc('text.latex', preamble='\usepackage{color}')
 import matplotlib.pyplot as plt, ast, matplotlib as mpl
 
 sys.path.insert(0, '/Users/erezcohen/larlite/UserDev/mySoftware/MySoftwarePackage/mac')

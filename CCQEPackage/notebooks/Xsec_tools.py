@@ -839,13 +839,6 @@ def load_mc_and_data(extra_name=''
                                                 ,varPp='truth_Pp',varPp_cos_theta='truth_Pp_cos_theta'
                                                 )
         genie_CC1p = overlay_genie_CC1p_in_limits        
-#        genie_CC1p['theta_12'] = 180./np.pi*np.arccos((genie_CC1p['truth_Pp_x']*genie_CC1p['truth_Pmu_x']
-#                                                       +genie_CC1p['truth_Pp_y']*genie_CC1p['truth_Pmu_y']
-#                                                       +genie_CC1p['truth_Pp_z']*genie_CC1p['truth_Pmu_z'])
-#                                                      /(genie_CC1p['truth_Pp']*genie_CC1p['truth_Pmu']))
-#        genie_CC1p['Pt'] = np.sqrt(np.square(genie_CC1p['truth_Pp_x']+genie_CC1p['truth_Pmu_x'])
-#                           +np.square(genie_CC1p['truth_Pp_y']+genie_CC1p['truth_Pmu_y']))
-#        genie_CC1p['delta_phi'] = 180./np.pi*np.abs(genie_CC1p['truth_Pp_phi']-genie_CC1p['truth_Pmu_phi'])
         outcsvname = prefix+'selected_genie_CC1p.csv'
         genie_CC1p.to_csv(outcsvname)
         print 'saved %d'%len(genie_CC1p),'CC1p events in genie_CC1p to',outcsvname

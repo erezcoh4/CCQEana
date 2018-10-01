@@ -4,18 +4,6 @@ from ccqe_notebook_tools import *
 vertices_files_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/ccqe_candidates/'
 
 
-# deprecated - delete by Sep 14, 2018
-#MCbnbDATAcosmicSamples=dict()
-#reduced_MCbnbDATAcosmicSamples=dict(dict())
-#pureff_MCbnbDATAcosmic = pd.DataFrame()
-#pureff_MCbnbDATAcosmic_numbers = pd.DataFrame()
-#MCbnbMCcosmicSamples=dict()
-#reduced_MCbnbMCcosmicSamples=dict(dict())
-#pureff_MCbnbMCcosmic = pd.DataFrame()
-#pureff_MCbnbMCcosmic_numbers = pd.DataFrame()
-
-
-
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # May-29,2018
@@ -488,28 +476,6 @@ def get_pureff_MCbnbDATAcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_M
     return freduced_MCbnbDATAcosmic['1mu-1p'],(100.*Nreduced_MCbnbDATAcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbDATAcosmic['CC1p'],(100.*Nreduced_MCbnbDATAcosmic['CC1p']/Ntot if Ntot>0 else 0)
 # ------------------------------------------------
 
-# reducndant, kill it!
-## ------------------------------------------------
-## Oct. 13, 2017
-#def get_pureff_MCbnbDATAcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced_MCbnbDATAcosmic = dict()):
-#    global pureff_MCbnbDATAcosmic_numbers
-#    Nreduced_MCbnbDATAcosmic , freduced_MCbnbDATAcosmic = get_Nreduced_MCbnbDATAcosmic(reduced_MCbnbDATAcosmic=reduced_MCbnbDATAcosmic)
-#    Ntot = Nreduced_MCbnbDATAcosmic['cosmic']+Nreduced_MCbnbDATAcosmic['other-pairs']+Nreduced_MCbnbDATAcosmic['1mu-1p']
-#    pureff_MCbnbDATAcosmic_numbers_cut = pd.DataFrame({'cut name':cut_name,
-#                                                      'cut label':cut_label,
-#                                                      'cosmic':Nreduced_MCbnbDATAcosmic['cosmic'],
-#                                                      'other-pairs':Nreduced_MCbnbDATAcosmic['other-pairs'],
-#                                                      '\mup':Nreduced_MCbnbDATAcosmic['1mu-1p'],
-#                                                      #                                                      '\CCIpOpi':Nreduced_MCbnbDATAcosmic['CC1p0pi'],
-#                                                      'eff \mup':freduced_MCbnbDATAcosmic['1mu-1p'],
-#                                                      #                                                      'eff \CCIpOpi':freduced_MCbnbDATAcosmic['CC1p0pi'],
-#                                                      'pur \mup':float(100*Nreduced_MCbnbDATAcosmic['1mu-1p'])/Ntot if Ntot>0 else 0,
-#                                                      #                                                      'pur \CCIpOpi':float(100*Nreduced_MCbnbDATAcosmic['CC1p0pi'])/Ntot if Ntot>0 else 0}
-#                                                      , index=[cut_name]
-#                                                      )
-#    pureff_MCbnbDATAcosmic_numbers = pureff_MCbnbDATAcosmic_numbers.append(pureff_MCbnbDATAcosmic_numbers_cut)
-## ------------------------------------------------
-
 
 #---------------------------------------------------------------------------------------------
 # July-11, 2017 (last edited May-15 2018)
@@ -619,65 +585,5 @@ def get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic = dict()):
         freduced[pair_type] = 100.0 * Nreduced[pair_type]/Noriginal[pair_type]
     return Nreduced , freduced
 # ------------------------------------------------
-
-
-
-# redundant, kill it!
-## ------------------------------------------------
-## Oct. 13, 2017
-#def get_pureff_MCbnbMCcosmic_cut(cut_name = 'PIDa', cut_label=None , reduced_MCbnbMCcosmic = dict()):
-#    '''
-#        return
-#        eff (mu-p) , pur (mu-p), eff (CC1p0pi) , pur (CC1p0pi)
-#        '''
-#    global pureff_MCbnbMCcosmic
-#    eff = dict()
-#    pur = dict()
-#    Nreduced_MCbnbMCcosmic , freduced_MCbnbMCcosmic = get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic=reduced_MCbnbMCcosmic)
-#    Ntot = (Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other-pairs'])
-#    
-#    eff['1mu-1p'] = freduced_MCbnbMCcosmic['1mu-1p']
-#    pur['1mu-1p'] = 100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0
-#    
-#    eff['CC1p0pi'] = freduced_MCbnbMCcosmic['CC1p0pi']
-#    pur['CC1p0pi'] = 100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0
-#    
-#    pureff_MCbnbMCcosmic_cut = pd.DataFrame({'label':cut_label
-#                                            ,'$\mu p$ eff.':'%.1f'%eff['1mu-1p']+'%'
-#                                            ,'$\mu p$ pur.':'%.1f'%pur['1mu-1p']+'%'
-#                                            ,'CC$0\pi 1 p$ eff.':'%.1f'%freduced_MCbnbMCcosmic['CC1p0pi']+'%'
-#                                            ,'CC$0\pi 1 p$ pur.':'%.1f'%(100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0)+'%'}
-#                                            , index=[cut_name]
-#                                            )
-#
-#    for pair_type in pair_types: pureff_MCbnbMCcosmic_cut[pair_type] = '%.1f'%freduced_MCbnbMCcosmic[pair_type]+'%' +' (%.0f)'%Nreduced_MCbnbMCcosmic[pair_type]
-#    pureff_MCbnbMCcosmic = pureff_MCbnbMCcosmic.append(pureff_MCbnbMCcosmic_cut)
-#    reduced_MCbnbMCcosmicSamples[cut_name] = reduced_MCbnbMCcosmic
-#    Ntot = Nreduced_MCbnbMCcosmic['1mu-1p']+Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other-pairs']
-#    
-#    return freduced_MCbnbMCcosmic['1mu-1p'],(100.*Nreduced_MCbnbMCcosmic['1mu-1p']/Ntot if Ntot>0 else 0),freduced_MCbnbMCcosmic['CC1p0pi'],(100.*Nreduced_MCbnbMCcosmic['CC1p0pi']/Ntot if Ntot>0 else 0)
-## ------------------------------------------------
-#
-## ------------------------------------------------
-## Oct. 13, 2017
-#def get_pureff_MCbnbMCcosmic_numbers(cut_name = 'PIDa', cut_label=None , reduced_MCbnbMCcosmic = dict()):
-#    global pureff_MCbnbMCcosmic_numbers
-#    Nreduced_MCbnbMCcosmic , freduced_MCbnbMCcosmic = get_Nreduced_MCbnbMCcosmic(reduced_MCbnbMCcosmic=reduced_MCbnbMCcosmic)
-#    Ntot = Nreduced_MCbnbMCcosmic['cosmic']+Nreduced_MCbnbMCcosmic['other-pairs']+Nreduced_MCbnbMCcosmic['1mu-1p']
-#    pureff_MCbnbMCcosmic_numbers_cut = pd.DataFrame({'cut name':cut_name,
-#                                                      'cut label':cut_label,
-#                                                      'cosmic':Nreduced_MCbnbMCcosmic['cosmic'],
-#                                                      'other-pairs':Nreduced_MCbnbMCcosmic['other-pairs'],
-#                                                      '\mup':Nreduced_MCbnbMCcosmic['1mu-1p'],
-#                                                      '\CCIpOpi':Nreduced_MCbnbMCcosmic['CC1p0pi'],
-#                                                      'eff \mup':freduced_MCbnbMCcosmic['1mu-1p'],
-#                                                      'eff \CCIpOpi':freduced_MCbnbMCcosmic['CC1p0pi'],
-#                                                      'pur \mup':float(100*Nreduced_MCbnbMCcosmic['1mu-1p'])/Ntot if Ntot>0 else 0,
-#                                                      'pur \CCIpOpi':float(100*Nreduced_MCbnbMCcosmic['CC1p0pi'])/Ntot if Ntot>0 else 0}
-#                                                      , index=[cut_name]
-#                                                      )
-#    pureff_MCbnbMCcosmic_numbers = pureff_MCbnbMCcosmic_numbers.append(pureff_MCbnbMCcosmic_numbers_cut)
-## ------------------------------------------------
-#
 
 
