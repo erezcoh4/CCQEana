@@ -7,11 +7,10 @@ from matplotlib.pylab import *
 
 # -- - --- - --- - --- - --- - --- - --- - --- - --- - --- - --- - -
 versions = dict({'Overlay':'prodgenie_bnb_nu_uboone_overlay_mcc8.11_reco2'
-                ,'OnBeam':'prod_reco_optfilter_bnb_v12_unblind_mcc8'
-                ,'OffBeam':'prod_reco_optfilter_extbnb_v12_mcc8_dev'
-                ,'date':'2018_05_11'
-                ,'overlay date':'2018_05_11'
-                ,'data date':'2018_05_11'
+                ,'beam on':'prod_reco_optfilter_bnb_v12_unblind_mcc8'
+                ,'beam off':'prod_reco_optfilter_extbnb_v12_mcc8_dev'
+                ,'overlay date':'2018_09_22'
+                ,'data date':'2018_08_16'
                 })
 print 'versions:'
 pp.pprint(versions)

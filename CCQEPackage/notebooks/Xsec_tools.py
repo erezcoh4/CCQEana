@@ -30,6 +30,11 @@ flux = 3.601e10 # cm^-2
 flux_err = 0
 Ntargets = 1.25e31
 Ntargets_err = 0
+# kinematical cuts
+delta_theta_12=55  # deg.
+delta_Delta_phi=35 # deg.
+Pt_max=0.35        # GeV/c
+
 
 Vars=dict({
           'Pmu':'reco_Pmu_mcs'
@@ -55,7 +60,8 @@ for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],
 # Oct-2, 2018
 Bins['cos(theta(mu))'] = np.array([-0.65, -0.4083,-0.167,0.075,0.317,0.5583, 0.8, 0.95])
 Bins['cos(theta(p))'] = np.array([ 0.15,0.2583,0.366,0.475 ,0.583,0.692,0.8,0.95])
-                                  
+bins1,bins2,bins3 = Bins['Pmu'], Bins['cos(theta(mu))'] , Bins['phi(mu)']
+N1,N2,N3 = len(bins1)-1,len(bins2)-1,len(bins3)-1
 Centers = dict()
 for key in Limits.keys(): Centers[key] = 0.5*(Bins[key][1:] + Bins[key][:-1])
 
@@ -101,6 +107,110 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 
 
 
+
+# ----------------------------------------------------------
+# Oct-03, 2018
+def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_theta=True, do_phi=True, do_print_Xsec=False,
+              remove_last_cos_theta_mu_bin=False,
+              selected_beam_on=None,selected_beam_off=None,selected_overlay_concat=None,selected_CC1p=None,
+              extra_wname=""):#{
+    Xsec_dict = dict()
+    for i,(observable,true,ivar,do_var) in enumerate(zip(['P'+particle,'cos(theta('+particle+'))','phi('+particle+')']
+                                                             ,['truth_P'+particle,'truth_P'+particle+'_cos_theta','truth_P'+particle+'_phi']
+                                                             ,[(1,4),(2,5),(3,6)]
+                                                             ,[do_P,do_cos_theta,do_phi])):#{
+        if do_var==False: continue
+        var,bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
+        mul = 180./np.pi if 'phi' in observable else 1
+        beam_on , beam_off , overlay , CC1p = selected_beam_on,selected_beam_off,selected_overlay_concat,selected_CC1p
+        if remove_last_cos_theta_mu_bin:#{
+            beam_on = beam_on[beam_on['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+            beam_off = beam_off[beam_off['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+            overlay = overlay[overlay['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+            CC1p = CC1p[CC1p['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+        #}
+        h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p
+                        ,var=var,bins=Bins[observable],bin_width=bin_width,wname='P'+particle+' weight'+extra_wname,mul=mul
+                        ,do_corr_phi_0=do_corr_phi_0)
+        if i==0:#{
+            Xsec_dict['integrated Xsec'] = np.sum(h['Xsec']*bin_width)
+            Xsec_dict['integrated Xsec err'] = np.sqrt(np.sum(np.square(h['Xsec err'])*bin_width))
+            Xsec_dict['mc Xsec'] = np.sum(h['mc Xsec']*bin_width)
+            Xsec_dict['mc Xsec err'] = np.sqrt(np.sum(np.square(h['mc Xsec err'])*bin_width))
+            if do_print_Xsec: print ('integrated Xsec: %.2f+/-%.2f'%(Xsec_dict['integrated Xsec'],Xsec_dict['integrated Xsec err']),
+                                            'mc Xsec: %.2f+/-%.2f'%(Xsec_dict['mc Xsec'],Xsec_dict['mc Xsec err']))
+        #}
+        if debug>1:  pp.pprint(h)
+        Xsec_dict[observable+' beam on'] = h['Xsec beam on']
+        Xsec_dict[observable+' beam on err'] = h['Xsec beam on err']
+        Xsec_dict[observable] = h['Xsec']
+        Xsec_dict[observable+' err'] = h['Xsec err']
+        Xsec_dict['mc '+observable] = h['mc Xsec']
+        Xsec_dict['mc '+observable+' err'] = h['mc Xsec err']
+    #}
+    return Xsec_dict
+#}
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# Oct-03, 2018
+# computation of 1D cross-section based on weighted distirubtions
+def get_Xsec_1d(beam_on=None,beam_off=None,overlay=None,CC1p=None,
+                var='reco_Pmu_mcs',bins=Bins['Pmu'],bin_width=None,wname='Pmu weight',
+                mul=1,
+                do_corr_phi_0=False):#{
+    h=dict()
+    for sam,slabel in zip([beam_on,beam_off,overlay,CC1p]
+                          ,['beam on','beam off','overlay','CC1p']):#{
+        h[slabel],h[slabel+' err']=np.zeros(len(bins)-1),np.zeros(len(bins)-1)
+        for i in range(len(bins)-1):#{
+            sam_in_bin = sam[(bins[i]<=mul*sam[var])& (mul*sam[var]<bins[i+1])]
+            h[slabel][i] = np.sum(sam_in_bin[wname])
+            if do_corr_phi_0:#{
+                h[slabel][i] = np.sum(sam_in_bin[wname]*sam_in_bin['W(corr. phi~0)'])
+            #}
+            h[slabel+' err'][i] = np.sqrt(np.sum(np.square(sam_in_bin[wname+' err'])
+                                                 +np.square(sam_in_bin[wname])))
+        #}
+    #}
+    h['B'] = h['overlay'] - h['CC1p']
+    h['B err'] = np.sqrt(np.square(h['overlay err']) + np.square(h['CC1p err']))
+    
+    h['B scaled'] = h['B']*Nevents['f(POT)']
+    h['B scaled err'] = h['B err']*Nevents['f(POT)']
+    
+    #     print "h['beam off err']:",h['beam off err']
+    h['beam off scaled'] = h['beam off']*OffBeam_scaling
+    h['beam off scaled err'] = h['beam off err']*OffBeam_scaling
+    
+    h['N(on)-N(off)-B'] = h['beam on'] - h['beam off scaled'] - h['B scaled']
+    h['N(on)-N(off)-B err'] = np.sqrt(np.square(h['beam on err'])
+                                      + np.square(h['beam off scaled err'])
+                                      + np.square(h['B scaled err']))
+
+    h['Xsec'] = h['N(on)-N(off)-B']/bin_width
+    h['Xsec err'] = h['N(on)-N(off)-B err']/bin_width
+    
+    h['Xsec beam on'] = h['beam on']/bin_width
+    h['Xsec beam on err'] = h['beam on err']/bin_width
+        
+    # foc CC1p (mc-Xsec) we want no correction applied
+    for i in range(len(bins)-1):#{
+        CC1p_in_bin = CC1p[(bins[i]<=mul*CC1p[var])& (mul*CC1p[var]<bins[i+1])]
+        h['CC1p'][i] = np.sum(CC1p_in_bin[wname])
+        h['mc Xsec'] = h['CC1p']*Nevents['f(POT)']/bin_width
+        h['mc Xsec err'] = h['CC1p err']*Nevents['f(POT)']/bin_width
+    #}
+    return h
+#}
+# ----------------------------------------------------------
+
+
+
+
+# ----------------------------------------------------------
+# Sep-14, 2018
 def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),ylim_phi=(0,0.1)
              ,do_add_genie_models=True
              ,ob_1='Pmu',ob_2='cos(theta(mu))',ob_3='phi(mu)'
@@ -225,6 +335,132 @@ def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),
     plt.tight_layout()
     print 'done.'
 #}
+# ----------------------------------------------------------
+
+
+
+
+
+
+
+# ----------------------------------------------------------
+# Oct-03, 2018
+# efficiency weights for cross-section
+def compute_eff_weights(beam_on=None,beam_off=None
+                        ,generated_CC1p=None,selected_CC1p=None,overlay=None
+                        ,ob_1='Pmu',ob_2='cos(theta(mu))',ob_3='phi(mu)'
+                        ,reco_1='reco_Pmu_mcs',reco_2='reco_Pmu_cos_theta',reco_3='reco_Pmu_mcs_phi'
+                        ,true_1='truth_Pmu',true_2='truth_Pmu_cos_theta',true_3='truth_Pmu_phi'
+                        # for fixing muon bins
+                        ,do_in_kin_cuts=True
+                        ,delta_theta_12=55  # deg.
+                        ,delta_Delta_phi=35 # deg.
+                        ,Pt_max=0.35        # GeV/c
+                        ,debug=0
+                        ,eff_cutoff=0.01
+                        # for different binning...
+                        ,do_different_binning = False
+                        ,NBins=7
+                        ,bins_cos_theta_mu = None
+                        ,bins_cos_theta_p = None
+                        # different options for systematical studies
+                        ,option=""
+                        ):
+    # for different binning...
+    if do_different_binning:#{
+        for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
+        if bins_cos_theta_mu is not None: Bins['cos(theta(mu))'] = bins_cos_theta_mu;
+        if bins_cos_theta_p is not None: Bins['cos(theta(p))'] = bins_cos_theta_p
+    #}
+    global bins1,bins2,bins3,N1,N2,N3
+    bins1,bins2,bins3 = Bins[ob_1], Bins[ob_2] , Bins[ob_3]
+    N1,N2,N3 = len(bins1)-1,len(bins2)-1,len(bins3)-1
+    N,List = dict(),dict()
+    for i_P in range(N1):#{
+        Pmin,Pmax = bins1[i_P],bins1[i_P+1]
+        for i_cos_theta in range(N2):#{
+            cos_theta_min,cos_theta_max = bins2[i_cos_theta],bins2[i_cos_theta+1]
+            for i_phi in range(N3):#{
+                phi_min,phi_max = bins3[i_phi],bins3[i_phi+1]
+                
+                N['on'],List['on'] = len_sam_in_3d_bin(beam_on,
+                                                       reco_1,Pmin,Pmax,
+                                                       reco_2,cos_theta_min,cos_theta_max,
+                                                       reco_3,phi_min,phi_max)
+                                                       
+                N['off'],List['off'] = len_sam_in_3d_bin(beam_off,
+                                                         reco_1,Pmin,Pmax,
+                                                         reco_2,cos_theta_min,cos_theta_max,
+                                                         reco_3,phi_min,phi_max)
+
+                N['generated'],List['generated'] = len_sam_in_3d_bin(generated_CC1p,
+                                                                     true_1,Pmin,Pmax,
+                                                                     true_2,cos_theta_min,cos_theta_max,
+                                                                     true_3,phi_min,phi_max)
+
+                generated_CC1p_in_kin_cuts = generated_CC1p[(np.abs(generated_CC1p['theta_12']-90)<delta_theta_12)
+                                                            &(generated_CC1p['Pt']<Pt_max)
+                                                            &(np.abs(np.abs(generated_CC1p['delta_phi'])-180.)<delta_Delta_phi)]
+
+                N['gen. in kin. cuts'],List['gen. in kin. cuts'] = len_sam_in_3d_bin(generated_CC1p_in_kin_cuts,
+                                                                                     true_1,Pmin,Pmax,
+                                                                                     true_2,cos_theta_min,cos_theta_max,
+                                                                                     true_3,phi_min,phi_max)
+                N['CC1p'],List['CC1p'] = len_sam_in_3d_bin(selected_CC1p,
+                                                           reco_1,Pmin,Pmax,
+                                                           reco_2,cos_theta_min,cos_theta_max,
+                                                           reco_3,phi_min,phi_max)
+
+
+                N['overlay'],List['overlay'] = len_sam_in_3d_bin(overlay,
+                                                                     reco_1,Pmin,Pmax,
+                                                                     reco_2,cos_theta_min,cos_theta_max,
+                                                                     reco_3,phi_min,phi_max)
+                        
+
+                Ngen = N['gen. in kin. cuts'] if do_in_kin_cuts else N['generated']
+                if option=="CC1p truth":#{
+                    N['CC1p'],List['CC1p'] = len_sam_in_3d_bin(selected_CC1p,
+                                                                           true_1,Pmin,Pmax,
+                                                                           true_2,cos_theta_min,cos_theta_max,
+                                                                           true_3,phi_min,phi_max)
+                #}
+                eff, eff_err = get_eff(Ngen=Ngen , Nsel=N['CC1p'])
+                
+                # efficiency weight assigned to the event
+                w,werr=0,0
+                if eff>eff_cutoff:#{
+                    w = 1.e39/(eff*flux*Ntargets)
+                    werr = 1.e39*eff_err/(eff*eff*flux*Ntargets)
+                #}
+                if debug:#{
+                    print 'phi_min,phi_max:',phi_min,phi_max
+                    print N['CC1p'],'CC1p',N['gen. in kin. cuts'],'gen. in kin. cuts'
+                    print 'eff=',eff,'+/-',eff_err
+                    print 'w=',w,'+/-',werr
+                #}                                                             
+                wname = ob_1 + ' weight'
+                
+                if option=="CC1p truth": wname = ob_1 + ' weight truth'
+                
+                beam_on.loc[List['on'],wname] = w
+                beam_on.loc[List['on'],wname+' err'] = werr
+
+                beam_off.loc[List['off'],wname] = w
+                beam_off.loc[List['off'],wname+' err'] = werr
+
+                selected_CC1p.loc[List['CC1p'],wname] = w
+                selected_CC1p.loc[List['CC1p'],wname+' err'] = werr
+
+                overlay.loc[List['overlay'],wname] = w
+                overlay.loc[List['overlay'],wname+' err'] = werr
+            #} i_phi
+        #} i_cos_theta
+    #} i_P
+    print 'done.'
+    return
+# ----------------------------------------------------------
+
 
 # ----------------------------------------------------------
 # Sep-14, 2018
@@ -752,7 +988,7 @@ def load_mc_and_data(extra_name=''
         for pair_type in pair_types:#{
             selected_overlay[pair_type]=pd.read_csv(prefix+'selected_'+pair_type+'.csv')
         #}
-        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
+        selected_overlay_concat = pd.read_csv(prefix+'selected_overlay.csv')
     #}
     else:#{
         print 'did not find '+selected_cosmic_filename+', so creating it...'
@@ -784,6 +1020,9 @@ def load_mc_and_data(extra_name=''
         print "Nevents['f(POT)']:",Nevents['f(POT)']
         selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
         print len(selected_overlay_concat),'events in the overlay'
+        outcsvname = prefix+'selected_overlay.csv'
+        selected_overlay_concat.to_csv(outcsvname)
+        print 'saved selected overlay to',outcsvname
     #}
     # ----------------------------------------------------------
     ## (2) DATA
@@ -794,7 +1033,7 @@ def load_mc_and_data(extra_name=''
         selected_beam_off = pd.read_csv(data_prefix+'selected_beam_off.csv')
     #}
     else:#{
-        print 'checked',prefix+'selected_on_beam.csv and there was no file there...'
+        print 'checked',data_prefix+'selected_on_beam.csv and there was no file there...'
         OnBeam = pd.read_csv(vertices_files_path+'/'+versions['data date']+'/'+versions['beam on']+'_'+versions['data date']+'_vertices.csv')
         print 'loaded beam-on'
         OffBeam = pd.read_csv(vertices_files_path+'/'+versions['data date']+'/'+versions['beam off']+'_'+versions['data date']+'_vertices.csv')
