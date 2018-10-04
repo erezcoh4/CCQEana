@@ -232,14 +232,14 @@ def apply_cuts_to_overlay(OverlaySamples=None
             if debug: print 'sam('+pair_type+'):',len(sam)
                                     
                                     
-            if cut == 'PIDa':#{
-                if do_PIDaCali:
-                    reduced[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
-                else:
-                    reduced[pair_type] = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
-            #}
+            # deprecated: we replaced the cut on PIDa to a cut on chi2_proton
+            #            if cut == 'PIDa':#{
+            #                if do_PIDaCali:
+            #                    reduced[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
+            #                else:
+            #                    reduced[pair_type] = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
+            #            #}
 
-            # replace the cut on PIDa to a cut on chi2_proton
             elif cut == 'Chi2Proton': #{
                 reduced[pair_type] = sam[ (sam['pidcali_Chi2ProtonYplane_muCandidate']>Chi2Proton_muCandidate_min)
                              &(sam['pidcali_Chi2ProtonYplane_muCandidate']<Chi2Proton_muCandidate_max)
@@ -250,12 +250,12 @@ def apply_cuts_to_overlay(OverlaySamples=None
             elif cut == 'Nflashes':#{
                 reduced[pair_type] = sam[(sam['Nflashes']>0)]
             #}
-            elif cut == 'ClosestFlash':#{
-                reduced[pair_type] = sam[(sam['Nflashes']>0)
-                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
-                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
-            #}
-            # replace the cut on ClosestFlash to a cut on MatchedFlash
+            # deprecated: we replaced the cut on ClosestFlash to a cut on MatchedFlash
+            #            elif cut == 'ClosestFlash':#{
+            #                reduced[pair_type] = sam[(sam['Nflashes']>0)
+            #                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
+            #                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
+            #            #}
             elif cut == 'MatchedFlash':#{
                 reduced[pair_type] = sam[(sam['Nflashes']>0)
                              &(sam['MatchedFlash_TotalPE'] > minPEcut)

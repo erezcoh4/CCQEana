@@ -109,6 +109,22 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 
 
 # ----------------------------------------------------------
+# Oct-04, 2018
+def save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off):
+    overlay_prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_'
+    data_prefix = Paths['selected events'] + versions['beam on'] + '_' + versions['data date'] + '_'
+    for sam,name,prefix in zip([selected_overlay_concat,selected_CC1p,selected_beam_on,selected_beam_off]
+                               ,['overlay','CC1p','beam_on','beam_off']
+                               ,[overlay_prefix,overlay_prefix,data_prefix,data_prefix]):#{
+        outcsvname = prefix+'selected_'+name+'.csv'
+        sam.to_csv(outcsvname)
+        print 'saved ',len(sam),'selected '+name+' events to',outcsvname
+    #}
+# ----------------------------------------------------------
+
+
+
+# ----------------------------------------------------------
 # Oct-03, 2018
 def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_theta=True, do_phi=True, do_print_Xsec=False,
               remove_last_cos_theta_mu_bin=False,
@@ -141,8 +157,6 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
                                             'mc Xsec: %.2f+/-%.2f'%(Xsec_dict['mc Xsec'],Xsec_dict['mc Xsec err']))
         #}
         if debug>1:  pp.pprint(h)
-        Xsec_dict[observable+' beam on'] = h['Xsec beam on']
-        Xsec_dict[observable+' beam on err'] = h['Xsec beam on err']
         Xsec_dict[observable] = h['Xsec']
         Xsec_dict[observable+' err'] = h['Xsec err']
         Xsec_dict['mc '+observable] = h['mc Xsec']
@@ -154,18 +168,20 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
 
 
 # ----------------------------------------------------------
-# Oct-03, 2018
+# Oct-03, 2018 (last edit Oct-04)
 # computation of 1D cross-section based on weighted distirubtions
 def get_Xsec_1d(beam_on=None,beam_off=None,overlay=None,CC1p=None,
                 var='reco_Pmu_mcs',bins=Bins['Pmu'],bin_width=None,wname='Pmu weight',
                 mul=1,
-                do_corr_phi_0=False):#{
+                do_corr_phi_0=False,
+                debug=0):#{
     h=dict()
     for sam,slabel in zip([beam_on,beam_off,overlay,CC1p]
                           ,['beam on','beam off','overlay','CC1p']):#{
         h[slabel],h[slabel+' err']=np.zeros(len(bins)-1),np.zeros(len(bins)-1)
         for i in range(len(bins)-1):#{
             sam_in_bin = sam[(bins[i]<=mul*sam[var])& (mul*sam[var]<bins[i+1])]
+            if debug>1: print "len(sam in bins[%d"%i+"]):",len(sam_in_bin)
             h[slabel][i] = np.sum(sam_in_bin[wname])
             if do_corr_phi_0:#{
                 h[slabel][i] = np.sum(sam_in_bin[wname]*sam_in_bin['W(corr. phi~0)'])

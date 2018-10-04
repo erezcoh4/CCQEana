@@ -35,6 +35,8 @@ print "f(POT):",Nevents['f(POT)'],"= N(POT on beam)/N(POT MC)"
 
 
 
+
+
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
 # written April-29, 2018
 def OnBeam_OffBeam( OnBeamSample=None , OffBeamSample=None , debug=0
@@ -88,7 +90,7 @@ def OnBeam_OffBeam( OnBeamSample=None , OffBeamSample=None , debug=0
 
 # ------------------------------------------------
 # April-29, 2018
-def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{1,2}$ [deg.]',bins=linspace(0,180,31)
+def plot_OnOff_nocut_finalcut(var='theta_12',x_label= r'$\theta_{12}$ [deg.]',bins=linspace(0,180,31)
                               ,scaling_name='only POT'
                               ,color ='black',x_ticks=None
                               ,figsize=(24,8)
@@ -814,12 +816,12 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Sep-23, 2018
+# Sep-23, 2018 (last edit Oct-04)
 def chi2_two_data_curves( bins=None, chi2_xrange=None
-                        , h1=None , h2=None
-                        , h1err=None, h2err=None
+                         , h1=None , h2=None
+                         , h1err=None, h2err=None
                          , cutoff=1.e-8
-                        , debug=0):
+                         , debug=0):
     '''
         compare the two histograms using a chi2 test.
         return: chi2, ndf
@@ -833,7 +835,7 @@ def chi2_two_data_curves( bins=None, chi2_xrange=None
         chi2 += chi2_bin
         ndf += 1
         if debug:
-            print 'comparing in bin:',bins[i_bin],'h1: %f+/-%f,'%(h1[i_bin],h1err[i_bin]),'h2: %f+/-%f'%(h2[i_bin],h2err[i_bin])
+            print 'comparing in bin %d'%i_bin,' at',bins[i_bin],'h1: %f+/-%f,'%(h1[i_bin],h1err[i_bin]),'h2: %f+/-%f'%(h2[i_bin],h2err[i_bin])
             print 'num = %f'%num, 'den = %f'%den
             print 'chi2 this bin: num/den = %f'%chi2_bin
             print 'chi2 : %.1f'%chi2_bin
