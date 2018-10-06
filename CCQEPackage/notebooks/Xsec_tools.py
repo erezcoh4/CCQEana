@@ -8,7 +8,7 @@ from mupClassification_notebooks import *
 from onbeam_offbeam_notebooks import *
 
 from mpl_toolkits.mplot3d import Axes3D
-
+import cPickle as pickle
 
 '''
     Setup for CCQE-like cross-section extraction
@@ -110,13 +110,13 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 
 # ----------------------------------------------------------
 # Oct-04, 2018
-def save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off):
-    overlay_prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_'
-    data_prefix = Paths['selected events'] + versions['beam on'] + '_' + versions['data date'] + '_'
+def save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off,extra_name=''):
+    overlay_prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_' + extra_name
+    data_prefix = Paths['selected events'] + versions['beam on'] + '_' + versions['data date'] + '_' + extra_name
     for sam,name,prefix in zip([selected_overlay_concat,selected_CC1p,selected_beam_on,selected_beam_off]
                                ,['overlay','CC1p','beam_on','beam_off']
                                ,[overlay_prefix,overlay_prefix,data_prefix,data_prefix]):#{
-        outcsvname = prefix+'selected_'+name+'.csv'
+        outcsvname = prefix+'selected_'+name+extra_name+'.csv'
         sam.to_csv(outcsvname)
         print 'saved ',len(sam),'selected '+name+' events to',outcsvname
     #}
@@ -131,9 +131,8 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
               selected_beam_on=None,selected_beam_off=None,selected_overlay_concat=None,selected_CC1p=None,
               extra_wname=""):#{
     Xsec_dict = dict()
-    for i,(observable,true,ivar,do_var) in enumerate(zip(['P'+particle,'cos(theta('+particle+'))','phi('+particle+')']
+    for i,(observable,true,do_var) in enumerate(zip(['P'+particle,'cos(theta('+particle+'))','phi('+particle+')']
                                                              ,['truth_P'+particle,'truth_P'+particle+'_cos_theta','truth_P'+particle+'_phi']
-                                                             ,[(1,4),(2,5),(3,6)]
                                                              ,[do_P,do_cos_theta,do_phi])):#{
         if do_var==False: continue
         var,bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
@@ -146,7 +145,7 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
             CC1p = CC1p[CC1p['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
         #}
         h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p
-                        ,var=var,bins=Bins[observable],bin_width=bin_width,wname='P'+particle+' weight'+extra_wname,mul=mul
+                        ,var=var,bins=bins,bin_width=bin_width,wname='P'+particle+' weight'+extra_wname,mul=mul
                         ,do_corr_phi_0=do_corr_phi_0)
         if i==0:#{
             Xsec_dict['integrated Xsec'] = np.sum(h['Xsec']*bin_width)
@@ -991,23 +990,22 @@ def load_mc_and_data(extra_name=''
                      ,Chi2Proton_pCandidate_max = 30):#{
     # ----------------------------------------------------------
     ## (1) MC
-    prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_' + extra_name
-    selected_cosmic_filename = 'selected_cosmic.csv'
+    overlay_prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_' + extra_name
     selected_overlay=dict()
     
     cuts_order  = ['no cut','Chi2Proton','Nflashes','MatchedFlash','length'
                    ,'non-collinearity','vertex activity'
                    ,'delta phi','Pt & delta phi']
         
-    if os.path.isfile(prefix+selected_cosmic_filename):#{
-        print 'found '+selected_cosmic_filename+', loading it...'
+    if os.path.isfile( overlay_prefix + 'selected_CC1p.csv'):#{
+        print 'found selected overlay files from '+extra_name+', loading them...'
         for pair_type in pair_types:#{
-            selected_overlay[pair_type]=pd.read_csv(prefix+'selected_'+pair_type+'.csv')
+            selected_overlay[pair_type]=pd.read_csv(overlay_prefix+'selected_'+pair_type+'.csv')
         #}
-        selected_overlay_concat = pd.read_csv(prefix+'selected_overlay.csv')
+        selected_overlay_concat = pd.read_csv(overlay_prefix+'selected_overlay.csv')
     #}
     else:#{
-        print 'did not find '+selected_cosmic_filename+', so creating it...'
+        print 'did not find selected overlay files from '+extra_name+', so creating it...'
         OverlaySamples = load_samples(date=versions['overlay date'],filename=versions['Overlay']+'_'+versions['overlay date']+'_vertices')
         reducedOverlay,pureffOverlay,pureffNumbers = apply_cuts_to_overlay(OverlaySamples=OverlaySamples, cuts_order=cuts_order
                                                                            ,minPEcut = minPEcut
@@ -1021,10 +1019,15 @@ def load_mc_and_data(extra_name=''
         print 'applied cuts to overlay'
         for pair_type in pair_types:#{
             selected_overlay[pair_type] = sample_in_limits(sam=reducedOverlay['Pt & delta phi'][pair_type])
-            outcsvname = prefix+'selected_'+pair_type+'.csv'
+            outcsvname = overlay_prefix+'selected_'+pair_type+'.csv'
             selected_overlay[pair_type].to_csv(outcsvname)
             print 'saved selected',pair_type,'to',outcsvname
         #}
+        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
+        print len(selected_overlay_concat),'events in the overlay'
+        outcsvname = overlay_prefix+'selected_overlay.csv'
+        selected_overlay_concat.to_csv(outcsvname)
+        print 'saved selected overlay to',outcsvname
         # overlay scaling
         summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/'
                               +versions['overlay date']+'/'
@@ -1034,22 +1037,19 @@ def load_mc_and_data(extra_name=''
         Nevents['overlay POT']  = np.sum(summary.POT)
         Nevents['f(POT)']       = Nevents['OnBeam POT']/Nevents['overlay POT']
         print "Nevents['f(POT)']:",Nevents['f(POT)']
-        selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
-        print len(selected_overlay_concat),'events in the overlay'
-        outcsvname = prefix+'selected_overlay.csv'
-        selected_overlay_concat.to_csv(outcsvname)
-        print 'saved selected overlay to',outcsvname
     #}
+    selected_CC1p = selected_overlay['CC1p']
+    print len(selected_CC1p),'selected CC1p events overlay'
     # ----------------------------------------------------------
     ## (2) DATA
     data_prefix = Paths['selected events'] + versions['beam on'] + '_' + versions['data date'] + '_' + extra_name
     if os.path.isfile(data_prefix+'selected_beam_on.csv'):#{
-        print 'checked',data_prefix+'selected_on_beam.csv and found the file...'
+        print 'found selected on beam events...'
         selected_beam_on = pd.read_csv(data_prefix+'selected_beam_on.csv')
         selected_beam_off = pd.read_csv(data_prefix+'selected_beam_off.csv')
     #}
     else:#{
-        print 'checked',data_prefix+'selected_on_beam.csv and there was no file there...'
+        print 'found selected on beam events and there was no file there...'
         OnBeam = pd.read_csv(vertices_files_path+'/'+versions['data date']+'/'+versions['beam on']+'_'+versions['data date']+'_vertices.csv')
         print 'loaded beam-on'
         OffBeam = pd.read_csv(vertices_files_path+'/'+versions['data date']+'/'+versions['beam off']+'_'+versions['data date']+'_vertices.csv')
@@ -1076,9 +1076,9 @@ def load_mc_and_data(extra_name=''
     #}
     # ----------------------------------------------------------
     ## (3) GENIE
-    if os.path.isfile(prefix + 'selected_genie_CC1p.csv'):#{
-        print 'checked',prefix+'selected_genie_CC1p.csv and found the file...'
-        genie_CC1p = pd.read_csv(prefix+'selected_genie_CC1p.csv')
+    if os.path.isfile(overlay_prefix + 'selected_genie_CC1p.csv'):#{
+        print 'found selected genie CC1p...'
+        genie_CC1p = pd.read_csv(overlay_prefix+'selected_genie_CC1p.csv')
     #}
     else:#{
         overlay_genie = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/genie/'
@@ -1096,13 +1096,11 @@ def load_mc_and_data(extra_name=''
                                                 ,varPmu='truth_Pmu',varPmu_cos_theta='truth_Pmu_cos_theta'
                                                 ,varPp='truth_Pp',varPp_cos_theta='truth_Pp_cos_theta'
                                                 )
-        genie_CC1p = overlay_genie_CC1p_in_limits        
-        outcsvname = prefix+'selected_genie_CC1p.csv'
+        genie_CC1p = overlay_genie_CC1p_in_limits
+        outcsvname = overlay_prefix+'selected_genie_CC1p.csv'
         genie_CC1p.to_csv(outcsvname)
         print 'saved %d'%len(genie_CC1p),'CC1p events in genie_CC1p to',outcsvname
     #}
-    selected_CC1p = selected_overlay['CC1p']
-    print len(selected_CC1p),'selected CC1p events overlay'
     return selected_overlay,selected_overlay_concat,selected_CC1p,genie_CC1p,selected_beam_on,selected_beam_off
 #}
 # ----------------------------------------------------------
