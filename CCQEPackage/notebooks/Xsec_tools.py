@@ -28,7 +28,7 @@ import cPickle as pickle
     '''
 flux = 3.601e10 # cm^-2
 flux_err = 0
-Ntargets = 1.25e31
+Ntargets = 1.1782e30
 Ntargets_err = 0
 # kinematical cuts
 delta_theta_12=55  # deg.
@@ -65,7 +65,6 @@ N1,N2,N3 = len(bins1)-1,len(bins2)-1,len(bins3)-1
 Centers = dict()
 for key in Limits.keys(): Centers[key] = 0.5*(Bins[key][1:] + Bins[key][:-1])
 
-
 vlabels = dict({
                'Pmu':r"p_{\mu}"
                ,'theta(mu)':r"\theta_{\mu}"
@@ -76,10 +75,8 @@ vlabels = dict({
                ,'cos(theta(p))':r"\cos(\theta_{p})"
                ,'phi(p)':r"\phi_{p}"
                })
-
 Vlabels = dict()
 for key in vlabels.keys(): Vlabels[key] = r"$"+vlabels[key]+"$"
-
 Units = dict({
              'Pmu':r"GeV/c"
              ,'theta(mu)':r"deg."
@@ -90,13 +87,7 @@ Units = dict({
              ,'cos(theta(p))':None
              ,'phi(p)':r"deg."
              })
-
-Colors = dict({
-              'overlay':'forestgreen'
-              ,'CC1p':'blue'
-              ,'beam off':'black'
-              ,'beam on':'tomato'
-              })
+Colors = dict({'overlay':'forestgreen','CC1p':'blue','beam off':'black','beam on':'tomato'})
 
 Xsec_path = '/Users/erezcohen/Desktop/uBoone/CCQEanalysis/Xsec/'
 Paths = dict({'selected events':Xsec_path+'selected_events/'
@@ -106,8 +97,164 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
              ,'1d Xsec':Xsec_path+'1d_Xsec/'
              ,'systematics':Xsec_path+'systematics/'})
 
+Xsec_ctu_titles = [r'excluding the last $\cos\theta_\mu$ bin',r'with the last $\cos\theta_\mu$ bin']
+Xsec_fnames     = [r'without_last_ctu_bin',r'with_last_ctu_bin']
+remove_ctu_bools= [True,False]
 
 
+# ----------------------------------------------------------
+# Oct-08, 2018
+def get_phi_Xsecs(do_corr_phi_0=False, debug=0,
+                  selected_beam_on=None,selected_beam_off=None,selected_overlay_concat=None,selected_CC1p=None):#{
+    Xsec_dict = dict()
+    for particle in ['mu','p']:#{
+        observable='phi('+particle+')'
+        var,bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
+        h = get_Xsec_1d(selected_beam_on,selected_beam_off,selected_overlay_concat,selected_CC1p
+                        ,var=var,bins=bins,bin_width=bin_width
+                        ,wname='P'+particle+' weight',mul=180./np.pi
+                        ,do_corr_phi_0=do_corr_phi_0)
+        Xsec_dict[observable] = h['Xsec']
+        Xsec_dict[observable+' err'] = h['Xsec err']
+        Xsec_dict['mc '+observable] = h['mc Xsec']
+        Xsec_dict['mc '+observable+' err'] = h['mc Xsec err']
+    #}
+    return Xsec_dict
+#}
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# Oct-08, 2018
+def extract_Xsecs(do_corr_phi_0=True, debug=0, particle='mu',
+                  selected_beam_on=None,selected_beam_off=None,
+                  selected_overlay_concat=None,selected_CC1p=None,
+                  extra_name=""):#{
+    Xsec_dicts = dict()
+    for iXsec,(Xsec_title,remove_ctu_bin) in enumerate(zip(Xsec_ctu_titles,remove_ctu_bools)):#{
+        Xsec_dict = get_Xsecs(do_corr_phi_0=do_corr_phi_0, debug=debug, particle=particle,
+                              remove_last_cos_theta_mu_bin=remove_ctu_bin,
+                              do_P=True, do_cos_theta=True, do_phi=True,
+                              selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,
+                              selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+        Xsec_dicts[Xsec_title] = Xsec_dict
+    #}
+    if debug: pp.pprint(Xsec_dicts)
+    outfilename = Paths['1d Xsec'] + "P"+particle + "Xsecs_1D"+extra_name+".txt"
+    with open(outfilename, 'w') as outfile:#{
+        outfile.write(pickle.dumps(Xsec_dicts))
+    #}
+    print 'saved cross-sections into',outfilename
+#}
+# ----------------------------------------------------------
+
+# ----------------------------------------------------------
+# Oct-08, 2018
+def get_Xsec_variable(debug=0,
+                      var='reco_Pt',mul=1,bins=linspace(0,1,5),
+                      wname='Pmu weight',
+                      do_corr_phi_0=True, remove_ctu_bin=True,
+                      selected_beam_on=None,selected_beam_off=None,
+                      selected_overlay_concat=None,selected_CC1p=None):#{
+    
+    Xsec_dict = dict()
+    beam_on, beam_off, overlay, CC1p = selected_beam_on,selected_beam_off,selected_overlay_concat,selected_CC1p
+    if remove_ctu_bin:#{
+        beam_on = beam_on[beam_on['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+        beam_off = beam_off[beam_off['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+        overlay = overlay[overlay['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+        CC1p = CC1p[CC1p['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
+    #}
+    h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p
+                    ,var=var,bins=bins,bin_width=bins[1]-bins[0]
+                    ,wname=wname,mul=mul
+                    ,do_corr_phi_0=do_corr_phi_0,debug=debug)
+    if debug>1:  pp.pprint(h)
+    Xsec_dict[var] = h['Xsec']
+    Xsec_dict[var+' err'] = h['Xsec err']
+    Xsec_dict['mc '+var] = h['mc Xsec']
+    Xsec_dict['mc '+var+' err'] = h['mc Xsec err']
+    #}
+    return Xsec_dict
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# Oct-08, 2018
+def draw_Xsec_variable(debug=0,
+                       var='reco_Pt',mul=1,bins=linspace(0,1,5),vlabel='p_T',units=None,legend_loc='best',
+                       wname='Pmu weight',
+                       do_corr_phi_0=True,
+                       selected_beam_on=None,selected_beam_off=None,
+                       selected_overlay_concat=None,selected_CC1p=None,
+                       filename=None,extra_name='',
+                       residuals_ylim=[-1,1],residuals_yticks=[-0.5,0,0.5],residuals_ytitle=1.05,residuals_xtitle='center',figures_path='~/Desktop/'):#{
+    Xsec_dicts = dict()
+    for Xsec_ctu_title,remove_ctu_bin in zip(Xsec_ctu_titles,remove_ctu_bools):
+        Xsec_dicts[Xsec_ctu_title] = get_Xsec_variable(debug=debug,
+                                                       var=var,mul=mul,bins=bins,
+                                                       wname=wname,
+                                                       do_corr_phi_0=do_corr_phi_0,
+                                                       remove_ctu_bin=remove_ctu_bin,
+                                                       selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,
+                                                       selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+
+    fig=plt.figure(figsize=(20,8))
+    mid = 0.5*(bins[1:]+bins[:-1]); bin_width=mid[1]-mid[0]
+    for iXsec,(Xsec_ctu_title,iax) in enumerate(zip(Xsec_ctu_titles,[(1,3),(2,4)])):
+        Xsec_dict = Xsec_dicts[Xsec_ctu_title]
+        h = dict()
+        ax = fig.add_subplot(3,2,iax)
+        h['Xsec'],h['Xsec err'] = Xsec_dict[var],Xsec_dict[var+' err']
+        plt.errorbar(x=mid,xerr=0.5*bin_width,y=h['Xsec'],yerr=h['Xsec err'],color=Colors['beam on'],fmt='o',label='data')
+        h['mc Xsec'],h['mc Xsec err'] = Xsec_dict['mc '+var], Xsec_dict['mc '+var+' err']
+        ax.bar( x=mid , height=2*h['mc Xsec err'], bottom=h['mc Xsec']-h['mc Xsec err'], width=bin_width, color=Colors['CC1p'],label='overlay')
+        set_axes(ax,x_label='',y_label=get_Xsec_label(vlabel,units)
+                 ,do_add_grid=True,remove_ticks_x=True,do_add_legend=True if iXsec==1 else False, legend_loc=legend_loc
+                 ,ylim=(0,1.1*np.max(ax.get_ylim())),title=Xsec_ctu_title)
+        # residuals plot
+        den, den_err = h['Xsec']-h['mc Xsec'],np.sqrt(np.square(h['Xsec err'])+np.square(h['mc Xsec err']))
+        num, num_err = h['Xsec'],h['mc Xsec err']
+        ratio = den/num
+        ax = fig.add_subplot(3,2,5+iXsec)
+        ratio_err = ratio*np.sqrt(np.square(den_err/den) + np.square(num_err/num))
+        plt.errorbar(x=mid,xerr=0.5*bin_width,y=ratio,yerr=ratio_err,fmt='o',markersize=0,color='black')
+        chi2,ndf = chi2_two_data_curves(h1=h['Xsec'],h1err=h['Xsec err'],h2=h['mc Xsec'],h2err=h['mc Xsec err'],bins=bins,debug=debug)
+        if units is None: x_label = '$'+vlabel+'$'
+        elif '^' in units or '_' in units: x_label = '$'+vlabel+'$' + r' $%s$'%units
+        else: x_label = '$'+vlabel+'$' + r' [%s]'%units
+        set_axes(ax,x_label=x_label
+                 ,y_label=r'(data-MC)/data',do_add_grid=True
+                 ,ylim=residuals_ylim,yticks=residuals_yticks)
+        plt.plot([np.min(bins),np.max(bins)],[0,0],'--',color='royalblue')
+        plt.title(r'$\chi^2/ndf=%.2f/%d$'%(chi2,ndf), fontsize=20,y=residuals_ytitle,loc=residuals_xtitle)
+    plt.tight_layout(h_pad=0.0)
+    plt.subplots_adjust(hspace=0.05)
+    if filename is not None: outfilename = figures_path + filename + '.pdf'
+    else: outfilename = figures_path + var + '_Xsec'+extra_name+'.pdf'
+    save_figure(outfilename)
+    return ax
+#}
+# ----------------------------------------------------------
+
+# ----------------------------------------------------------
+# Oct-08, 2018
+def get_Xsec_label(vlabel=None,units=None,power_factor=38):
+    factor_str = r'10^{- %d}'%power_factor
+
+    if vlabel is None:
+        return r'$\times '+factor_str+' \mathrm{cm}^{2}$'
+
+    prefix = r'$\frac{d\sigma}{d'+vlabel+'}$ '
+    
+    if units is not None:
+        suffix = r'$\left['+factor_str+r' \frac{\mathrm{cm}^{2}}{%s} \right]$'%units
+    else:
+        suffix = r'$\left['+factor_str+r' \mathrm{cm}^{2}\right]$'
+
+    return  prefix + suffix
+#}
+# ----------------------------------------------------------
 
 # ----------------------------------------------------------
 # Oct-04, 2018
@@ -120,7 +267,7 @@ def save_selected_samples(selected_overlay_concat , selected_CC1p , selected_bea
         outcsvname = prefix+'selected_'+name+extra_name+'.csv'
         sam.to_csv(outcsvname)
         print 'saved ',len(sam),'selected '+name+' events to',outcsvname
-    #}
+#}
 # ----------------------------------------------------------
 
 
@@ -238,7 +385,7 @@ def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),
             afro_genie_CC1p = afro_genie_dict[gname]
             afro_Xsec,afro_Xsec_err = compute_Xsec(Non=len(afro_genie_CC1p), Non_err=np.sqrt(len(afro_genie_CC1p)))
             afro_Xsec,afro_Xsec_err = afro_Xsec*4.908e19/4.9e20,afro_Xsec_err*4.908e19/4.9e20
-            print gname,'afro genie Xsec: %.2f +/- %.2f'%(afro_Xsec,afro_Xsec_err),'e-39 cm2'
+            print gname,'afro genie Xsec: %.2f +/- %.2f'%(afro_Xsec,afro_Xsec_err),'e-38 cm2'
     #}
     fig=plt.figure(figsize=(28,8))
     observable = ob_1
@@ -274,7 +421,7 @@ def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),
                 genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
             mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
     set_axes(ax,xlabel
-             ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$' +r'$\left[10^{-39} \frac{cm^{2}}{(%s)}\right]$'%units)
+             ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$' +r'$\left[10^{-38} \frac{cm^{2}}{(%s)}\right]$'%units)
              ,ylim=ylim_P)
     #-------------------------------
     observable = ob_2
@@ -310,7 +457,7 @@ def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),
                 genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
             mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
     set_axes(ax,xlabel
-                     ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'[$10^{-39}$ cm$^{2}$]'),ylim=ylim_cos_theta)
+                     ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'[$10^{-38}$ cm$^{2}$]'),ylim=ylim_cos_theta)
     # #-------------------------------
     observable = ob_3
     bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
@@ -346,7 +493,7 @@ def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),
                 genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
                 mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
     set_axes(ax,xlabel
-         ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'$\left[10^{-39} \frac{cm^{2}}{(%s)}\right]$'%units)
+         ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'$\left[10^{-38} \frac{cm^{2}}{(%s)}\right]$'%units)
          ,do_add_legend=False,ylim=ylim_phi)
     plt.tight_layout()
     print 'done.'
@@ -381,6 +528,7 @@ def compute_eff_weights(beam_on=None,beam_off=None
                         ,bins_cos_theta_p = None
                         # different options for systematical studies
                         ,option=""
+                        ,power_factor=38
                         ):
     # for different binning...
     if do_different_binning:#{
@@ -446,8 +594,9 @@ def compute_eff_weights(beam_on=None,beam_off=None
                 # efficiency weight assigned to the event
                 w,werr=0,0
                 if eff>eff_cutoff:#{
-                    w = 1.e39/(eff*flux*Ntargets)
-                    werr = 1.e39*eff_err/(eff*eff*flux*Ntargets)
+                    power = np.power(10,power_factor)
+                    w = power/(eff*flux*Ntargets)
+                    werr = power*eff_err/(eff*eff*flux*Ntargets)
                 #}
                 if debug:#{
                     print 'phi_min,phi_max:',phi_min,phi_max
@@ -498,9 +647,9 @@ def get_integrated_Xsec(h,bins1,bins2,bins3,N1,N2,N3):
                 mc_Xsec_integrated_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi]*bin_width)
 
     Xsec_integrated_err = np.sqrt(Xsec_integrated_err_sq_sum)
-    print 'Xsec_integrated: %.2f +/- %.2f'%(Xsec_integrated,Xsec_integrated_err),'e-39 cm2'
+    print 'Xsec_integrated: %.2f +/- %.2f'%(Xsec_integrated,Xsec_integrated_err),'e-38 cm2'
     mc_Xsec_integrated_err = np.sqrt(mc_Xsec_integrated_err_sq_sum)
-    print 'mc_Xsec_integrated: %.2f +/- %.2f'%(mc_Xsec_integrated,mc_Xsec_integrated_err),'e-39 cm2'
+    print 'mc_Xsec_integrated: %.2f +/- %.2f'%(mc_Xsec_integrated,mc_Xsec_integrated_err),'e-38 cm2'
     return Xsec_integrated,Xsec_integrated_err,mc_Xsec_integrated,mc_Xsec_integrated_err
 # ----------------------------------------------------------
 
@@ -567,8 +716,8 @@ def compute_Xsec(Non=1, Noff=0, B=0, eff=1, bin_width=1,
         
         return:
         ------
-        Xsec        cross-section in units of (10^-39) cm2 / bin_units
-        Xsec_err    cross-section uncertainty in units of (10^-39) cm2 / bin_units
+        Xsec        cross-section in units of (10^-38) cm2 / bin_units
+        Xsec_err    cross-section uncertainty in units of (10^-38) cm2 / bin_units
         '''
     
     if eff<eff_cutoff:  return 0,0
@@ -582,7 +731,7 @@ def compute_Xsec(Non=1, Noff=0, B=0, eff=1, bin_width=1,
     den_err = den * np.sqrt( np.square(eff_err/eff) + np.square(Ntargets_err/Ntargets) + np.square(flux_err/flux) )
     Xsec_err = Xsec * np.max( [0 , np.sqrt(  (np.square(num_err/num) if num>0 else 0) + (np.square(den_err/den) if den>0 else 0) ) ] )
     
-    return Xsec*1e39, Xsec_err*1e39
+    return Xsec*1e38, Xsec_err*1e38
 # ----------------------------------------------------------
 
 
@@ -708,7 +857,7 @@ def Xsec_diff_1d(observable='Pmu',recovar='reco_Pmu_mcs',smearedvar='',ax=None
                            +np.square(h['N-B']*herr['eff']/(h['eff']*h['eff']*Ntargets*flux*bin_width))
                            +np.square(h['N-B']*Ntargets_err/(h['eff']*Ntargets*Ntargets*flux*bin_width))
                            +np.square(h['N-B']*flux_err/(h['eff']*Ntargets*flux*flux*bin_width)))
-    h['Xsec'],herr['Xsec'] = h['Xsec']*1e39,herr['Xsec']*1e39
+    h['Xsec'],herr['Xsec'] = h['Xsec']*1e38,herr['Xsec']*1e38
                            
 
     h['mc'] = h['mc']/(h['eff']*Ntargets*flux*bin_width)
@@ -717,7 +866,7 @@ def Xsec_diff_1d(observable='Pmu',recovar='reco_Pmu_mcs',smearedvar='',ax=None
                                                 +np.square(h['mc']*herr['eff']/(h['eff']*h['eff']*Ntargets*flux*bin_width))
                                                 +np.square(h['mc']*Ntargets_err/(h['eff']*Ntargets*Ntargets*flux*bin_width))
                                                 +np.square(h['mc']*flux_err/(h['eff']*Ntargets*flux*flux*bin_width)))
-    h['mc'],herr['mc'] = h['mc']*1e39*mc_scale_factor,herr['mc']*1e39*mc_scale_factor
+    h['mc'],herr['mc'] = h['mc']*1e38*mc_scale_factor,herr['mc']*1e38*mc_scale_factor
     
     # draw the cross-section
     if ax is None:#{
@@ -728,7 +877,7 @@ def Xsec_diff_1d(observable='Pmu',recovar='reco_Pmu_mcs',smearedvar='',ax=None
                     , color=Colors['beam on'], capsize=1, capthick=3, label='data')
     set_axes(ax,xlabel
              ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'
-                       +r' $\left[\times 10^{-39}\right]$ '
+                       +r' $\left[\times 10^{-38}\right]$ '
                        +(r'$\left[\frac{cm^{2}}{(%s)}\right]$'%units
                          if units is not None
                          else r'[cm$^{2}$]'))
