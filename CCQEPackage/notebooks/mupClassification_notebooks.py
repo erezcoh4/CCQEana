@@ -198,17 +198,14 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'$N_{cosmic}$':Noverlay['cosmic']
                                           ,r'$N_{other-pairs}$':Noverlay['other-pairs']
                                           ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
-                                          #                                          ,r'$N_{CC1p0pi}$':Noverlay['CC1p0pi']
                                           ,r'$N_{CC1p}$':Noverlay['CC1p']
 
                                           ,r'${\epsilon}_{cosmic}$ [%]':100
-                                          #                                          ,r'${\epsilon}_{CC1p0pi}$ [%]':100
                                           ,r'${\epsilon}_{CC1p}$ [%]':100
                                           ,r'${\epsilon}_{1mu-1p}$ [%]':100
                                           ,r'${\epsilon}_{other-pairs}$ [%]':100
                                            
                                           ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
-                                          #                                          ,r'${\mathcal{p}}_{CC1p0pi}$ [%]':100.*Noverlay['pur CC1p0pi']
                                           ,r'${\mathcal{p}}_{CC1p}$ [%]':100.*Noverlay['pur CC1p']
                                           
                                           # scaling and re-weighting
@@ -218,7 +215,6 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                           ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
                                           ,r'$N_{other-pairs scaled}$':Noverlay['other-pairs scaled']
                                           ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
-                                          #                                          ,r'$N_{CC1p0pi scaled}$':Noverlay['CC1p0pi scaled']
                                           ,r'$N_{CC1p scaled}$':Noverlay['CC1p scaled']
                                            },index=['preselection']))
                                           
@@ -229,33 +225,16 @@ def apply_cuts_to_overlay(OverlaySamples=None
         
         for pair_type in pair_types:#{
             sam = samples_previous_cut[pair_type]
-            if debug: print 'sam('+pair_type+'):',len(sam)
-                                    
-                                    
-            # deprecated: we replaced the cut on PIDa to a cut on chi2_proton
-            #            if cut == 'PIDa':#{
-            #                if do_PIDaCali:
-            #                    reduced[pair_type] = sam[sam['pidcali_PIDaYplane_pCandidate']>PIDa_p_min]
-            #                else:
-            #                    reduced[pair_type] = sam[sam['pid_PIDaYplane_pCandidate']>PIDa_p_min]
-            #            #}
-
-            elif cut == 'Chi2Proton': #{
+            if debug: print 'before cut',cut,'sam('+pair_type+'):',len(sam)
+            if cut == 'Chi2Proton': #{
                 reduced[pair_type] = sam[ (sam['pidcali_Chi2ProtonYplane_muCandidate']>Chi2Proton_muCandidate_min)
-                             &(sam['pidcali_Chi2ProtonYplane_muCandidate']<Chi2Proton_muCandidate_max)
-                             &(sam['pidcali_Chi2ProtonYplane_pCandidate']>Chi2Proton_pCandidate_min)
-                             &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
-        
+                                         &(sam['pidcali_Chi2ProtonYplane_muCandidate']<Chi2Proton_muCandidate_max)
+                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']>Chi2Proton_pCandidate_min)
+                                         &(sam['pidcali_Chi2ProtonYplane_pCandidate']<Chi2Proton_pCandidate_max)]
             #}
             elif cut == 'Nflashes':#{
                 reduced[pair_type] = sam[(sam['Nflashes']>0)]
             #}
-            # deprecated: we replaced the cut on ClosestFlash to a cut on MatchedFlash
-            #            elif cut == 'ClosestFlash':#{
-            #                reduced[pair_type] = sam[(sam['Nflashes']>0)
-            #                                         &(sam['ClosestFlash_TotalPE'] > minPEcut)
-            #                                         &(sam['ClosestFlash_YZdistance'] < maxdYZcut)]
-            #            #}
             elif cut == 'MatchedFlash':#{
                 reduced[pair_type] = sam[(sam['Nflashes']>0)
                              &(sam['MatchedFlash_TotalPE'] > minPEcut)
@@ -265,7 +244,6 @@ def apply_cuts_to_overlay(OverlaySamples=None
             elif cut == 'length':#{
                 reduced[pair_type] = sam[sam['l_muCandidate'] > sam['l_pCandidate']]
             #}
-
             elif cut == 'non-collinearity':#{
                 reduced[pair_type] = sam[np.abs(sam['theta_12']-90)<delta_theta_12]
             #}
@@ -297,6 +275,9 @@ def apply_cuts_to_overlay(OverlaySamples=None
                 reduced[pair_type] = sam[(sam['reco_Pt_mcs']<0.15)
                                          &(np.abs(sam['delta_phi']-180.)<delta_Delta_phi)]
             #}
+            if debug:
+                print 'after ',cut,'cut, sam('+pair_type+'):',len(sam)
+                print 'reduced['+pair_type+']:',len(reduced[pair_type])
         #}
         reducedSamples[cut] = reduced
         pureffOverlay = get_pureff_cut(OverlaySamples=OverlaySamples,pureff=pureffOverlay,cut_name=cut
@@ -308,17 +289,14 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'$N_{cosmic}$':Noverlay['cosmic']
                                               ,r'$N_{other-pairs}$':Noverlay['other-pairs']
                                               ,r'$N_{1mu-1p}$':Noverlay['1mu-1p']
-                                              #                                              ,r'$N_{CC1p0pi}$':Noverlay['CC1p0pi']
                                               ,r'$N_{CC1p}$':Noverlay['CC1p']
 
                                               ,r'${\epsilon}_{cosmic}$ [%]':100*Noverlay['eff cosmic']
-                                              #                                              ,r'${\epsilon}_{CC1p0pi}$ [%]':100*Noverlay['eff CC1p0pi']
                                               ,r'${\epsilon}_{CC1p}$ [%]':100*Noverlay['eff CC1p']
                                               ,r'${\epsilon}_{1mu-1p}$ [%]':100*Noverlay['eff 1mu-1p']
                                               ,r'${\epsilon}_{other-pairs}$ [%]':100*Noverlay['eff other-pairs']
                                            
                                               ,r'${\mathcal{p}}_{1mu-1p}$ [%]':100.*Noverlay['pur 1mu-1p']
-                                              #                                              ,r'${\mathcal{p}}_{CC1p0pi}$ [%]':100.*Noverlay['pur CC1p0pi']
                                               ,r'${\mathcal{p}}_{CC1p}$ [%]':100.*Noverlay['pur CC1p']
 
                                               # scaling and re-weighting
@@ -328,12 +306,11 @@ def apply_cuts_to_overlay(OverlaySamples=None
                                               ,r'$N_{cosmic scaled}$':Noverlay['cosmic scaled']
                                               ,r'$N_{other-pairs scaled}$':Noverlay['other-pairs scaled']
                                               ,r'$N_{1mu-1p scaled}$':Noverlay['1mu-1p scaled']
-                                              #                                              ,r'$N_{CC1p0pi scaled}$':Noverlay['CC1p0pi scaled']
                                               ,r'$N_{CC1p scaled}$':Noverlay['CC1p scaled']
 
                                           },index=[cut]))
     #}
-    if debug>1: os.system('say "I have completed applying % cuts to the overlay samples, from %s to %s".'%(len(cuts_order),cuts_order[0],cuts_order[-1]))
+    if debug>2: os.system('say "I have completed applying % cuts to the overlay samples, from %s to %s".'%(len(cuts_order),cuts_order[0],cuts_order[-1]))
     return reducedSamples,pureffOverlay,numbers
 #}
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
@@ -380,15 +357,15 @@ def get_Noverlay(reducedSamples=None,cut_name=''
         else:  N['pur '+pair_type+' scaled'] = 0
     N['eff Overlay scaled'] = N['Overlay scaled']/N['Overlay original scaled']
 
-    if debug: print 'Noverlay in',cut_name,'\n',N
+    if debug>2: print 'Noverlay in',cut_name,'\n',N
     return N
 # ------------------------------------------------
 
 
 # ------------------------------------------------
-# July-24, 2018 (last edit Aug-16,2018)
-def load_samples(date='2018_04_28'
-                 ,filename='ecohen_physical_files_adi_prodgenie_bnb_nu_uboone_overlay_cosmic_data_100K_reco2_2018_02_17_vertices'
+# July-24, 2018 (last edit Oct-09, 2018)
+def load_samples(date='2018_09_22'
+                 ,filename='prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev'
                  ,only_in_FV=False):
     '''
         return:
@@ -403,7 +380,7 @@ def load_samples(date='2018_04_28'
         if only_in_FV: samples[pair_type] = pairsFV[pairsFV[pair_type]==True]
         else: samples[pair_type] = pairs[pairs[pair_type]==True]
         if 'CC1p' in pair_type: print_line()
-        print len(samples[pair_type]),'are '+pair_type+', %.1f'%(100.*float(len(samples[pair_type]))/len(pairsFV))+'%'
+        print len(samples[pair_type]),'are '+pair_type+', %.1f'%(100.*float(len(samples[pair_type]))/len(pairs))+'% of pairs'
     #}
     print "I finished loading overlay samples. We have in total %d pairs"%len(pairs)
     return samples

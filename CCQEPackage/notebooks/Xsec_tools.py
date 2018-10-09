@@ -6,7 +6,6 @@ import sys; sys.path.insert(0, '../..');
 from ccqe_notebook_tools import *
 from mupClassification_notebooks import *
 from onbeam_offbeam_notebooks import *
-
 from mpl_toolkits.mplot3d import Axes3D
 import cPickle as pickle
 
@@ -100,6 +99,81 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 Xsec_ctu_titles = [r'excluding the last $\cos\theta_\mu$ bin',r'with the last $\cos\theta_\mu$ bin']
 Xsec_fnames     = [r'without_last_ctu_bin',r'with_last_ctu_bin']
 remove_ctu_bools= [True,False]
+
+
+# ----------------------------------------------------------
+# Oct-09, 2018
+def extract_Xsec_full_chain(extra_name='',debug=0
+                            ,minPEcut = 150,maxdYZcut = 200
+                            ,delta_theta_12 = 55,r_max_RdQ_CC1p = 0.43
+                            ,delta_Delta_phi = 35,Pt_max =0.35
+                            ,Chi2Proton_muCandidate_min =80,Chi2Proton_pCandidate_max = 30,force_recalculated_weights=False):
+    samples = load_mc_and_data(extra_name=extra_name,debug=debug
+                               ,minPEcut = minPEcut,maxdYZcut = maxdYZcut
+                               ,delta_theta_12 = delta_theta_12,r_max_RdQ_CC1p = r_max_RdQ_CC1p
+                               ,delta_Delta_phi = delta_Delta_phi,Pt_max = Pt_max
+                               ,Chi2Proton_muCandidate_min = Chi2Proton_muCandidate_min,Chi2Proton_pCandidate_max = Chi2Proton_pCandidate_max)
+    selected_overlay,selected_overlay_concat,selected_CC1p,genie_CC1p,selected_beam_on,selected_beam_off = samples
+    print 'done loading samples...'
+    if (("Pmu weight" not in selected_beam_on.columns) or ("Pp weight" not in selected_beam_on.columns) or force_recalculated_weights):#{
+        print 'no Pmu weights, computing them'
+        compute_eff_weights(beam_on=selected_beam_on,beam_off=selected_beam_off,debug=debug,
+                                                           generated_CC1p=genie_CC1p,selected_CC1p=selected_CC1p,overlay=selected_overlay_concat,
+                                                           delta_theta_12=delta_theta_12,
+                                                           delta_Delta_phi=delta_Delta_phi,
+                                                           Pt_max=Pt_max)
+        compute_eff_weights(beam_on=selected_beam_on,beam_off=selected_beam_off,debug=debug,
+                                                               generated_CC1p=genie_CC1p,selected_CC1p=selected_CC1p,overlay=selected_overlay_concat,
+                                                               delta_theta_12=delta_theta_12,
+                                                               delta_Delta_phi=delta_Delta_phi,
+                                                               Pt_max=Pt_max,
+                                                               ob_1='Pp',ob_2='cos(theta(p))',ob_3='phi(p)',
+                                                               reco_1='reco_Pp',reco_2='reco_Pp_cos_theta',reco_3='reco_Pp_phi',
+                                                               true_1='truth_Pp',true_2='truth_Pp_cos_theta',true_3='truth_Pp_phi')
+        print 'done assiging Pmu weights and Pp weights and saving the files.'
+    #}
+    else: print 'Pmu weights and Pp weights already exist.'
+    # iterative process for correction around \phi~0
+    if ('W(corr. phi~0)' not in selected_beam_on.columns):#{
+        for sam in [selected_beam_on,selected_beam_off,selected_CC1p,selected_overlay_concat]: sam['W(corr. phi~0)'] = 1
+        Xsec_dict = get_phi_Xsecs( do_corr_phi_0=False , debug=debug ,
+                                  selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,
+                                  selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+        correction, correction_arrays = dict(),dict()
+        correction_arrays['mu'] = []; correction_arrays['p'] = []; correction['mu'] = correction['p'] = 1
+        current_correction = 100
+        while np.abs(current_correction-1)>0.0001:#{
+            for particle,var in zip(['mu','p'],['reco_Pmu_mcs_phi','reco_Pp_phi']):#{
+                Xsec,Xsec_err = Xsec_dict['phi('+particle+')'],Xsec_dict['phi('+particle+') err']
+                bins = Bins['phi('+particle+')']
+                N = len(bins)-1; n = N/2
+                Xsec_phi_0 = Xsec[n]
+                Xsec_phi_not_0 = np.concatenate([Xsec[:n-1],Xsec[n+1:]])
+                Xsec_err_phi_not_0 = np.concatenate([Xsec_err[:n-1],Xsec_err[n+1:]])
+                mean_phi_not_0 = np.average(Xsec_phi_not_0 , weights=1./np.square(Xsec_err_phi_not_0))
+                current_correction = mean_phi_not_0/Xsec_phi_0
+                correction[particle] = correction[particle]*current_correction
+                correction_arrays[particle].append( correction[particle] )
+                for sam in [selected_beam_on,selected_beam_off,selected_CC1p,selected_overlay_concat]:#{
+                    indices_phi_0 = sam.index[(bins[n] <= 180./np.pi*sam[var]) & (180./np.pi*sam[var] < bins[n+1])].tolist()
+                    sam.loc[indices_phi_0,'W(corr. phi~0)'] = sam.loc[indices_phi_0,'W(corr. phi~0)'] * current_correction
+                    Xsec_dict = get_phi_Xsecs( do_corr_phi_0=True , debug=debug ,
+                                              selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,
+                                              selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+                #}
+            #}
+        #}
+        for particle in ['mu','p']: print 'correction for phi('+particle+')~0:',correction_arrays[particle][-1]
+        save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off, extra_name=extra_name)
+        print 'done performing iterative correction for phi~0 and saved the samples...'    
+    else: print 'already performed correction for phi~0 and saved the samples...'
+    extract_Xsecs(debug=debug,extra_name=extra_name,particle='mu',
+              selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,                  
+              selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+    extract_Xsecs(debug=debug,extra_name=extra_name,particle='p',
+                  selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,                  
+                  selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+# ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
@@ -372,136 +446,6 @@ def get_Xsec_1d(beam_on=None,beam_off=None,overlay=None,CC1p=None,
 
 
 
-# ----------------------------------------------------------
-# Sep-14, 2018
-def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),ylim_phi=(0,0.1)
-             ,do_add_genie_models=True
-             ,ob_1='Pmu',ob_2='cos(theta(mu))',ob_3='phi(mu)'
-             ,true_1='truth_Pmu',true_2='truth_Pmu_cos_theta',true_3='truth_Pmu_phi'
-             ):#{
-    get_integrated_Xsec(h,bins1,bins2,bins3,N1,N2,N3);
-    if do_add_genie_models:#{
-        for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
-            afro_genie_CC1p = afro_genie_dict[gname]
-            afro_Xsec,afro_Xsec_err = compute_Xsec(Non=len(afro_genie_CC1p), Non_err=np.sqrt(len(afro_genie_CC1p)))
-            afro_Xsec,afro_Xsec_err = afro_Xsec*4.908e19/4.9e20,afro_Xsec_err*4.908e19/4.9e20
-            print gname,'afro genie Xsec: %.2f +/- %.2f'%(afro_Xsec,afro_Xsec_err),'e-38 cm2'
-    #}
-    fig=plt.figure(figsize=(28,8))
-    observable = ob_1
-    bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
-    Xsec_1d,Xsec_1d_err,mc_Xsec_1d,mc_Xsec_1d_err = np.zeros(N1),np.zeros(N1),np.zeros(N1),np.zeros(N1)
-    for i_P in range(N1):#{
-        Xsec_1d_err_sq_sum,mc_Xsec_1d_err_sq_sum = 0,0
-        for i_cos_theta in range(N2):#{
-            cos_theta_bin_width = bins2[i_cos_theta+1] - bins2[i_cos_theta]
-            for i_phi in range(N3):#{
-                phi_bin_width = bins3[i_phi+1] - bins3[i_phi]
-                Xsec_1d[i_P] += h['Xsec'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width
-                Xsec_1d_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width)
-                mc_Xsec_1d[i_P] += h['mc-Xsec'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width
-                mc_Xsec_1d_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width)
-            #}
-        #}
-        Xsec_1d_err[i_P] = np.sqrt(Xsec_1d_err_sq_sum)
-        mc_Xsec_1d_err[i_P] = np.sqrt(mc_Xsec_1d_err_sq_sum)
-    #}
-    ax = fig.add_subplot(1,3,1)
-    ax.bar( x=mid , height=2*mc_Xsec_1d_err, bottom=mc_Xsec_1d-mc_Xsec_1d_err, width=bin_width, color=Colors['CC1p'])
-    #     ax.bar( x=mid , height=2*genie_Xsec_err, bottom=genie_Xsec-genie_Xsec_err, width=bin_width, color='black')
-    ax.errorbar( x=mid , xerr=0.5*bin_width, y=Xsec_1d, yerr=Xsec_1d_err , fmt='o', markersize=10
-                , color=Colors['beam on'], capsize=1, capthick=3, label='data')
-    if do_add_genie_models:
-        for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
-            h_genie,_ = np.histogram(afro_genie_dict[gname][true_1],bins=bins)
-            h_genie_err = np.sqrt(h_genie)
-            h_genie,h_genie_err = h_genie*4.908e19/4.9e20, h_genie_err*4.908e19/4.9e20
-            genie_Xsec,genie_Xsec_err = np.zeros((len(bins)-1)), np.zeros((len(bins)-1))
-            for i in range(len(bins)-1):
-                genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
-            mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
-    set_axes(ax,xlabel
-             ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$' +r'$\left[10^{-38} \frac{cm^{2}}{(%s)}\right]$'%units)
-             ,ylim=ylim_P)
-    #-------------------------------
-    observable = ob_2
-    bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
-    Xsec_1d,Xsec_1d_err,mc_Xsec_1d,mc_Xsec_1d_err = np.zeros(N2),np.zeros(N2),np.zeros(N2),np.zeros(N2)
-    for i_cos_theta in range(N2):#{
-        Xsec_1d_err_sq_sum,mc_Xsec_1d_err_sq_sum = 0,0
-        for i_P in range(N1):#{
-            P_bin_width = bins1[i_P+1] - bins1[i_P]
-            for i_phi in range(N3):#{
-                phi_bin_width = bins3[i_phi+1] - bins3[i_phi]
-                Xsec_1d[i_cos_theta] += h['Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width
-                Xsec_1d_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width)
-                mc_Xsec_1d[i_cos_theta] += h['mc-Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width
-                mc_Xsec_1d_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width)
-            #}
-        #}
-        Xsec_1d_err[i_cos_theta] = np.sqrt(Xsec_1d_err_sq_sum)
-        mc_Xsec_1d_err[i_cos_theta] = np.sqrt(mc_Xsec_1d_err_sq_sum)
-    #}
-    ax = fig.add_subplot(1,3,2)
-    ax.bar( x=mid , height=2*mc_Xsec_1d_err, bottom=mc_Xsec_1d-mc_Xsec_1d_err, width=bin_width, color=Colors['CC1p'])
-    # ax.bar( x=mid , height=2*genie_Xsec_err, bottom=genie_Xsec-genie_Xsec_err, width=bin_width, color='black')
-    ax.errorbar( x=mid , xerr=0.5*bin_width, y=Xsec_1d, yerr=Xsec_1d_err , fmt='o', markersize=10
-                , color=Colors['beam on'], capsize=1, capthick=3, label='data')
-    if do_add_genie_models:
-        for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
-            h_genie,_ = np.histogram(afro_genie_dict[gname][true_2],bins=bins)
-            h_genie_err = np.sqrt(h_genie)
-            h_genie,h_genie_err = h_genie*4.908e19/4.9e20, h_genie_err*4.908e19/4.9e20
-            genie_Xsec,genie_Xsec_err = np.zeros((len(bins)-1)), np.zeros((len(bins)-1))
-            for i in range(len(bins)-1):
-                genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
-            mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
-    set_axes(ax,xlabel
-                     ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'[$10^{-38}$ cm$^{2}$]'),ylim=ylim_cos_theta)
-    # #-------------------------------
-    observable = ob_3
-    bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
-    
-    Xsec_1d,Xsec_1d_err,mc_Xsec_1d,mc_Xsec_1d_err = np.zeros(N3),np.zeros(N3),np.zeros(N3),np.zeros(N3)
-    for i_phi in range(N3):#{
-        Xsec_1d_err_sq_sum,mc_Xsec_1d_err_sq_sum = 0,0
-        for i_P in range(N1):#{
-            P_bin_width = bins1[i_P+1] - bins1[i_P]
-            for i_cos_theta in range(N2):#{
-                cos_theta_bin_width = bins2[i_cos_theta+1] - bins2[i_cos_theta]
-                Xsec_1d[i_phi] += h['Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width
-                Xsec_1d_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width)
-                mc_Xsec_1d[i_phi] += h['mc-Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width
-                mc_Xsec_1d_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width)
-            #}
-        #}
-        Xsec_1d_err[i_phi] = np.sqrt(Xsec_1d_err_sq_sum)
-        mc_Xsec_1d_err[i_phi] = np.sqrt(mc_Xsec_1d_err_sq_sum)
-    #}
-    ax = fig.add_subplot(1,3,3)
-    ax.bar( x=mid , height=2*mc_Xsec_1d_err, bottom=mc_Xsec_1d-mc_Xsec_1d_err, width=bin_width, color=Colors['CC1p'])
-    #ax.bar( x=mid , height=2*genie_Xsec_err, bottom=genie_Xsec-genie_Xsec_err, width=bin_width, color='black')
-    ax.errorbar( x=mid , xerr=0.5*bin_width, y=Xsec_1d, yerr=Xsec_1d_err , fmt='o', markersize=10
-                , color=Colors['beam on'], capsize=1, capthick=3, label='data')
-    if do_add_genie_models:
-        for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
-            h_genie,_ = np.histogram(180./np.pi*afro_genie_dict[gname][true_3],bins=bins)
-            h_genie_err = np.sqrt(h_genie)
-            h_genie,h_genie_err = h_genie*4.908e19/4.9e20, h_genie_err*4.908e19/4.9e20
-            genie_Xsec,genie_Xsec_err = np.zeros((len(bins)-1)), np.zeros((len(bins)-1))
-            for i in range(len(bins)-1):
-                genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
-                mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
-    set_axes(ax,xlabel
-         ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'$\left[10^{-38} \frac{cm^{2}}{(%s)}\right]$'%units)
-         ,do_add_legend=False,ylim=ylim_phi)
-    plt.tight_layout()
-    print 'done.'
-#}
-# ----------------------------------------------------------
-
-
-
 
 
 
@@ -594,7 +538,7 @@ def compute_eff_weights(beam_on=None,beam_off=None
                 # efficiency weight assigned to the event
                 w,werr=0,0
                 if eff>eff_cutoff:#{
-                    power = np.power(10,power_factor)
+                    power = float("1.e%d"%power_factor)
                     w = power/(eff*flux*Ntargets)
                     werr = power*eff_err/(eff*eff*flux*Ntargets)
                 #}
@@ -603,7 +547,10 @@ def compute_eff_weights(beam_on=None,beam_off=None
                     print N['CC1p'],'CC1p',N['gen. in kin. cuts'],'gen. in kin. cuts'
                     print 'eff=',eff,'+/-',eff_err
                     print 'w=',w,'+/-',werr
-                #}                                                             
+                    print "List['on']:",len(List['on'])
+                    print "List['off']:",len(List['off'])
+                    print "List['CC1p']:",len(List['CC1p'])
+                #}
                 wname = ob_1 + ' weight'
                 
                 if option=="CC1p truth": wname = ob_1 + ' weight truth'
@@ -622,9 +569,144 @@ def compute_eff_weights(beam_on=None,beam_off=None
             #} i_phi
         #} i_cos_theta
     #} i_P
-    print 'done.'
+    if debug: print 'done.'
     return
 # ----------------------------------------------------------
+
+
+
+
+#
+#
+## ----------------------------------------------------------
+## Sep-14, 2018
+#def get_Xsec(h = None ,afro_genie_dict=dict(),ylim_P=(0,9),ylim_cos_theta=(0,9),ylim_phi=(0,0.1)
+#             ,do_add_genie_models=True
+#             ,ob_1='Pmu',ob_2='cos(theta(mu))',ob_3='phi(mu)'
+#             ,true_1='truth_Pmu',true_2='truth_Pmu_cos_theta',true_3='truth_Pmu_phi'
+#             ):#{
+#    get_integrated_Xsec(h,bins1,bins2,bins3,N1,N2,N3);
+#    if do_add_genie_models:#{
+#        for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
+#            afro_genie_CC1p = afro_genie_dict[gname]
+#            afro_Xsec,afro_Xsec_err = compute_Xsec(Non=len(afro_genie_CC1p), Non_err=np.sqrt(len(afro_genie_CC1p)))
+#            afro_Xsec,afro_Xsec_err = afro_Xsec*4.908e19/4.9e20,afro_Xsec_err*4.908e19/4.9e20
+#            print gname,'afro genie Xsec: %.2f +/- %.2f'%(afro_Xsec,afro_Xsec_err),'e-38 cm2'
+#    #}
+#    fig=plt.figure(figsize=(28,8))
+#    observable = ob_1
+#    bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
+#    Xsec_1d,Xsec_1d_err,mc_Xsec_1d,mc_Xsec_1d_err = np.zeros(N1),np.zeros(N1),np.zeros(N1),np.zeros(N1)
+#    for i_P in range(N1):#{
+#        Xsec_1d_err_sq_sum,mc_Xsec_1d_err_sq_sum = 0,0
+#        for i_cos_theta in range(N2):#{
+#            cos_theta_bin_width = bins2[i_cos_theta+1] - bins2[i_cos_theta]
+#            for i_phi in range(N3):#{
+#                phi_bin_width = bins3[i_phi+1] - bins3[i_phi]
+#                Xsec_1d[i_P] += h['Xsec'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width
+#                Xsec_1d_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width)
+#                mc_Xsec_1d[i_P] += h['mc-Xsec'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width
+#                mc_Xsec_1d_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi] * cos_theta_bin_width * phi_bin_width)
+#        #}
+##}
+#Xsec_1d_err[i_P] = np.sqrt(Xsec_1d_err_sq_sum)
+#    mc_Xsec_1d_err[i_P] = np.sqrt(mc_Xsec_1d_err_sq_sum)
+#    #}
+#    ax = fig.add_subplot(1,3,1)
+#    ax.bar( x=mid , height=2*mc_Xsec_1d_err, bottom=mc_Xsec_1d-mc_Xsec_1d_err, width=bin_width, color=Colors['CC1p'])
+#    #     ax.bar( x=mid , height=2*genie_Xsec_err, bottom=genie_Xsec-genie_Xsec_err, width=bin_width, color='black')
+#    ax.errorbar( x=mid , xerr=0.5*bin_width, y=Xsec_1d, yerr=Xsec_1d_err , fmt='o', markersize=10
+#                , color=Colors['beam on'], capsize=1, capthick=3, label='data')
+#                if do_add_genie_models:
+#                    for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
+#                        h_genie,_ = np.histogram(afro_genie_dict[gname][true_1],bins=bins)
+#                            h_genie_err = np.sqrt(h_genie)
+#                                h_genie,h_genie_err = h_genie*4.908e19/4.9e20, h_genie_err*4.908e19/4.9e20
+#                                    genie_Xsec,genie_Xsec_err = np.zeros((len(bins)-1)), np.zeros((len(bins)-1))
+#                                        for i in range(len(bins)-1):
+#                                            genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
+#                                                mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
+#                                            set_axes(ax,xlabel
+#                                                     ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$' +r'$\left[10^{-38} \frac{cm^{2}}{(%s)}\right]$'%units)
+#                                                     ,ylim=ylim_P)
+##-------------------------------
+#observable = ob_2
+#    bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
+#    Xsec_1d,Xsec_1d_err,mc_Xsec_1d,mc_Xsec_1d_err = np.zeros(N2),np.zeros(N2),np.zeros(N2),np.zeros(N2)
+#    for i_cos_theta in range(N2):#{
+#        Xsec_1d_err_sq_sum,mc_Xsec_1d_err_sq_sum = 0,0
+#        for i_P in range(N1):#{
+#            P_bin_width = bins1[i_P+1] - bins1[i_P]
+#            for i_phi in range(N3):#{
+#                phi_bin_width = bins3[i_phi+1] - bins3[i_phi]
+#                Xsec_1d[i_cos_theta] += h['Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width
+#                Xsec_1d_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width)
+#                mc_Xsec_1d[i_cos_theta] += h['mc-Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width
+#                mc_Xsec_1d_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * phi_bin_width)
+#        #}
+#        #}
+#        Xsec_1d_err[i_cos_theta] = np.sqrt(Xsec_1d_err_sq_sum)
+#    mc_Xsec_1d_err[i_cos_theta] = np.sqrt(mc_Xsec_1d_err_sq_sum)
+##}
+#ax = fig.add_subplot(1,3,2)
+#    ax.bar( x=mid , height=2*mc_Xsec_1d_err, bottom=mc_Xsec_1d-mc_Xsec_1d_err, width=bin_width, color=Colors['CC1p'])
+#    # ax.bar( x=mid , height=2*genie_Xsec_err, bottom=genie_Xsec-genie_Xsec_err, width=bin_width, color='black')
+#    ax.errorbar( x=mid , xerr=0.5*bin_width, y=Xsec_1d, yerr=Xsec_1d_err , fmt='o', markersize=10
+#                , color=Colors['beam on'], capsize=1, capthick=3, label='data')
+#                if do_add_genie_models:
+#                    for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
+#                        h_genie,_ = np.histogram(afro_genie_dict[gname][true_2],bins=bins)
+#                            h_genie_err = np.sqrt(h_genie)
+#                                h_genie,h_genie_err = h_genie*4.908e19/4.9e20, h_genie_err*4.908e19/4.9e20
+#                                    genie_Xsec,genie_Xsec_err = np.zeros((len(bins)-1)), np.zeros((len(bins)-1))
+#                                        for i in range(len(bins)-1):
+#                                            genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
+#                                                mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
+#                                            set_axes(ax,xlabel
+#                                                     ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'[$10^{-38}$ cm$^{2}$]'),ylim=ylim_cos_theta)
+#    # #-------------------------------
+#    observable = ob_3
+#    bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
+#    
+#    Xsec_1d,Xsec_1d_err,mc_Xsec_1d,mc_Xsec_1d_err = np.zeros(N3),np.zeros(N3),np.zeros(N3),np.zeros(N3)
+#    for i_phi in range(N3):#{
+#        Xsec_1d_err_sq_sum,mc_Xsec_1d_err_sq_sum = 0,0
+#        for i_P in range(N1):#{
+#            P_bin_width = bins1[i_P+1] - bins1[i_P]
+#            for i_cos_theta in range(N2):#{
+#                cos_theta_bin_width = bins2[i_cos_theta+1] - bins2[i_cos_theta]
+#                Xsec_1d[i_phi] += h['Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width
+#                Xsec_1d_err_sq_sum += np.square(h['Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width)
+#                mc_Xsec_1d[i_phi] += h['mc-Xsec'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width
+#                mc_Xsec_1d_err_sq_sum += np.square(h['mc-Xsec err'][i_P][i_cos_theta][i_phi] * P_bin_width * cos_theta_bin_width)
+#        #}
+#        #}
+#        Xsec_1d_err[i_phi] = np.sqrt(Xsec_1d_err_sq_sum)
+#    mc_Xsec_1d_err[i_phi] = np.sqrt(mc_Xsec_1d_err_sq_sum)
+#    #}
+#    ax = fig.add_subplot(1,3,3)
+#    ax.bar( x=mid , height=2*mc_Xsec_1d_err, bottom=mc_Xsec_1d-mc_Xsec_1d_err, width=bin_width, color=Colors['CC1p'])
+#    #ax.bar( x=mid , height=2*genie_Xsec_err, bottom=genie_Xsec-genie_Xsec_err, width=bin_width, color='black')
+#    ax.errorbar( x=mid , xerr=0.5*bin_width, y=Xsec_1d, yerr=Xsec_1d_err , fmt='o', markersize=10
+#                , color=Colors['beam on'], capsize=1, capthick=3, label='data')
+#    if do_add_genie_models:
+#    for gname,ls in zip(['nominal','hA2015','hA_SRC'],['-','--','-.']):
+#        h_genie,_ = np.histogram(180./np.pi*afro_genie_dict[gname][true_3],bins=bins)
+#        h_genie_err = np.sqrt(h_genie)
+#        h_genie,h_genie_err = h_genie*4.908e19/4.9e20, h_genie_err*4.908e19/4.9e20
+#        genie_Xsec,genie_Xsec_err = np.zeros((len(bins)-1)), np.zeros((len(bins)-1))
+#    for i in range(len(bins)-1):
+#    genie_Xsec[i],genie_Xsec_err[i] = compute_Xsec(Non=h_genie[i], Non_err=h_genie_err[i] ,eff=1,eff_err=0,B=0, bin_width=bin_width )
+#    mystep(x=mid ,dx=bin_width, y=genie_Xsec, y_width=genie_Xsec_err, color='black',linestyle=ls,linewidth=3,label=r'genie ('+gname+')')
+#    set_axes(ax,xlabel
+#                                                     ,y_label=(r'$\frac{d\sigma}{d'+vlabel+'}$'+r'$\left[10^{-38} \frac{cm^{2}}{(%s)}\right]$'%units)
+#                                                     ,do_add_legend=False,ylim=ylim_phi)
+#plt.tight_layout()
+#    print 'done.'
+##}
+## ----------------------------------------------------------
+
+
 
 
 # ----------------------------------------------------------
@@ -1128,8 +1210,8 @@ def sample_in_limits(sam=None
 
 
 # ----------------------------------------------------------
-# Aug-27, 2018 (last edit Aug-31, 2018)
-def load_mc_and_data(extra_name=''
+# Aug-27, 2018 (last edit Oct-09, 2018)
+def load_mc_and_data(extra_name='',debug=0
                      ,minPEcut = 150
                      ,maxdYZcut = 200
                      ,delta_theta_12 = 55
@@ -1141,11 +1223,11 @@ def load_mc_and_data(extra_name=''
     # ----------------------------------------------------------
     ## (1) MC
     overlay_prefix = Paths['selected events'] + versions['Overlay'] + '_' + versions['overlay date'] + '_' + extra_name
+    data_prefix = Paths['selected events'] + versions['beam on'] + '_' + versions['data date'] + '_' + extra_name
     selected_overlay=dict()
     
     cuts_order  = ['no cut','Chi2Proton','Nflashes','MatchedFlash','length'
-                   ,'non-collinearity','vertex activity'
-                   ,'delta phi','Pt & delta phi']
+                   ,'non-collinearity','vertex activity','delta phi','Pt & delta phi']
         
     if os.path.isfile( overlay_prefix + 'selected_CC1p.csv'):#{
         print 'found selected overlay files from '+extra_name+', loading them...'
@@ -1157,7 +1239,7 @@ def load_mc_and_data(extra_name=''
     else:#{
         print 'did not find selected overlay files from '+extra_name+', so creating it...'
         OverlaySamples = load_samples(date=versions['overlay date'],filename=versions['Overlay']+'_'+versions['overlay date']+'_vertices')
-        reducedOverlay,pureffOverlay,pureffNumbers = apply_cuts_to_overlay(OverlaySamples=OverlaySamples, cuts_order=cuts_order
+        reducedOverlay,pureffOverlay,pureffNumbers = apply_cuts_to_overlay(OverlaySamples=OverlaySamples, cuts_order=cuts_order,debug=debug
                                                                            ,minPEcut = minPEcut
                                                                            ,maxdYZcut = maxdYZcut
                                                                            ,delta_theta_12 = delta_theta_12
@@ -1166,18 +1248,17 @@ def load_mc_and_data(extra_name=''
                                                                            ,Pt_max=Pt_max
                                                                            ,Chi2Proton_muCandidate_min=Chi2Proton_muCandidate_min
                                                                            ,Chi2Proton_pCandidate_max=Chi2Proton_pCandidate_max)
-        print 'applied cuts to overlay'
+        print 'applied cuts to overlay \n'
         for pair_type in pair_types:#{
             selected_overlay[pair_type] = sample_in_limits(sam=reducedOverlay['Pt & delta phi'][pair_type])
             outcsvname = overlay_prefix+'selected_'+pair_type+'.csv'
             selected_overlay[pair_type].to_csv(outcsvname)
-            print 'saved selected',pair_type,'to',outcsvname
+            print 'saved',len(selected_overlay[pair_type]),'selected',pair_type,'events to','selected_'+pair_type+'.csv'
         #}
         selected_overlay_concat = pd.concat([selected_overlay['1mu-1p'],selected_overlay['cosmic'],selected_overlay['other-pairs']])
-        print len(selected_overlay_concat),'events in the overlay'
         outcsvname = overlay_prefix+'selected_overlay.csv'
         selected_overlay_concat.to_csv(outcsvname)
-        print 'saved selected overlay to',outcsvname
+        print 'saved',len(selected_overlay_concat),'selected overlay to',outcsvname
         # overlay scaling
         summary = pd.read_csv('/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/summary/'
                               +versions['overlay date']+'/'
@@ -1192,11 +1273,10 @@ def load_mc_and_data(extra_name=''
     print len(selected_CC1p),'selected CC1p events overlay'
     # ----------------------------------------------------------
     ## (2) DATA
-    data_prefix = Paths['selected events'] + versions['beam on'] + '_' + versions['data date'] + '_' + extra_name
     if os.path.isfile(data_prefix+'selected_beam_on.csv'):#{
-        print 'found selected on beam events...'
         selected_beam_on = pd.read_csv(data_prefix+'selected_beam_on.csv')
         selected_beam_off = pd.read_csv(data_prefix+'selected_beam_off.csv')
+        print 'found ',len(selected_beam_on),'selected on beam and',len(selected_beam_off),'beam off events...'
     #}
     else:#{
         print 'found selected on beam events and there was no file there...'
