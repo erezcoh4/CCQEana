@@ -255,7 +255,8 @@ private:
     std::string fPIDModuleLabel;
     std::string fCaliPIDModuleLabel;
     std::string fTPCobjectProducer;
-    std::string fEventWeightModuleLabel;
+    std::string fgenieEventWeightModuleLabel;
+    std::string fluxEventWeightModuleLabel;
     
     //mctruth information
     Int_t    mcevts_truth;    //number of neutrino Int_teractions in the spill
@@ -398,6 +399,7 @@ void ub::ErezCCQEAna::CollectGlobals(art::Event const & evt){
         StreamEventsToCSV();
         DoAnalyze = false;
     }
+    events_ctr++;
 }
 
 
@@ -1571,10 +1573,7 @@ void ub::ErezCCQEAna::StreamEventsToCSV(){
     
     // whatever you add here - must add also in header
     // i.e. in
-    // ub::ErezSimpleTracksAnalyzer::HeaderEventsInCSV()
-    
-    events_ctr++;
-    
+    // ub::ErezCCQEAna::HeaderEventsInCSV()
     events_file
     << run        << "," << subrun << "," << event << ",";
     
@@ -1907,24 +1906,15 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "track_id" << ","
     
     // µ/p assigned tracks
-    //    << "PIDa_muCandidate"<< "," << "PIDa_pCandidate" << ","
     << "l_muCandidate"  << ","
     << "l_pCandidate"   << ","
     << "l_mu-l_p"       << ","
     
     // pandoraNu pid object
-    //    << "pid_PIDa_muCandidate"<< "," << "pid_PIDa_pCandidate" << ","
-    //    << "pid_PIDaYplane_muCandidate"<< "," << "pid_PIDaYplane_pCandidate" << ","
-    //    << "pidcali_PIDa_muCandidate"<< "," << "pidcali_PIDa_pCandidate" << ","
-    //    << "pidcali_PIDaYplane_muCandidate"<< "," << "pidcali_PIDaYplane_pCandidate" << ","
     << "pidcali_Chi2ProtonYplane_muCandidate"   << ","
     << "pidcali_Chi2ProtonYplane_pCandidate"    << ","
     << "pidcali_Chi2MuonYplane_muCandidate"     << ","
     << "pidcali_Chi2MuonYplane_pCandidate"      << ","
-    
-    // flash matching of tracks
-    //    << "ClosestFlash_YZdistance_muCandidate"<< "," << "ClosestFlash_YZdistance_pCandidate" << ","
-    //    << "ClosestFlash_TotalPE_muCandidate"<< "," << "ClosestFlash_TotalPE_pCandidate" << ","
     
     // start/end points, for FV cuts
     << "startx_muCandidate" << ","  << "truth_startx_muCandidate"   << ","
@@ -1939,8 +1929,6 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "endx_pCandidate"    << ","  << "truth_endx_pCandidate"      << ","
     << "endy_pCandidate"    << ","  << "truth_endy_pCandidate"      << ","
     << "endz_pCandidate"    << ","  << "truth_endz_pCandidate"      << ",";
-    
-    
     
 
     // CC1p0π reconstructed featues
@@ -1971,7 +1959,6 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     << "reco_Pp_x"          << "," << "reco_Pp_y"   << "," << "reco_Pp_z" << ","
     << "reco_Pp_theta"      << "," << "reco_Pp_phi" << ","
     << "reco_Pp_cos_theta"  << ","
-    //    << "PmuHypothesisCalc"  << "," << "PpHypothesisCalc" << ","
     // virtual boson
     << "reco_q"         << ","  << "reco_omega"   << ","
     
@@ -2039,25 +2026,10 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
                                   , plane , NwiresBox[i_box_size] , NticksBox[i_box_size] ) << "," ;
         }
     }
-    // charge deposition around the vertex in a sphere of r [cm]
-    //    for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
-    //        for (int plane=0; plane<3; plane++) {
-    //            vertices_file
-    //            << Form( "RdQaroundVertex[plane %d][r=%.1fcm]"
-    //                    , plane , r_around_vertex[i_r_around_vertex] ) << ",";
-    //        }
-    //    }
-
     
     // flash matching of vertex
     vertices_file
-    //    << "ClosestFlash_YZdistance" << ","
-    //    << "ClosestFlash_TotalPE" << ","
-    //    << "ClosestFlash_Time" << ","
-    << "Nflashes" << ",";
-
-    // flash matching by Marco' method
-    vertices_file
+    << "Nflashes"                   << ","
     << "MatchedFlash_Ydistance"     << ","
     << "MatchedFlash_Zdistance"     << ","
     << "MatchedFlash_YZdistance"    << ","
@@ -2070,19 +2042,16 @@ void ub::ErezCCQEAna::HeaderVerticesInCSV(){
     // broken trajectories
     vertices_file
     << "isBrokenTrajectory" << ",";
-
     
-    //    // event weight
-    //    for (auto name: event_weight_names) {
-    //        vertices_file << name << ",";
-    //    }
+    // event weight
+    for (auto name: event_weight_names) {
+        vertices_file << name << ",";
+    }
 
     
     // vertex truth-topology in MC
     vertices_file
     << "1mu-1p" << "," << "CC1p" << "," << "other-pairs" << "," << "cosmic";
-    
-    //  << "," << "CC1p0pi"
     
     // finish
     vertices_file << endl;
@@ -2098,11 +2067,8 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         auto trk_p = v.GetTrack_pCandidate();
         
         vertices_ctr++;
-        if (v.GetIsGENIECC_1p_200MeVc()) {
-            CC1pVertices_ctr++;
-        } else if (v.GetIsCosmic()){
-            CosmicVertices_ctr++;
-        }
+        if (v.GetIsGENIECC_1p_200MeVc()) { CC1pVertices_ctr++;}
+        else if (v.GetIsCosmic()){ CosmicVertices_ctr++;}
         
         vertices_file
         << v.GetRun()           << "," << v.GetSubrun() << "," << v.GetEvent() << "," << v.GetVertexID() << ","
@@ -2117,29 +2083,15 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         
         // µ/p assigned tracks
         vertices_file
-        //        << trk_mu.GetPIDa() << "," << trk_p.GetPIDa() << ","
         << trk_mu.GetLength() << ","
         << trk_p.GetLength()  << ","
         << trk_mu.GetLength() - trk_p.GetLength() << ","
         
         // pandoraNu pid object
-        //        << trk_mu.GetPID_PIDA()               << ","  << trk_p.GetPID_PIDA() << ","
-        //        << trk_mu.GetPID_PIDA(2)              << ","  << trk_p.GetPID_PIDA(2) << ","
-        //        << trk_mu.GetCaliPID_PIDA()           << ","  << trk_p.GetCaliPID_PIDA() << ","
-        //        << trk_mu.GetCaliPID_PIDA(2)          << ","  << trk_p.GetCaliPID_PIDA(2) << ","
         << trk_mu.GetCaliPID_Chi2Proton(2)    << ","
         << trk_p.GetCaliPID_Chi2Proton(2)     << ","
         << trk_mu.GetCaliPID_Chi2Muon(2)      << ","
         << trk_p.GetCaliPID_Chi2Muon(2)       << ",";
-
-        
-
-
-        
-        // flash matching of tracks
-        //        vertices_file
-        //        << trk_mu.GetDis2ClosestFlash() << "," << trk_p.GetDis2ClosestFlash() << ","
-        //        << trk_mu.GetClosestFlash().GetTotalPE() << "," << trk_p.GetClosestFlash().GetTotalPE() << "," ;
         
         // start/end points, for FV cuts
         vertices_file
@@ -2155,11 +2107,6 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         << trk_p.GetEndPos().x()    << ","  << trk_p.GetTruthEndPos().x()     << ","
         << trk_p.GetEndPos().y()    << ","  << trk_p.GetTruthEndPos().y()     << ","
         << trk_p.GetEndPos().z()    << ","  << trk_p.GetTruthEndPos().z()     << ",";
-        
-        
-        
-        
-
         
         // CC1p0π reconstructed featues
         // distances between the tracks
@@ -2202,7 +2149,6 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         << v.GetRecoPp().Theta()<< "," << v.GetRecoPp().Phi()   << ","
         << TMath::Cos(v.GetRecoPp().Theta()) << ",";
         
-        //        vertices_file << trk_mu.GetPmuHypothesisCalc() << "," << trk_p.GetPpHypothesisCalc() << ",";
         // virtual boson
         vertices_file
         << v.GetReco_q()        << "," << v.GetReco_omega() << ",";
@@ -2285,24 +2231,9 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
             }
         }
         
-        // charge deposition around the vertex in a sphere of r [cm]
-        //        for (int i_r_around_vertex=0; i_r_around_vertex < N_r_around_vertex; i_r_around_vertex++) {
-        //            for (int plane=0; plane<3; plane++) {
-        //                vertices_file
-        //                << GetRdQInSphereAroundVertex( v, plane, r_around_vertex[i_r_around_vertex] ) << ",";
-        //            }
-        //        }
-        
-        
         // flash matching of vertex
         vertices_file
-        //        << v.GetDis2ClosestFlash() << ","
-        //        << v.GetClosestFlash().GetTotalPE() << ","
-        //        << v.GetClosestFlash().GetTime() << ","
-        << flashes.size() << "," ;
-        
-        // flash matching by Marco' method
-        vertices_file
+        << flashes.size()                   << ","
         << v.GetYDis2MatchedFlash()         << ","
         << v.GetZDis2MatchedFlash()         << ","
         << v.GetDis2MatchedFlash()          << ","
@@ -2316,16 +2247,15 @@ void ub::ErezCCQEAna::StreamVerticesToCSV(){
         << v.GetIsBrokenTrajectory() << ",";
 
         
-        //        // event weight
-        //        for (auto weight: event_weight_values) {
-        //            vertices_file << weight << ",";
-        //        }
+        // event weight
+        for (auto weight: event_weight_values) {
+            vertices_file << weight << ",";
+        }
         
         // vertex truth-topology in MC
         vertices_file
         << v.GetIs1mu1p()               << ","
         << v.GetIsGENIECC_1p_200MeVc()  << ","
-        //        << v.GetIsGENIECC_1p_200MeVc_0pi() << ","
         << v.GetIsNon1mu1p()            << ","
         << v.GetIsCosmic();
         
@@ -2416,7 +2346,7 @@ void ub::ErezCCQEAna::beginJob(){
     // charge deposition around the vertex in a sphere of radius r [cm]
     for (int i_r_around_vertex=0 ; i_r_around_vertex < N_r_around_vertex ; i_r_around_vertex++){
         r_around_vertex[i_r_around_vertex] = Min_r_around_vertex + i_r_around_vertex * dr_around_vertex;
-        Debug(4,"r_around_vertex[%]:%",i_r_around_vertex,r_around_vertex[i_r_around_vertex]);
+        Debug(10,"r_around_vertex[%]:%",i_r_around_vertex,r_around_vertex[i_r_around_vertex]);
     }
     
     
@@ -2678,7 +2608,8 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
     FlashMatch_mgr.Configure(p.get<flashana::Config_t>("FlashMatchConfig"));
     
     // event weight
-    fEventWeightModuleLabel = p.get< std::string >("EventWeightModuleLabel");
+    fgenieEventWeightModuleLabel    = p.get< std::string >("EventWeightModuleLabel");
+    fluxEventWeightModuleLabel      = p.get< std::string >("fluxEventWeightModuleLabel","");
     DoDebugRSE              = p.get<bool>                           ("DoDebugRSE",false);
     DebugRSEarray           = p.get<std::vector<std::vector<int>> > ("DebugRSE",{});
 }
@@ -2689,6 +2620,7 @@ void ub::ErezCCQEAna::reconfigure(fhicl::ParameterSet const & p){
 void ub::ErezCCQEAna::CollectEventWeights (art::Event const & evt){
     int fDebug = 3;
     
+    // superceeded by the event-weights used for flux variation analysis
     // June-14, 2018
     // reweighting for different mA values,
     // to extract mA from CCQE-like events
@@ -2696,7 +2628,8 @@ void ub::ErezCCQEAna::CollectEventWeights (art::Event const & evt){
     
     art::Handle< std::vector <evwgh::MCEventWeight> > MCEventWeightlistHandle;
     std::vector< art::Ptr <evwgh::MCEventWeight> > MCEventWeightlist;
-    if (evt.getByLabel( fEventWeightModuleLabel , MCEventWeightlistHandle))
+    //    if (evt.getByLabel( fgenieEventWeightModuleLabel , MCEventWeightlistHandle))
+    if (evt.getByLabel( fluxEventWeightModuleLabel , MCEventWeightlistHandle))
         art::fill_ptr_vector( MCEventWeightlist , MCEventWeightlistHandle );
 
     

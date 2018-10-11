@@ -1,0 +1,345 @@
+#include "services_microboone.fcl"
+#include "time_memory_tracker_microboone.fcl"
+#include "seedservice_microboone.fcl"
+
+process_name: GenieEventWeight
+
+services:
+{
+    scheduler:               { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+    TFileService:            { fileName: "flux_eventweight_hist.root" }
+    TimeTracker:             @local::microboone_time_tracker
+    MemoryTracker:           @local::microboone_memory_tracker
+    RandomNumberGenerator:   {} #ART native random number generator
+    message:                 @local::microboone_message_services_prod_debug
+    FileCatalogMetadata:     @local::art_file_catalog_mc
+    @table::microboone_simulation_services
+}
+
+services.DetectorPropertiesService.NumberTimeSamples:        6400
+services.DetectorPropertiesService.ReadOutWindowSize:        6400
+services.DetectorClocksService.InheritClockConfig:           false
+services.DetectorClocksService.TriggerOffsetTPC:             -0.400e3
+
+source:
+{
+    module_type: RootInput
+    maxEvents:   -1        # Number of events to create
+}
+
+source.inputCommands: ["keep *_*_*_*", "drop sumdata::RunData_*_*_*" ]
+
+flux_microboone_eventweight:{
+    module_type:	"EventWeight"
+    weight_functions:[bnbcorrection, piplus, piminus, kplus, kzero, kminus, horncurrent, pioninexsec, nucleontotxsec, nucleonqexsec, nucleoninexsec, pionqexsec, piontotxsec, expskin]
+    
+    # throw exception if weight outside limits
+    min_weight: 0
+    max_weight: 100
+    genie_module_label:    generator
+    
+    
+    horncurrent:{
+        type: FluxUnisim
+        CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+        PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_horn175ka_rgen610.6_flux.root"
+        NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_horn173ka_rgen610.6_flux.root"
+        parameter_list: ["horncurrent"]
+        random_seed:1578
+        scale_factor_pos:1
+        scale_factor_neg:1
+        weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+        mode: multisim
+        number_of_multisims: 100
+        use_MiniBooNE_random_numbers: false
+    }
+
+    
+    pioninexsec:{
+        type: FluxUnisim
+        CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+        PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_pioninexsec_up_rgen610.6_flux.root"
+        NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_pioninexsec_down_rgen610.6_flux.root"
+        parameter_list: ["pioninexsec"]
+        random_seed:5
+        scale_factor_pos:1
+        scale_factor_neg:1
+        weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+        mode: multisim
+        number_of_multisims: 100
+        use_MiniBooNE_random_numbers: false
+    }
+    
+nucleontotxsec:{
+type: FluxUnisim
+CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_nucleontotxsec_up_rgen610.6_flux.root"
+NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_nucleontotxsec_down_rgen610.6_flux.root"
+parameter_list: ["nucleontotxsec"]
+random_seed:1346
+scale_factor_pos:1
+scale_factor_neg:1
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+mode: multisim
+number_of_multisims: 100
+use_MiniBooNE_random_numbers: false
+}
+    
+nucleonqexsec:{
+type: FluxUnisim
+CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_nucleonqexsec_up_rgen610.6_flux.root"
+NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_nucleonqexsec_down_rgen610.6_flux.root"
+parameter_list: ["nucleonqexse"]
+random_seed:1675
+scale_factor_pos:0.333 #From MiniBooNE
+scale_factor_neg:0.573 #From MiniBooNE
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+mode: multisim
+number_of_multisims: 100
+use_MiniBooNE_random_numbers: false
+}
+    
+nucleoninexsec:{
+type: FluxUnisim
+CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_nucleoninexsec_up_rgen610.6_flux.root"
+NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_nucleoninexsec_down_rgen610.6_flux.root"
+parameter_list: ["nucleoninexsec"]
+random_seed:97442
+scale_factor_pos:1
+scale_factor_neg:1
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+mode: multisim
+number_of_multisims: 100
+use_MiniBooNE_random_numbers: false
+}
+    
+pionqexsec:{
+type: FluxUnisim
+CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_pionqexsec_up_rgen610.6_flux.root"
+NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_pionqexsec_down_rgen610.6_flux.root"
+parameter_list: ["pionqexsec"]
+random_seed:3678
+scale_factor_pos:0.292 #From MiniBooNE
+scale_factor_neg:0.585 #From MiniBooNE
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+mode: multisim
+number_of_multisims: 100
+use_MiniBooNE_random_numbers: false
+}
+    
+piontotxsec:{
+type: FluxUnisim
+CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+PositiveSystematicVariation_hist_file:"beamData/UnisimHists/may06_piontotxsec_up_rgen610.6_flux.root"
+NegativeSystematicVariation_hist_file:"beamData/UnisimHists/may06_piontotxsec_down_rgen610.6_flux.root"
+parameter_list: ["piontotxsec"]
+random_seed:4
+scale_factor_pos:1
+scale_factor_neg:1
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+mode: multisim
+number_of_multisims: 100
+use_MiniBooNE_random_numbers: false
+}
+    
+expskin:{
+type: FluxUnisim
+CentralValue_hist_file:"beamData/UnisimHists/may06_10kpot_ntrd1000_flux.root"
+PositiveSystematicVariation_hist_file:"beamData/UnisimHists/expskin_nrtd1000_flux.root"
+NegativeSystematicVariation_hist_file:"beamData/UnisimHists/expskin_nrtd1000_flux.root"
+parameter_list: ["expskin"]
+random_seed:1231
+scale_factor_pos:1
+scale_factor_neg:1
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+mode: multisim
+number_of_multisims: 100
+use_MiniBooNE_random_numbers: false
+}
+    
+bnbcorrection: {
+type: FluxHist
+### To Flux without K+ Constraint
+#cv_hist_file: "uboonebeam/bnb_gsimple/bnb_gsimple_fluxes_02.28.2014_470_rwhist/gsimple_uboone_flux.root"
+#rw_hist_file: "uboonebeam/bnb_gsimple/bnb_gsimple_fluxes_02.28.2014_470_rwhist/redecay_uboone_flux.root"
+### To Flux with K+ Constraint
+cv_hist_file: "uboonebeam/bnb_gsimple/bnb_gsimple_fluxes_09.7.2017_470_rwhist/bnb_oldflux_volAVTPC.root"
+rw_hist_file: "uboonebeam/bnb_gsimple/bnb_gsimple_fluxes_09.7.2017_470_rwhist/bnb_newflux_volAVTPC.root"
+    
+random_seed: 985
+mode: reweight
+number_of_multisims: 1
+}
+    
+piplus:{
+type: PrimaryHadronSWCentralSplineVariation
+random_seed: 35
+parameter_list: ["piplus"]
+parameter_sigma: 1
+mode: multisim
+scale_factor: 1
+number_of_multisims: 100
+PrimaryHadronGeantCode: 211 # geant code for particle production on Be
+    weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+    ExternalData:"beamData/ExternalData/BNBExternalData_uBooNE_SplinesHARP.root"
+    ExternalFit:"beamData/ExternalData/BNBExternalData_uBooNE.root"
+    use_MiniBooNE_random_numbers: false
+    }
+    
+piminus:{
+type: PrimaryHadronSWCentralSplineVariation
+random_seed: 9875
+parameter_list: ["piminus"]
+parameter_sigma: 1
+mode: multisim
+scale_factor: 1
+number_of_multisims: 100
+PrimaryHadronGeantCode: -211 # geant code for particle production on Be
+    weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+    ExternalData:"beamData/ExternalData/BNBExternalData_uBooNE_SplinesHARP.root"
+    ExternalFit:"beamData/ExternalData/BNBExternalData_uBooNE.root"
+    use_MiniBooNE_random_numbers: false
+    }
+    
+kplus:{
+type: PrimaryHadronFeynmanScaling
+random_seed: 34567
+parameter_sigma: 1
+mode: multisim
+number_of_multisims: 100
+PrimaryHadronGeantCode: 321 # geant code for particle production on Be
+    weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+### Uncertainties without SciBooNE Contraint
+#parameter_list: ["kplusOld"]
+#scale_factor: 2
+#ExternalData:"beamData/ExternalData/BNBExternalData_uBooNE_KPlus_withoutSciBooNE.root"
+### Uncertainties with SciBooNE Constraint
+    parameter_list: ["kplus"]
+    scale_factor: 1
+    ExternalData:"beamData/ExternalData/BNBExternalData_uBooNE.root"
+    use_MiniBooNE_random_numbers: false
+    }
+    
+kzero:{
+type: PrimaryHadronSanfordWang
+random_seed: 8888
+parameter_list: ["kzero"]
+parameter_sigma: 1
+mode: multisim
+scale_factor: 1
+number_of_multisims: 100
+PrimaryHadronGeantCode: [130] # MiniBooNE only reweighted GEANT CODE = 10
+weight_calculator: "MicroBooNE" # "MicroBooNE" OR "MiniBooNE"
+ExternalData:"beamData/ExternalData/BNBExternalData_uBooNE.root"
+use_MiniBooNE_random_numbers: false
+}
+    
+kminus:{
+type: PrimaryHadronNormalization
+random_seed: 42
+parameter_list: ["kminus"]
+parameter_sigma: 1
+mode: multisim
+scale_factor: 1
+number_of_multisims: 100
+PrimaryHadronGeantCode: -321 # geant code for particle production on Be
+    weight_calculator: "MiniBooNE" # "MicroBooNE" OR "MiniBooNE"
+    use_MiniBooNE_random_numbers: false
+    }
+
+}
+
+physics:
+{
+    producers:{
+        fluxeventweightmultisim:    @local::flux_microboone_eventweight
+        rns:                        { module_type: "RandomNumberSaver" }
+    }
+    stream1:  [ out1 ]
+    simulate: [ rns, fluxeventweightmultisim ]
+    ana:      [ ]
+    trigger_paths: [simulate]
+    end_paths:     [stream1,ana]
+}
+
+outputs.out1.fileName: "%ifb_flux_eventweight_slimmed.root"
+outputs:
+{
+    out1:
+    {
+        module_type: RootOutput
+        fileName:    "%ifb_flux_eventweight_slimmed.root"    # default, can override using -o or --output
+        dataTier:    "reconstructed"
+        compressionLevel: 1
+        outputCommands: [
+                            "keep *_*_*_*",
+                            "drop raw::*_*_*_*",
+                            "drop art::*_*_*_*",
+                            "drop sim::*_*_*_*",
+                            "drop sumdata::RunData_*_*_*",
+                            "drop recob::Cluster_*_*_*",
+                            "drop recob::EndPoint2D_*_*_*",
+                            "drop recob::Vertex_*_*_*",
+                            "drop recob::Wires_*_*_*",
+                            "drop recob::PFParticle_*_*_*",
+                            "drop recob::Wire_*_*_*",
+                            "drop recob::SpacePoint_*_*_*",
+                            "drop recob::SpacePoints_pandoraCosmic_*_DataRecoStage2",
+                            "drop recob::SpacePoints_*_*_DataRecoStage2",
+                            "drop recob::Hits_trajcluster_*_DataRecoStage2",
+                            "drop recob::Seeds_*_*_DataRecoStage2",
+                            "drop recob::*_*_*_SpacePoint",
+                            "drop recob::Seed_*_*_*",
+                            "drop recob::Shower_*_*_*",
+                            "drop recob::*_*_pandoraCosmic_*",
+                            "drop *_*_pandoraCosmic_*",
+                            "drop recob::*_*_pandoraCosmic_DataRecoStage2",
+                            "drop *_*_*_McRecoAprStage1",
+                            "drop *_*_*_DataRecoAprStage1",
+                            "drop *_*_*_DetsimNoNoise",
+                            "drop *_*_*_Swizzler",
+                            "drop *_*_*_DetSim",
+                            "drop *_*_pmtrack_*",
+                            "drop *_*_trajcluster_*",
+                            "drop *_*_pandoraNuPMA_*",
+                            "drop *_*_pandoraNuKalmanTrackFlashMatch_*",
+                            "drop *_*_pandoraCosmicT0RecoBeam_*",
+                            "drop *_*_pandoraCosmicKHitpid_*",
+                            "drop *_*_pandoraCosmicKHit_*",
+                            "drop *_*_pandoraCosmicKHitFlashMatch_*",
+                            "drop *_*_pmtrackcalo_*"
+                            ]
+    }
+}
+
+
+
+
+services.message.destinations :
+{
+    STDCOUT:
+    {
+        type:      "cout"      #tells the message service to output this destination to cout
+        threshold: "WARNING"   #tells the message service that this destination applies to WARNING and higher level messages
+        append:     true       #says to append all messages to the output
+        categories:
+        {
+            ChannelFilter:
+            {
+                limit: 0
+                reportEvery: 0
+            }
+            default:
+            {
+                limit: -1  #don not print anything at the infomsg level except the explicitly named categories
+                reportEvery: 1
+            }
+        }
+    }
+}
+
+
+
