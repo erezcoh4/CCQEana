@@ -15,7 +15,10 @@ from scipy.optimize import curve_fit
 # ----------------------------------------------------------
 def mystep(x,y,x_width,y_width, ax=None, **kwargs):
     for x_,dx,y_,y_width_ in zip(x,x_width,y,y_width):
-        plt.plot([x_-dx/2,x_+dx/2],[y_,y_] , **kwargs)
+        if ax is None:
+            plt.plot([x_-dx/2,x_+dx/2],[y_,y_] , **kwargs)
+        else:
+            ax.plot([x_-dx/2,x_+dx/2],[y_,y_] , **kwargs)
 # ----------------------------------------------------------
 
 # ----------------------------------------------------------

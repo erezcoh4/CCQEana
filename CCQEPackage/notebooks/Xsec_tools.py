@@ -108,11 +108,14 @@ Paths = dict({'selected events':Xsec_path+'selected_events/'
 Xsec_ctu_titles = [r'excluding the last $\cos\theta_\mu$ bin',r'with the last $\cos\theta_\mu$ bin']
 Xsec_fnames     = [r'without_last_ctu_bin',r'with_last_ctu_bin']
 remove_ctu_bools= [True,False]
+genie_list      = ['nominal','hA2015','hA_SRC','hA_Tune3']#,'hN2015'
+genie_labels    = ['GENIE(nominal)','GENIE(hA2015)','GENIE(SRC+hA)','GENIE(Tune3+hA)']
+
 
 
 # ----------------------------------------------------------
 # Oct-09, 2018
-def extract_Xsec_full_chain(extra_name='',debug=0
+def extract_Xsec_full_chain(extra_name='',debug=0,eff_cutoff=0.025
                             ,evtwgt_name='' # event weights (for systematical studies like beam-flux uncertainties...)
                             ,minPEcut = 150,maxdYZcut = 200
                             ,delta_theta_12 = 55,r_max_RdQ_CC1p = 0.43
@@ -126,13 +129,13 @@ def extract_Xsec_full_chain(extra_name='',debug=0
     selected_overlay,selected_overlay_concat,selected_CC1p,genie_CC1p,selected_beam_on,selected_beam_off = samples
     print 'done loading samples...'
     if (("Pmu weight" not in selected_beam_on.columns) or ("Pp weight" not in selected_beam_on.columns) or force_recalculated_weights):#{
-        print 'no Pmu weights, computing them'
-        compute_eff_weights(beam_on=selected_beam_on,beam_off=selected_beam_off,debug=debug,evtwgt_name=evtwgt_name,
+        print 'no efficiency weights, computing them'
+        compute_eff_weights(beam_on=selected_beam_on,beam_off=selected_beam_off,debug=debug,evtwgt_name=evtwgt_name,eff_cutoff=eff_cutoff,
                                                            generated_CC1p=genie_CC1p,selected_CC1p=selected_CC1p,overlay=selected_overlay_concat,
                                                            delta_theta_12=delta_theta_12,
                                                            delta_Delta_phi=delta_Delta_phi,
                                                            Pt_max=Pt_max)
-        compute_eff_weights(beam_on=selected_beam_on,beam_off=selected_beam_off,debug=debug,evtwgt_name=evtwgt_name,
+        compute_eff_weights(beam_on=selected_beam_on,beam_off=selected_beam_off,debug=debug,evtwgt_name=evtwgt_name,eff_cutoff=eff_cutoff,
                                                                generated_CC1p=genie_CC1p,selected_CC1p=selected_CC1p,overlay=selected_overlay_concat,
                                                                delta_theta_12=delta_theta_12,
                                                                delta_Delta_phi=delta_Delta_phi,
@@ -140,9 +143,9 @@ def extract_Xsec_full_chain(extra_name='',debug=0
                                                                ob_1='Pp',ob_2='cos(theta(p))',ob_3='phi(p)',
                                                                reco_1='reco_Pp',reco_2='reco_Pp_cos_theta',reco_3='reco_Pp_phi',
                                                                true_1='truth_Pp',true_2='truth_Pp_cos_theta',true_3='truth_Pp_phi')
-        print 'done assiging Pmu weights and Pp weights and saving the files.'
+        print 'done assiging efficiency weights weights.'
     #}
-    else: print 'Pmu weights and Pp weights already exist.'
+    else: print 'efficiency weights already exist.'
     # iterative process for correction around \phi~0
     if (('W(corr. phi~0)' not in selected_beam_on.columns) or ('W(corr. phi~0)' not in selected_CC1p.columns)):#{
         for sam in [selected_beam_on,selected_beam_off,selected_CC1p,selected_overlay_concat]: sam['W(corr. phi~0)'] = 1
@@ -173,9 +176,9 @@ def extract_Xsec_full_chain(extra_name='',debug=0
             #}
         #}
         for particle in ['mu','p']: print 'correction for phi('+particle+')~0:',correction_arrays[particle][-1]
-        save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off, extra_name=extra_name)
-        print 'done performing iterative correction for phi~0 and saved the samples...'    
+        print 'done performing iterative correction for phi~0 and saved the samples...'
     else: print 'already performed correction for phi~0 and saved the samples...'
+    save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off, extra_name=extra_name)
     extract_Xsecs(debug=debug,extra_name=extra_name,particle='mu',evtwgt_name=evtwgt_name,
               selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,                  
               selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
@@ -192,7 +195,7 @@ def get_phi_Xsecs(do_corr_phi_0=False, debug=0, evtwgt_name='',
     Xsec_dict = dict()
     for particle in ['mu','p']:#{
         observable='phi('+particle+')'
-        var,bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
+        var,vtrue,bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
         h = get_Xsec_1d(selected_beam_on,selected_beam_off,selected_overlay_concat,selected_CC1p
                         ,var=var,bins=bins,bin_width=bin_width
                         ,wname='P'+particle+' weight',mul=180./np.pi
@@ -248,8 +251,9 @@ def get_Xsec_variable(debug=0,evtwgt_name='',
         overlay = overlay[overlay['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
         CC1p = CC1p[CC1p['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
     #}
-    h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p,evtwgt_name=evtwgt_name
-                    ,var=var,bins=bins,bin_width=bins[1]-bins[0]
+    h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p
+                    ,evtwgt_name=evtwgt_name
+                    ,var=var,bins=bins,bin_width=(bins[1]-bins[0])
                     ,wname=wname,mul=mul
                     ,do_corr_phi_0=do_corr_phi_0,debug=debug)
     if debug>1:  pp.pprint(h)
@@ -263,7 +267,7 @@ def get_Xsec_variable(debug=0,evtwgt_name='',
 
 
 # ----------------------------------------------------------
-# Oct-08, 2018
+# Oct-08, 2018 (last edit Oct-15, 2018)
 def draw_Xsec_variable(debug=0,evtwgt_name='',
                        var='reco_Pt',mul=1,bins=linspace(0,1,5),vlabel='p_T',units=None,legend_loc='best',
                        wname='Pmu weight',
@@ -289,12 +293,14 @@ def draw_Xsec_variable(debug=0,evtwgt_name='',
         h = dict()
         ax = fig.add_subplot(3,2,iax)
         h['Xsec'],h['Xsec err'] = Xsec_dict[var],Xsec_dict[var+' err']
+        if debug: print var,"Xsec:",h['Xsec']
         plt.errorbar(x=mid,xerr=0.5*bin_width,y=h['Xsec'],yerr=h['Xsec err'],color=Colors['beam on'],fmt='o',label='data')
         h['mc Xsec'],h['mc Xsec err'] = Xsec_dict['mc '+var], Xsec_dict['mc '+var+' err']
         ax.bar( x=mid , height=2*h['mc Xsec err'], bottom=h['mc Xsec']-h['mc Xsec err'], width=bin_width, color=Colors['CC1p'],label='overlay')
         set_axes(ax,x_label='',y_label=get_Xsec_label(vlabel,units)
                  ,do_add_grid=True,remove_ticks_x=True,do_add_legend=True if iXsec==1 else False, legend_loc=legend_loc
                  ,ylim=(0,1.1*np.max(ax.get_ylim())),title=Xsec_ctu_title)
+                 
         # residuals plot
         den, den_err = h['Xsec']-h['mc Xsec'],np.sqrt(np.square(h['Xsec err'])+np.square(h['mc Xsec err']))
         num, num_err = h['Xsec'],h['mc Xsec err']
@@ -352,26 +358,25 @@ def save_selected_samples(selected_overlay_concat , selected_CC1p , selected_bea
 # ----------------------------------------------------------
 # Oct-03, 2018
 def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_theta=True, do_phi=True, do_print_Xsec=False,evtwgt_name='',
-              remove_last_cos_theta_mu_bin=False,
-              selected_beam_on=None,selected_beam_off=None,selected_overlay_concat=None,selected_CC1p=None,
-              extra_wname=""):#{
+              remove_last_cos_theta_mu_bin=True,extra_wname='',
+              selected_beam_on=None,selected_beam_off=None,selected_overlay_concat=None,selected_CC1p=None):#{
     Xsec_dict = dict()
-    for i,(observable,true,do_var) in enumerate(zip(['P'+particle,'cos(theta('+particle+'))','phi('+particle+')']
-                                                             ,['truth_P'+particle,'truth_P'+particle+'_cos_theta','truth_P'+particle+'_phi']
-                                                             ,[do_P,do_cos_theta,do_phi])):#{
+    for i,(observable,do_var) in enumerate(zip(['P'+particle,'cos(theta('+particle+'))','phi('+particle+')'],
+                                               [do_P,do_cos_theta,do_phi])):#{
         if do_var==False: continue
         var,vtrue,bins,mid,bin_width,vlabel,xlabel,units = get_labels(observable=observable)
         mul = 180./np.pi if 'phi' in observable else 1
         beam_on , beam_off , overlay , CC1p = selected_beam_on,selected_beam_off,selected_overlay_concat,selected_CC1p
+        
         if remove_last_cos_theta_mu_bin:#{
             beam_on = beam_on[beam_on['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
             beam_off = beam_off[beam_off['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
             overlay = overlay[overlay['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
             CC1p = CC1p[CC1p['reco_Pmu_cos_theta']<Bins['cos(theta(mu))'][-2]]
         #}
-        h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p
-                        ,evtwgt_name=evtwgt_name
-                        ,var=var,bins=bins,bin_width=bin_width,wname='P'+particle+' weight'+extra_wname,mul=mul
+        h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p,extra_wname=extra_wname
+                        ,evtwgt_name=evtwgt_name,debug=debug
+                        ,var=var,bins=bins,bin_width=bin_width,wname='P'+particle+' weight',mul=mul
                         ,do_corr_phi_0=do_corr_phi_0)
         if i==0:#{
             Xsec_dict['integrated Xsec'] = np.sum(h['Xsec']*bin_width)
@@ -393,58 +398,55 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
 
 
 # ----------------------------------------------------------
-# Oct-03, 2018 (last edit Oct-11)
+# Oct-03, 2018 (last edit Oct-16, 2018)
 # computation of 1D cross-section based on weighted distirubtions
 def get_Xsec_1d(beam_on=None,beam_off=None,overlay=None,CC1p=None,evtwgt_name='',
-                var='reco_Pmu_mcs',bins=Bins['Pmu'],bin_width=None,wname='Pmu weight',
+                var='reco_Pmu_mcs',bins=Bins['Pmu'],bin_width=None,wname='Pmu weight',extra_wname='',
                 mul=1,
                 do_corr_phi_0=False,
                 debug=0):#{
-    
-    if evtwgt_name!='' and debug:
-        print "evtwgt_name!=''...."
-    
+    if evtwgt_name!='' and debug: print "evtwgt_name=",evtwgt_name,"..."
+    if extra_wname!='' and debug: print "extra_wname=",extra_wname,"..."
     h=dict()
-    for sam,slabel in zip([beam_on,beam_off,overlay,CC1p]
-                          ,['beam on','beam off','overlay','CC1p']):#{
+    for sam,slabel in zip([beam_on,beam_off,overlay,CC1p] ,['beam on','beam off','overlay','CC1p']):#{
         h[slabel],h[slabel+' err']=np.zeros(len(bins)-1),np.zeros(len(bins)-1)
         for i in range(len(bins)-1):#{
             sam_in_bin = sam[(bins[i]<=mul*sam[var])& (mul*sam[var]<bins[i+1])]
-            if debug>1: print "len(sam in bins[%d"%i+"]):",len(sam_in_bin)
+            if debug>2: print "len(",slabel," in bins[%d"%i+"]):",len(sam_in_bin)
             
             # in each bin, the weighted-histogram content is the sum of weights
-            weights_in_bin = sam_in_bin[wname]
+            weights_in_bin = sam_in_bin[wname+extra_wname]
             # add (possible) event weights (only to MC, data don't have these weights...)
-            if (evtwgt_name!='') and (slabel!='beam on') and (slabel!='beam off'):  weights_in_bin = weights_in_bin * sam_in_bin[evtwgt_name]
+            if (evtwgt_name!='') and (slabel!='beam on') and (slabel!='beam off'):#{
+                if debug>1: print 'adding',evtwgt_name,'event-weights to ',slabel
+                weights_in_bin = weights_in_bin * sam_in_bin[evtwgt_name]
+            #}
             # add (possible) correction to \phi~0
-            if do_corr_phi_0:                                                       weights_in_bin = weights_in_bin * sam_in_bin['W(corr. phi~0)']
+            if do_corr_phi_0:#{
+                if debug>1: print 'adding W(corr. phi~0) correction-weights to ',slabel
+                weights_in_bin = weights_in_bin * sam_in_bin['W(corr. phi~0)']
+            #}
             h[slabel][i] = np.sum( weights_in_bin )
-            
             # the uncertainty in this bin is taken as the quadratic sum of the squared weights + uncertainties
             h[slabel+' err'][i] = np.sqrt(np.sum(np.square(sam_in_bin[wname+' err'])+np.square(sam_in_bin[wname])))
         #}
     #}
-    h['B'] = h['overlay'] - h['CC1p']
-    h['B err'] = np.sqrt(np.square(h['overlay err']) + np.square(h['CC1p err']))
     
-    h['B scaled'] = h['B']*Nevents['f(POT)']
-    h['B scaled err'] = h['B err']*Nevents['f(POT)']
+    h['B'] = (h['overlay'] - h['CC1p'])*Nevents['f(POT)']
+    h['B err'] = np.sqrt(np.square(h['overlay err']) + np.square(h['CC1p err']))*Nevents['f(POT)']
     
-    #     print "h['beam off err']:",h['beam off err']
-    h['beam off scaled'] = h['beam off']*OffBeam_scaling
-    h['beam off scaled err'] = h['beam off err']*OffBeam_scaling
+    h['N(on)'] = h['beam on']
+    h['N(on) err'] = h['beam on err']
     
-    h['N(on)-N(off)-B'] = h['beam on'] - h['beam off scaled'] - h['B scaled']
-    h['N(on)-N(off)-B err'] = np.sqrt(np.square(h['beam on err'])
-                                      + np.square(h['beam off scaled err'])
-                                      + np.square(h['B scaled err']))
+    h['N(off)'] = h['beam off']*OffBeam_scaling
+    h['N(off) err'] = h['beam off err']*OffBeam_scaling
+    
+    h['N(on)-N(off)-B'] = h['N(on)'] - h['N(off)'] - h['B']
+    h['N(on)-N(off)-B err'] = np.sqrt(np.square(h['N(on) err']) + np.square(h['N(off) err']) + np.square(h['B err']))
 
     h['Xsec'] = h['N(on)-N(off)-B']/bin_width
     h['Xsec err'] = h['N(on)-N(off)-B err']/bin_width
     
-    h['Xsec beam on'] = h['beam on']/bin_width
-    h['Xsec beam on err'] = h['beam on err']/bin_width
-        
     # foc CC1p (mc-Xsec) we want no correction applied
     for i in range(len(bins)-1):#{
         CC1p_in_bin = CC1p[(bins[i]<=mul*CC1p[var])& (mul*CC1p[var]<bins[i+1])]
@@ -477,7 +479,7 @@ def compute_eff_weights(beam_on=None,beam_off=None,evtwgt_name=''
                         ,delta_Delta_phi=35 # deg.
                         ,Pt_max=0.35        # GeV/c
                         ,debug=0
-                        ,eff_cutoff=0.01
+                        ,eff_cutoff=0.025
                         # for different binning...
                         ,do_different_binning = False
                         ,NBins=7
@@ -487,6 +489,7 @@ def compute_eff_weights(beam_on=None,beam_off=None,evtwgt_name=''
                         ,option=""
                         ,power_factor=38
                         ):
+    power = float("1.e%d"%power_factor)
     # for different binning...
     if do_different_binning:#{
         for key in Limits.keys(): Bins[key] = np.linspace(Limits[key][0],Limits[key][1],NBins+1)
@@ -554,11 +557,11 @@ def compute_eff_weights(beam_on=None,beam_off=None,evtwgt_name=''
                 # efficiency weight assigned to the event
                 w,werr=0,0
                 if eff>eff_cutoff:#{
-                    power = float("1.e%d"%power_factor)
                     w = power/(eff*flux*Ntargets)
                     werr = power*eff_err/(eff*eff*flux*Ntargets)
+                    if w==nan: w,werr=0,0
                 #}
-                if debug:#{
+                if debug>1:#{
                     print 'phi_min,phi_max:',phi_min,phi_max
                     print N['CC1p'],'CC1p',N['gen. in kin. cuts'],'gen. in kin. cuts'
                     print 'eff=',eff,'+/-',eff_err
@@ -585,7 +588,7 @@ def compute_eff_weights(beam_on=None,beam_off=None,evtwgt_name=''
             #} i_phi
         #} i_cos_theta
     #} i_P
-    if debug: print 'done.'
+    if debug: print 'done computing',wname
     return
 # ----------------------------------------------------------
 
@@ -676,14 +679,14 @@ def sam_in_3d_bin(sam,
 # ----------------------------------------------------------
 # Aug-29, 2018
 def compute_Xsec(Non=1, Noff=0, B=0, eff=1, bin_width=1,
-                 Non_err=1, Noff_err=0, B_err=0, eff_err=0, eff_cutoff=0.01):
+                 Non_err=1, Noff_err=0, B_err=0, eff_err=0, eff_cutoff=0.025):
     '''
         input:
         ------
         Non         number of beam on events
         Noff        number of beam off events
         B           background estimation from overlay
-        eff         efficiency (built-in cut-off <eff_cutoff=5%>: if eff<eff_cutoff return 0 +/- 0 )
+        eff         efficiency (built-in cut-off <eff_cutoff=2.5%>: if eff<eff_cutoff return 0 +/- 0 )
         [err]       uncertainties
         
         return:
