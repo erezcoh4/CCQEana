@@ -113,6 +113,25 @@ genie_labels    = ['GENIE(nominal)','GENIE(hA2015)','GENIE(SRC+hA)','GENIE(Tune3
 
 
 
+
+
+# ----------------------------------------------------------
+# Oct-18, 2018
+def get_sys_uncertainties(Xsec_sys_unc_cuts=None,var=None,Xsec_fname=None,h=None):#{
+    Xsec_sys_unc_cuts_up = Xsec_sys_unc_cuts[var + Xsec_fname + ' Xsec sys. err up']
+    Xsec_sys_unc_cuts_dw = Xsec_sys_unc_cuts[var + Xsec_fname + ' Xsec sys. err dw']
+    Xsec_sys_unc_flux_up = Xsec_sys_unc_beam_flux[var + Xsec_fname + ' Xsec sys. err up']
+    Xsec_sys_unc_flux_dw = Xsec_sys_unc_beam_flux[var + Xsec_fname + ' Xsec sys. err dw']
+    Xsec_sys_unc_POT_up = POT_unc * h['Xsec']
+    Xsec_sys_unc_POT_dw = POT_unc * h['Xsec']
+    Xsec_sys_unc_up = np.sqrt( np.square(Xsec_sys_unc_cuts_up) + np.square(Xsec_sys_unc_flux_up) + np.square(Xsec_sys_unc_POT_up) )
+    Xsec_sys_unc_dw = np.sqrt( np.square(Xsec_sys_unc_cuts_dw) + np.square(Xsec_sys_unc_flux_dw) + np.square(Xsec_sys_unc_POT_dw) )
+    Xsec_tot_unc_up = np.sqrt( np.square(Xsec_sys_unc_up) + np.square(h['Xsec err']) )
+    Xsec_tot_unc_dw = np.sqrt( np.square(Xsec_sys_unc_dw) + np.square(h['Xsec err']) )
+    return Xsec_sys_unc_up, Xsec_sys_unc_dw, Xsec_tot_unc_up, Xsec_tot_unc_dw
+#}
+# ----------------------------------------------------------
+
 # ----------------------------------------------------------
 # Oct-09, 2018
 def extract_Xsec_full_chain(extra_name='',debug=0,eff_cutoff=0.025
@@ -387,6 +406,8 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
                                             'mc Xsec: %.2f+/-%.2f'%(Xsec_dict['mc Xsec'],Xsec_dict['mc Xsec err']))
         #}
         if debug>1:  pp.pprint(h)
+        Xsec_dict[observable+' beam on'] = h['Xsec beam on']
+        Xsec_dict[observable+' beam on err'] = h['Xsec beam on err']
         Xsec_dict[observable] = h['Xsec']
         Xsec_dict[observable+' err'] = h['Xsec err']
         Xsec_dict['mc '+observable] = h['mc Xsec']
@@ -446,6 +467,9 @@ def get_Xsec_1d(beam_on=None,beam_off=None,overlay=None,CC1p=None,evtwgt_name=''
 
     h['Xsec'] = h['N(on)-N(off)-B']/bin_width
     h['Xsec err'] = h['N(on)-N(off)-B err']/bin_width
+    
+    h['Xsec beam on'] = h['N(on)']/bin_width
+    h['Xsec beam on err'] = h['N(on) err']/bin_width
     
     # foc CC1p (mc-Xsec) we want no correction applied
     for i in range(len(bins)-1):#{
