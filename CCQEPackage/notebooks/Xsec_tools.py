@@ -267,14 +267,14 @@ def get_Xsec_variable(debug=0,evtwgt_name='',
 
 
 # ----------------------------------------------------------
-# Oct-08, 2018 (last edit Oct-15, 2018)
-def draw_Xsec_variable(debug=0,evtwgt_name='',
+# Oct-08, 2018 (last edit Oct-18, 2018)
+def draw_Xsec_variable(debug=0,evtwgt_name='',y_scale=1,
                        var='reco_Pt',mul=1,bins=linspace(0,1,5),vlabel='p_T',units=None,legend_loc='best',
                        wname='Pmu weight',
                        do_corr_phi_0=True,
                        selected_beam_on=None,selected_beam_off=None,
                        selected_overlay_concat=None,selected_CC1p=None,
-                       filename=None,extra_name='',
+                       filename=None,extra_name='',do_save_figure=True,
                        residuals_ylim=[-1,1],residuals_yticks=[-0.5,0,0.5],residuals_ytitle=1.05,residuals_xtitle='center',figures_path='~/Desktop/'):#{
     Xsec_dicts = dict()
     for Xsec_ctu_title,remove_ctu_bin in zip(Xsec_ctu_titles,remove_ctu_bools):
@@ -292,10 +292,10 @@ def draw_Xsec_variable(debug=0,evtwgt_name='',
         Xsec_dict = Xsec_dicts[Xsec_ctu_title]
         h = dict()
         ax = fig.add_subplot(3,2,iax)
-        h['Xsec'],h['Xsec err'] = Xsec_dict[var],Xsec_dict[var+' err']
-        if debug: print var,"Xsec:",h['Xsec']
+        h['Xsec'],h['Xsec err'] = y_scale*Xsec_dict[var],y_scale*Xsec_dict[var+' err']
         plt.errorbar(x=mid,xerr=0.5*bin_width,y=h['Xsec'],yerr=h['Xsec err'],color=Colors['beam on'],fmt='o',label='data')
-        h['mc Xsec'],h['mc Xsec err'] = Xsec_dict['mc '+var], Xsec_dict['mc '+var+' err']
+        
+        h['mc Xsec'],h['mc Xsec err'] = y_scale*Xsec_dict['mc '+var], y_scale*Xsec_dict['mc '+var+' err']
         ax.bar( x=mid , height=2*h['mc Xsec err'], bottom=h['mc Xsec']-h['mc Xsec err'], width=bin_width, color=Colors['CC1p'],label='overlay')
         set_axes(ax,x_label='',y_label=get_Xsec_label(vlabel,units)
                  ,do_add_grid=True,remove_ticks_x=True,do_add_legend=True if iXsec==1 else False, legend_loc=legend_loc
@@ -321,7 +321,7 @@ def draw_Xsec_variable(debug=0,evtwgt_name='',
     plt.subplots_adjust(hspace=0.05)
     if filename is not None: outfilename = figures_path + filename + '.pdf'
     else: outfilename = figures_path + var + '_Xsec'+extra_name+'.pdf'
-    save_figure(outfilename)
+    if do_save_figure: save_figure(outfilename)
     return ax
 #}
 # ----------------------------------------------------------
