@@ -66,7 +66,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::hit));
       static ::ROOT::TGenericClassInfo 
          instance("hit", "hit.h", 23,
-                  typeid(::hit), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  typeid(::hit), DefineBehavior(ptr, ptr),
                   &hit_Dictionary, isa_proxy, 4,
                   sizeof(::hit) );
       instance.SetNew(&new_hit);
@@ -111,7 +111,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::box));
       static ::ROOT::TGenericClassInfo 
          instance("box", "box.h", 22,
-                  typeid(::box), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  typeid(::box), DefineBehavior(ptr, ptr),
                   &box_Dictionary, isa_proxy, 4,
                   sizeof(::box) );
       instance.SetNew(&new_box);
@@ -156,7 +156,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::PandoraNuTrack));
       static ::ROOT::TGenericClassInfo 
          instance("PandoraNuTrack", "PandoraNuTrack.h", 65,
-                  typeid(::PandoraNuTrack), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  typeid(::PandoraNuTrack), DefineBehavior(ptr, ptr),
                   &PandoraNuTrack_Dictionary, isa_proxy, 4,
                   sizeof(::PandoraNuTrack) );
       instance.SetNew(&new_PandoraNuTrack);
@@ -201,7 +201,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::pairVertex));
       static ::ROOT::TGenericClassInfo 
          instance("pairVertex", "pairVertex.h", 32,
-                  typeid(::pairVertex), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  typeid(::pairVertex), DefineBehavior(ptr, ptr),
                   &pairVertex_Dictionary, isa_proxy, 4,
                   sizeof(::pairVertex) );
       instance.SetNew(&new_pairVertex);
@@ -246,7 +246,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::AnalyseEvents));
       static ::ROOT::TGenericClassInfo 
          instance("AnalyseEvents", "AnalyseEvents.h", 33,
-                  typeid(::AnalyseEvents), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  typeid(::AnalyseEvents), DefineBehavior(ptr, ptr),
                   &AnalyseEvents_Dictionary, isa_proxy, 4,
                   sizeof(::AnalyseEvents) );
       instance.SetNew(&new_AnalyseEvents);
@@ -291,7 +291,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::GenieFile));
       static ::ROOT::TGenericClassInfo 
          instance("GenieFile", "GenieFile.h", 39,
-                  typeid(::GenieFile), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  typeid(::GenieFile), DefineBehavior(ptr, ptr),
                   &GenieFile_Dictionary, isa_proxy, 4,
                   sizeof(::GenieFile) );
       instance.SetNew(&new_GenieFile);
@@ -461,8 +461,8 @@ namespace ROOT {
       vector<vector<float> > *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<vector<float> >));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<vector<float> >", -2, "vector", 477,
-                  typeid(vector<vector<float> >), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<vector<float> >", -2, "vector", 457,
+                  typeid(vector<vector<float> >), DefineBehavior(ptr, ptr),
                   &vectorlEvectorlEfloatgRsPgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<vector<float> >) );
       instance.SetNew(&new_vectorlEvectorlEfloatgRsPgR);
@@ -491,10 +491,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEvectorlEfloatgRsPgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<vector<float> > : new vector<vector<float> >;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<vector<float> > : new vector<vector<float> >;
    }
    static void *newArray_vectorlEvectorlEfloatgRsPgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<vector<float> >[nElements] : new vector<vector<float> >[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<vector<float> >[nElements] : new vector<vector<float> >[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEvectorlEfloatgRsPgR(void *p) {
@@ -524,8 +524,8 @@ namespace ROOT {
       vector<vector<double> > *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<vector<double> >));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<vector<double> >", -2, "vector", 477,
-                  typeid(vector<vector<double> >), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<vector<double> >", -2, "vector", 457,
+                  typeid(vector<vector<double> >), DefineBehavior(ptr, ptr),
                   &vectorlEvectorlEdoublegRsPgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<vector<double> >) );
       instance.SetNew(&new_vectorlEvectorlEdoublegRsPgR);
@@ -554,10 +554,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEvectorlEdoublegRsPgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<vector<double> > : new vector<vector<double> >;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<vector<double> > : new vector<vector<double> >;
    }
    static void *newArray_vectorlEvectorlEdoublegRsPgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<vector<double> >[nElements] : new vector<vector<double> >[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<vector<double> >[nElements] : new vector<vector<double> >[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEvectorlEdoublegRsPgR(void *p) {
@@ -587,8 +587,8 @@ namespace ROOT {
       vector<tripleVertex> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<tripleVertex>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<tripleVertex>", -2, "vector", 477,
-                  typeid(vector<tripleVertex>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<tripleVertex>", -2, "vector", 457,
+                  typeid(vector<tripleVertex>), DefineBehavior(ptr, ptr),
                   &vectorlEtripleVertexgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<tripleVertex>) );
       instance.SetNew(&new_vectorlEtripleVertexgR);
@@ -617,10 +617,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEtripleVertexgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<tripleVertex> : new vector<tripleVertex>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<tripleVertex> : new vector<tripleVertex>;
    }
    static void *newArray_vectorlEtripleVertexgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<tripleVertex>[nElements] : new vector<tripleVertex>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<tripleVertex>[nElements] : new vector<tripleVertex>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEtripleVertexgR(void *p) {
@@ -650,8 +650,8 @@ namespace ROOT {
       vector<pairVertex> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<pairVertex>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<pairVertex>", -2, "vector", 477,
-                  typeid(vector<pairVertex>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<pairVertex>", -2, "vector", 457,
+                  typeid(vector<pairVertex>), DefineBehavior(ptr, ptr),
                   &vectorlEpairVertexgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<pairVertex>) );
       instance.SetNew(&new_vectorlEpairVertexgR);
@@ -680,10 +680,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEpairVertexgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<pairVertex> : new vector<pairVertex>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<pairVertex> : new vector<pairVertex>;
    }
    static void *newArray_vectorlEpairVertexgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<pairVertex>[nElements] : new vector<pairVertex>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<pairVertex>[nElements] : new vector<pairVertex>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEpairVertexgR(void *p) {
@@ -713,8 +713,8 @@ namespace ROOT {
       vector<int> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<int>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<int>", -2, "vector", 477,
-                  typeid(vector<int>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<int>", -2, "vector", 457,
+                  typeid(vector<int>), DefineBehavior(ptr, ptr),
                   &vectorlEintgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<int>) );
       instance.SetNew(&new_vectorlEintgR);
@@ -743,10 +743,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEintgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<int> : new vector<int>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<int> : new vector<int>;
    }
    static void *newArray_vectorlEintgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<int>[nElements] : new vector<int>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<int>[nElements] : new vector<int>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEintgR(void *p) {
@@ -776,8 +776,8 @@ namespace ROOT {
       vector<hit> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<hit>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<hit>", -2, "vector", 477,
-                  typeid(vector<hit>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<hit>", -2, "vector", 457,
+                  typeid(vector<hit>), DefineBehavior(ptr, ptr),
                   &vectorlEhitgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<hit>) );
       instance.SetNew(&new_vectorlEhitgR);
@@ -806,10 +806,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEhitgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<hit> : new vector<hit>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<hit> : new vector<hit>;
    }
    static void *newArray_vectorlEhitgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<hit>[nElements] : new vector<hit>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<hit>[nElements] : new vector<hit>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEhitgR(void *p) {
@@ -839,8 +839,8 @@ namespace ROOT {
       vector<float> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<float>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<float>", -2, "vector", 477,
-                  typeid(vector<float>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<float>", -2, "vector", 457,
+                  typeid(vector<float>), DefineBehavior(ptr, ptr),
                   &vectorlEfloatgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<float>) );
       instance.SetNew(&new_vectorlEfloatgR);
@@ -869,10 +869,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEfloatgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<float> : new vector<float>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<float> : new vector<float>;
    }
    static void *newArray_vectorlEfloatgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<float>[nElements] : new vector<float>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<float>[nElements] : new vector<float>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEfloatgR(void *p) {
@@ -902,8 +902,8 @@ namespace ROOT {
       vector<double> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<double>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<double>", -2, "vector", 477,
-                  typeid(vector<double>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<double>", -2, "vector", 457,
+                  typeid(vector<double>), DefineBehavior(ptr, ptr),
                   &vectorlEdoublegR_Dictionary, isa_proxy, 0,
                   sizeof(vector<double>) );
       instance.SetNew(&new_vectorlEdoublegR);
@@ -932,10 +932,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEdoublegR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<double> : new vector<double>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<double> : new vector<double>;
    }
    static void *newArray_vectorlEdoublegR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<double>[nElements] : new vector<double>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<double>[nElements] : new vector<double>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEdoublegR(void *p) {
@@ -965,8 +965,8 @@ namespace ROOT {
       vector<discrete_distribution<double> > *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<discrete_distribution<double> >));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<discrete_distribution<double> >", -2, "vector", 477,
-                  typeid(vector<discrete_distribution<double> >), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<discrete_distribution<double> >", -2, "vector", 457,
+                  typeid(vector<discrete_distribution<double> >), DefineBehavior(ptr, ptr),
                   &vectorlEdiscrete_distributionlEdoublegRsPgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<discrete_distribution<double> >) );
       instance.SetNew(&new_vectorlEdiscrete_distributionlEdoublegRsPgR);
@@ -995,10 +995,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEdiscrete_distributionlEdoublegRsPgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<discrete_distribution<double> > : new vector<discrete_distribution<double> >;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<discrete_distribution<double> > : new vector<discrete_distribution<double> >;
    }
    static void *newArray_vectorlEdiscrete_distributionlEdoublegRsPgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<discrete_distribution<double> >[nElements] : new vector<discrete_distribution<double> >[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<discrete_distribution<double> >[nElements] : new vector<discrete_distribution<double> >[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEdiscrete_distributionlEdoublegRsPgR(void *p) {
@@ -1028,8 +1028,8 @@ namespace ROOT {
       vector<TLorentzVector> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TLorentzVector>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<TLorentzVector>", -2, "vector", 477,
-                  typeid(vector<TLorentzVector>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<TLorentzVector>", -2, "vector", 457,
+                  typeid(vector<TLorentzVector>), DefineBehavior(ptr, ptr),
                   &vectorlETLorentzVectorgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<TLorentzVector>) );
       instance.SetNew(&new_vectorlETLorentzVectorgR);
@@ -1058,10 +1058,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlETLorentzVectorgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TLorentzVector> : new vector<TLorentzVector>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<TLorentzVector> : new vector<TLorentzVector>;
    }
    static void *newArray_vectorlETLorentzVectorgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TLorentzVector>[nElements] : new vector<TLorentzVector>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<TLorentzVector>[nElements] : new vector<TLorentzVector>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlETLorentzVectorgR(void *p) {
@@ -1091,8 +1091,8 @@ namespace ROOT {
       vector<PandoraNuTrack> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<PandoraNuTrack>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<PandoraNuTrack>", -2, "vector", 477,
-                  typeid(vector<PandoraNuTrack>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+         instance("vector<PandoraNuTrack>", -2, "vector", 457,
+                  typeid(vector<PandoraNuTrack>), DefineBehavior(ptr, ptr),
                   &vectorlEPandoraNuTrackgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<PandoraNuTrack>) );
       instance.SetNew(&new_vectorlEPandoraNuTrackgR);
@@ -1121,10 +1121,10 @@ namespace ROOT {
 namespace ROOT {
    // Wrappers around operator new
    static void *new_vectorlEPandoraNuTrackgR(void *p) {
-      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<PandoraNuTrack> : new vector<PandoraNuTrack>;
+      return  p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<PandoraNuTrack> : new vector<PandoraNuTrack>;
    }
    static void *newArray_vectorlEPandoraNuTrackgR(Long_t nElements, void *p) {
-      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<PandoraNuTrack>[nElements] : new vector<PandoraNuTrack>[nElements];
+      return p ? ::new((::ROOT::TOperatorNewHelper*)p) vector<PandoraNuTrack>[nElements] : new vector<PandoraNuTrack>[nElements];
    }
    // Wrapper around operator delete
    static void delete_vectorlEPandoraNuTrackgR(void *p) {
@@ -1162,12 +1162,12 @@ namespace {
 "/Users/erezcohen/larlite/UserDev/CCQEana/LArSoftCodes",
 "/Users/erezcohen/larlite/UserDev/CCQEana/LArSoftCodes/MyObjects",
 "/Users/erezcohen/larlite/core",
-"/usr/local/Cellar/root6/6.06.02/include/root",
+"/Users/erezcohen/root6/root-6.04.10/include",
 "/Users/erezcohen/larlite/UserDev/CCQEana/CCQEPackage/",
 0
     };
-    static const char* fwdDeclCode = R"DICTFWDDCLS(
-#line 1 "libCCQEana_CCQEPackage dictionary forward declarations' payload"
+    static const char* fwdDeclCode = 
+R"DICTFWDDCLS(
 #pragma clang diagnostic ignored "-Wkeyword-compat"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -1180,7 +1180,6 @@ class __attribute__((annotate("$clingAutoload$AnalyseEvents.h")))  AnalyseEvents
 class __attribute__((annotate("$clingAutoload$GenieFile.h")))  GenieFile;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
-#line 1 "libCCQEana_CCQEPackage dictionary payload"
 
 #ifndef G__VECTOR_HAS_CLASS_ITERATOR
   #define G__VECTOR_HAS_CLASS_ITERATOR 1

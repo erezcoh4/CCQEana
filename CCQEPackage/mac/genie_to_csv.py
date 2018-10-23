@@ -68,5 +68,5 @@ for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
     gf.StreamToCSV()
 #}
 gf.EndJob()
-print 'done stepping through %d CC1p events with mA=%.2f'%(ctr_CC1p,flags.mA)
+print 'done stepping through %d CC1p events with'%(ctr_CC1p)
 print 'done genie_to_csv'
