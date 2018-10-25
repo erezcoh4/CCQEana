@@ -44,6 +44,10 @@ public:
     GenieFile( TString fPath
               ,TString fRootFileName
               ,TString fRootTreeName
+              ,int fdebug);
+    GenieFile( TString fPath
+              ,TString fRootFileName
+              ,TString fRootTreeName
               ,int fdebug
               ,TString fAccMapPath
               ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName,TString fQ2ThetaAccMapName);

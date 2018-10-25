@@ -8,6 +8,22 @@ GenieFile::GenieFile( TString fPath
                      ,TString fRootFileName     // without the .root suffix (!)
                      ,TString fRootTreeName
                      ,int fdebug
+                     ):
+debug(fdebug),
+Path( fPath ),
+RootFileName( fRootFileName + ".root"),
+RootTreeName( fRootTreeName ),
+OutputCSVname( fRootFileName + ".csv")
+{
+    SetLArTools();
+    SetInTree();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+GenieFile::GenieFile( TString fPath
+                     ,TString fRootFileName     // without the .root suffix (!)
+                     ,TString fRootTreeName
+                     ,int fdebug
                      ,TString fAccMapPath
                      ,TString fPmuThetaAccMapName,TString fPpThetaAccMapName,TString fQ2AccMapName):
 debug(fdebug),
@@ -504,6 +520,7 @@ bool GenieFile::SetTopology (){
             if ( Npi==0 && Nel==0 && Ngamma==0 ){
                 IsCC_1p_200MeVc_0pi = true;
                 q = nu - muon;
+                Q2 = -q.Mag2();
                 Pmiss = proton - q;
             }
         }
@@ -808,7 +825,6 @@ void GenieFile::SetRecoKinematics(){
     
     
     // reconstructed Q2 from the overlay map
-    Q2 = -q.Mag2();
     i_gen = FindWhichBin( Q2 , Q2_gen_rec_bins );
     Debug(4,"Q2: %, i_gen: %",Q2,i_gen);
     if ( Q2 < Q2_gen_rec_bins.at(0) ) { // under bin
@@ -850,9 +866,8 @@ void GenieFile::MimicDetectorVolume(){
     ProjectMuonTrajectory();
     //    CutMuonTrajectory();
     ProjectProtonTrajectory();
-    //    CutProtonTrajectory();
-    
-    SetRecoKinematics();
+    //    CutProtonTrajectory();    
+    // SetRecoKinematics();
 
 }
 

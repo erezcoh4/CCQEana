@@ -28,12 +28,23 @@ genie_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/afro_genie_samples/" 
 filename = flags.option
 if filename == '': filename = "CC_4_9E20_POT_mA_0_99"
 
+acceptance_map_path = "/Users/erezcohen/Desktop/uBoone/CCQEanalysis/csvFiles/acceptance_maps/"
+Pmu_theta_acceptance_map_name = "Pmu_theta_12x12_bins"
+Pp_theta_acceptance_map_name = "Pp_theta_12x12_bins"
+Q2_acceptance_map_name = "Q2_11_bins"
+Q2_gen_rec_map_name = "Q2_gen_rec"
+
 
 # run on a single files
 gf = GenieFile( genie_path
                    ,filename
                    ,"gst" # RootFileName
-                   ,flags.verbose               )
+                   ,flags.verbose
+                   ,acceptance_map_path
+                   ,Pmu_theta_acceptance_map_name
+                   ,Pp_theta_acceptance_map_name
+                   ,Q2_acceptance_map_name)
+gf.SetQ2_gen_rec_map( acceptance_map_path, Q2_gen_rec_map_name )
 gf.HeaderCSV()
 
 Nevents = gf.GetNevents()
@@ -47,6 +58,7 @@ for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
     #    if we want to mimic MicroBooNE in the GENIE calculation
     # --------------------------------------------------------
     gf.MimicDetectorVolume()
+    #    gf.SetMicroBooNEWeights()
 
     if flags.verbose>2:#{
         print 'XXXXXXXX \n event %d \nXXXXXXXX'%i_event
