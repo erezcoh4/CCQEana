@@ -117,7 +117,8 @@ genie_labels    = ['GENIE(nominal)','GENIE(hA2015)','GENIE(SRC+hA)','GENIE(Tune3
 
 # ----------------------------------------------------------
 # Oct-21, 2018
-def get_sys_uncertainties(Xsec_sys_unc_cuts=None,Xsec_sys_unc_beam_flux=None,var=None,Xsec_fname=None,h=None):#{
+def get_sys_uncertainties(Xsec_sys_unc_cuts=None,Xsec_sys_unc_beam_flux=None,POT_unc=0.02,
+                          var=None,Xsec_fname=None,h=None):#{
     Xsec_sys_unc_cuts_up = Xsec_sys_unc_cuts[var + Xsec_fname + ' Xsec sys. err up']
     Xsec_sys_unc_cuts_dw = Xsec_sys_unc_cuts[var + Xsec_fname + ' Xsec sys. err dw']
     Xsec_sys_unc_flux_up = Xsec_sys_unc_beam_flux[var + Xsec_fname + ' Xsec sys. err up']

@@ -848,9 +848,9 @@ void GenieFile::MimicDetectorVolume(){
     SetVertexPosition( 100*(vtxx + 1.282) , 100*vtxy , 100*(vtxz + 5.184));
     
     ProjectMuonTrajectory();
-    CutMuonTrajectory();
+    //    CutMuonTrajectory();
     ProjectProtonTrajectory();
-    CutProtonTrajectory();
+    //    CutProtonTrajectory();
     
     SetRecoKinematics();
 

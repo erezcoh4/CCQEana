@@ -55,9 +55,11 @@ for i_event in range(flags.nskip,int(flags.evnts_frac*Nevents)): #{
         
     gf.ReadEvent(i_event)
     gf.SetTopology()
+    #    if we want to mimic MicroBooNE in the GENIE calculation
+    # --------------------------------------------------------
     gf.MimicDetectorVolume()
-    gf.SetMicroBooNEWeights()
-        
+    #    gf.SetMicroBooNEWeights()
+
     if flags.verbose>2:#{
         print 'XXXXXXXX \n event %d \nXXXXXXXX'%i_event
         gf.Print()
