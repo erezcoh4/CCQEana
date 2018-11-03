@@ -13,7 +13,8 @@ from scipy.stats import norm
 from scipy.optimize import curve_fit
 
 # ----------------------------------------------------------
-def mystep(x,y,x_width,y_width, ax=None, **kwargs):
+def mystep(x,y,x_width,y_width=None, ax=None, **kwargs):
+    if y_width is None: y_width=np.zeros(len(x))
     for x_,dx,y_,y_width_ in zip(x,x_width,y,y_width):
         if ax is None:
             plt.plot([x_-dx/2,x_+dx/2],[y_,y_] , **kwargs)

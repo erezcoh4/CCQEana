@@ -4,6 +4,7 @@
     Afro files, June 2018:
     make && python mac/genie_to_csv.py -evf=0.001
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_nominal -evf=1
+    python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_1_3 -evf=1
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hA2015 -evf=1
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hN2015 -evf=1
     python mac/genie_to_csv.py --option=CC_4_9E20_POT_mA_0_99_hA_SRC -evf=1
