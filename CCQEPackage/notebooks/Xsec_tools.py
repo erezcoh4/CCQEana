@@ -287,7 +287,7 @@ def get_Xsec_variable(debug=0,evtwgt_name='',
 
 
 # ----------------------------------------------------------
-# Oct-08, 2018 (last edit Oct-18, 2018)
+# Oct-08, 2018 (last edit Nov-18, 2018)
 def draw_Xsec_variable(debug=0,evtwgt_name='',y_scale=1,
                        var='reco_Pt',mul=1,bins=linspace(0,1,5),vlabel='p_T',units=None,legend_loc='best',
                        wname='Pmu weight',
@@ -295,6 +295,7 @@ def draw_Xsec_variable(debug=0,evtwgt_name='',y_scale=1,
                        selected_beam_on=None,selected_beam_off=None,
                        selected_overlay_concat=None,selected_CC1p=None,
                        filename=None,extra_name='',do_save_figure=True,
+                       do_add_cut_lines=False,cut_Xlim=(0,1),
                        residuals_ylim=[-1,1],residuals_yticks=[-0.5,0,0.5],residuals_ytitle=1.05,residuals_xtitle='center',figures_path='~/Desktop/'):#{
     Xsec_dicts = dict()
     for Xsec_ctu_title,remove_ctu_bin in zip(Xsec_ctu_titles,remove_ctu_bools):
@@ -321,6 +322,10 @@ def draw_Xsec_variable(debug=0,evtwgt_name='',y_scale=1,
                  ,do_add_grid=True,remove_ticks_x=True,do_add_legend=True if iXsec==1 else False, legend_loc=legend_loc
                  ,ylim=(0,1.1*np.max(ax.get_ylim())),title=Xsec_ctu_title)
                  
+        if do_add_cut_lines:#{
+            plt.plot([cut_Xlim[0],cut_Xlim[0]],ax.get_ylim(),'--',color='red')
+            plt.plot([cut_Xlim[1],cut_Xlim[1]],ax.get_ylim(),'--',color='red')
+        #}
         # residuals plot
         den, den_err = h['Xsec']-h['mc Xsec'],np.sqrt(np.square(h['Xsec err'])+np.square(h['mc Xsec err']))
         num, num_err = h['Xsec'],h['mc Xsec err']
@@ -337,6 +342,10 @@ def draw_Xsec_variable(debug=0,evtwgt_name='',y_scale=1,
                  ,ylim=residuals_ylim,yticks=residuals_yticks)
         plt.plot([np.min(bins),np.max(bins)],[0,0],'--',color='royalblue')
         plt.title(r'$\chi^2/ndf=%.2f/%d$'%(chi2,ndf), fontsize=20,y=residuals_ytitle,loc=residuals_xtitle)
+        if do_add_cut_lines:#{
+            plt.plot([cut_Xlim[0],cut_Xlim[0]],ax.get_ylim(),'--',color='red')
+            plt.plot([cut_Xlim[1],cut_Xlim[1]],ax.get_ylim(),'--',color='red')
+        #}
     plt.tight_layout(h_pad=0.0)
     plt.subplots_adjust(hspace=0.05)
     if filename is not None: outfilename = figures_path + filename + '.pdf'
