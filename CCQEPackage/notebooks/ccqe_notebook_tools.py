@@ -126,7 +126,7 @@ def sample_in_FV(sample=None, max_FV_y = 110, # 115 in pandoraNu tracks collecti
 
 
 #---------------------------------------------------------------------------------------------
-# April-30, 2017
+# April-30, 2017 (last edit Dec-06, 2018 to add a maximal cut + greater than 0)
 def get_fraction_in_cut( data=None , cut_var='distance', mul=1 , xmin=0.1, xmax=10 , Nbins=10 ,  cut_type= 'max' ):
     x_array = np.linspace(xmin,xmax,Nbins)
     frac , frac_err = [] , []
@@ -137,6 +137,8 @@ def get_fraction_in_cut( data=None , cut_var='distance', mul=1 , xmin=0.1, xmax=
             reduced = data[mul*data[cut_var]<x]
         elif cut_type is 'min':
             reduced = data[mul*data[cut_var]>x]
+        elif cut_type=='max above 0':
+            reduced = data[(mul*data[cut_var]>0) & (mul*data[cut_var]<x)]
         numerator = float(len(reduced))
         
         frac.append(100 * numerator / denominator)
