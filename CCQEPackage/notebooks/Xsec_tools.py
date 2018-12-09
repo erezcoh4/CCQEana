@@ -116,8 +116,8 @@ genie_labels    = ['GENIE(nominal)','GENIE(hA2015)','GENIE(SRC+hA)','GENIE(Tune3
 
 
 # ----------------------------------------------------------
-# Oct-21, 2018
-def get_sys_uncertainties(Xsec_sys_unc_cuts=None,Xsec_sys_unc_beam_flux=None,POT_unc=0.02,
+# Oct-21, 2018 (last edit Dec-08, 2018)
+def get_sys_uncertainties(Xsec_sys_unc_cuts=None,Xsec_sys_unc_beam_flux=None,Xsec_sys_unc_decoupling=None,POT_unc=0.02,
                           var=None,Xsec_fname=None,h=None):#{
     Xsec_sys_unc_cuts_up = Xsec_sys_unc_cuts[var + Xsec_fname + ' Xsec sys. err up']
     Xsec_sys_unc_cuts_dw = Xsec_sys_unc_cuts[var + Xsec_fname + ' Xsec sys. err dw']
@@ -125,8 +125,10 @@ def get_sys_uncertainties(Xsec_sys_unc_cuts=None,Xsec_sys_unc_beam_flux=None,POT
     Xsec_sys_unc_flux_dw = Xsec_sys_unc_beam_flux[var + Xsec_fname + ' Xsec sys. err dw']
     Xsec_sys_unc_POT_up = POT_unc * h['Xsec']
     Xsec_sys_unc_POT_dw = POT_unc * h['Xsec']
-    Xsec_sys_unc_up = np.sqrt( np.square(Xsec_sys_unc_cuts_up) + np.square(Xsec_sys_unc_flux_up) + np.square(Xsec_sys_unc_POT_up) )
-    Xsec_sys_unc_dw = np.sqrt( np.square(Xsec_sys_unc_cuts_dw) + np.square(Xsec_sys_unc_flux_dw) + np.square(Xsec_sys_unc_POT_dw) )
+    Xsec_sys_unc_decoupling_up = Xsec_sys_unc_decoupling[var + Xsec_fname + ' Xsec sys. err']
+    Xsec_sys_unc_decoupling_dw = Xsec_sys_unc_decoupling[var + Xsec_fname + ' Xsec sys. err']
+    Xsec_sys_unc_up = np.sqrt( np.square(Xsec_sys_unc_cuts_up) + np.square(Xsec_sys_unc_flux_up) + np.square(Xsec_sys_unc_POT_up) + np.square(Xsec_sys_unc_decoupling_up) )
+    Xsec_sys_unc_dw = np.sqrt( np.square(Xsec_sys_unc_cuts_dw) + np.square(Xsec_sys_unc_flux_dw) + np.square(Xsec_sys_unc_POT_dw) + np.square(Xsec_sys_unc_decoupling_dw)  )
     Xsec_tot_unc_up = np.sqrt( np.square(Xsec_sys_unc_up) + np.square(h['Xsec err']) )
     Xsec_tot_unc_dw = np.sqrt( np.square(Xsec_sys_unc_dw) + np.square(h['Xsec err']) )
     return Xsec_sys_unc_up, Xsec_sys_unc_dw, Xsec_tot_unc_up, Xsec_tot_unc_dw
@@ -200,8 +202,8 @@ def extract_Xsec_full_chain(extra_name='',debug=0,eff_cutoff=0.025
     else: print 'already performed correction for phi~0 and saved the samples...'
     save_selected_samples(selected_overlay_concat , selected_CC1p , selected_beam_on , selected_beam_off, extra_name=extra_name)
     extract_Xsecs(debug=debug,extra_name=extra_name,particle='mu',evtwgt_name=evtwgt_name,
-              selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,                  
-              selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
+                  selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,
+                  selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
     extract_Xsecs(debug=debug,extra_name=extra_name,particle='p',evtwgt_name=evtwgt_name,
                   selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,                  
                   selected_overlay_concat=selected_overlay_concat,selected_CC1p=selected_CC1p)
@@ -232,14 +234,14 @@ def get_phi_Xsecs(do_corr_phi_0=False, debug=0, evtwgt_name='',
 
 
 # ----------------------------------------------------------
-# Oct-08, 2018
+# Oct-08, 2018 (last edit Dec-08,2018)
 def extract_Xsecs(do_corr_phi_0=True, debug=0, particle='mu',evtwgt_name='',
                   selected_beam_on=None,selected_beam_off=None,
                   selected_overlay_concat=None,selected_CC1p=None,
-                  extra_name=""):#{
+                  extra_name="",do_cross_weights=False):#{
     Xsec_dicts = dict()
     for iXsec,(Xsec_title,remove_ctu_bin) in enumerate(zip(Xsec_ctu_titles,remove_ctu_bools)):#{
-        Xsec_dict = get_Xsecs(do_corr_phi_0=do_corr_phi_0, debug=debug, particle=particle,evtwgt_name=evtwgt_name,
+        Xsec_dict = get_Xsecs(do_corr_phi_0=do_corr_phi_0, debug=debug, particle=particle,evtwgt_name=evtwgt_name,do_cross_weights=do_cross_weights,
                               remove_last_cos_theta_mu_bin=remove_ctu_bin,
                               do_P=True, do_cos_theta=True, do_phi=True,
                               selected_beam_on=selected_beam_on,selected_beam_off=selected_beam_off,
@@ -387,8 +389,13 @@ def save_selected_samples(selected_overlay_concat , selected_CC1p , selected_bea
 # ----------------------------------------------------------
 # Oct-03, 2018
 def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_theta=True, do_phi=True, do_print_Xsec=False,evtwgt_name='',
-              remove_last_cos_theta_mu_bin=True,extra_wname='',
+              remove_last_cos_theta_mu_bin=True,extra_wname='',do_cross_weights=False,
               selected_beam_on=None,selected_beam_off=None,selected_overlay_concat=None,selected_CC1p=None):#{
+    
+    if particle=='mu': other_particle = 'p';
+    if particle=='p': other_particle = 'mu';
+    
+
     Xsec_dict = dict()
     for i,(observable,do_var) in enumerate(zip(['P'+particle,'cos(theta('+particle+'))','phi('+particle+')'],
                                                [do_P,do_cos_theta,do_phi])):#{
@@ -405,7 +412,9 @@ def get_Xsecs(do_corr_phi_0=False, debug=0, particle='mu', do_P=True, do_cos_the
         #}
         h = get_Xsec_1d(beam_on,beam_off,overlay,CC1p,extra_wname=extra_wname
                         ,evtwgt_name=evtwgt_name,debug=debug
-                        ,var=var,bins=bins,bin_width=bin_width,wname='P'+particle+' weight',mul=mul
+                        ,var=var,bins=bins,bin_width=bin_width
+                        ,wname='P'+particle+' weight' if do_cross_weights==False else 'P'+other_particle+' weight'
+                        ,mul=mul
                         ,do_corr_phi_0=do_corr_phi_0)
         if i==0:#{
             Xsec_dict['integrated Xsec'] = np.sum(h['Xsec']*bin_width)
@@ -446,20 +455,20 @@ def get_Xsec_1d(beam_on=None,beam_off=None,overlay=None,CC1p=None,evtwgt_name=''
             if debug>2: print "len(",slabel," in bins[%d"%i+"]):",len(sam_in_bin)
             
             # in each bin, the weighted-histogram content is the sum of weights
-            weights_in_bin = sam_in_bin[wname+extra_wname]
+            weights_in_bin = sam_in_bin[wname+extra_wname].fillna(0)
             # add (possible) event weights (only to MC, data don't have these weights...)
             if (evtwgt_name!='') and (slabel!='beam on') and (slabel!='beam off'):#{
                 if debug>1: print 'adding',evtwgt_name,'event-weights to ',slabel
-                weights_in_bin = weights_in_bin * sam_in_bin[evtwgt_name]
+                weights_in_bin = weights_in_bin * sam_in_bin[evtwgt_name].fillna(0)
             #}
             # add (possible) correction to \phi~0
             if do_corr_phi_0:#{
                 if debug>1: print 'adding W(corr. phi~0) correction-weights to ',slabel
-                weights_in_bin = weights_in_bin * sam_in_bin['W(corr. phi~0)']
+                weights_in_bin = weights_in_bin * sam_in_bin['W(corr. phi~0)'].fillna(0)
             #}
             h[slabel][i] = np.sum( weights_in_bin )
             # the uncertainty in this bin is taken as the quadratic sum of the squared weights + uncertainties
-            h[slabel+' err'][i] = np.sqrt(np.sum(np.square(sam_in_bin[wname+' err'])+np.square(sam_in_bin[wname])))
+            h[slabel+' err'][i] = np.sqrt(np.sum(np.square(sam_in_bin[wname+' err'].fillna(0))+np.square(sam_in_bin[wname].fillna(0))))
         #}
     #}
     
