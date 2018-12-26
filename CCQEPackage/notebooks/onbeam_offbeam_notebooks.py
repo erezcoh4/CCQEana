@@ -816,7 +816,7 @@ def chi2_two_histograms( bins=None, chi2_xrange=None
 
 
 # -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- - -- - - -- -- - -- -
-# Sep-23, 2018 (last edit Oct-04)
+# Sep-23, 2018 (last edit Dec-26, 2018)
 def chi2_two_data_curves( bins=None, chi2_xrange=None
                          , h1=None , h2=None
                          , h1err=None, h2err=None
@@ -830,6 +830,11 @@ def chi2_two_data_curves( bins=None, chi2_xrange=None
     ndf = -1
     for i_bin in range(len(bins)-1):
         num = np.square( h1[i_bin] - h2[i_bin] )
+        # avoid from 0 uncertainty which is unphysical, by taking the average uncertainty everywhere this happens
+        if h1err[i_bin]==0:
+            h1err[i_bin] = np.mean(h1err)
+        if h2err[i_bin]==0:
+            h2err[i_bin] = np.mean(h2err)
         den = np.max([( np.square(h1err[i_bin]) + np.square(h2err[i_bin]) ),cutoff])
         chi2_bin = num / den
         chi2 += chi2_bin
